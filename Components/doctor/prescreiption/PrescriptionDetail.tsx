@@ -1,0 +1,247 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText } from "lucide-react";
+import { toast } from "sonner";
+
+type PrescriptionDetail = {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorName: string;
+  diagnosis: string;
+  symptoms: string | null;
+  medicines: Array<{
+    name: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
+  }>;
+  labTests: Array<{
+    name: string;
+    description?: string;
+  }> | null;
+  followUpRequired: boolean;
+  followUpDate: string | null;
+  followUpNotes: string | null;
+  additionalNotes: string | null;
+  createdAt: string;
+};
+
+export default function PrescriptionDetail() {
+  const params = useParams();
+  const router = useRouter();
+  const prescriptionId = params?.id as string;
+
+  const [prescription, setPrescription] = useState<PrescriptionDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrescription = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/prescriptions/${prescriptionId}`);
+        const result = await response.json();
+
+        if (result.success) {
+          setPrescription(result.data);
+        } else {
+          toast.error(result.error || "Failed to load prescription");
+          router.push("/doctor/prescription");
+        }
+      } catch (error) {
+        console.error("Error fetching prescription:", error);
+        toast.error("Failed to load prescription");
+        router.push("/doctor/prescription");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (prescriptionId) {
+      fetchPrescription();
+    }
+  }, [prescriptionId, router]);
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Loading prescription...</p>
+      </div>
+    );
+  }
+
+  if (!prescription) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Prescription not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-2xl">Prescription Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Patient & Doctor Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <User className="h-5 w-5 text-muted-foreground mt-1" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Patient</p>
+                  <p className="font-medium">{prescription.patientName}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Stethoscope className="h-5 w-5 text-muted-foreground mt-1" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Doctor</p>
+                  <p className="font-medium">{prescription.doctorName}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Calendar className="h-5 w-5 text-muted-foreground mt-1" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-medium">
+                    {new Date(prescription.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Diagnosis */}
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Diagnosis
+              </h3>
+              <p className="text-muted-foreground">{prescription.diagnosis}</p>
+            </div>
+
+            {/* Symptoms */}
+            {prescription.symptoms && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Symptoms</h3>
+                <p className="text-muted-foreground">{prescription.symptoms}</p>
+              </div>
+            )}
+
+            {/* Medicines */}
+            <div className="border-t pt-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Pill className="h-5 w-5" />
+                Medicines
+              </h3>
+              <div className="space-y-3">
+                {prescription.medicines.map((medicine, index) => (
+                  <Card key={index} className="bg-muted/50">
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <p className="font-medium">{medicine.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {medicine.dosage}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm">
+                            <span className="font-medium">Frequency:</span>{" "}
+                            {medicine.frequency}
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">Duration:</span>{" "}
+                            {medicine.duration}
+                          </p>
+                        </div>
+                        {medicine.instructions && (
+                          <div className="md:col-span-2">
+                            <p className="text-sm text-muted-foreground">
+                              {medicine.instructions}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Lab Tests */}
+            {prescription.labTests && prescription.labTests.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-3">Lab Tests</h3>
+                <div className="space-y-2">
+                  {prescription.labTests.map((test, index) => (
+                    <Card key={index} className="bg-muted/50">
+                      <CardContent className="p-3">
+                        <p className="font-medium">{test.name}</p>
+                        {test.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {test.description}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Follow-up */}
+            {prescription.followUpRequired && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Follow-up</h3>
+                {prescription.followUpDate && (
+                  <p className="text-sm">
+                    <span className="font-medium">Date:</span>{" "}
+                    {new Date(prescription.followUpDate).toLocaleDateString()}
+                  </p>
+                )}
+                {prescription.followUpNotes && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {prescription.followUpNotes}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Additional Notes */}
+            {prescription.additionalNotes && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-2">Additional Notes</h3>
+                <p className="text-muted-foreground">
+                  {prescription.additionalNotes}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => window.print()}>
+            Print
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,386 @@
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
+
+interface StaffData {
+  id: string;
+  userId: string;
+  hospitalId: string;
+  name: string;
+  mobileNumber: string | null;
+  gender: string;
+  dob: string | null;
+  department: string | null;
+  joiningDate: string | null;
+  address: string | null;
+}
+
+interface DoctorData {
+  id: string;
+  staffId: string;
+  hospitalId: string;
+  specialization: any;
+  qualification: string;
+  experience: string;
+  consultationFee: string;
+  availability: string | null;
+}
+
+interface ProfileData {
+  staff: StaffData;
+  doctor: DoctorData | null;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+}
+
+export default function DoctorProfile() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState("/images/placeholder.jpg");
+  const [showClinicDetails, setShowClinicDetails] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    mobileNumber: "",
+    gender: "",
+    dob: "",
+    department: "",
+    address: "",
+    qualification: "",
+    experience: "",
+    consultationFee: "",
+    specialization: "",
+  });
+
+  const { data: session } = useSession();
+
+  const handleAvatarClick = () => fileInputRef.current?.click();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () =>
+        reader.result && setAvatarUrl(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchProfileData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/profile");
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setProfileData(result.data);
+          
+          // Populate form data
+          const { staff, doctor, user } = result.data;
+          setFormData({
+            name: user?.name || "",
+            mobileNumber: staff.mobileNumber || "",
+            gender: staff.gender || "",
+            dob: staff.dob || "",
+            department: staff.department || "",
+            address: staff.address || "",
+            qualification: doctor?.qualification || "",
+            experience: doctor?.experience || "",
+            consultationFee: doctor?.consultationFee || "",
+            specialization: Array.isArray(doctor?.specialization) 
+              ? doctor.specialization[0]?.name || ""
+              : "",
+          });
+        } else {
+          toast.error(result.error || "Failed to load profile");
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [session?.user?.id]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      
+      const updateData: any = {
+        name: formData.name,
+        mobileNumber: formData.mobileNumber,
+        gender: formData.gender,
+        dob: formData.dob || null,
+        department: formData.department,
+        address: formData.address,
+      };
+
+      // Add doctor data if user is a doctor
+      if (profileData?.doctor) {
+        updateData.doctorData = {
+          specialization: formData.specialization 
+            ? [{ name: formData.specialization }] 
+            : profileData.doctor.specialization,
+          qualification: formData.qualification,
+          experience: formData.experience,
+          consultationFee: formData.consultationFee,
+        };
+      }
+
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Profile updated successfully");
+        
+        // Refresh profile data
+        const refreshResponse = await fetch("/api/profile");
+        const refreshResult = await refreshResponse.json();
+        if (refreshResult.success) {
+          setProfileData(refreshResult.data);
+        }
+      } else {
+        toast.error(result.error || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading profile...</div>;
+  }
+
+  if (!profileData) {
+    return <div className="p-8 text-center">Profile not found</div>;
+  }
+
+  return (
+    <div className="p-8 flex flex-col lg:flex-row justify-between gap-6  min-h-screen">
+      {/* Left: Avatar + Actions */}
+      <Card className="lg:w-1/3 flex flex-col items-center  p-6 gap-4 shadow-md">
+        <Avatar className="w-20 h-20 border-2 border-gray-200">
+          <AvatarImage src={avatarUrl} />
+          <AvatarFallback>DR</AvatarFallback>
+        </Avatar>
+
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <Button
+          onClick={handleAvatarClick}
+          variant="outline"
+          className="w-full"
+        >
+          Upload Profile Photo
+        </Button>
+
+        <Button
+          onClick={() => setShowClinicDetails((prev) => !prev)}
+          variant="secondary"
+          className="w-full"
+        >
+          {showClinicDetails ? "View Doctor Profile" : "View Clinic Details"}
+        </Button>
+      </Card>
+
+      {/* Right: Profile / Clinic Info */}
+      <Card className="lg:w-2/3 p-6 shadow-md">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold border-b pb-2">
+            {showClinicDetails ? "Clinic Details" : "Doctor Profile"}
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="mt-4 space-y-4">
+          {showClinicDetails ? (
+            // CLINIC SECTION
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label className="mb-2">Clinic Name</Label>
+                <Input placeholder="Heart Care Center" />
+              </div>
+              <div>
+                <Label className="mb-2">Clinic Email</Label>
+                <Input placeholder="heartcare@example.com" />
+              </div>
+
+              <div>
+                <Label className="mb-2">Clinic Contact</Label>
+                <Input placeholder="+91 9876543210" />
+              </div>
+
+              <div>
+                <Label className="mb-2">Working Hours</Label>
+                <Input placeholder="Mon–Sat, 10:00 AM – 6:00 PM" />
+              </div>
+              <div className="">
+                <Label className="mb-2">Clinic Address</Label>
+                <Input placeholder="123, MG Road, Pune" />
+              </div>
+              <div className=" text-right mt-2">
+                <Button variant="outline">Save Changes</Button>
+              </div>
+            </div>
+          ) : (
+            //  DOCTOR SECTION
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-2">Full Name</Label>
+                <Input 
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Dr. Jane Doe" 
+                />
+              </div>
+              <div>
+                <Label className="mb-2">Email</Label>
+                <Input 
+                  value={profileData.user.email}
+                  disabled
+                  placeholder="jane.doe@example.com" 
+                />
+              </div>
+              <div>
+                <Label className="mb-2">Contact Number</Label>
+                <Input 
+                  value={formData.mobileNumber}
+                  onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
+                  placeholder="+91 9876543210" 
+                />
+              </div>
+              <div>
+                <Label className="mb-2">Gender</Label>
+                <Select 
+                  value={formData.gender}
+                  onValueChange={(value) => handleInputChange("gender", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-2">Date of Birth</Label>
+                <Input 
+                  type="date" 
+                  value={formData.dob}
+                  onChange={(e) => handleInputChange("dob", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="mb-2">Department</Label>
+                <Input 
+                  value={formData.department}
+                  onChange={(e) => handleInputChange("department", e.target.value)}
+                  placeholder="Cardiology" 
+                />
+              </div>
+              {profileData.doctor && (
+                <>
+                  <div>
+                    <Label className="mb-2">Specialization</Label>
+                    <Input 
+                      value={formData.specialization}
+                      onChange={(e) => handleInputChange("specialization", e.target.value)}
+                      placeholder="Cardiology" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-2">Qualification</Label>
+                    <Input 
+                      value={formData.qualification}
+                      onChange={(e) => handleInputChange("qualification", e.target.value)}
+                      placeholder="MBBS, MD" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-2">Experience (Years)</Label>
+                    <Input 
+                      value={formData.experience}
+                      onChange={(e) => handleInputChange("experience", e.target.value)}
+                      placeholder="12" 
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-2">Consultation Fee</Label>
+                    <Input 
+                      value={formData.consultationFee}
+                      onChange={(e) => handleInputChange("consultationFee", e.target.value)}
+                      placeholder="500" 
+                    />
+                  </div>
+                </>
+              )}
+              <div className="md:col-span-2">
+                <Label className="mb-2">Address</Label>
+                <Input 
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  placeholder="123, MG Road, Pune" 
+                />
+              </div>
+              <div className="md:col-span-2 text-right mt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

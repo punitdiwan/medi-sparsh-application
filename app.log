@@ -1,0 +1,484 @@
+{"level":"info","message":"Hospital found for domain: ","timestamp":"2025-11-06T12:11:58.940Z"}
+{"level":"info","message":"Hospital found for domain: ","timestamp":"2025-11-06T12:14:02.813Z"}
+{"level":"info","message":"Hospital found for domain: [object Object]","timestamp":"2025-11-06T12:17:48.622Z"}
+{"level":"info","message":"Hospital found for domain: [object Object]","timestamp":"2025-11-06T12:17:48.682Z"}
+{"level":"info","message":"Hospital found for domain: [object Object]","timestamp":"2025-11-06T12:19:31.203Z"}
+{"level":"info","message":"Hospital found for domain: [object Object]","timestamp":"2025-11-06T12:19:31.250Z"}
+{"level":"info","message":[{"createdAt":"2025-11-06T07:51:40.731Z","id":"joB5eKhJ7AmHfe7vejmfcQ9yUM5gL9R6","logo":"https://example.com/logo.png","metadata":"{\"subdomain\":\"medisparsh.com\",\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"Medisparsh","slug":"localhost"}],"timestamp":"2025-11-06T12:20:19.542Z"}
+{"level":"info","message":[{"createdAt":"2025-11-06T07:51:40.731Z","id":"joB5eKhJ7AmHfe7vejmfcQ9yUM5gL9R6","logo":"https://example.com/logo.png","metadata":"{\"subdomain\":\"medisparsh.com\",\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"Medisparsh","slug":"localhost"}],"timestamp":"2025-11-06T12:20:19.598Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:21:52.410Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:21:52.477Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:23:13.863Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:23:13.935Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:25:34.758Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:25:37.287Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:47:23.479Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:49:59.388Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:50:01.811Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:55:25.557Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T12:57:52.864Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:06:41.199Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:07:56.352Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:11:20.125Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:11:47.303Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:12:49.449Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:14:40.156Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:16:19.567Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:16:35.851Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:18:37.482Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:19:17.309Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:19:31.515Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:19:31.574Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:19:34.280Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:19:34.366Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:20:18.890Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:20:41.407Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:28:36.300Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:28:36.892Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:28:46.260Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:28:57.182Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:28:57.301Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:29:10.124Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:29:10.200Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:29:56.487Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:29:56.615Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:30:03.588Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:30:14.846Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:30:14.908Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:42:03.676Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:42:03.956Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:42:04.005Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:20.543Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:20.595Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:27.245Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:27.407Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:37.566Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:37.615Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:47.352Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:47.472Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:43:52.148Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:21.549Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:21.614Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:24.599Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:24.718Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:34.994Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:47:35.080Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:52:14.965Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:13.588Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:13.769Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:21.610Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:21.910Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:33.287Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:53:33.405Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:55:25.032Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:55:25.107Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:56:06.406Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:56:12.994Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:56:13.062Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T13:57:34.720Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:09:23.798Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:09:23.838Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:09:28.833Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:09:28.869Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:10:48.239Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:10:48.382Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:10:48.433Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:11:21.938Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:13.463Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:13.652Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:13.742Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:30.292Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:50.632Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:12:50.687Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:13:49.473Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:13:49.522Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:15:04.017Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:19:13.575Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:21:25.873Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:21:25.941Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:25:58.080Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:31:47.844Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:31:47.993Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:32:55.014Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:32:55.066Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:33:51.703Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:33:51.767Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:35:47.060Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-06T14:35:47.113Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:10:59.402Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:11:11.191Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:12:05.014Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:12:05.141Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:12:23.572Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:23:40.853Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:23:41.093Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:23:44.775Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:24:13.778Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:24:18.533Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:24:23.461Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:25:14.711Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:25:25.173Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:25:25.226Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:27:09.172Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:27:09.220Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:27:32.391Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:27:32.438Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:15.847Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:15.907Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:51.047Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:51.104Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:53.296Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:28:53.343Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:36:10.982Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:36:11.023Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:38:27.164Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:38:29.245Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:38:29.295Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:39:31.997Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:39:32.097Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:39:39.107Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:39:39.150Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:43:17.149Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:46:59.601Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:46:59.724Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:51:30.080Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:51:30.160Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:00.160Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:00.205Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:26.092Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:26.211Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:32.203Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:53:32.247Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:54:24.428Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:54:24.477Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:54:39.796Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:54:39.844Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:55:05.001Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:55:05.047Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:55:09.242Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T06:55:09.285Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:06:01.739Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:06:01.826Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:06:09.974Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:06:10.073Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:21.230Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:22.848Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:22.892Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:32.569Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:32.621Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:34.158Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:34.200Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:39.795Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:10:39.892Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:13:23.116Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:13:23.176Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:06.237Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:06.278Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:20.140Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:28.113Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:28.167Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:52.869Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:52.911Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:58.303Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:58.354Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:59.810Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:14:59.853Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:19:24.706Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:19:24.756Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:19:39.673Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:19:39.715Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:21:57.351Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:21:57.395Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:28:32.593Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:28:32.691Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:00.390Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:11.529Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:11.580Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:18.930Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:18.977Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:20.601Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:22.350Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:22.583Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:29:22.823Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:31:16.669Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:31:16.714Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:31:22.283Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:37.010Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:38.619Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:38.658Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:45.385Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:45.436Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:52.606Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:52.756Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:54.122Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:32:54.207Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:33:35.698Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:33:35.765Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:33:47.068Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:33:47.112Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:34:47.722Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:34:47.763Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:35:01.999Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:35:08.630Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:35:08.680Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:38:23.131Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:38:23.238Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:44:38.587Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:44:38.657Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:48:54.512Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:48:54.580Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:49:48.072Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:49:48.139Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:49:58.555Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:50:00.621Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:50:00.672Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:51:13.390Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:51:13.441Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:51:45.742Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:51:45.846Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:52:55.333Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:52:55.379Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:57:09.342Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:57:09.390Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:59:09.270Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:59:11.790Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:59:44.653Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T07:59:44.698Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:01:31.135Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:01:31.185Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:01:48.873Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:03:33.929Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:03:33.933Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:03:52.136Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:03:52.240Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:08:53.213Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:16:06.915Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:16:17.199Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:17:04.152Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:17:04.268Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:17:29.555Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:20:54.872Z"}
+{"level":"info","message":"localhost","timestamp":"2025-11-07T08:20:54.923Z"}
+{"level":"info","timestamp":"2025-11-07T13:24:03.685Z"}
+{"level":"info","timestamp":"2025-11-07T13:25:31.171Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:26:46.011Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:26:50.389Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:29:53.459Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:29:54.221Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:31:24.030Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:31:24.674Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:10.489Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:11.181Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:21.221Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:21.879Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:22.855Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:28.764Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:29.936Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:33.168Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:33.588Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:33.889Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:34.049Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:37.090Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:37.458Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:37.557Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:37.619Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:32:37.747Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:33:39.043Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:34:52.677Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:34:53.262Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:34:54.946Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:34:56.506Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:35:14.194Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:35:20.437Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:39.784Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:43.766Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:44.432Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:45.938Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:55.514Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:48:57.641Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:50:02.043Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:50:11.222Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:50:56.346Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:51:17.249Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:44.859Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:48.738Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:49.405Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:50.733Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:51.341Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:52:56.725Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:53:39.493Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:53:41.663Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:53:56.572Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:53:57.953Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:54:03.902Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:54:34.285Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:54:37.306Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:56:51.059Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:56:51.564Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T13:56:55.411Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:02:07.606Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:03:48.573Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:03:49.098Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:03:50.554Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:03:51.068Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:03:55.097Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:04:46.627Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:31.904Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:32.030Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:41.093Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:41.305Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:58.974Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-07T14:08:59.540Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:35:53.159Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:35:53.947Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:05.266Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:07.787Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:08.549Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:14.551Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:36.384Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:37.157Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:49.078Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:49.891Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:50.512Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:51.318Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:54.684Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:38:55.412Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:39:03.087Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:39:03.824Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:39:04.788Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:39:05.531Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:50:40.224Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:50:41.208Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:52:46.523Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:52:47.477Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:00.568Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:01.608Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:39.064Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:39.813Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:45.689Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:46.646Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:57.860Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:53:58.599Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:09.752Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:10.488Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:39.523Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:40.423Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:41.422Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:54:42.195Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T06:55:13.570Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:00:46.276Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:00:46.287Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:00:46.294Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:00:46.413Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:01:15.474Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:01:15.482Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:01:17.259Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:01:17.289Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:02:44.816Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:02:46.660Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:02:48.521Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:02:50.358Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:15.643Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:16.491Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:17.411Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:20.931Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:21.138Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:47.454Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:48.146Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:03:53.765Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:05:19.362Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:05:20.955Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:05:20.985Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:10:56.574Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:11:39.089Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:11:39.707Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:11:39.829Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:11:40.672Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:13:51.751Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:14:06.490Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:14:08.238Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:14:16.826Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:14:38.716Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:14:39.625Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:16:05.030Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:16:10.112Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:26.774Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:26.812Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:34.404Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:34.438Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:35.777Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:41.210Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:41.365Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:50.676Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:17:50.690Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:19:07.954Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:19:44.945Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:19:45.670Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:20:05.358Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:20:06.065Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:20:09.254Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:20:11.157Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:21:46.326Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:21:46.370Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:21:59.294Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:21:59.331Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:01.869Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:02.668Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:02.681Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:16.877Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:16.923Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:20.846Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:33.278Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:37.186Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:37.545Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:22:38.452Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:23:33.207Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:23:33.962Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:23:41.489Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:24:59.515Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:25:34.557Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:25:35.456Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:25:55.944Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:25:56.893Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:34:23.974Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:34:24.025Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:34:24.168Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:34:24.223Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:19.856Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:19.897Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:24.754Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:25.474Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:51.365Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:35:52.073Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:36:15.816Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:36:15.929Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:38:49.946Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:38:50.020Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:47:06.287Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:47:06.723Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:50.345Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:52.364Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:58.933Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:58.937Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:59.664Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:48:59.811Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:09.019Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:11.048Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:24.023Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:24.027Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:24.824Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:49:24.900Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:50:58.935Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:50:59.612Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:50:59.931Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:51:00.000Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:51:26.305Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:51:26.390Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:25.425Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:25.429Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:25.431Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:25.432Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:26.888Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:26.940Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:36.512Z"}
+{"level":"info","message":{"createdAt":"2025-11-07T13:06:21.664Z","id":"brYpkYRbIR8ztgB6brENzozY5rl0EN7h","logo":null,"metadata":"{\"address\":\"123 Medical Street, City\",\"phone\":\"+91-1234567890\",\"email\":\"contact@medisparsh.com\"}","name":"City Hospital","slug":"localhost"},"timestamp":"2025-11-08T07:53:36.554Z"}

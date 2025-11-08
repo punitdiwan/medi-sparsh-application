@@ -1,0 +1,67 @@
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "./db";
+import * as authSchema from "./db/schema/auth-schema";
+import { organization } from "better-auth/plugins";
+import { member } from "./db/schema";
+import { eq } from "drizzle-orm";
+import { Pool } from "pg";
+
+const url = "http://localhost:3000";
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      dialect: "pg",
+      schema: "auth",
+      organization: authSchema.organization,
+      user: authSchema.user,
+      member: authSchema.member,
+      session: authSchema.session,
+      account: authSchema.account,
+      verification: authSchema.verification,
+    },
+  }),
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          console.log("before Session Creation", session);
+          const organizationId = await getOrganisation(session.userId);
+          return {
+            data: {
+              ...session,
+              activeOrganizationId: organizationId
+            },
+          }
+        }
+      }
+    }
+  },
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: false
+  },
+
+  trustedOrigins: [url],
+  baseURL: url,
+  basePath: "/api/auth",
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === "production",
+    cookiePrefix: "medisparsh",
+  },
+  plugins: [organization()]
+});
+
+const getOrganisation = async (userId: string) => {
+  const result = await db.select().from(member).where(eq(member.userId, userId)).limit(1);
+  
+  console.log("Data from Result of getOrganisation", result);
+
+  if (result.length > 0) {
+    return result[0].organizationId;
+  }
+  
+  return null;
+}
+  
