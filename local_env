@@ -1,0 +1,9 @@
+BETTERAUTH_ORIGIN="http://localhost:3000"
+BETTER_AUTH_SECRET="FaTvIeduiInc1nrBUILnlX1WpJUmkO6AG8NMp916s2B8Zv5eDymCaGX1Z94="
+BETTER_AUTH_URL="http://localhost:3000"
+#DATABASE_URL=postgres://peppermint:peppermint@localhost:5432/medisparsh
+DATABASE_URL=postgresql://neondb_owner:npg_lJSarXf5xnO1@ep-soft-union-a12ap1dv-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+NEXT_PUBLIC_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Zmtsc2hia3l1dXpyZnB2eXphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDExNjk4ODksImV4cCI6MjAxNjc0NTg4OX0.nWbYqO-l38rBmpN419kqF-kZc8pEhkj2z-LHRUepKUE"
+NEXT_PUBLIC_SUPABASE_URL="https://zufklshbkyuuzrfpvyza.supabase.co"
+SUPABASE_JWT_SECRET="wnEVqyrLwMCd60meOJDChQbXIihNlKRhtHgDFnZ61Ibka1K0QSymsMsILXkivYYPuqveSwTQM5zqdcigFLTIHg=="
+UUID_V7_NATIVE_SUPPORT=true
