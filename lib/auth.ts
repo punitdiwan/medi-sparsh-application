@@ -6,7 +6,7 @@ import { organization } from "better-auth/plugins";
 import { member } from "./db/schema";
 import { eq } from "drizzle-orm";
 
-const url = "https://medisparsh.launchmysite.in";
+const url = "https://abc.medisparsh.com";
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -42,7 +42,7 @@ export const auth = betterAuth({
     autoSignIn: false
   },
 
-  trustedOrigins: [url],
+  trustedOrigins: [url, "http://localhost:3000"],
   baseURL: url,
   basePath: "/api/auth",
   advanced: {
