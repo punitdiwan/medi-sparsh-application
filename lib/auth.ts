@@ -5,9 +5,8 @@ import * as authSchema from "./db/schema/auth-schema";
 import { organization } from "better-auth/plugins";
 import { member } from "./db/schema";
 import { eq } from "drizzle-orm";
-import { Pool } from "pg";
 
-const url = "http://localhost:3000";
+const url = "https://medisparsh.launchmysite.in";
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
