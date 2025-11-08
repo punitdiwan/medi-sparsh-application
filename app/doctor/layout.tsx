@@ -24,9 +24,9 @@ export default async function DashboardLayout({
   // const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
   const sessionData = await validateServerSession();
   console.log(sessionData);
-  if (!sessionData) {
-    redirect("/sign-in");
-  }
+  // if (!sessionData) {
+  //   redirect("/sign-in");
+  // }
   
   return (
     <SidebarProvider>
