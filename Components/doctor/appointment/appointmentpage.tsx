@@ -129,7 +129,7 @@ export default function AppointmentPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           {/* Show Visit button only for doctor and admin roles */}
-          {(userRole === "doctor" || userRole === "admin") && (
+          {(userRole === "doctor" || userRole === "owner") && (
             <Link
               href={`/doctor/appointment/vistiPatient/${
                 row.original.patient_id
