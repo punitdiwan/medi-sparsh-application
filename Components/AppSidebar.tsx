@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/tooltip';
 
 import { useSession } from "@/lib/auth-client";
+import { useAuth } from '@/context/AuthContext';
 type SidebarChildItem = {
   title: string;
   url: string;
@@ -69,11 +70,10 @@ const items: SidebarItem[] = [
 ];
 
 export function AppSidebar() {
-  const { data } = useSession();
   const pathname = usePathname();
 const { state } = useSidebar();
 const isCollapsed = state === 'collapsed';
-
+  const {user}= useAuth();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
   const [staffData,setStaffData] = useState<any>();
   const toggleMenu = (title: string) => {
@@ -83,9 +83,9 @@ const isCollapsed = state === 'collapsed';
     }));
   };
 
-// console.log("SessionData", data);
-  
 
+  
+console.log("user:",user);
   return (
     <TooltipProvider delayDuration={0}>
       <Sidebar collapsible="icon" className="bg-background border-r">
@@ -94,10 +94,10 @@ const isCollapsed = state === 'collapsed';
             {!isCollapsed && (
               <>
                 <SidebarGroupLabel className="text-foreground font-semibold text-xl">
-                  Clinic Name
+                  {user?.hospital?.name||"Clinic Name"}
                 </SidebarGroupLabel>
                 <SidebarGroupLabel className="mb-2 text-muted-foreground">
-                  Dr.{data?.user?.name}
+                  Dr.{user?.userData?.name}
                 </SidebarGroupLabel>
               </>
             )}

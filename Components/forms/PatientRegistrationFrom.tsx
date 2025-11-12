@@ -328,6 +328,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
                     <MaskedInput
                       value={field.value}
                       onChange={field.onChange}
+                      placeholder="+91 000-000-0000"
                     />
                   </FormControl>
                   <FormMessage />

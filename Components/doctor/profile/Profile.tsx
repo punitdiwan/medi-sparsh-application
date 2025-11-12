@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
+import MaskedInput from "@/components/InputMask";
 
 interface StaffData {
   id: string;
@@ -96,7 +97,7 @@ export default function DoctorProfile() {
 
         if (result.success && result.data) {
           setProfileData(result.data);
-          
+
           // Populate form data
           const { staff, doctor, user } = result.data;
           setFormData({
@@ -109,7 +110,7 @@ export default function DoctorProfile() {
             qualification: doctor?.qualification || "",
             experience: doctor?.experience || "",
             consultationFee: doctor?.consultationFee || "",
-            specialization: Array.isArray(doctor?.specialization) 
+            specialization: Array.isArray(doctor?.specialization)
               ? doctor.specialization[0]?.name || ""
               : "",
           });
@@ -134,7 +135,7 @@ export default function DoctorProfile() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true);
-      
+
       const updateData: any = {
         name: formData.name,
         mobileNumber: formData.mobileNumber,
@@ -147,8 +148,8 @@ export default function DoctorProfile() {
       // Add doctor data if user is a doctor
       if (profileData?.doctor) {
         updateData.doctorData = {
-          specialization: formData.specialization 
-            ? [{ name: formData.specialization }] 
+          specialization: formData.specialization
+            ? [{ name: formData.specialization }]
             : profileData.doctor.specialization,
           qualification: formData.qualification,
           experience: formData.experience,
@@ -168,7 +169,7 @@ export default function DoctorProfile() {
 
       if (result.success) {
         toast.success("Profile updated successfully");
-        
+
         // Refresh profile data
         const refreshResponse = await fetch("/api/profile");
         const refreshResult = await refreshResponse.json();
@@ -270,31 +271,34 @@ export default function DoctorProfile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2">Full Name</Label>
-                <Input 
+                <Input
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Dr. Jane Doe" 
+                  placeholder="Dr. Jane Doe"
                 />
               </div>
               <div>
                 <Label className="mb-2">Email</Label>
-                <Input 
+                <Input
                   value={profileData.user.email}
                   disabled
-                  placeholder="jane.doe@example.com" 
+                  placeholder="jane.doe@example.com"
                 />
               </div>
               <div>
                 <Label className="mb-2">Contact Number</Label>
-                <Input 
+                <MaskedInput
                   value={formData.mobileNumber}
-                  onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
-                  placeholder="+91 9876543210" 
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, "").slice(-10);
+                    handleInputChange("mobileNumber", raw);
+                  }}
+                  placeholder="+91 000-000-0000"
                 />
               </div>
               <div>
                 <Label className="mb-2">Gender</Label>
-                <Select 
+                <Select
                   value={formData.gender}
                   onValueChange={(value) => handleInputChange("gender", value)}
                 >
@@ -310,67 +314,67 @@ export default function DoctorProfile() {
               </div>
               <div>
                 <Label className="mb-2">Date of Birth</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={formData.dob}
                   onChange={(e) => handleInputChange("dob", e.target.value)}
                 />
               </div>
               <div>
                 <Label className="mb-2">Department</Label>
-                <Input 
+                <Input
                   value={formData.department}
                   onChange={(e) => handleInputChange("department", e.target.value)}
-                  placeholder="Cardiology" 
+                  placeholder="Cardiology"
                 />
               </div>
               {profileData.doctor && (
                 <>
                   <div>
                     <Label className="mb-2">Specialization</Label>
-                    <Input 
+                    <Input
                       value={formData.specialization}
                       onChange={(e) => handleInputChange("specialization", e.target.value)}
-                      placeholder="Cardiology" 
+                      placeholder="Cardiology"
                     />
                   </div>
                   <div>
                     <Label className="mb-2">Qualification</Label>
-                    <Input 
+                    <Input
                       value={formData.qualification}
                       onChange={(e) => handleInputChange("qualification", e.target.value)}
-                      placeholder="MBBS, MD" 
+                      placeholder="MBBS, MD"
                     />
                   </div>
                   <div>
                     <Label className="mb-2">Experience (Years)</Label>
-                    <Input 
+                    <Input
                       value={formData.experience}
                       onChange={(e) => handleInputChange("experience", e.target.value)}
-                      placeholder="12" 
+                      placeholder="12"
                     />
                   </div>
                   <div>
                     <Label className="mb-2">Consultation Fee</Label>
-                    <Input 
+                    <Input
                       value={formData.consultationFee}
                       onChange={(e) => handleInputChange("consultationFee", e.target.value)}
-                      placeholder="500" 
+                      placeholder="500"
                     />
                   </div>
                 </>
               )}
               <div className="md:col-span-2">
                 <Label className="mb-2">Address</Label>
-                <Input 
+                <Input
                   value={formData.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
-                  placeholder="123, MG Road, Pune" 
+                  placeholder="123, MG Road, Pune"
                 />
               </div>
               <div className="md:col-span-2 text-right mt-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleSaveProfile}
                   disabled={saving}
                 >

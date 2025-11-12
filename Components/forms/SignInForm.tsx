@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter} from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +14,9 @@ import {
 } from "@/components/ui/card";
 import { Command } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
-import { useAuth } from "@/context/AuthContext";
 
 
 export function SignInForm() {
@@ -25,7 +24,6 @@ export function SignInForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const {setUserId}=useAuth();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -37,11 +35,11 @@ export function SignInForm() {
       });
 
       if (error) throw new Error(error.message);
-      console.log("Session:", data);
-      console.log("User:", data.user);
+      // console.log("User:", data.user);
+
       // user_id: data.user.id
       // Get user details (including role)
-     
+
       router.push("/doctor")
       toast.success("Welcome Doctor")
       // toast.success(`Welcome ${user.role}!`);
@@ -52,6 +50,10 @@ export function SignInForm() {
       setIsLoading(false);
     }
   };
+
+  useEffect(()=>{
+    localStorage.clear();
+  },[]);
 
   return (
     <div className="flex min-h-screen">

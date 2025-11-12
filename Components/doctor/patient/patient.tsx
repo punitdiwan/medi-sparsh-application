@@ -24,6 +24,7 @@ import PatientRegistrationForm from "@/Components/forms/PatientRegistrationFrom"
 import { InputOTPForm } from "@/components/model/Otpmodel";
 import HoneycombLoader from "@/components/HoneycombLoader";
 import { getShortId } from "@/utils/getShortId";
+import AddPatientDialog from "./AddPatientDialog";
 
 type Patient = {
   id: string;
@@ -67,28 +68,29 @@ function PatientPage() {
   useEffect(() => {
     localStorage.setItem("visiblePatientFields", JSON.stringify(visibleFields));
   }, [visibleFields]);
-  useEffect(() => {
-    const fetchPatients = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/patients");
-        const result = await response.json();
+const fetchPatients = async () => {
+  setLoading(true);
+  try {
+    const response = await fetch("/api/patients");
+    const result = await response.json();
 
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || "Failed to fetch patients");
-        }
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Failed to fetch patients");
+    }
 
-        setPatients(result.data);
-      } catch (err) {
-        console.error("Error fetching patients:", err);
-        toast.error("Failed to load patients");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setPatients(result.data);
+  } catch (err) {
+    console.error("Error fetching patients:", err);
+    toast.error("Failed to load patients");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    fetchPatients();
-  }, []);
+useEffect(() => {
+  fetchPatients();
+}, []);
+
 
   const filteredData = useMemo(() => {
     return patients.filter((item) => {
@@ -233,10 +235,7 @@ function PatientPage() {
               );
             }}
           />
-          <Button onClick={() => setIsRegistrationOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            New Patient
-          </Button>
+           <AddPatientDialog onPatientAdded={fetchPatients} />
         </div>
       </div>
       <div className="mt-2">
@@ -262,8 +261,10 @@ function PatientPage() {
         />
       </div>
 
+     
+
       {/* Patient Registration Dialog */}
-      <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
+      {/* <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
         <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Patient</DialogTitle>
@@ -297,7 +298,7 @@ function PatientPage() {
         </DialogContent>
       </Dialog>
 
-      {/* OTP Verification Dialog */}
+      //OTP Verification Dialog
       <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -315,7 +316,7 @@ function PatientPage() {
             }}
           />
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }
