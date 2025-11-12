@@ -148,7 +148,7 @@ export default function Employee() {
       // Transform the data to match the Employee type
       const transformedData: Employee[] = result.data.map((staff: any) => {
         const doctorData = staff.doctorData;
-        
+
         // Format specialization
         let specializationNames = "-";
         if (doctorData?.specialization) {
@@ -447,7 +447,7 @@ export default function Employee() {
 
           <Button
             onClick={() =>
-              router.push("/doctor/employees/manageSpecialization.tsx")
+              router.push("/doctor/employees/manageSpecialization")
             }
             className="flex items-center gap-2 bg-white/5 text-white border border-white/20 hover:bg-white/10"
           >
@@ -524,23 +524,17 @@ export default function Employee() {
 
       {showAddEmployee && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm">
-          <div className="relative w-full h-full bg-transparent">
-            <div className="absolute inset-0 overflow-y-auto">
-              <div className="min-h-full flex items-start justify-center p-6">
-                {/* AddEmployeeForm with cancel callback */}
-                <div className="w-full max-w-4xl bg-white/10 rounded-xl shadow-lg overflow-visible relative z-[9999]">
-                  <AddEmployeeForm 
-                    onCancel={() => {
-                      setShowAddEmployee(false);
-                      getStaffWithDoctor(); // Refresh the employee list
-                    }} 
-                  />
-                </div>
-              </div>
-            </div>
+          <div className="w-full max-w-4xl rounded-xl shadow-lg p-6">
+            <AddEmployeeForm
+              onCancel={() => {
+                setShowAddEmployee(false);
+                getStaffWithDoctor();
+              }}
+            />
           </div>
         </div>
       )}
+
 
       {selectedEmployeeId && (
         <EditEmployeeModal

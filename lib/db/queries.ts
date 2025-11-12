@@ -371,13 +371,13 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
   return result[0] || null;
 }
 
-export async function getPrescriptionsByHospital(hospitalId: string) {
+export async function getPrescriptionsByHospital(hospitalId: string,doctor_id :string) {
   const prescriptionsList = await db
     .select()
     .from(prescriptions)
     .innerJoin(patients, eq(prescriptions.patientId, patients.id))
     .innerJoin(user, eq(prescriptions.doctorUserId, user.id))
-    .where(eq(prescriptions.hospitalId, hospitalId))
+    .where(and(eq(prescriptions.hospitalId, hospitalId),eq(prescriptions.doctorUserId,doctor_id)))
     .orderBy(desc(prescriptions.createdAt));
 
   return prescriptionsList.map((item) => ({

@@ -5,6 +5,7 @@ import { useSearchParams, useParams } from "next/navigation";
 import PatientMedicialHistroy from "@/Components/doctor/patient/patientProfile/PatientMedicialHistroy";
 import PrescriptionForm from "@/Components/forms/PrescriptionForm";
 import BackButton from "@/Components/BackButton";
+import { getShortId } from "@/utils/getShortId";
 
 export default function VisitPatientPage() {
   const [activeTab, setActiveTab] = useState("Prescription");
@@ -19,13 +20,20 @@ export default function VisitPatientPage() {
 
   return (
     <div>
-      <BackButton/>
+      <BackButton />
       <nav className="flex justify-between items-center mt-4  p-5 border-b border-gray-300">
         <div>
-          <h2 className="text-sm font-semibold">
+          {/* <h2 className="text-sm font-semibold">
             Patient: {name || "Unknown"}
           </h2>
-          <p className="text-sm text-gray-600">ID: {id}</p>
+          <p className="text-sm text-gray-600">ID: {id}</p> */}
+          <p className="text-sm text-muted-foreground">
+            Patient ID:{" "}
+            <span className="font-medium text-primary">
+              {Array.isArray(id) ? getShortId(id[0]) : id ? getShortId(id) : "Patient Id"}
+            </span>
+          </p>
+
         </div>
 
         <div className="flex space-x-6">
@@ -33,9 +41,9 @@ export default function VisitPatientPage() {
             onClick={() => setActiveTab("Prescription")}
             className={`px-4 py-2 font-semibold rounded ${
               activeTab === "Prescription"
-                ? "border-b-2 border-blue-500"
-                : "text-gray-600"
-            }`}
+              ? "border-b-2 border-blue-500"
+              : "text-gray-600"
+              }`}
           >
             Prescription
           </button>
@@ -43,14 +51,14 @@ export default function VisitPatientPage() {
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 font-semibold rounded ${
               activeTab === "history"
-                ? "border-b-2 border-blue-500"
-                : "text-gray-600"
-            }`}
+              ? "border-b-2 border-blue-500"
+              : "text-gray-600"
+              }`}
           >
             Medical History
           </button>
 
-          
+
         </div>
       </nav>
 

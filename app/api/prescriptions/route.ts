@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
-    const prescriptions = await getPrescriptionsByHospital(hospital.hospitalId);
+    const prescriptions = await getPrescriptionsByHospital(hospital.hospitalId ,user.id);
 
     return NextResponse.json({
       success: true,

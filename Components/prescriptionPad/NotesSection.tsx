@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 interface NotesProps {
   value?: string;
@@ -12,21 +13,26 @@ function NotesSection({ value = "", onChange }: NotesProps) {
   const [notes, setNotes] = useState(value);
 
   useEffect(() => {
-    onChange && onChange(notes); // parent ko notify
+    onChange?.(notes);
   }, [notes]);
 
   return (
-    <div className="bg-white dark:bg-black border border-gray-300 dark:border-gray-700 p-6 m-5 rounded-lg shadow-md">
-      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">
-        Notes
-      </h2>
-      <Textarea
-        placeholder="Type your message here."
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        className="bg-white dark:bg-black text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700"
-      />
-    </div>
+    <Card className="m-5 shadow-sm border border-border bg-card">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold text-foreground">
+          Notes
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <Textarea
+          placeholder="Type your notes here..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[120px] resize-y border-input bg-background text-foreground focus-visible:ring-ring"
+        />
+      </CardContent>
+    </Card>
   );
 }
 

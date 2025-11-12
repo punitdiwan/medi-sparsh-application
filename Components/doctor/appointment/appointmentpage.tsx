@@ -20,6 +20,7 @@ import { UserPlus, X } from "lucide-react";
 import { PaginationControl } from "@/components/pagination";
 import AppointmentModal from "./AppointmentModal";
 import { toast } from "sonner";
+import { getShortId } from "@/utils/getShortId";
 
 type Appointment = {
   id: number;
@@ -117,7 +118,14 @@ export default function AppointmentPage() {
   }, []);
 
   const columns: ColumnDef<Appointment>[] = [
-    { accessorKey: "id", header: "ID" },
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => {
+        const id = row.getValue("id") as string;
+        return <span>{getShortId(id)}</span>;
+      },
+    },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "contact", header: "Contact" },
     { accessorKey: "purpose", header: "Purpose" },
@@ -126,44 +134,50 @@ export default function AppointmentPage() {
     {
       id: "action",
       header: "Action",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          {/* Show Visit button only for doctor and admin roles */}
-          {(userRole === "doctor" || userRole === "owner") && (
-            <Link
-              href={`/doctor/appointment/vistiPatient/${
-                row.original.patient_id
-              }?name=${encodeURIComponent(row.original.patientName || "")}&appointmentId=${row.original.id}`}
-            >
-              <Button variant="outline" size="sm">
+      cell: ({ row }) => {
+        const appointment = row.original;
+
+        return (
+          <div className="flex items-center gap-2">
+            {/* Visit button */}
+            {appointment.status === "completed" || appointment.status === "cancelled" ? (
+              <Button variant="outline" size="sm" disabled>
                 Visit
               </Button>
-            </Link>
-          )}
-          
-          {/* Show Cancel button for all roles */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleCancelAppointment(row.original.id)}
-            disabled={cancellingId === row.original.id || row.original.status === "cancelled"}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
+            ) : (
+              <Link
+                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(appointment.patientName || "")}&appointmentId=${appointment.id}`}
+              >
+                <Button variant="outline" size="sm">Visit</Button>
+              </Link>
+            )}
+
+            {/* Cancel button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCancelAppointment(appointment.id)}
+              disabled={cancellingId === appointment.id || appointment.status === "cancelled" || appointment.status === "completed"}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    }
+
+
   ];
 
   // Filter appointments based on appointment type
   useEffect(() => {
     let filtered = allData;
-    
+
     switch (appointmentFilter) {
       case "active":
         // Active: scheduled and confirmed appointments
-        filtered = allData.filter((item) => 
+        filtered = allData.filter((item) =>
           item.status === "scheduled" || item.status === "confirmed"
         );
         break;
@@ -178,11 +192,11 @@ export default function AppointmentPage() {
         filtered = allData;
         break;
       default:
-        filtered = allData.filter((item) => 
+        filtered = allData.filter((item) =>
           item.status === "scheduled" || item.status === "confirmed"
         );
     }
-    
+
     setFilteredData(filtered);
     setCurrentPage(1);
   }, [appointmentFilter, allData]);
@@ -190,10 +204,10 @@ export default function AppointmentPage() {
   const handleFilter = (appliedFilters: Record<string, string>) => {
     // First filter by appointment type
     let statusFiltered = allData;
-    
+
     switch (appointmentFilter) {
       case "active":
-        statusFiltered = allData.filter((item) => 
+        statusFiltered = allData.filter((item) =>
           item.status === "scheduled" || item.status === "confirmed"
         );
         break;
@@ -207,7 +221,7 @@ export default function AppointmentPage() {
         statusFiltered = allData;
         break;
       default:
-        statusFiltered = allData.filter((item) => 
+        statusFiltered = allData.filter((item) =>
           item.status === "scheduled" || item.status === "confirmed"
         );
     }
@@ -216,9 +230,9 @@ export default function AppointmentPage() {
     const filtered = statusFiltered.filter((item) => {
       const matchesSearch = appliedFilters.search
         ? item.patientName
-            ?.toLowerCase()
-            .includes(appliedFilters.search.toLowerCase()) ||
-          item.id.toString() === appliedFilters.search
+          ?.toLowerCase()
+          .includes(appliedFilters.search.toLowerCase()) ||
+        item.id.toString() === appliedFilters.search
         : true;
 
       const matchesDate = appliedFilters.date
@@ -227,7 +241,7 @@ export default function AppointmentPage() {
 
       const matchesType = appliedFilters.appointmentType
         ? item.purpose?.toLowerCase() ===
-          appliedFilters.appointmentType.toLowerCase()
+        appliedFilters.appointmentType.toLowerCase()
         : true;
 
       return matchesSearch && matchesDate && matchesType;
@@ -280,7 +294,7 @@ export default function AppointmentPage() {
                 return null;
             }
           })}
-          
+
           <Select
             value={appointmentFilter}
             onValueChange={setAppointmentFilter}
@@ -295,7 +309,7 @@ export default function AppointmentPage() {
               <SelectItem value="all">All</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Button variant="outline" onClick={() => handleFilter({})}>
             Reset
           </Button>
@@ -304,7 +318,7 @@ export default function AppointmentPage() {
 
       <div className="mt-6 text-sm">
         {loading ? (
-          <p className="text-muted-foreground mt-4">Loading appointments...</p>
+          <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">Loading appointments...</p>
         ) : filteredData.length === 0 ? (
           <p className="text-muted-foreground mt-4">No appointments found.</p>
         ) : (

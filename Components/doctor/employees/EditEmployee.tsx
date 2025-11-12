@@ -249,12 +249,12 @@ export function EditEmployeeModal({
 
   return (
     <Dialog open={!!employeeId} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-6">
+      <DialogContent className="max-w-2xl max-h-[80vh] p-6">
         <DialogHeader>
           <DialogTitle>Edit Employee</DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[75vh] overflow-y-scroll scrollbar-hide p-2 ">
+        <div className="max-h-[70vh] overflow-y-scroll scrollbar-hide p-2 ">
           {initialLoading ? (
             <div className="flex justify-center py-10">
               <Spinner size={50} />
