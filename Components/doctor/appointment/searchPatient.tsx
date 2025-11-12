@@ -12,14 +12,14 @@ type Patient = {
   patient_id: string;
   name: string;
   email: string;
-  mobile_number: string;
+  mobileNumber: string;
 };
 
 type PatientSearchResult = {
   id: string;
   patient_id: string;
   name: string;
-  mobile_number: string;
+  mobileNumber: string;
   email: string;
 };
 
@@ -100,7 +100,7 @@ export default function PatientSearchBox({
               <p className="font-medium text-gray-800">{p.name}</p>
               <p className="text-sm text-gray-600 flex flex-col gap-1">
                 {p.email || "N/A"}
-                <span className="text-gray-500">{p.mobile_number}</span>
+                <span className="text-gray-500">{p.mobileNumber}</span>
               </p>
             </div>
           ))}

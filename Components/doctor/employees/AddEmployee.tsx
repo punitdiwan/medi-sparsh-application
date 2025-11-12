@@ -132,7 +132,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
     try {
       const response = await fetch("/api/specializations");
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         setSpecializations(result.data.map((spec: any) => ({
           id: spec.id.toString(),
@@ -196,7 +196,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
       // Validate doctor-specific fields if role is doctor
       if (isDoctor) {
         const errors: Record<string, string> = {};
-        
+
         if (doctorData.specialization.length === 0) {
           errors.specialization = "At least one specialization is required";
         }
@@ -267,12 +267,12 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
         availability: "",
       });
       setDoctorErrors({});
-      
+
       // Close the modal if onCancel is provided
       if (onCancel) {
         onCancel();
       }
-      
+
       // Refresh the page to show new employee
       router.refresh();
     } catch (error: any) {
@@ -284,28 +284,26 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto shadow-lg my-6 overflow-visible relative z-[9999]">
+    <Card className="max-w-2xl mx-auto shadow-lg my-6 overflow-hidden relative z-[9999] h-[90vh] flex flex-col">
 
-      <CardHeader className="flex items-center justify-between border-b pb-2">
-        <CardTitle className="text-xl font-semibold text-center flex-1 text-white pl-8">
+      <CardHeader className="flex items-center justify-between border-b pb-2 flex-shrink-0 bg-transparent sticky top-0 z-10">
+        <CardTitle className="text-xl font-semibold text-center flex-1 text-foreground pl-8">
           Add New Employee
         </CardTitle>
 
         <Button
           variant="ghost"
           onClick={onCancel}
-          className="text-white hover:text-white/80 ml-2"
+          className="text-foreground hover:text-foreground/80 ml-2"
         >
           <ImCross />
         </Button>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="overflow-y-auto p-6 flex-1">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(
-              onSubmit
-            )}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-5"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -528,7 +526,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                       className={`${
                         doctorErrors.qualification &&
                         "border-1 border-red-400/60   "
-                      }`}
+                        }`}
                     />
                     {doctorErrors.qualification && (
                       <p className="text-sm text-red-500">
@@ -552,7 +550,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                       className={`${
                         doctorErrors.experience &&
                         "border-1 border-red-400/60   "
-                      }`}
+                        }`}
                     />
                     {doctorErrors.experience && (
                       <p className="text-sm text-red-500">
@@ -578,7 +576,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                       className={`${
                         doctorErrors.consultationFee &&
                         "border-1 border-red-400/60   "
-                      }`}
+                        }`}
                     />
                     {doctorErrors.consultationFee && (
                       <p className="text-sm text-red-500">
@@ -601,7 +599,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                       className={`${
                         doctorErrors.availability &&
                         "border-1 border-red-400/60   "
-                      }`}
+                        }`}
                     />
                     {doctorErrors.availability && (
                       <p className="text-sm text-red-500">
@@ -645,7 +643,6 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">
                     <div className="scale-75">
-                      {" "}
                       <Spinner size={24} color="bg-black/80" />
                     </div>
                   </div>

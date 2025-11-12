@@ -8,6 +8,7 @@ import DiagnosisSection from "@/Components/prescriptionPad/DiagnosisSection";
 import MedicineSection from "@/Components/prescriptionPad/MedicineSection";
 import NotesSection from "@/Components/prescriptionPad/NotesSection";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function PrescriptionForm() {
   const router = useRouter();
@@ -40,6 +42,7 @@ function PrescriptionForm() {
 
   const handleVitalsChange = (newVitals: Record<string, any>) => {
     setFormData((prev) => ({ ...prev, vitals: newVitals }));
+    // console.log("Vitals",formData.vitals)
   };
 
   const handleDiagnosisChange = (data: Record<string, any>) => {
@@ -83,6 +86,7 @@ function PrescriptionForm() {
       const prescriptionData = {
         appointmentId,
         patientId,
+        vitals: formData.vitals || null,
         diagnosis: formData.diagnosis.join(", "), // Convert array to comma-separated string
         symptoms: formData.symptoms.join(", ") || null, // Convert array to comma-separated string
         medicines: formData.medicines, // Array of medicine objects
@@ -121,49 +125,79 @@ function PrescriptionForm() {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-800 dark:text-gray-100 transition-colors">
-      <main className="max-w-6xl mx-auto py-8 px-6">
-        <Vitals value={formData.vitals} onChange={handleVitalsChange} />
-        <Symptoms
-          value={{ symptoms: formData.symptoms }}
-          onChange={(data) =>
-            setFormData((prev) => ({ ...prev, symptoms: data.symptoms }))
-          }
-        />
-        <DiagnosisSection
-          value={{ diagnosis: formData.diagnosis }}
-          onChange={handleDiagnosisChange}
-        />
-        <MedicineSection onChange={handleMedicineChange} />
-        <NotesSection value={formData.notes} onChange={handleNotesChange} />
-
-        <div className="flex justify-between p-5 mt-8 bg-white dark:bg-black rounded-md border border-gray-200 dark:border-gray-700">
-          <Button variant="outline" onClick={() => router.back()}>
-            Cancel
-          </Button>
-
-          <div>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Language</SelectLabel>
-                  <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="Hindi">Hindi</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button variant="outline" onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : "Save"}
-          </Button>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
         </div>
-      </main>
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-screen flex justify-center items-center  px-4 py-6">
+      <Card className="w-full max-w-5xl shadow-lg border border-border/50">
+        <CardHeader >
+          <CardTitle className="text-2xl font-semibold">
+            Prescription Form
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            For patient:{" "}
+            <span className="font-medium text-primary">
+              {patientName || "Patient"}
+            </span>
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-8 py-6">
+          <Vitals value={formData.vitals} onChange={handleVitalsChange} />
+          <Symptoms
+            value={{ symptoms: formData.symptoms }}
+            onChange={(data) =>
+              setFormData((prev) => ({ ...prev, symptoms: data.symptoms }))
+            }
+          />
+          <DiagnosisSection
+            value={{ diagnosis: formData.diagnosis }}
+            onChange={handleDiagnosisChange}
+          />
+          <MedicineSection onChange={handleMedicineChange} />
+          <NotesSection value={formData.notes} onChange={handleNotesChange} />
+
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Language</SelectLabel>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Hindi">Hindi</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              {loading ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { getShortId } from "@/utils/getShortId";
 
 type Prescription = {
   id: string;
@@ -30,13 +31,14 @@ export default function PrescriptionPage() {
         const result = await response.json();
 
         if (result.success) {
+          console.log("Precsrip Data",result);
           setData(result.data || []);
         } else {
-          console.error("Failed to fetch prescriptions:", result.error);
+          console.log("Failed to fetch prescriptions:", result.error);
           setData([]);
         }
       } catch (error) {
-        console.error("Error fetching prescriptions:", error);
+        console.log("Error fetching prescriptions:", error);
         setData([]);
       } finally {
         setLoading(false);
@@ -47,7 +49,14 @@ export default function PrescriptionPage() {
   }, []);
 
   const columns: ColumnDef<Prescription>[] = [
-    { accessorKey: "id", header: "Prescription ID" },
+    {
+          accessorKey: "id",
+          header: "ID",
+          cell: ({ row }) => {
+            const id = row.getValue("id") as string;
+            return <span>{getShortId(id)}</span>;
+          },
+        },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "diagnosis", header: "Diagnosis" },
     { 

@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import PatientRegistrationForm from "@/Components/forms/PatientRegistrationFrom";
 import { InputOTPForm } from "@/components/model/Otpmodel";
+import HoneycombLoader from "@/components/HoneycombLoader";
+import { getShortId } from "@/utils/getShortId";
 
 type Patient = {
   id: string;
@@ -126,7 +128,14 @@ function PatientPage() {
   );
 
   const allColumns: ColumnDef<Patient>[] = [
-    { accessorKey: "id", header: "Patient ID" },
+    {
+          accessorKey: "id",
+          header: "ID",
+          cell: ({ row }) => {
+            const id = row.getValue("id") as string;
+            return <span>{getShortId(id)}</span>;
+          },
+        },
     { accessorKey: "name", header: "Patient Name" },
     { accessorKey: "mobileNumber", header: "Number" },
     { accessorKey: "gender", header: "Gender" },
@@ -202,9 +211,12 @@ function PatientPage() {
 
   if (loading)
     return (
-      <p className="h-screen flex justify-center items-center text-lg font-medium animate-pulse">
-        Getting patients...
-      </p>
+      // <p className="h-screen flex justify-center items-center text-lg font-medium animate-pulse">
+      //   Getting patients...
+      // </p>
+      <div className="flex justify-center items-center h-screen">
+              <HoneycombLoader />
+      </div>
     );
 
   return (
@@ -252,7 +264,7 @@ function PatientPage() {
 
       {/* Patient Registration Dialog */}
       <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Patient</DialogTitle>
           </DialogHeader>
