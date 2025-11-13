@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       followUpDate: body.followUpDate || null,
       followUpNotes: body.followUpNotes || null,
       additionalNotes: body.additionalNotes || null,
+      vitals: body.vitals || null, // Store vitals data in JSONB column
     });
 
     // Update appointment status to completed

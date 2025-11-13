@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 type PrescriptionDetail = {
@@ -25,6 +25,7 @@ type PrescriptionDetail = {
     name: string;
     description?: string;
   }> | null;
+  vitals: Record<string, any> | null;
   followUpRequired: boolean;
   followUpDate: string | null;
   followUpNotes: string | null;
@@ -135,6 +136,30 @@ export default function PrescriptionDetail() {
               </h3>
               <p className="text-muted-foreground">{prescription.diagnosis}</p>
             </div>
+
+            {/* Vitals */}
+            {prescription.vitals && Object.keys(prescription.vitals).length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Heart className="h-5 w-5" />
+                  Vitals
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {Object.entries(prescription.vitals).map(([key, value]) => {
+                    if (!value) return null;
+                    const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    return (
+                      <Card key={key} className="bg-muted/50">
+                        <CardContent className="p-3">
+                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                          <p className="font-medium text-sm">{value}</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Symptoms */}
             {prescription.symptoms && (

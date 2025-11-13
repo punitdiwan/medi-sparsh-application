@@ -49,6 +49,7 @@ export async function GET(
       symptoms: result[0].prescriptions.symptoms,
       medicines: result[0].prescriptions.medicines,
       labTests: result[0].prescriptions.labTests,
+      vitals: result[0].prescriptions.vitals,
       followUpRequired: result[0].prescriptions.followUpRequired,
       followUpDate: result[0].prescriptions.followUpDate,
       followUpNotes: result[0].prescriptions.followUpNotes,
