@@ -36,11 +36,12 @@ interface Medicine {
 }
 
 interface MedicineProps {
+  value?: Medicine[]; 
   onChange?: (medicines: Medicine[]) => void;
 }
 
-function MedicineSection({ onChange }: MedicineProps) {
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
+function MedicineSection({ value = [], onChange }: MedicineProps) {
+  const [medicines, setMedicines] = useState<Medicine[]>(value);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [form, setForm] = useState<Medicine>({
     name: "",
@@ -49,6 +50,9 @@ function MedicineSection({ onChange }: MedicineProps) {
     duration: "",
     instruction: "",
   });
+  useEffect(() => {
+  setMedicines(value);
+}, [value]);
 
   useEffect(() => {
     onChange?.(medicines);

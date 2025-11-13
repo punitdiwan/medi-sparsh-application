@@ -1,14 +1,17 @@
-import React from 'react'
-import { SignInForm } from '@/Components/forms/SignInForm'
+import { redirect } from "next/navigation";
+import { validateServerSession } from "@/lib/validateSession";
+import { SignInForm } from "@/Components/forms/SignInForm";
 
-function page() {
+export default async function SignInPage() {
+  const session = await validateServerSession();
+
+  if (session) {
+    redirect("/doctor");
+  }
+
   return (
     <div>
-
       <SignInForm />
-     
     </div>
-  )
+  );
 }
-
-export default page

@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { validateServerSession } from "@/lib/validateSession";
 import type { Metadata } from 'next';
 import { AuthProvider } from "@/context/AuthContext";
-import { getCurrentUser } from "@/lib/utils/auth-helpers";
+
 import { getCurrentHospital } from "@/lib/tenant";
 import { getUserRole } from "@/lib/db/queries";
-// import { cookies } from 'next/headers';
+
 
 export const metadata: Metadata = {
   title: 'medisparsh',
@@ -33,6 +33,14 @@ export default async function DashboardLayout({
     memberRole: memberRole,
   };
   // console.log("Server-side fetched user data:", userData);
+  // inside layout or wherever you have userData
+  await fetch(`${process.env.VERCEL || "http://localhost:3000" || "https://abc.medisparsh.com"}/api/set-user-cookie`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userData }),
+
+  });
+
 
   return (
     <AuthProvider initialUser={userData}>

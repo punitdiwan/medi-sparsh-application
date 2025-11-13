@@ -127,20 +127,33 @@ export default function AppointmentPage() {
 
         return (
           <div className="flex items-center gap-2">
-            {/* Visit button */}
-            {appointment.status === "completed" || appointment.status === "cancelled" ? (
+            {/* Visit / Edit Button */}
+            {appointment.status === "completed" ? (
+              <Link
+                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(
+                  appointment.patientName || ""
+                )}&appointmentId=${appointment.id}&mode=edit`}
+              >
+                <Button variant="outline" size="sm">Edit</Button>
+              </Link>
+
+            ) : appointment.status === "cancelled" ? (
               <Button variant="outline" size="sm" disabled>
                 Visit
               </Button>
             ) : (
               <Link
-                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(appointment.patientName || "")}&appointmentId=${appointment.id}`}
+                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(
+                  appointment.patientName || ""
+                )}&appointmentId=${appointment.id}`}
               >
-                <Button variant="outline" size="sm">Visit</Button>
+                <Button variant="outline" size="sm">
+                  Visit
+                </Button>
               </Link>
             )}
 
-            {/* Cancel button */}
+            {/* Cancel Button */}
             <ConfirmDialog
               title="Cancel Appointment"
               description="Are you sure you want to cancel this appointment? This action cannot be undone."
@@ -162,11 +175,11 @@ export default function AppointmentPage() {
                 </Button>
               }
             />
-
           </div>
         );
       },
     }
+
 
 
   ];

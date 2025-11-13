@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Vitals from "@/Components/prescriptionPad/Vitals";
 import Symptoms from "@/Components/prescriptionPad/Symtoms";
@@ -26,10 +26,13 @@ function PrescriptionForm() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const patientId = params?.id as string; // This is the patient ID from the URL
-  const appointmentId = searchParams.get("appointmentId"); // Get appointment ID from query params
+  const patientId = params?.id as string;
+  const appointmentId = searchParams.get("appointmentId");
   const patientName = searchParams.get("name");
+  const mode = searchParams.get("mode"); // "edit" or "new"
+  const isEditMode = mode === "edit";
 
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     vitals: {} as Record<string, any>,
     symptoms: [] as string[],
@@ -38,93 +41,113 @@ function PrescriptionForm() {
     notes: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  // 🟢 Fetch prescription for edit mode
+  useEffect(() => {
+    const fetchPrescription = async () => {
+      if (!isEditMode || !appointmentId) return;
 
-  const handleVitalsChange = (newVitals: Record<string, any>) => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `/api/prescriptions/appointmentByDcotor?appointmentId=${appointmentId}`
+        );
+        const result = await response.json();
+
+        if (response.ok && result.success && result.data?.length > 0) {
+          const data = result.data[0];
+          console.log("Fetched prescription:", data);
+
+          setFormData({
+            vitals: data.vitals || {},
+            symptoms: data.symptoms
+              ? data.symptoms.split(",").map((s: string) => s.trim())
+              : [],
+            diagnosis: data.diagnosis
+              ? data.diagnosis.split(",").map((d: string) => d.trim())
+              : [],
+            medicines: data.medicines || [],
+            notes: data.additionalNotes || "",
+          });
+        } else {
+          toast.warning("No prescription data found for this appointment.");
+        }
+      } catch (err) {
+        console.error("Error fetching prescription:", err);
+        toast.error("Failed to fetch prescription data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrescription();
+  }, [isEditMode, appointmentId]);
+
+  // 🟢 Handlers
+  const handleVitalsChange = (newVitals: Record<string, any>) =>
     setFormData((prev) => ({ ...prev, vitals: newVitals }));
-    // console.log("Vitals",formData.vitals)
-  };
 
-  const handleDiagnosisChange = (data: Record<string, any>) => {
+  const handleDiagnosisChange = (data: Record<string, any>) =>
     setFormData((prev) => ({ ...prev, diagnosis: data.diagnosis }));
-  };
 
-  const handleMedicineChange = (meds: any[]) => {
+  const handleMedicineChange = (meds: any[]) =>
     setFormData((prev) => ({ ...prev, medicines: meds }));
-  };
 
-  const handleNotesChange = (notes: string) => {
+  const handleNotesChange = (notes: string) =>
     setFormData((prev) => ({ ...prev, notes }));
-  };
 
+  const handleSymptomsChange = (data: Record<string, any>) =>
+    setFormData((prev) => ({ ...prev, symptoms: data.symptoms }));
+
+  // 🟢 Submit
   const handleSubmit = async () => {
     try {
       setLoading(true);
 
-      // Validate required fields
-      if (!appointmentId) {
-        toast.error("Appointment ID is missing. Please access this page from the appointment list.");
-        return;
-      }
+      if (!appointmentId) return toast.error("Appointment ID missing!");
+      if (!patientId) return toast.error("Patient ID missing!");
+      if (formData.diagnosis.length === 0)
+        return toast.error("Add at least one diagnosis!");
+      if (formData.medicines.length === 0)
+        return toast.error("Add at least one medicine!");
 
-      if (!patientId) {
-        toast.error("Patient ID is missing.");
-        return;
-      }
-
-      if (formData.diagnosis.length === 0) {
-        toast.error("Please add at least one diagnosis.");
-        return;
-      }
-
-      if (formData.medicines.length === 0) {
-        toast.error("Please add at least one medicine.");
-        return;
-      }
-
-      // Prepare prescription data
-      const prescriptionData = {
+      const payload = {
         appointmentId,
         patientId,
         vitals: formData.vitals || null,
-        diagnosis: formData.diagnosis.join(", "), // Convert array to comma-separated string
-        symptoms: formData.symptoms.join(", ") || null, // Convert array to comma-separated string
-        medicines: formData.medicines, // Array of medicine objects
-        labTests: null, // Can be added later if needed
-        followUpRequired: false, // Can be made dynamic
-        followUpDate: null,
-        followUpNotes: null,
+        diagnosis: formData.diagnosis.join(", "),
+        symptoms: formData.symptoms.join(", ") || null,
+        medicines: formData.medicines,
         additionalNotes: formData.notes || null,
       };
 
-      console.log("Submitting prescription:", prescriptionData);
+      console.log("Submitting:", payload);
 
       const response = await fetch("/api/prescriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(prescriptionData),
+        method: isEditMode ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
-
       if (result.success) {
-        toast.success("Prescription saved successfully!");
-        // Redirect back to appointments page after a short delay
-        setTimeout(() => {
-          router.push("/doctor/appointment");
-        }, 1500);
+        toast.success(
+          isEditMode
+            ? "Prescription updated successfully!"
+            : "Prescription saved successfully!"
+        );
+        setTimeout(() => router.push("/doctor/appointment"), 1500);
       } else {
         toast.error(result.error || "Failed to save prescription");
       }
     } catch (err: any) {
-      console.error("Error saving prescription:", err);
-      toast.error(`Error: ${err.message || "Failed to save prescription"}`);
+      console.error("Error:", err);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
+
+  // 🟣 Skeleton while loading
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -135,12 +158,14 @@ function PrescriptionForm() {
       </div>
     );
   }
+
+  // 🟢 Render form
   return (
-    <div className="min-h-screen flex justify-center items-center  px-4 py-6">
+    <div className="min-h-screen flex justify-center items-center px-4 py-6">
       <Card className="w-full max-w-5xl shadow-lg border border-border/50">
-        <CardHeader >
+        <CardHeader>
           <CardTitle className="text-2xl font-semibold">
-            Prescription Form
+            {isEditMode ? "Edit Prescription" : "New Prescription"}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             For patient:{" "}
@@ -149,19 +174,12 @@ function PrescriptionForm() {
             </span>
           </p>
         </CardHeader>
+
         <CardContent className="space-y-8 py-6">
           <Vitals value={formData.vitals} onChange={handleVitalsChange} />
-          <Symptoms
-            value={{ symptoms: formData.symptoms }}
-            onChange={(data) =>
-              setFormData((prev) => ({ ...prev, symptoms: data.symptoms }))
-            }
-          />
-          <DiagnosisSection
-            value={{ diagnosis: formData.diagnosis }}
-            onChange={handleDiagnosisChange}
-          />
-          <MedicineSection onChange={handleMedicineChange} />
+          <Symptoms value={{ symptoms: formData.symptoms }} onChange={handleSymptomsChange} />
+          <DiagnosisSection value={{ diagnosis: formData.diagnosis }} onChange={handleDiagnosisChange} />
+          <MedicineSection value={formData.medicines} onChange={handleMedicineChange} />
           <NotesSection value={formData.notes} onChange={handleNotesChange} />
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -193,7 +211,7 @@ function PrescriptionForm() {
               disabled={loading}
               className="w-full sm:w-auto"
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Saving..." : isEditMode ? "Update" : "Save"}
             </Button>
           </div>
         </CardContent>

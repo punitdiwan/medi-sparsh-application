@@ -15,7 +15,6 @@ export async function GET(
     const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
     const { id } = await params;
-
     // Fetch prescription with patient and doctor details
     const result = await db
       .select()
@@ -29,7 +28,7 @@ export async function GET(
         )
       )
       .limit(1);
-
+      console.log("Prescription data",result);
     if (result.length === 0) {
       return NextResponse.json(
         {
@@ -55,7 +54,6 @@ export async function GET(
       additionalNotes: result[0].prescriptions.additionalNotes,
       createdAt: result[0].prescriptions.createdAt,
     };
-
     return NextResponse.json({
       success: true,
       data: prescriptionData,

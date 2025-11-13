@@ -52,8 +52,8 @@ type SidebarItem = {
 
 const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
-  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar },
   { title: 'Patients', url: '/doctor/patient', icon: User },
+  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar },
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen },
   { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus },
   { title: 'Services', url: '/doctor/services', icon: ServerCog },
@@ -83,9 +83,6 @@ const isCollapsed = state === 'collapsed';
     }));
   };
 
-
-  
-console.log("user:",user);
   return (
     <TooltipProvider delayDuration={0}>
       <Sidebar collapsible="icon" className="bg-background border-r">
