@@ -49,6 +49,7 @@ export default function PrescriptionDetail() {
         const result = await response.json();
 
         if (result.success) {
+          console.log("Detail Paga",result);
           setPrescription(result.data);
         } else {
           toast.error(result.error || "Failed to load prescription");

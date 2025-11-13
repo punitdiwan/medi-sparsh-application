@@ -6,8 +6,8 @@ import { updateAppointmentStatus } from "@/lib/db/queries";
 // POST /api/appointments/cancel - Cancel an appointment
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    const hospital = await getCurrentHospital();
+    // const user = await getCurrentUser();
+    // const hospital = await getCurrentHospital();
     const body = await request.json();
 
     const { appointmentId } = body;

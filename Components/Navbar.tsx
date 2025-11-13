@@ -21,9 +21,11 @@ import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
   const router = useRouter();
+  const {logout}= useAuth();
 
   return (
     <header className="sticky top-0 bg-background z-[999] flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -93,6 +95,7 @@ export default function Header() {
                     try {
                       await authClient.signOut();
                       // clearSession();
+                      logout();
                       router.push("/sign-in");
                     } catch (err) {
                       console.error("Logout failed:", err);

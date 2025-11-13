@@ -1,13 +1,14 @@
 import { AppSidebar } from "@/Components/AppSidebar";
 import Navbar from "@/Components/Navbar";
-
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-
 import { redirect } from "next/navigation";
 import { validateServerSession } from "@/lib/validateSession";
-
 import type { Metadata } from 'next';
-// import { cookies } from 'next/headers';
+import { AuthProvider } from "@/context/AuthContext";
+
+import { getCurrentHospital } from "@/lib/tenant";
+import { getUserRole } from "@/lib/db/queries";
+
 
 export const metadata: Metadata = {
   title: 'medisparsh',
@@ -19,25 +20,40 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Persisting the sidebar state in the cookie.
-  // const cookieStore = await cookies();
-  // const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
   const sessionData = await validateServerSession();
-  console.log(sessionData);
-  // if (!sessionData) {
-  //   redirect("/sign-in");
-  // }
-  
+  if (!sessionData) redirect("/sign-in");
+  // console.log("Session data:", sessionData)
+  const hospital = await getCurrentHospital();
+  const memberRole = await getUserRole(sessionData?.user?.id, hospital.hospitalId);
+
+  const userData = {
+    userData: sessionData?.user,
+    hospital,
+    memberRole: memberRole,
+  };
+  // console.log("Server-side fetched user data:", userData);
+  // inside layout or wherever you have userData
+  await fetch(`${process.env.VERCEL || "http://localhost:3000" || "https://abc.medisparsh.com"}/api/set-user-cookie`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userData }),
+
+  });
+
+
   return (
-    <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <Navbar />
-            
-              {/* page main content */}
-              {children}
-              {/* page main content ends */}
-            </SidebarInset>
-          </SidebarProvider>
+    <AuthProvider initialUser={userData}>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Navbar />
+
+          {/* page main content */}
+          {children}
+          {/* page main content ends */}
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthProvider>
   );
 }

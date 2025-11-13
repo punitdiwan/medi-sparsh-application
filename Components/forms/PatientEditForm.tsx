@@ -78,41 +78,38 @@ export default function PatientEditForm({ patientId, initialData }: PatientEditF
 
   const onSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
+    console.log("Edit Patient data",data)
     try {
-      const cleanedNumber = data.mobileNumber
-        .replace(/^\+91/, "")
-        .replace(/[\s-]/g, "")
-        .trim();
 
-      const response = await fetch(`/api/patients/${patientId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email || null,
-          gender: data.gender || null,
-          dob: data.dob || null,
-          mobileNumber: cleanedNumber,
-          address: data.address || null,
-          city: data.city || null,
-          state: data.state || null,
-          areaOrPin: data.areaOrPin || null,
-          bloodGroup: data.bloodGroup || null,
-          referredByDr: data.referredByDr || null,
-          preferredLanguage: data.preferredLanguage || null,
-        }),
-      });
+      // const response = await fetch(`/api/patients/${patientId}`, {
+      //   method: "PUT",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     name: data.name,
+      //     email: data.email || null,
+      //     gender: data.gender || null,
+      //     dob: data.dob || null,
+      //     mobileNumber: data.mobileNumber,
+      //     address: data.address || null,
+      //     city: data.city || null,
+      //     state: data.state || null,
+      //     areaOrPin: data.areaOrPin || null,
+      //     bloodGroup: data.bloodGroup || null,
+      //     referredByDr: data.referredByDr || null,
+      //     preferredLanguage: data.preferredLanguage || null,
+      //   }),
+      // });
 
-      const result = await response.json();
+      // const result = await response.json();
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Failed to update patient");
-      }
+      // if (!response.ok || !result.success) {
+      //   throw new Error(result.error || "Failed to update patient");
+      // }
 
-      toast.success("Patient updated successfully!");
-      router.push("/doctor/patient");
+      // toast.success("Patient updated successfully!");
+      // router.push("/doctor/patient");
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Failed to update patient. Please try again.");
@@ -212,9 +209,14 @@ export default function PatientEditForm({ patientId, initialData }: PatientEditF
                   <FormLabel>Mobile Number</FormLabel>
                   <FormControl>
                     <MaskedInput
-                      value={field.value}
-                      onChange={field.onChange}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/\D/g, "").slice(-10);
+                        field.onChange(cleaned.trim());
+                      }}
+                      placeholder="Enter mobile number"
                     />
+
                   </FormControl>
                   <FormMessage />
                 </FormItem>

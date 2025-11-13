@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import AddPatientDialog from "../patient/AddPatientDialog";
 
 type Patient = {
   id: string;
@@ -56,7 +57,7 @@ export default function PatientSearchBox({
     try {
       const response = await fetch(`/api/patients?search=${encodeURIComponent(term)}`);
       const result = await response.json();
-      
+
       if (result.success) {
         setPatientResults(result.data || []);
       } else {
@@ -89,7 +90,7 @@ export default function PatientSearchBox({
 
       {loading && <p className="text-sm text-gray-500 mt-1">Searching...</p>}
 
-      {patientResults.length > 0 && (
+      {patientResults.length > 0 ? (
         <div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow z-20 max-h-56 overflow-auto">
           {patientResults.map((p) => (
             <div
@@ -105,25 +106,11 @@ export default function PatientSearchBox({
             </div>
           ))}
         </div>
-      )}
+      ) : (!loading && searchTerm && (<div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow p-4 text-center text-gray-600 z-20">
+        <p className="text-sm mb-2">No patients found for "{searchTerm}"</p>
+        <AddPatientDialog />
+      </div>))}
 
-      {!loading &&
-        searchTerm &&
-        patientResults.length === 0 &&
-        isPatientSelected && (
-          <div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow p-4 text-center text-gray-600 z-20">
-            <p className="text-sm mb-2">No patients found for "{searchTerm}"</p>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                route.push("/doctor/patient/registration");
-              }}
-            >
-              Add Patient
-            </Button>
-          </div>
-        )}
     </div>
   );
 }
