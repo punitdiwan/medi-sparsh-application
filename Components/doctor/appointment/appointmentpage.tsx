@@ -319,7 +319,7 @@ export default function AppointmentPage() {
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
+              <SelectItem value="closed">Completed</SelectItem>
               <SelectItem value="all">All</SelectItem>
             </SelectContent>
           </Select>
