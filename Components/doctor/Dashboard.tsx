@@ -43,6 +43,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
+    
     try {
       setLoading(true);
       const response = await fetch("/api/dashboard");
