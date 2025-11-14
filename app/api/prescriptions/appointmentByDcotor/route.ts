@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       patientName: row.patients.name,
       doctorName: row.user.name,
       diagnosis: row.prescriptions.diagnosis,
+      vitals: row.prescriptions.vitals,
       symptoms: row.prescriptions.symptoms,
       medicines: row.prescriptions.medicines,
       labTests: row.prescriptions.labTests,

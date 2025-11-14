@@ -34,6 +34,7 @@ function PrescriptionForm() {
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    prescriptionId: "",
     vitals: {} as Record<string, any>,
     symptoms: [] as string[],
     diagnosis: [] as string[],
@@ -41,7 +42,6 @@ function PrescriptionForm() {
     notes: "",
   });
 
-  // 🟢 Fetch prescription for edit mode
   useEffect(() => {
     const fetchPrescription = async () => {
       if (!isEditMode || !appointmentId) return;
@@ -56,8 +56,9 @@ function PrescriptionForm() {
         if (response.ok && result.success && result.data?.length > 0) {
           const data = result.data[0];
           console.log("Fetched prescription:", data);
-
+          console.log("Prescription id",data.id);
           setFormData({
+            prescriptionId: data.id || "",
             vitals: data.vitals || {},
             symptoms: data.symptoms
               ? data.symptoms.split(",").map((s: string) => s.trim())
@@ -82,7 +83,6 @@ function PrescriptionForm() {
     fetchPrescription();
   }, [isEditMode, appointmentId]);
 
-  // 🟢 Handlers
   const handleVitalsChange = (newVitals: Record<string, any>) =>
     setFormData((prev) => ({ ...prev, vitals: newVitals }));
 
@@ -98,7 +98,6 @@ function PrescriptionForm() {
   const handleSymptomsChange = (data: Record<string, any>) =>
     setFormData((prev) => ({ ...prev, symptoms: data.symptoms }));
 
-  // 🟢 Submit
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -110,7 +109,7 @@ function PrescriptionForm() {
       if (formData.medicines.length === 0)
         return toast.error("Add at least one medicine!");
 
-      const payload = {
+      const payload: any = {
         appointmentId,
         patientId,
         vitals: formData.vitals || null,
@@ -119,8 +118,11 @@ function PrescriptionForm() {
         medicines: formData.medicines,
         additionalNotes: formData.notes || null,
       };
-
-      console.log("Submitting:", payload);
+      
+      if (isEditMode) {
+        payload.prescriptionId = formData.prescriptionId;
+      }
+      console.log("prescription data",payload);
 
       const response = await fetch("/api/prescriptions", {
         method: isEditMode ? "PUT" : "POST",
@@ -147,7 +149,6 @@ function PrescriptionForm() {
     }
   };
 
-  // 🟣 Skeleton while loading
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
