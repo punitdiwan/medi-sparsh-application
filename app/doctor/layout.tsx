@@ -22,8 +22,8 @@ export default async function DashboardLayout({
 }) {
 
   const sessionData = await validateServerSession();
+  console.log("Session data:", sessionData)
   if (!sessionData) redirect("/sign-in");
-  // console.log("Session data:", sessionData)
   const hospital = await getCurrentHospital();
   const memberRole = await getUserRole(sessionData?.user?.id, hospital.hospitalId);
 

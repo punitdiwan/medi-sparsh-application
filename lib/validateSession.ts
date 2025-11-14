@@ -5,12 +5,13 @@ export async function validateServerSession() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("medisparsh.session_token")?.value;
+    const token1= cookieStore.get("__Secure-medisparsh.session_token")?.value;
 
-    if (!token) return null;
+    // if (!token) return null;
 
     // Validate the session
     const sessionData = await auth.api.getSession({
-      headers: { cookie: `medisparsh.session_token=${token}` },
+      headers: { cookie: `__Secure-medisparsh.session_token=${token ? token :token1}` },
     });
 
     if (!sessionData || !sessionData.session) {
