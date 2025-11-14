@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/command";
 import PatientSearchBox from "./searchPatient";
 import { toast } from "sonner";
+import MaskedInput from "@/components/InputMask";
 
 const formSchema = z.object({
   patientName: z.string().min(1, "Patient name is required"),
@@ -86,7 +87,7 @@ export default function AppointmentModal({
       try {
         const response = await fetch("/api/employees");
         const result = await response.json();
-        
+
         if (result.success) {
           // Filter only doctors (those with doctorData)
           const doctorsList = result.data.filter((emp: any) => emp.doctorData);
@@ -181,6 +182,7 @@ export default function AppointmentModal({
                     <FormLabel>Patient Name</FormLabel>
                     <FormControl>
                       <Input
+                        readOnly
                         placeholder="Enter Full Name"
                         {...field}
                         value={field.value ?? ""}
@@ -200,6 +202,7 @@ export default function AppointmentModal({
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
+                          readOnly
                           placeholder="Email (optional)"
                           {...field}
                           value={field.value ?? ""}
@@ -217,11 +220,18 @@ export default function AppointmentModal({
                     <FormItem>
                       <FormLabel>Mobile</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Mobile Number"
+                        <MaskedInput
                           {...field}
                           value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value.replace(/\D/g, "").slice(-10)
+                            )
+                          }
+                          placeholder="Mobile Number"
+                          readOnly
                         />
+
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -264,8 +274,8 @@ export default function AppointmentModal({
                                     .filter((doc: any) =>
                                       doctorSearch
                                         ? doc.user.name
-                                            .toLowerCase()
-                                            .includes(doctorSearch.toLowerCase())
+                                          .toLowerCase()
+                                          .includes(doctorSearch.toLowerCase())
                                         : true
                                     )
                                     .map((doc: any) => (

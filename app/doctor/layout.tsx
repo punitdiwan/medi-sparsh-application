@@ -1,12 +1,13 @@
 import { AppSidebar } from "@/Components/AppSidebar";
 import Navbar from "@/Components/Navbar";
-
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-
 import { redirect } from "next/navigation";
 import { validateServerSession } from "@/lib/validateSession";
-
 import type { Metadata } from 'next';
+import { AuthProvider } from "@/context/AuthContext";
+import { getCurrentUser } from "@/lib/utils/auth-helpers";
+import { getCurrentHospital } from "@/lib/tenant";
+import { getUserRole } from "@/lib/db/queries";
 // import { cookies } from 'next/headers';
 
 export const metadata: Metadata = {
@@ -19,25 +20,32 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Persisting the sidebar state in the cookie.
-  // const cookieStore = await cookies();
-  // const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
   const sessionData = await validateServerSession();
-  console.log(sessionData);
-  // if (!sessionData) {
-  //   redirect("/sign-in");
-  // }
-  
+  if (!sessionData) redirect("/sign-in");
+  // console.log("Session data:", sessionData)
+  const hospital = await getCurrentHospital();
+  const memberRole = await getUserRole(sessionData?.user?.id, hospital.hospitalId);
+
+  const userData = {
+    userData: sessionData?.user,
+    hospital,
+    memberRole: memberRole,
+  };
+  // console.log("Server-side fetched user data:", userData);
+
   return (
-    <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <Navbar />
-            
-              {/* page main content */}
-              {children}
-              {/* page main content ends */}
-            </SidebarInset>
-          </SidebarProvider>
+    <AuthProvider initialUser={userData}>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Navbar />
+
+          {/* page main content */}
+          {children}
+          {/* page main content ends */}
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthProvider>
   );
 }

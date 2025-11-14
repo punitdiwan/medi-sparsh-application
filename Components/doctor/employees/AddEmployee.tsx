@@ -33,6 +33,7 @@ import { MultiSelectDropdown } from "./MultipleSelect";
 import Spinner from "@/components/Spinner";
 import { useSession } from "@/lib/auth-client";
 import { ImCross } from "react-icons/im";
+import MaskedInput from "@/components/InputMask";
 //employee schema
 const baseEmployeeSchema = z.object({
   user_id: z.string().optional().or(z.literal("")),
@@ -241,7 +242,6 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
           availability: doctorData.availability,
         };
       }
-
       // Call the API
       const response = await fetch("/api/employees", {
         method: "POST",
@@ -350,7 +350,16 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                   <FormItem>
                     <FormLabel>Mobile Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter mobile number" {...field} />
+                      <MaskedInput
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const cleaned = e.target.value.replace(/\D/g, "").slice(-10);
+                          field.onChange(cleaned.trim());
+                        }}
+                        placeholder="+91 000-000-0000"
+                      />
+
                     </FormControl>
                     <FormMessage />
                   </FormItem>

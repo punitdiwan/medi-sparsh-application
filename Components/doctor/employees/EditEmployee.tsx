@@ -23,6 +23,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Spinner from "@/components/Spinner";
+import MaskedInput from "@/components/InputMask";
 
 
 // ✅ Schemas
@@ -119,7 +120,7 @@ export function EditEmployeeModal({
       try {
         const response = await fetch("/api/specializations");
         const result = await response.json();
-        
+
         if (result.success && result.data) {
           setSpecializations(result.data.map((spec: any) => ({
             id: spec.id.toString(),
@@ -136,7 +137,7 @@ export function EditEmployeeModal({
 
   // Fetch employee by staffId
   useEffect(() => {
-    if (!employeeId) return; 
+    if (!employeeId) return;
     console.log("Employee staffId", employeeId);
     const fetchEmployee = async () => {
       setInitialLoading(true);
@@ -149,7 +150,7 @@ export function EditEmployeeModal({
         }
 
         const employee = result.data;
-        
+
         if (!employee) {
           throw new Error("Employee not found");
         }
@@ -168,8 +169,8 @@ export function EditEmployeeModal({
           dob: employee.staff.dob || "",
           password: "******", // Don't show actual password
           doctorData: employee.doctorData ? {
-            specialization: Array.isArray(employee.doctorData.specialization) 
-              ? employee.doctorData.specialization 
+            specialization: Array.isArray(employee.doctorData.specialization)
+              ? employee.doctorData.specialization
               : [employee.doctorData.specialization],
             qualification: employee.doctorData.qualification || "",
             experience: employee.doctorData.experience || "",
@@ -232,12 +233,12 @@ export function EditEmployeeModal({
       }
 
       toast.success("Employee updated successfully!");
-      
+
       // Call the onUpdated callback if provided
       if (onUpdated) {
         onUpdated(values);
       }
-      
+
       onClose();
     } catch (error: any) {
       console.error("Error updating employee:", error);
@@ -279,7 +280,14 @@ export function EditEmployeeModal({
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label>Mobile</Label>
-                  <Input {...form.register("mobile")} />
+                  <MaskedInput
+                    {...form.register("mobile")}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "").slice(-10);
+                      form.setValue("mobile", raw);
+                    }}
+                    placeholder="Enter mobile number"
+                  />
                 </div>
                 <div className="flex flex-col gap-1">
                   <Label>Gender</Label>

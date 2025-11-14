@@ -16,6 +16,7 @@ import {
 import { useSearchParams, useParams } from "next/navigation";
 
 import { toast } from "sonner";
+import MaskedInput from "@/components/InputMask";
 
 function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,9 +163,8 @@ function Profile() {
               {/* Avatar Upload */}
               <div className="flex flex-col items-center gap-4">
                 <Avatar
-                  className={`w-20 h-20 border-2 ${
-                    editMode ? "cursor-pointer" : "cursor-default"
-                  }`}
+                  className={`w-20 h-20 border-2 ${editMode ? "cursor-pointer" : "cursor-default"
+                    }`}
                   onClick={handleAvatarClick}
                 >
                   <AvatarImage src={avatarUrl} />
@@ -270,16 +270,14 @@ function Profile() {
                     <Label htmlFor="phone" className="mb-2">
                       Contact Number
                     </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
+                    <MaskedInput
                       placeholder="Enter your contact number"
                       disabled={!editMode}
                       value={patientData.mobileNumber}
                       onChange={(e) =>
                         setPatientData({
                           ...patientData,
-                          mobileNumber: e.target.value,
+                          mobileNumber: e.target.value.replace(/\D/g, "").slice(-10),
                         })
                       }
                     />

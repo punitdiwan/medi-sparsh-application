@@ -446,10 +446,11 @@ export default function Employee() {
           />
 
           <Button
+            variant="outline"
             onClick={() =>
               router.push("/doctor/employees/manageSpecialization")
             }
-            className="flex items-center gap-2 bg-white/5 text-white border border-white/20 hover:bg-white/10"
+            className="flex items-center gap-2 "
           >
             <Plus className="w-4 h-4" />
             Manage Specializations

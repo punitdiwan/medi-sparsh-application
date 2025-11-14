@@ -21,6 +21,7 @@ import { PaginationControl } from "@/components/pagination";
 import AppointmentModal from "./AppointmentModal";
 import { toast } from "sonner";
 import { getShortId } from "@/utils/getShortId";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type Appointment = {
   id: number;
@@ -46,19 +47,6 @@ export default function AppointmentPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Fetch user role
-  const fetchUserRole = async () => {
-    try {
-      const response = await fetch("/api/user/role");
-      const result = await response.json();
-
-      if (result.success) {
-        setUserRole(result.data.role);
-      }
-    } catch (error) {
-      console.error("Error fetching user role:", error);
-    }
-  };
 
   // Fetch appointments from API
   const fetchAppointments = async () => {
@@ -113,7 +101,6 @@ export default function AppointmentPage() {
   };
 
   useEffect(() => {
-    fetchUserRole();
     fetchAppointments();
   }, []);
 
@@ -131,6 +118,7 @@ export default function AppointmentPage() {
     { accessorKey: "purpose", header: "Purpose" },
     { accessorKey: "date", header: "Date" },
     { accessorKey: "time", header: "Time" },
+    { accessorKey: "status", header: "Status" },
     {
       id: "action",
       header: "Action",
@@ -153,15 +141,28 @@ export default function AppointmentPage() {
             )}
 
             {/* Cancel button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCancelAppointment(appointment.id)}
-              disabled={cancellingId === appointment.id || appointment.status === "cancelled" || appointment.status === "completed"}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <ConfirmDialog
+              title="Cancel Appointment"
+              description="Are you sure you want to cancel this appointment? This action cannot be undone."
+              actionLabel="Yes, Cancel"
+              cancelLabel="No"
+              onConfirm={() => handleCancelAppointment(appointment.id)}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={
+                    cancellingId === appointment.id ||
+                    appointment.status === "cancelled" ||
+                    appointment.status === "completed"
+                  }
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              }
+            />
+
           </div>
         );
       },
@@ -263,7 +264,7 @@ export default function AppointmentPage() {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">My Appointments</h2>
 
-          <Button variant="outline" onClick={() => setIsModalOpen(true)}>
+          <Button variant="outline" onClick={() => setIsModalOpen(true)} className="btn-theme">
             <UserPlus className="mr-2 h-4 w-4" />
             <span>New Appointment</span>
           </Button>
