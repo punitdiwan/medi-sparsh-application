@@ -183,7 +183,6 @@ export default function AppointmentModal({
                     <FormControl>
                       <Input
                         readOnly
-                        disabled
                         placeholder="Enter Full Name"
                         {...field}
                         value={field.value ?? ""}
@@ -204,7 +203,6 @@ export default function AppointmentModal({
                       <FormControl>
                         <Input
                           readOnly
-                          disabled
                           placeholder="Email (optional)"
                           {...field}
                           value={field.value ?? ""}
@@ -232,7 +230,6 @@ export default function AppointmentModal({
                           }
                           placeholder="Mobile Number"
                           readOnly
-                          disabled
                         />
 
                       </FormControl>
