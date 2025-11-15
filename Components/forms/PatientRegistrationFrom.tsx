@@ -24,6 +24,10 @@ import MaskedInput from "@/components/InputMask";
 
 import { useSession } from "@/lib/auth-client";
 import { useAuth } from "@/context/AuthContext";
+import Combobox from "@/components/ui/combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 interface PatientRegistrationFormProps {
   onSuccess?: () => void;
@@ -77,9 +81,9 @@ const patientSchema = z.object({
 export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequired }: PatientRegistrationFormProps = {}) {
   const router = useRouter();
   const [isOtpModalOpen, setIsOtpModalOpen] = React.useState(false);
-  const [isOtpVerified, setIsOtpVerified] = React.useState(false);
-  const {user} = useAuth();
-  console.log("user",user);
+
+  const { user } = useAuth();
+  console.log("user", user);
   const [formDataToSubmit, setFormDataToSubmit] =
     React.useState<FormData | null>(null);
   const form = useForm<z.infer<typeof patientSchema>>({
@@ -146,10 +150,10 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
 
       toast.success("Patient registered successfully!");
       setIsOtpModalOpen(false);
-      
+
       // Reset form
       form.reset();
-      
+
       // Call onSuccess callback or redirect
       if (onSuccess) {
         onSuccess();
@@ -210,10 +214,10 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
           }
 
           toast.success("Patient registered successfully!");
-          
+
           // Reset form
           form.reset();
-          
+
           // Call onSuccess callback
           if (onSuccess) {
             onSuccess();
@@ -225,7 +229,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
           toast.error(err instanceof Error ? err.message : "Failed to save patient. Please try again.");
         }
       };
-      
+
       // Pass the wrapper to parent
       onOtpRequired(data, verifyWithData);
     } else {
@@ -233,239 +237,263 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
       setIsOtpModalOpen(true);
     }
   };
+  const indianStates = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry", "Chandigarh", "Andaman & Nicobar", "Dadra & Nagar Haveli", "Lakshadweep", "Daman & Diu",
+  ];
 
   return (
     <div>
       <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="grid grid-cols-2 gap-4 p-6"
-          >
-            {/* Name */}
-            <FormField
-              control={form.control}
-              name="name"
-              rules={{ required: "Name is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="grid grid-cols-2 gap-4 p-6"
+        >
+          {/* Name */}
+          <FormField
+            control={form.control}
+            name="name"
+            rules={{ required: "Name is required" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Patient Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Email */}
+          <FormField
+            control={form.control}
+            name="email"
+            // rules={{ required: "Email is required" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Patient Email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Gender */}
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Gender</FormLabel>
+
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <Input placeholder="Patient Name" {...field} />
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Email */}
+
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Date of Birth */}
+          <FormField
+            control={form.control}
+            name="dob"
+            // rules={{ required: "Date of Birth is required" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Mobile Number */}
+          {/* import InputMask from "react-input-mask"; // ... */}
+          <FormField
+            control={form.control}
+            name="mobileNumber"
+            rules={{ required: "Mobile number is required" }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mobile Number</FormLabel>
+                <FormControl>
+                  <MaskedInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="+91 000-000-0000"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* City */}
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input placeholder="City" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* State */}
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>State</FormLabel>
+                <FormControl>
+                  <Combobox
+                    value={field.value}
+                    onChange={(value: any) => field.onChange(value)}
+                    placeholder="Select a state..."
+                    list={indianStates}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Area or Pin */}
+          <FormField
+            control={form.control}
+            name="areaOrPin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Area / PIN Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="Area or PIN" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Blood Group */}
+          <FormField
+            control={form.control}
+            name="bloodGroup"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Blood Group</FormLabel>
+
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Blood Group" />
+                    </SelectTrigger>
+                  </FormControl>
+
+                  <SelectContent>
+                    <SelectItem value="A+">A+</SelectItem>
+                    <SelectItem value="A-">A-</SelectItem>
+                    <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="B-">B-</SelectItem>
+                    <SelectItem value="O+">O+</SelectItem>
+                    <SelectItem value="O-">O-</SelectItem>
+                    <SelectItem value="AB+">AB+</SelectItem>
+                    <SelectItem value="AB-">AB-</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Referred By Doctor */}
+          <FormField
+            control={form.control}
+            name="referredByDr"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Referred By Doctor</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doctor's Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Address (Full Width) */}
+          <div className="col-span-2">
             <FormField
               control={form.control}
-              name="email"
-              // rules={{ required: "Email is required" }}
+              name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Address</FormLabel>
+
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Patient Email"
+                    <Textarea
+                      placeholder="Full Address"
+                      className="min-h-[90px] w-full resize-none"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Gender */}
-            <FormField
-              control={form.control}
-              name="gender"
-              // rules={{ required: "Gender is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="w-full rounded-md border border-white/20 px-2 py-1 text
-                      dark:bg-black/80 dark:text-white/50 
-                        focus:outline-none focus:border-white/40 focus:ring-3 focus:ring-white/20 focus:dark:text-gray-300
-                        transition-all duration-200"
-                    >
-                      <option value="">Select gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Date of Birth */}
-            <FormField
-              control={form.control}
-              name="dob"
-              // rules={{ required: "Date of Birth is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Mobile Number */}
-            {/* import InputMask from "react-input-mask"; // ... */}
-            <FormField
-              control={form.control}
-              name="mobileNumber"
-              rules={{ required: "Mobile number is required" }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
-                    <MaskedInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="+91 000-000-0000"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {/* City */}
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="City" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {/* State */}
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>State</FormLabel>
-                  <FormControl>
-                    <Input placeholder="State" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Area or Pin */}
-            <FormField
-              control={form.control}
-              name="areaOrPin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Area / PIN Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Area or PIN" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Blood Group */}
-            <FormField
-              control={form.control}
-              name="bloodGroup"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Blood Group</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="w-full rounded-md border border-white/20 px-2 py-1 text
-          dark:bg-black/80 dark:text-white/50 
-          focus:outline-none focus:border-white/40 focus:ring-3 focus:ring-white/20 focus:dark:text-gray-300
-          transition-all duration-200"
-                    >
-                      <option value="">Select Blood Group</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Referred By Doctor */}
-            <FormField
-              control={form.control}
-              name="referredByDr"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Referred By Doctor</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doctor's Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Address (Full Width) */}
-            <div className="col-span-2">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <textarea
-                        {...field}
-                        className="w-full rounded border border-gray-300 px-3 py-2"
-                        placeholder="Full Address"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            {/* Buttons */}
-            <div className="col-span-2 flex justify-end space-x-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  form.reset();
-                  if (onCancel) {
-                    onCancel();
-                  } else {
-                    router.back();
-                  }
-                }}
-              >
-                Cancel
-              </Button>
+          </div>
 
-              <Button variant="outline" type="submit">
-                Add Patient
-              </Button>
-            </div>
-          </form>
-        </Form>
+
+
+          {/* Buttons */}
+          <div className="col-span-2 flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.reset();
+                if (onCancel) {
+                  onCancel();
+                } else {
+                  router.back();
+                }
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button variant="outline" type="submit">
+              Add Patient
+            </Button>
+          </div>
+        </form>
+      </Form>
       {!onOtpRequired && isOtpModalOpen && (
         <div className="absolute flex justify-center items-center dark:bg-black  dark:text-gray-300 w-full h-screen ">
           <InputOTPForm

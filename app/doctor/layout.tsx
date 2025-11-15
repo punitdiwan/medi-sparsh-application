@@ -32,8 +32,6 @@ export default async function DashboardLayout({
     hospital,
     memberRole: memberRole,
   };
-  
-
 
   return (
     <AuthProvider initialUser={userData}>

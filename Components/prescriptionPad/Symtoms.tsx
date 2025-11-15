@@ -45,6 +45,9 @@ function Symptoms({ value, onChange }: SymptomsProps) {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        <p className="text-sm italic text-muted-foreground mb-1">
+          Type a symptom and press <b>Enter</b> or click <b>Add</b>.
+        </p>
         {/* --- Add Symptom Input --- */}
         <form onSubmit={handleAdd} className="flex items-center gap-3">
           <Input
