@@ -159,7 +159,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = ({
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Age/Gender:</Text>
-          <Text style={styles.infoValue}>{patientAge} / {patientGender}</Text>
+          <Text style={styles.infoValue}>{patientAge}/{patientGender}</Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Doctor:</Text>
@@ -180,7 +180,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = ({
           <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Medicine</Text></View>
           <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Dosage</Text></View>
           <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Frequency</Text></View>
-          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Duration</Text></View>
+          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Duration/Day</Text></View>
         </View>
         {medicines.map((med, index) => (
           <View style={styles.tableRow} key={index}>

@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsComponent() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [phoneValidationEnabled, setPhoneValidationEnabled] = useState(false);
-
+  const [validationKey ,setValidationKey] = useState();
+  const {user} = useAuth();
   useEffect(() => {
     const fetchSetting = async () => {
       try {
@@ -24,6 +26,7 @@ export default function SettingsComponent() {
 
         if (data.success) {
           const isEnabled = data.data.value === "true";
+          setValidationKey(data?.data?.key)
           setPhoneValidationEnabled(isEnabled);
         } else {
           toast.error("Failed to load settings");
@@ -49,11 +52,15 @@ export default function SettingsComponent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ value: enabled }),
+        body: JSON.stringify({ 
+          key: validationKey,
+          value: enabled ,
+          orgId : user?.hospital?.hospitalId
+        }),
       });
 
       const data = await response.json();
-
+      console.log("Server response",data);
       if (data.success) {
         toast.success(
           enabled

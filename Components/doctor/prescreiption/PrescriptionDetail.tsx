@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText, Heart, Download
 import { toast } from "sonner";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import PrescriptionPdf from "@/Components/prescriptionPad/PrescriptionPdf";
+import calculateAge from "@/utils/ageCalculator";
 
 type PrescriptionDetail = {
   id: string;
@@ -54,8 +55,39 @@ export default function PrescriptionDetail() {
         const result = await response.json();
 
         if (result.success) {
-          console.log("Detail Paga",result);
-          setPrescription(result.data);
+          const d = result.data;
+
+          const normalized = {
+            id: d.id ?? "",
+            createdAt: d.createdAt ?? "",
+            patientId: d.patientId ?? "",
+            patientName: d.patientName ?? "",
+            patientGender: d.patientData?.gender ?? "",
+            patientAge: calculateAge(d.patientData?.dob),
+            doctorName: d.doctorName ?? "",
+            doctorSpecialization: d.doctorSpecialization ?? "",
+            diagnosis: d.diagnosis ?? "",
+            symptoms: d.symptoms ?? "",
+            vitals: d.vitals ? { ...d.vitals } : {},
+            medicines: (d.medicines || []).map((m: any) => ({
+              name: m.name ?? "",
+              dosage: m.timing ?? "",          
+              frequency: m.frequency ?? "",
+              duration: m.duration ?? "",
+              instructions: m.instruction ?? ""
+            })),
+            labTests: (d.labTests || []).map((t: any) => ({
+              name: t.name ?? "",
+              description: t.description ?? ""
+            })),
+            followUpRequired: Boolean(d.followUpRequired),
+            followUpDate: d.followUpDate ?? null,
+            followUpNotes: d.followUpNotes ?? "",
+            additionalNotes: d.additionalNotes ?? "",
+          };
+
+          console.log("Normalized: ", normalized);
+          setPrescription(normalized);
         } else {
           toast.error(result.error || "Failed to load prescription");
           router.push("/doctor/prescription");

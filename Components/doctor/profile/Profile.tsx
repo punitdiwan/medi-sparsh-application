@@ -101,19 +101,24 @@ export default function DoctorProfile() {
           // Populate form data
           const { staff, doctor, user } = result.data;
           setFormData({
-            name: user?.name || "",
-            mobileNumber: staff.mobileNumber || "",
-            gender: staff.gender || "",
-            dob: staff.dob || "",
-            department: staff.department || "",
-            address: staff.address || "",
-            qualification: doctor?.qualification || "",
-            experience: doctor?.experience || "",
-            consultationFee: doctor?.consultationFee || "",
-            specialization: Array.isArray(doctor?.specialization)
-              ? doctor.specialization[0]?.name || ""
-              : "",
+            name: user?.name ?? "",
+            mobileNumber: staff?.mobileNumber ?? "",
+            gender: staff?.gender ?? "",
+            dob: staff?.dob ? staff.dob.slice(0, 10) : "",
+            department: staff?.department ?? "",
+            address: staff?.address ?? "",
+            qualification: doctor?.qualification ?? "",
+            experience: doctor?.experience ?? "",
+            consultationFee: doctor?.consultationFee ?? "",
+            specialization:
+              Array.isArray(doctor?.specialization) &&
+                doctor.specialization.length > 0 &&
+                doctor.specialization[0]?.name
+                ? doctor.specialization[0].name
+                : "",
           });
+
+
         } else {
           toast.error(result.error || "Failed to load profile");
         }

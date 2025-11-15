@@ -96,6 +96,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
         const response = await fetch("/api/settings/phone-validation");
         const data = await response.json();
         if (data.success) {
+          console.log("Validation data",data);
           const isEnabled = data.data.value === "true";
           setPhoneValidationEnabled(isEnabled);
         }
