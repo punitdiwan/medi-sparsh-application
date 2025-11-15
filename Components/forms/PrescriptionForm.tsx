@@ -185,10 +185,10 @@ function PrescriptionForm() {
           <DiagnosisSection value={{ diagnosis: formData.diagnosis }} onChange={handleDiagnosisChange} />
           <MedicineSection value={formData.medicines} onChange={handleMedicineChange} />
           <NotesSection value={formData.notes} onChange={handleNotesChange} />
-          <LabTestsEditor
+          {/* <LabTestsEditor
               value={labTests}
               onChange={(next) => setLabTests(next)}
-            />
+            /> */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <Button
               variant="outline"
