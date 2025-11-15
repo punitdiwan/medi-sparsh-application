@@ -4,14 +4,19 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText, Heart } from "lucide-react";
+import { ArrowLeft, Calendar, User, Stethoscope, Pill, FileText, Heart, Download } from "lucide-react";
 import { toast } from "sonner";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PrescriptionPdf from "@/Components/prescriptionPad/PrescriptionPdf";
 
 type PrescriptionDetail = {
   id: string;
   patientId: string;
   patientName: string;
+  patientAge: number;
+  patientGender: string;
   doctorName: string;
+  doctorSpecialization: string;
   diagnosis: string;
   symptoms: string | null;
   medicines: Array<{
@@ -96,6 +101,32 @@ export default function PrescriptionDetail() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
+
+        {prescription && (
+          <PDFDownloadLink
+            document={
+              <PrescriptionPdf
+                patientName={prescription.patientName}
+                patientAge={prescription.patientAge}
+                patientGender={prescription.patientGender}
+                doctorName={prescription.doctorName}
+                doctorSpecialization={prescription.doctorSpecialization}
+                diagnosis={prescription.diagnosis}
+                medicines={prescription.medicines}
+                notes={prescription.additionalNotes || ""}
+                date={new Date(prescription.createdAt).toLocaleDateString()}
+              />
+            }
+            fileName={`prescription_${prescription.patientName.replace(/ /g, "_")}_${new Date(prescription.createdAt).toLocaleDateString().replace(/\//g, "-")}.pdf`}
+          >
+            {({ blob, url, loading, error }) => (
+              <Button className="mb-4 ml-2" disabled={loading}>
+                {loading ? "Loading document..." : "Download PDF"}
+                <Download className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </PDFDownloadLink>
+        )}
 
         <Card className="mb-6">
           <CardHeader>
