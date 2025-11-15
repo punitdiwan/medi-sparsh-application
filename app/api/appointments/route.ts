@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { createAppointment, getAppointmentsByHospital, getAppointmentsByDoctor, getUserRole } from "@/lib/db/queries";
+import { cookies } from "next/headers";
 
 // GET /api/appointments - Get all appointments for the current hospital
 export async function GET(request: NextRequest) {
   try {
+
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
 

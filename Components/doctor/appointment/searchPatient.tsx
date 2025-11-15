@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-
-
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import AddPatientDialog from "../patient/AddPatientDialog";
@@ -33,50 +31,47 @@ export default function PatientSearchBox({
   onSelect,
   onAddPatient,
 }: PatientSearchBoxProps) {
-  const route = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isPatientSelected, setIsPatientSelected] = useState(false);
-
-  const [patientResults, setPatientResults] = useState<PatientSearchResult[]>(
-    []
-  );
+  const [patientResults, setPatientResults] = useState<PatientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  let debounceTimer: NodeJS.Timeout;
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const handleSearch = useCallback(async (term: string) => {
-    setIsPatientSelected(false);
+  const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
+    setSelectedPatient(null); 
 
-    if (!term.trim()) {
-      setPatientResults([]);
-      return;
-    }
+    if (debounceTimer) clearTimeout(debounceTimer);
 
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/patients?search=${encodeURIComponent(term)}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setPatientResults(result.data || []);
-      } else {
+    const timer = setTimeout(async () => {
+      if (!term.trim()) {
         setPatientResults([]);
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error("Error searching patients:", error);
-      setPatientResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/patients?search=${encodeURIComponent(term)}`);
+        const data = await res.json();
+        setPatientResults(data.success ? data.data || [] : []);
+      } catch (error) {
+        console.error("Error searching patients:", error);
+        setPatientResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300); 
+
+    setDebounceTimer(timer);
+  }, [debounceTimer]);
 
   const handlePatientSelect = (patient: Patient) => {
-    setIsPatientSelected(true);
+    setSelectedPatient(patient);
     setSearchTerm(patient.name);
     setPatientResults([]);
     onSelect(patient);
-    setTimeout(() => setIsPatientSelected(false), 500);
   };
 
   return (
@@ -88,9 +83,11 @@ export default function PatientSearchBox({
         className="pr-3"
       />
 
-      {loading && <p className="text-sm text-gray-500 mt-1">Searching...</p>}
+      {loading && (
+        <p className="text-sm text-gray-500 mt-1">Searching...</p>
+      )}
 
-      {patientResults.length > 0 ? (
+      {patientResults.length > 0 && (
         <div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow z-20 max-h-56 overflow-auto">
           {patientResults.map((p) => (
             <div
@@ -106,11 +103,14 @@ export default function PatientSearchBox({
             </div>
           ))}
         </div>
-      ) : (!loading && searchTerm && (<div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow p-4 text-center text-gray-600 z-20">
-        <p className="text-sm mb-2">No patients found for "{searchTerm}"</p>
-        <AddPatientDialog />
-      </div>))}
+      )}
 
+      {!loading && searchTerm.trim() !== "" && patientResults.length === 0 && !selectedPatient && (
+        <div className="absolute w-full bg-gray-300 border mt-1 rounded-lg shadow p-4 text-center text-gray-600 z-20">
+          <p className="text-sm mb-2">No patients found for "{searchTerm}"</p>
+          <AddPatientDialog />
+        </div>
+      )}
     </div>
   );
 }

@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import MaskedInput from "@/components/InputMask";
 
 import { useSession } from "@/lib/auth-client";
+import { useAuth } from "@/context/AuthContext";
 
 interface PatientRegistrationFormProps {
   onSuccess?: () => void;
@@ -77,9 +78,8 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
   const router = useRouter();
   const [isOtpModalOpen, setIsOtpModalOpen] = React.useState(false);
   const [isOtpVerified, setIsOtpVerified] = React.useState(false);
-  const { data } = useSession();
-  console.log("User Id", data?.user?.id);
-  const AuserId = data?.user?.id;
+  const {user} = useAuth();
+  console.log("user",user);
   const [formDataToSubmit, setFormDataToSubmit] =
     React.useState<FormData | null>(null);
   const form = useForm<z.infer<typeof patientSchema>>({
@@ -133,7 +133,8 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
           areaOrPin: formDataToSubmit.areaOrPin || null,
           bloodGroup: formDataToSubmit.bloodGroup || null,
           referredByDr: formDataToSubmit.referredByDr || null,
-          userId: AuserId || null,
+          userId: user?.userData?.id || null,
+          hospitalId: user?.hospital?.hospitalId
         }),
       });
 
@@ -198,7 +199,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
               areaOrPin: data.areaOrPin || null,
               bloodGroup: data.bloodGroup || null,
               referredByDr: data.referredByDr || null,
-              userId: AuserId || null,
+              userId: user?.userData?.id || null,
             }),
           });
 

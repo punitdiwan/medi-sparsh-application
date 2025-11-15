@@ -59,6 +59,7 @@ export const prescriptions = pgTable("prescriptions", {
   additionalNotes: text("additional_notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  vitals:  jsonb("vitals"),
 });
 
 // Medical history table

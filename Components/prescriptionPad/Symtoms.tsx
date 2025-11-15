@@ -71,7 +71,7 @@ function Symptoms({ value, onChange }: SymptomsProps) {
             localSymptoms.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full text-sm border border-border"
+                className="flex items-center gap-2 bg-blue-400/15 text-blue-100 px-3 py-1.5 rounded-full text-sm border border-blue-800"
               >
                 <span>{item}</span>
                 <button

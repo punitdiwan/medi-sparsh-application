@@ -8,40 +8,68 @@ import { Separator } from "@/components/ui/separator";
 import { X, Plus } from "lucide-react";
 
 interface DiagnosisProps {
-  value: Record<string, any>;
-  onChange: (diagnosis: Record<string, any>) => void;
+  value?: {
+    diagnosis?: string[];
+  };
+  onChange: (updated: { diagnosis: string[] }) => void;
 }
 
-function DiagnosisSection({ value, onChange }: DiagnosisProps) {
-  const [diagnosis, setDiagnosis] = useState("");
-  const [localDiagnosis, setLocalDiagnosis] = useState<string[]>(value.diagnosis || []);
+export default function DiagnosisSection({ value, onChange }: DiagnosisProps) {
+  const [diagnosisInput, setDiagnosisInput] = useState("");
+  const [diagnosisList, setDiagnosisList] = useState<string[]>(value?.diagnosis || []);
 
+  // Sync with parent updates (useful in edit mode)
   useEffect(() => {
-    setLocalDiagnosis(value.diagnosis || []);
-  }, [value]);
+    if (value?.diagnosis) {
+      setDiagnosisList(value.diagnosis);
+    }
+  }, [value?.diagnosis]);
 
+  // Add a diagnosis
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (diagnosis.trim()) {
-      const updated = [...localDiagnosis, diagnosis.trim()];
-      setLocalDiagnosis(updated);
-      setDiagnosis("");
-      onChange({ diagnosis: updated });
-    }
+    const trimmed = diagnosisInput.trim();
+    if (!trimmed) return;
+
+    const updated = [...diagnosisList, trimmed];
+    setDiagnosisList(updated);
+    setDiagnosisInput("");
+    onChange({ diagnosis: updated });
   };
 
+  // Remove a diagnosis
   const handleRemove = (index: number) => {
-    const updated = localDiagnosis.filter((_, i) => i !== index);
-    setLocalDiagnosis(updated);
+    const updated = diagnosisList.filter((_, i) => i !== index);
+    setDiagnosisList(updated);
     onChange({ diagnosis: updated });
+  };
+
+  // Clear all
+  const handleClearAll = () => {
+    setDiagnosisList([]);
+    onChange({ diagnosis: [] });
   };
 
   return (
     <Card className="border border-border shadow-sm rounded-2xl bg-card">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Diagnosis
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold text-foreground">
+            Diagnosis
+          </CardTitle>
+
+          {diagnosisList.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive/80"
+              onClick={handleClearAll}
+            >
+              Clear All
+            </Button>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-5">
@@ -49,8 +77,8 @@ function DiagnosisSection({ value, onChange }: DiagnosisProps) {
         <form onSubmit={handleAdd} className="flex items-center gap-3">
           <Input
             placeholder="Type a diagnosis"
-            value={diagnosis}
-            onChange={(e) => setDiagnosis(e.target.value)}
+            value={diagnosisInput}
+            onChange={(e) => setDiagnosisInput(e.target.value)}
             className="flex-1"
           />
           <Button
@@ -67,8 +95,8 @@ function DiagnosisSection({ value, onChange }: DiagnosisProps) {
 
         {/* --- Diagnosis List --- */}
         <div className="flex flex-wrap gap-2">
-          {localDiagnosis.length > 0 ? (
-            localDiagnosis.map((item, index) => (
+          {diagnosisList.length > 0 ? (
+            diagnosisList.map((item, index) => (
               <div
                 key={index}
                 className="flex items-center gap-2 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-100 px-3 py-1.5 rounded-full text-sm border border-emerald-300 dark:border-emerald-700"
@@ -89,9 +117,13 @@ function DiagnosisSection({ value, onChange }: DiagnosisProps) {
             </p>
           )}
         </div>
+
+        {diagnosisList.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Total: {diagnosisList.length}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
 }
-
-export default DiagnosisSection;

@@ -38,7 +38,7 @@ export async function GET(
       diagnosis: item.prescriptions.diagnosis,
       symptoms: item.prescriptions.symptoms,
       medicines: item.prescriptions.medicines,
-      vitals: null, // Vitals are not stored in prescriptions table
+      vitals: item.prescriptions.vitals, // Include actual vitals data from prescriptions table
       notes: item.prescriptions.additionalNotes,
       created_at: item.prescriptions.createdAt,
       doctor_name: item.user.name,

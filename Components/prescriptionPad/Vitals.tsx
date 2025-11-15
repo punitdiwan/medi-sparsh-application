@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,10 +25,25 @@ interface VitalsProps {
 function Vitals({ value, onChange }: VitalsProps) {
   const [enabledVitals, setEnabledVitals] = useState<string[]>([]);
 
+  // ✅ When editing, auto-enable vitals that already have data
+  useEffect(() => {
+    if (value && Object.keys(value).length > 0) {
+      const filledKeys = Object.keys(value).filter((key) => value[key] !== "" && value[key] != null);
+      setEnabledVitals(filledKeys);
+    }
+  }, [value]);
+
   const handleToggleVital = (key: string) => {
-    setEnabledVitals((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
+    setEnabledVitals((prev) => {
+      const updated = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+      // If unchecked, remove it from parent data
+      if (!updated.includes(key)) {
+        const newVitals = { ...value };
+        delete newVitals[key];
+        onChange(newVitals);
+      }
+      return updated;
+    });
   };
 
   const handleInput = (key: string, val: string) => {
@@ -43,9 +58,7 @@ function Vitals({ value, onChange }: VitalsProps) {
       <CardContent className="space-y-6">
         {/* Vitals Selection */}
         <div>
-          <Label className="mb-2 block text-sm font-medium">
-            Select Vitals
-          </Label>
+          <Label className="mb-2 block text-sm font-medium">Select Vitals</Label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {vitalsData.map((vital) => (
               <div key={vital.key} className="flex items-center gap-2">

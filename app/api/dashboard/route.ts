@@ -5,10 +5,15 @@ import { getUserRole } from "@/lib/db/queries";
 import { db } from "@/lib/db";
 import { appointments, patients, user as userTable } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
+import { cookies } from "next/headers";
 
 // GET /api/dashboard - Get dashboard statistics
 export async function GET(request: NextRequest) {
+
   try {
+    // const cookieStore = await cookies();
+    // const userCookie = cookieStore.get("userData");
+    // console.log("userCookie",userCookie);
     const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
