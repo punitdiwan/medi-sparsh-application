@@ -8,9 +8,6 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   try {
 
-    const raw = (await cookies()).get("userData")?.value;
-    const userData = raw ? JSON.parse(raw) : null;
-    console.log("userData",userData);
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
