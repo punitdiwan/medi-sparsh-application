@@ -42,7 +42,7 @@ export const auth = betterAuth({
     autoSignIn: false
   },
 
-  trustedOrigins: [url, "http://localhost:3000","*.medisparsh.com"],
+  trustedOrigins: [url, "http://localhost:3000","*.medisparsh.com", "*.vercel.app"],
   baseURL: url,
   basePath: "/api/auth",
   advanced: {
