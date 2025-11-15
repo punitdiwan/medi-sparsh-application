@@ -16,7 +16,8 @@ export async function getCurrentHospital() {
   let subdomain;
   if (process.env.VERCEL) {
     domain = host.split(".")[0];
-    subdomain = domain.split(".")[0]; // Get first part as subdomain
+    subdomain = "abc"
+    // subdomain = domain.split(".")[0]; // Get first part as subdomain
   }
   else {
     domain = host.split(":")[0];

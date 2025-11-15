@@ -4,14 +4,20 @@ import { auth } from "./auth";
 export async function validateServerSession() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("medisparsh.session_token")?.value;
-    const token1= cookieStore.get("__Secure-medisparsh.session_token")?.value;
+    const token =
+      cookieStore.get("medisparsh.session_token")?.value ||
+      cookieStore.get("__Secure-medisparsh.session_token")?.value;
 
-    // if (!token) return null;
+    if (!token) return null;
 
+    const cookieHeader =
+      cookieStore.get("__Secure-medisparsh.session_token")
+        ? `__Secure-medisparsh.session_token=${token}`
+        : `medisparsh.session_token=${token}`;
+        
     // Validate the session
     const sessionData = await auth.api.getSession({
-      headers: { cookie: `__Secure-medisparsh.session_token=${token ? token :token1}` },
+      headers: { cookie: cookieHeader },
     });
 
     if (!sessionData || !sessionData.session) {
