@@ -29,9 +29,14 @@ const MaskedInput = React.forwardRef<HTMLInputElement, MaskedInputProps>(
         readOnly={readOnly}
         {...props}
         className={`
-          w-full rounded-md border border-white/20 px-2 py-1.5 text-sm
-          dark:bg-white/5 dark:text-white/50 
-          focus:outline-none focus:border-white/40 focus:ring-3 focus:ring-white/20 focus:dark:text-gray-300
+         w-full rounded-md px-2 py-1.5 text-sm
+          bg-white text-gray border border-gray-200
+          dark:bg-white/5 dark:text-gray-100 dark:border-white/20
+          
+          focus:outline  focus:outline-offset-0
+          focus:ring-3 focus:ring-gray-300
+          
+          dark:focus:ring-white/20
           transition-all duration-200
           ${disabled || readOnly ? "opacity-60" : ""}
         `}
