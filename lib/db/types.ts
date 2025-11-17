@@ -1,15 +1,15 @@
 import type {
-  user,
-  session,
-  organization,
-  member,
+  userInAuth as user,
+  sessionInAuth as session ,
+  organizationInAuth as organization,
+  memberInAuth as member,
   patients,
   staff,
   doctors,
   specializations,
   appointments,
   prescriptions,
-} from "./schema";
+} from "./migrations/schema";
 
 // Infer types from Drizzle schemas (Better Auth)
 export type User = typeof user.$inferSelect;
