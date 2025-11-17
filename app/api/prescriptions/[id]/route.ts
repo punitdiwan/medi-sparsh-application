@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getPrescriptionById } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { prescriptions, patients, user } from "@/lib/db/schema";
+import { prescriptions, patients, userInAuth as user } from "@/lib/db/migrations/schema";
 import { eq, and } from "drizzle-orm";
 
 // GET /api/prescriptions/[id] - Get a specific prescription

@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
-import * as authSchema from "./db/schema/auth-schema";
+import * as authSchema from "./db/migrations/schema";
 import { organization } from "better-auth/plugins";
-import { member } from "./db/schema";
+import { memberInAuth as member } from "./db/migrations/schema";
 import { eq } from "drizzle-orm";
 
 const url = "https://abc.medisparsh.com";
@@ -13,12 +13,12 @@ export const auth = betterAuth({
     schema: {
       dialect: "pg",
       schema: "auth",
-      organization: authSchema.organization,
-      user: authSchema.user,
-      member: authSchema.member,
-      session: authSchema.session,
-      account: authSchema.account,
-      verification: authSchema.verification,
+      organization: authSchema.organizationInAuth,
+      user: authSchema.userInAuth,
+      member: authSchema.memberInAuth,
+      session: authSchema.sessionInAuth,
+      account: authSchema.accountInAuth,
+      verification: authSchema.verificationInAuth,
     },
   }),
   databaseHooks: {

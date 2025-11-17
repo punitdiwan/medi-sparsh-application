@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { settings } from "@/lib/db/schema/settings";
+import { settings } from "@/lib/db/migrations/schema";
 import { eq ,and} from "drizzle-orm";
 
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     const updateResult = await db
       .update(settings)
-      .set({ value: stringValue, updatedAt: new Date() })
+      .set({ value: stringValue, updatedAt: new Date().toISOString() })
       .where(
         and(
           eq(settings.key, key),

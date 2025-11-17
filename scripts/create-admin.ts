@@ -3,7 +3,7 @@
 import { Command } from "commander";
 import * as readline from "readline";
 import { db } from "@/lib/db";
-import { organization, user, member, staff, account } from "@/lib/db/schema";
+import { organizationInAuth as organization, userInAuth as user, memberInAuth as member, staff, accountInAuth as account } from "@/lib/db/migrations/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth"; // your BetterAuth instance
