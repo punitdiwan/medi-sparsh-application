@@ -115,10 +115,10 @@ export const memberInAuth = auth.table("member", {
 
 export const sessionInAuth = auth.table("session", {
 	id: text().primaryKey().notNull(),
-	expiresAt: timestamp({ mode: 'string' }).notNull(),
+	expiresAt: text().notNull(),
 	token: text().notNull(),
-	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ mode: 'string' }).notNull(),
+	createdAt: text().notNull(),
+	updatedAt: text().notNull(),
 	ipAddress: text(),
 	userAgent: text(),
 	userId: text().notNull(),

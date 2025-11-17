@@ -24,14 +24,16 @@ export const auth = betterAuth({
   databaseHooks: {
     session: {
       create: {
-        before: async (session) => {
-          console.log("before Session Creation", session);
+        before: async (session, context) => {
           const organizationId = await getOrganisation(session.userId);
           return {
             data: {
               ...session,
+              expiresAt: session.expiresAt instanceof Date ? session.expiresAt.toISOString() : session.expiresAt,
+              createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : session.createdAt,
+              updatedAt: session.updatedAt instanceof Date ? session.updatedAt.toISOString() : session.updatedAt,
               activeOrganizationId: organizationId
-            },
+            } as any,
           }
         }
       }
@@ -42,7 +44,7 @@ export const auth = betterAuth({
     autoSignIn: false
   },
 
-  trustedOrigins: [url, "http://localhost:3000","*.medisparsh.com", "*.vercel.app"],
+  trustedOrigins: [url, "http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
   baseURL: url,
   basePath: "/api/auth",
   advanced: {
@@ -54,13 +56,13 @@ export const auth = betterAuth({
 
 const getOrganisation = async (userId: string) => {
   const result = await db.select().from(member).where(eq(member.userId, userId)).limit(1);
-  
+
   console.log("Data from Result of getOrganisation", result);
 
   if (result.length > 0) {
     return result[0].organizationId;
   }
-  
+
   return null;
 }
-  
+
