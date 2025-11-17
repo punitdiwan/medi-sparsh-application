@@ -1,80 +1,10 @@
-CREATE SCHEMA "auth";
---> statement-breakpoint
-CREATE TABLE "auth"."account" (
-	"id" text PRIMARY KEY NOT NULL,
-	"accountId" text NOT NULL,
-	"providerId" text NOT NULL,
-	"userId" text NOT NULL,
-	"accessToken" text,
-	"refreshToken" text,
-	"idToken" text,
-	"accessTokenExpiresAt" timestamp,
-	"refreshTokenExpiresAt" timestamp,
-	"scope" text,
-	"password" text,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "auth"."invitation" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organizationId" text NOT NULL,
-	"email" text NOT NULL,
-	"role" text,
-	"status" text DEFAULT 'pending' NOT NULL,
-	"expiresAt" timestamp NOT NULL,
-	"inviterId" text NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "auth"."member" (
-	"id" text PRIMARY KEY NOT NULL,
-	"organizationId" text NOT NULL,
-	"userId" text NOT NULL,
-	"role" text DEFAULT 'admin' NOT NULL,
-	"createdAt" timestamp NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "auth"."organization" (
-	"id" text PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"slug" text NOT NULL,
-	"logo" text,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"metadata" text,
-	CONSTRAINT "organization_slug_unique" UNIQUE("slug")
-);
---> statement-breakpoint
-CREATE TABLE "auth"."session" (
-	"id" text PRIMARY KEY NOT NULL,
-	"expiresAt" timestamp NOT NULL,
-	"token" text NOT NULL,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp NOT NULL,
-	"ipAddress" text,
-	"userAgent" text,
-	"userId" text NOT NULL,
-	"activeOrganizationId" text,
-	CONSTRAINT "session_token_unique" UNIQUE("token")
-);
---> statement-breakpoint
-CREATE TABLE "auth"."user" (
-	"id" text PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"email" text NOT NULL,
-	"emailVerified" boolean DEFAULT false NOT NULL,
-	"image" text,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "user_email_unique" UNIQUE("email")
-);
---> statement-breakpoint
-CREATE TABLE "auth"."verification" (
-	"id" text PRIMARY KEY NOT NULL,
-	"identifier" text NOT NULL,
-	"value" text NOT NULL,
-	"expiresAt" timestamp NOT NULL,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp DEFAULT now() NOT NULL
+CREATE TABLE "settings" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"key" varchar(256) NOT NULL,
+	"value" varchar(256) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "settings_key_unique" UNIQUE("key")
 );
 --> statement-breakpoint
 CREATE TABLE "patients" (
@@ -170,7 +100,17 @@ CREATE TABLE "prescriptions" (
 	"follow_up_notes" text,
 	"additional_notes" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"vitals" jsonb
+);
+--> statement-breakpoint
+CREATE TABLE "settings" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"key" varchar(256) NOT NULL,
+	"value" varchar(256) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "settings_key_unique" UNIQUE("key")
 );
 --> statement-breakpoint
 ALTER TABLE "auth"."account" ADD CONSTRAINT "account_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "auth"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

@@ -50,9 +50,6 @@ function PatientPage() {
   const [filters, setFilters] = useState<PatientFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
-  const [isOtpOpen, setIsOtpOpen] = useState(false);
-  const [otpVerifyHandler, setOtpVerifyHandler] = useState<((otp: string) => Promise<void>) | null>(null);
 
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "name",

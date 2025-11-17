@@ -81,11 +81,36 @@ const patientSchema = z.object({
 export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequired }: PatientRegistrationFormProps = {}) {
   const router = useRouter();
   const [isOtpModalOpen, setIsOtpModalOpen] = React.useState(false);
+  const [phoneValidationEnabled, setPhoneValidationEnabled] = React.useState(false);
+  const [loadingValidationSetting, setLoadingValidationSetting] = React.useState(true);
 
   const { user } = useAuth();
   console.log("user", user);
   const [formDataToSubmit, setFormDataToSubmit] =
     React.useState<FormData | null>(null);
+
+  // Fetch phone validation setting on component mount
+  React.useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const response = await fetch("/api/settings/phone-validation");
+        const data = await response.json();
+        if (data.success) {
+          console.log("Validation data",data);
+          const isEnabled = data.data.value === "true";
+          setPhoneValidationEnabled(isEnabled);
+        }
+      } catch (error) {
+        console.error("Error fetching phone validation setting:", error);
+        // Default to false if error
+        setPhoneValidationEnabled(false);
+      } finally {
+        setLoadingValidationSetting(false);
+      }
+    };
+
+    fetchSetting();
+  }, []);
   const form = useForm<z.infer<typeof patientSchema>>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
@@ -169,72 +194,127 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
   const onSubmit = async (data: FormData) => {
     setFormDataToSubmit(data);
 
-    if (onOtpRequired) {
-      // Create a wrapper that ensures formData is available
-      const verifyWithData = async (otp: string) => {
-        // Use the data parameter directly instead of relying on state
+    // Check if phone validation is enabled
+    if (phoneValidationEnabled) {
+      // Phone validation is enabled, show OTP modal
+      if (onOtpRequired) {
+        // Create a wrapper that ensures formData is available
+        const verifyWithData = async (otp: string) => {
+          // Use the data parameter directly instead of relying on state
+          const cleanedNumber = data.mobileNumber
+            .replace(/^\+91/, "")
+            .replace(/[\s-]/g, "")
+            .trim();
+          const DEMO_OTP = "123456";
+          if (otp !== DEMO_OTP) {
+            toast.error("Invalid OTP, please try again.");
+            return;
+          }
+
+          toast.success("Mobile number verified!");
+
+          try {
+            const response = await fetch("/api/patients", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: data.name,
+                email: data.email || null,
+                gender: data.gender || null,
+                dob: data.dob || null,
+                mobileNumber: cleanedNumber,
+                address: data.address || null,
+                city: data.city || null,
+                state: data.state || null,
+                areaOrPin: data.areaOrPin || null,
+                bloodGroup: data.bloodGroup || null,
+                referredByDr: data.referredByDr || null,
+                userId: user?.userData?.id || null,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+              throw new Error(result.error || "Failed to save patient");
+            }
+
+            toast.success("Patient registered successfully!");
+
+            // Reset form
+            form.reset();
+
+            // Call onSuccess callback
+            if (onSuccess) {
+              onSuccess();
+            } else {
+              router.push("/doctor/patient");
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error(err instanceof Error ? err.message : "Failed to save patient. Please try again.");
+          }
+        };
+
+        // Pass the wrapper to parent
+        onOtpRequired(data, verifyWithData);
+      } else {
+        // Fallback: open OTP modal inline
+        setIsOtpModalOpen(true);
+      }
+    } else {
+      // Phone validation is disabled, skip OTP and save directly
+      try {
         const cleanedNumber = data.mobileNumber
           .replace(/^\+91/, "")
           .replace(/[\s-]/g, "")
           .trim();
-        const DEMO_OTP = "123456";
-        if (otp !== DEMO_OTP) {
-          toast.error("Invalid OTP, please try again.");
-          return;
+
+        const response = await fetch("/api/patients", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email || null,
+            gender: data.gender || null,
+            dob: data.dob || null,
+            mobileNumber: cleanedNumber,
+            address: data.address || null,
+            city: data.city || null,
+            state: data.state || null,
+            areaOrPin: data.areaOrPin || null,
+            bloodGroup: data.bloodGroup || null,
+            referredByDr: data.referredByDr || null,
+            userId: user?.userData?.id || null,
+            hospitalId: user?.hospital?.hospitalId
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Failed to save patient");
         }
 
-        toast.success("Mobile number verified!");
+        toast.success("Patient registered successfully!");
 
-        try {
-          const response = await fetch("/api/patients", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: data.name,
-              email: data.email || null,
-              gender: data.gender || null,
-              dob: data.dob || null,
-              mobileNumber: cleanedNumber,
-              address: data.address || null,
-              city: data.city || null,
-              state: data.state || null,
-              areaOrPin: data.areaOrPin || null,
-              bloodGroup: data.bloodGroup || null,
-              referredByDr: data.referredByDr || null,
-              userId: user?.userData?.id || null,
-            }),
-          });
+        // Reset form
+        form.reset();
 
-          const result = await response.json();
-
-          if (!response.ok || !result.success) {
-            throw new Error(result.error || "Failed to save patient");
-          }
-
-          toast.success("Patient registered successfully!");
-
-          // Reset form
-          form.reset();
-
-          // Call onSuccess callback
-          if (onSuccess) {
-            onSuccess();
-          } else {
-            router.push("/doctor/patient");
-          }
-        } catch (err) {
-          console.error(err);
-          toast.error(err instanceof Error ? err.message : "Failed to save patient. Please try again.");
+        // Call onSuccess callback or redirect
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/doctor/patient");
         }
-      };
-
-      // Pass the wrapper to parent
-      onOtpRequired(data, verifyWithData);
-    } else {
-      // Fallback: open OTP modal inline
-      setIsOtpModalOpen(true);
+      } catch (err) {
+        console.error(err);
+        toast.error(err instanceof Error ? err.message : "Failed to save patient. Please try again.");
+      }
     }
   };
   const indianStates = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",

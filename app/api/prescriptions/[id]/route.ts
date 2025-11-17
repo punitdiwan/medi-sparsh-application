@@ -43,6 +43,7 @@ export async function GET(
       id: result[0].prescriptions.id,
       patientId: result[0].prescriptions.patientId,
       patientName: result[0].patients.name,
+      patientData: result[0].patients,
       doctorName: result[0].user.name,
       diagnosis: result[0].prescriptions.diagnosis,
       symptoms: result[0].prescriptions.symptoms,

@@ -1,1 +1,0 @@
-ALTER TABLE "prescriptions" ADD COLUMN "vitals" jsonb;

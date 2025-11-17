@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import LabTestsEditor from "../prescriptionPad/LabTests";
 
 function PrescriptionForm() {
   const router = useRouter();
@@ -82,6 +83,8 @@ function PrescriptionForm() {
 
     fetchPrescription();
   }, [isEditMode, appointmentId]);
+
+    const [labTests, setLabTests] = useState<{name:string,description?:string}[]>([]);
 
   const handleVitalsChange = (newVitals: Record<string, any>) =>
     setFormData((prev) => ({ ...prev, vitals: newVitals }));
@@ -182,7 +185,10 @@ function PrescriptionForm() {
           <DiagnosisSection value={{ diagnosis: formData.diagnosis }} onChange={handleDiagnosisChange} />
           <MedicineSection value={formData.medicines} onChange={handleMedicineChange} />
           <NotesSection value={formData.notes} onChange={handleNotesChange} />
-
+          {/* <LabTestsEditor
+              value={labTests}
+              onChange={(next) => setLabTests(next)}
+            /> */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <Button
               variant="outline"
