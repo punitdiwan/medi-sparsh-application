@@ -76,6 +76,22 @@ export default function Services() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/services/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error();
+
+      await fetchServices();
+      toast.success("Service deleted successfully!");
+    } catch (err) {
+      toast.error("Failed to delete service!");
+    }
+  };
+
   if (loading) return <p className="p-5">Loading...</p>;
 
   return (
@@ -124,7 +140,10 @@ export default function Services() {
                         }}
                       />
 
-                      <Trash2 className="h-4 w-4 cursor-pointer text-red-500" />
+                      <Trash2 
+                        className="h-4 w-4 cursor-pointer text-red-500"
+                        onClick={() => handleDelete(service.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))

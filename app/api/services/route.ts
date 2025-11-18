@@ -1,4 +1,4 @@
-import { getServicesByHospital } from "@/lib/db/queries";
+import { getServicesByHospital, createService } from "@/lib/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,20 +22,15 @@ export async function GET() {
 }
 export async function POST(req: NextRequest) {
   try {
-    const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
     const body = await req.json();
     
-     console.log("\n====== POST /api/services ======");
-    console.log("CURRENT USER:", currentUser);
-    console.log("CURRENT HOSPITAL:", hospital);
-    console.log("REQUEST BODY:", body);
-    console.log("================================\n");
-
-    const newService = {
-      id: Date.now().toString(),
-      ...body,
-    };
+    const newService = await createService({
+      hospitalId: hospital.hospitalId,
+      name: body.name,
+      amount: body.amount,
+      description: body.description,
+    });
 
     return NextResponse.json(newService, { status: 201 });
   } catch (error) {
@@ -47,27 +42,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  try {
-    const body = await req.json();
-    const { id } = context.params;
-
-    console.log("Updating service:", id, body);
-
-    const updatedService = {
-      id,
-      ...body,
-    };
-
-    return NextResponse.json(updatedService, { status: 200 });
-  } catch (error) {
-    console.error("PUT Error:", error);
-    return NextResponse.json(
-      { error: "Failed to update service" },
-      { status: 500 }
-    );
-  }
-}

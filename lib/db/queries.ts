@@ -433,6 +433,49 @@ export async function getServicesByHospital(hospitalId:string) {
     return result || null;
 }
 
-export async function createService(data:object) {
-  
+export async function createService(data: {
+  hospitalId: string;
+  name: string;
+  amount: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(services)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      amount: data.amount,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateService(id: string, data: {
+  name?: string;
+  amount?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(services)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.amount && { amount: data.amount }),
+      ...(data.description !== undefined && { description: data.description }),
+    })
+    .where(eq(services.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteService(id: string) {
+  const result = await db
+    .update(services)
+    .set({ isDeleted: true })
+    .where(eq(services.id, id))
+    .returning();
+
+  return result[0];
 }

@@ -82,28 +82,33 @@ export default function AppointmentModal({
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   const [doctorSearch, setDoctorSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [dbServices, setDbServices] = useState<any[]>([]);
 
-  // Fetch doctors
+  // Fetch doctors and services
   useEffect(() => {
-    const fetchDoctors = async () => {
+    const fetchDoctorsAndServices = async () => {
       try {
-        const response = await fetch("/api/employees");
-        const result = await response.json();
+        // Fetch doctors
+        const doctorResponse = await fetch("/api/employees");
+        const doctorResult = await doctorResponse.json();
 
-        if (result.success) {
-          // Filter only doctors (those with doctorData)
-          const doctorsList = result.data.filter((emp: any) => emp.doctorData);
-          console.log("Doctors:", doctorsList);
+        if (doctorResult.success) {
+          const doctorsList = doctorResult.data.filter((emp: any) => emp.doctorData);
           setDoctors(doctorsList);
         }
+
+        // Fetch services from database
+        const serviceResponse = await fetch("/api/services");
+        const services = await serviceResponse.json();
+        setDbServices(services || []);
       } catch (error) {
-        console.error("Error fetching doctors:", error);
-        toast.error("Failed to load doctors");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
       }
     };
 
     if (open) {
-      fetchDoctors();
+      fetchDoctorsAndServices();
     }
   }, [open]);
 
@@ -161,15 +166,6 @@ export default function AppointmentModal({
       setSubmitting(false);
     }
   };
-  const allServices = [
-  "General Checkup",
-  "Blood Test",
-  "X-Ray",
-  "ECG",
-  "Ultrasound",
-  "Nutrition Consultation",
-  "Vaccination",
-];
 const [showServicesDropdown, setShowServicesDropdown] = useState(false);
 const [serviceSearch, setServiceSearch] = useState("");
 
@@ -388,25 +384,25 @@ const [serviceSearch, setServiceSearch] = useState("");
                   <CommandEmpty>No service found.</CommandEmpty>
 
                   <CommandGroup>
-                    {allServices
-                      .filter(s =>
-                        s.toLowerCase().includes(serviceSearch.toLowerCase())
+                    {dbServices
+                      .filter((service: any) =>
+                        service.name.toLowerCase().includes(serviceSearch.toLowerCase())
                       )
-                      .map(service => {
-                        const isSelected = field.value?.includes(service);
+                      .map((service: any) => {
+                        const isSelected = field.value?.includes(service.id);
                         const currentValues = field.value ?? [];
                         return (
                           <CommandItem
-                            key={service}
+                            key={service.id}
                             onSelect={() => {
                               let updated = [];
 
                               if (isSelected) {
                                 updated = currentValues.filter(
-                                  item => item !== service
+                                  item => item !== service.id
                                 );
                               } else {
-                                updated = [...(field.value ?? []), service];
+                                updated = [...(field.value ?? []), service.id];
                               }
 
                               field.onChange(updated);
@@ -415,10 +411,10 @@ const [serviceSearch, setServiceSearch] = useState("");
                             <div className="flex gap-2 items-center">
                               <input
                                 type="checkbox"
-                                checked={isSelected}
-                                readOnly
+                                checked={isSelected || false}
+                                onChange={() => {}}
                               />
-                              <span>{service}</span>
+                              <span>{service.name}</span>
                             </div>
                           </CommandItem>
                         );
@@ -433,25 +429,28 @@ const [serviceSearch, setServiceSearch] = useState("");
 
       {/* Selected Services UI */}
       <div className="flex flex-wrap gap-2 mt-2">
-        {(field.value ?? []).map(service => (
-          <div
-            key={service}
-            className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-          >
-            {service}
-            <button
-              type="button"
-              onClick={() => {
-                const currentValues = field.value ?? [];
-                const updated = currentValues.filter(item => item !== service);
-                field.onChange(updated);
-              }}
-              className="text-red-500"
+        {(field.value ?? []).map((serviceId: string) => {
+          const serviceName = dbServices.find((s: any) => s.id === serviceId)?.name || serviceId;
+          return (
+            <div
+              key={serviceId}
+              className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1"
             >
-              ✕
-            </button>
-          </div>
-        ))}
+              {serviceName}
+              <button
+                type="button"
+                onClick={() => {
+                  const currentValues = field.value ?? [];
+                  const updated = currentValues.filter(item => item !== serviceId);
+                  field.onChange(updated);
+                }}
+                className="text-red-500"
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <FormMessage />
