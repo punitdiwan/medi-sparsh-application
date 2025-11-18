@@ -5,11 +5,11 @@ import {
   doctors,
   appointments,
   prescriptions,
-  organization,
-  user,
-  member,
+  organizationInAuth as organization,
+  userInAuth as user,
+  memberInAuth as member,
   specializations,
-} from "./schema";
+} from "./migrations/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type {
   NewPatient,
@@ -58,7 +58,7 @@ export async function createPatient(data: NewPatient) {
 export async function updatePatient(patientId: string, data: Partial<NewPatient>) {
   const result = await db
     .update(patients)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...data, updatedAt: new Date().toISOString() })
     .where(eq(patients.id, patientId))
     .returning();
   return result[0];
@@ -67,7 +67,7 @@ export async function updatePatient(patientId: string, data: Partial<NewPatient>
 export async function deletePatient(patientId: string) {
   const result = await db
     .update(patients)
-    .set({ isDeleted: true, updatedAt: new Date() })
+    .set({ isDeleted: true, updatedAt: new Date().toISOString() })
     .where(eq(patients.id, patientId))
     .returning();
   return result[0];
@@ -124,7 +124,7 @@ export async function createDoctor(data: NewDoctor) {
 export async function updateStaff(staffId: string, data: Partial<NewStaff>) {
   const result = await db
     .update(staff)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...data, updatedAt: new Date().toISOString() })
     .where(eq(staff.id, staffId))
     .returning();
   return result[0];
@@ -133,7 +133,7 @@ export async function updateStaff(staffId: string, data: Partial<NewStaff>) {
 export async function updateDoctor(doctorId: string, data: Partial<NewDoctor>) {
   const result = await db
     .update(doctors)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...data, updatedAt: new Date().toISOString() })
     .where(eq(doctors.id, doctorId))
     .returning();
   return result[0];
@@ -142,7 +142,7 @@ export async function updateDoctor(doctorId: string, data: Partial<NewDoctor>) {
 export async function deleteStaff(staffId: string) {
   const result = await db
     .update(staff)
-    .set({ isDeleted: true, updatedAt: new Date() })
+    .set({ isDeleted: true, updatedAt: new Date().toISOString() })
     .where(eq(staff.id, staffId))
     .returning();
   return result[0];
@@ -151,7 +151,7 @@ export async function deleteStaff(staffId: string) {
 export async function deleteDoctor(doctorId: string) {
   const result = await db
     .update(doctors)
-    .set({ isDeleted: true, updatedAt: new Date() })
+    .set({ isDeleted: true, updatedAt: new Date().toISOString() })
     .where(eq(doctors.id, doctorId))
     .returning();
   return result[0];
@@ -335,7 +335,7 @@ export async function createAppointment(data: NewAppointment) {
 export async function updateAppointmentStatus(appointmentId: string, status: string) {
   const result = await db
     .update(appointments)
-    .set({ status, updatedAt: new Date() })
+    .set({ status, updatedAt: new Date().toISOString() })
     .where(eq(appointments.id, appointmentId))
     .returning();
   return result[0];

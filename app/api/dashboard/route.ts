@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getUserRole } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { appointments, patients, user as userTable } from "@/lib/db/schema";
+import { appointments, patients, userInAuth as userTable } from "@/lib/db/migrations/schema";
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
 import { cookies } from "next/headers";
 
