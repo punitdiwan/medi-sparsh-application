@@ -9,6 +9,7 @@ import {
   userInAuth as user,
   memberInAuth as member,
   specializations,
+  services
 } from "./migrations/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type {
@@ -424,8 +425,14 @@ export async function getUserRole(userId: string, organizationId: string) {
 // Service Queries
 // =============================================
 export async function getServicesByHospital(hospitalId:string) {
-    // const result = await db
-    // .select()
-    // .from(service)
-    // .where()
+    const result = await db
+    .select()
+    .from(services)
+    .where(eq(services.hospitalId,hospitalId));
+
+    return result || null;
+}
+
+export async function createService(data:object) {
+  
 }

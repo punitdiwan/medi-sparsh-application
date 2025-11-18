@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const hospital = await getCurrentHospital();
-
+    console.log("hospital",hospital);
     const services = await getServicesByHospital(hospital.hospitalId);
-
+    console.log("service data on server",services);
     return NextResponse.json(services, { status: 200 });
   } catch (error) {
     console.error("GET Error:", error);
