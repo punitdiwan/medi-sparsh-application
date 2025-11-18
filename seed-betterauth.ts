@@ -2,7 +2,7 @@ import "dotenv/config";
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
 import { auth } from "@/lib/auth"
-import { specializations } from "@/lib/db/schema";
+import { specializations } from "@/lib/db/migrations/schema";
 import { eq } from "drizzle-orm";
 
 const addSpecialization = async () => {

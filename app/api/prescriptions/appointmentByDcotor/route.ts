@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentHospital } from "@/lib/tenant";
 import { db } from "@/lib/db";
-import { prescriptions, patients, user } from "@/lib/db/schema";
+import { prescriptions, patients, userInAuth as user } from "@/lib/db/migrations/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
