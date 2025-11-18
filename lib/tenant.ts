@@ -21,7 +21,8 @@ export async function getCurrentHospital() {
   }
   else {
     domain = host.split(":")[0];
-    subdomain = domain.split(".")[0]; // Get first part as subdomain
+    subdomain = "abc"
+    // subdomain = domain.split(".")[0]; // Get first part as subdomain
   }
 
   console.log(domain, subdomain);

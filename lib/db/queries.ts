@@ -419,3 +419,13 @@ export async function getUserRole(userId: string, organizationId: string) {
 // ============================================
 // Note: Medical history table is currently commented out in schema
 // Uncomment when needed
+
+// ============================================
+// Service Queries
+// =============================================
+export async function getServicesByHospital(hospitalId:string) {
+    // const result = await db
+    // .select()
+    // .from(service)
+    // .where()
+}

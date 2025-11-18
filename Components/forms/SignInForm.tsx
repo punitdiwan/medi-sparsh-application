@@ -27,7 +27,6 @@ export function SignInForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const { data, error } = await authClient.signIn.email({
         email,

@@ -48,6 +48,8 @@ const formSchema = z.object({
   patientId: z.string().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
+  services: z.array(z.string()).optional(),
+
 });
 
 type AppointmentFormType = z.infer<typeof formSchema>;
@@ -159,6 +161,17 @@ export default function AppointmentModal({
       setSubmitting(false);
     }
   };
+  const allServices = [
+  "General Checkup",
+  "Blood Test",
+  "X-Ray",
+  "ECG",
+  "Ultrasound",
+  "Nutrition Consultation",
+  "Vaccination",
+];
+const [showServicesDropdown, setShowServicesDropdown] = useState(false);
+const [serviceSearch, setServiceSearch] = useState("");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -343,6 +356,108 @@ export default function AppointmentModal({
                   )}
                 />
               </div>
+              <FormField
+  control={form.control}
+  name="services"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Services</FormLabel>
+      <FormControl>
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-between"
+            onClick={() => setShowServicesDropdown(prev => !prev)}
+          >
+            {field.value?.length
+              ? `${field.value.length} selected`
+              : "Select services"}
+          </Button>
+
+          {showServicesDropdown && (
+            <div className="absolute mt-2 w-full rounded-md border bg-white shadow-lg z-50">
+              <Command>
+                <CommandInput
+                  placeholder="Search service..."
+                  value={serviceSearch}
+                  onValueChange={setServiceSearch}
+                />
+
+                <CommandList className="max-h-60 overflow-auto">
+                  <CommandEmpty>No service found.</CommandEmpty>
+
+                  <CommandGroup>
+                    {allServices
+                      .filter(s =>
+                        s.toLowerCase().includes(serviceSearch.toLowerCase())
+                      )
+                      .map(service => {
+                        const isSelected = field.value?.includes(service);
+                        const currentValues = field.value ?? [];
+                        return (
+                          <CommandItem
+                            key={service}
+                            onSelect={() => {
+                              let updated = [];
+
+                              if (isSelected) {
+                                updated = currentValues.filter(
+                                  item => item !== service
+                                );
+                              } else {
+                                updated = [...(field.value ?? []), service];
+                              }
+
+                              field.onChange(updated);
+                            }}
+                          >
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                readOnly
+                              />
+                              <span>{service}</span>
+                            </div>
+                          </CommandItem>
+                        );
+                      })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </div>
+          )}
+        </div>
+      </FormControl>
+
+      {/* Selected Services UI */}
+      <div className="flex flex-wrap gap-2 mt-2">
+        {(field.value ?? []).map(service => (
+          <div
+            key={service}
+            className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1"
+          >
+            {service}
+            <button
+              type="button"
+              onClick={() => {
+                const currentValues = field.value ?? [];
+                const updated = currentValues.filter(item => item !== service);
+                field.onChange(updated);
+              }}
+              className="text-red-500"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
               <FormField
                 control={form.control}
