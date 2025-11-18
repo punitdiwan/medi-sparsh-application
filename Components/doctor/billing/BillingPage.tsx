@@ -48,7 +48,7 @@ export default function BillingPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/transactions");
+        const res = await fetch("/api/transaction");
         const data = await res.json();
 
         if (!data.success) return toast.error("Failed to load transactions");

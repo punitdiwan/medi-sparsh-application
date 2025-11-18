@@ -52,7 +52,7 @@ export default function AppointmentPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/appointments");
+      const response = await fetch("/api/appointment");
       const result = await response.json();
 
       if (result.success) {
