@@ -73,22 +73,22 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
 
               <div className="flex flex-col gap-1">
                 <Label>Hospital Name</Label>
-                <Input value={hospital.name ?? ""} disabled />
+                <Input className="bg-background text-foreground" value={hospital.name ?? ""} readOnly />
               </div>
 
               <div className="flex flex-col gap-1">
                 <Label>Email</Label>
-                <Input value={hospital?.metadata?.email ?? ""} disabled />
+                <Input className="bg-background text-foreground" value={hospital?.metadata?.email ?? ""} readOnly />
               </div>
 
               <div className="flex flex-col gap-1">
                 <Label>Contact Number</Label>
-                <Input value={hospital?.metadata?.phone ?? ""} disabled />
+                <Input className="bg-background text-foreground" value={hospital?.metadata?.phone ?? ""} readOnly />
               </div>
 
               <div className="flex flex-col gap-1 md:col-span-2">
                 <Label>Address</Label>
-                <Input value={hospital?.metadata?.address ?? ""} disabled />
+                <Input className="bg-background text-foreground" value={hospital?.metadata?.address ?? ""} readOnly />
               </div>
 
             </div>

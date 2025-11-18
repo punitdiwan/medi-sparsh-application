@@ -52,20 +52,22 @@ export default function AddServicePage({ initialData, onSuccess }: AddServicePag
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-xl font-semibold">
+        {/* <h2 className="text-2xl font-semibold">
           {service.id ? "Edit Service" : "Add Service"}
-        </h2>
+        </h2> */}
+        <p className="text-muted-foreground text-sm">{!service.id && "Create a new service offered at your clinic."}</p>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
 
-          <div>
+          <div className="flex flex-col gap-1">
             <Label>Service Name</Label>
             <Input
               value={service.name}
               onChange={(e) => handleChange("name", e.target.value)}
               required
+              placeholder="e.g., General Consultation"
             />
           </div>
 
@@ -78,26 +80,28 @@ export default function AddServicePage({ initialData, onSuccess }: AddServicePag
             />
           </div> */}
 
-          <div>
+          <div className="flex flex-col gap-1"> 
             <Label>Amount (₹)</Label>
             <Input
               type="number"
               value={service.amount}
               onChange={(e) => handleChange("amount", e.target.value)}
               required
+              placeholder="e.g., 500"
             />
           </div>
 
-          <div>
+          <div className="flex flex-col gap-1">
             <Label>Description</Label>
             <Textarea
               value={service.description}
               onChange={(e) => handleChange("description", e.target.value)}
+              placeholder="Short description about this service..."
             />
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-end gap-3">
+        <CardFooter className="flex justify-end gap-3 mt-4">
           <Button type="submit">
             {service.id ? "Update" : "Save"}
           </Button>

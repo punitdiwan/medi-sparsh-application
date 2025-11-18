@@ -11,9 +11,6 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
 
   try {
-    // const cookieStore = await cookies();
-    // const userCookie = cookieStore.get("userData");
-    // console.log("userCookie",userCookie);
     const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
