@@ -1,169 +1,187 @@
-// "use client";
-
-// import * as React from "react";
-// import BillingForm, { BillData } from "@/Components/forms/BillingForm";
-// import {
-//   Card,
-//   CardContent,
-//   CardHeader,
-//   CardTitle,
-// } from "@/components/ui/card";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table";
-
-// export default function BillingPage() {
-//   const [bills, setBills] = React.useState<any[]>([]);
-
-//   const handleCreateBill = (bill: BillData & { total: number }) => {
-//     setBills((prev) => [...prev, bill]);
-//   };
-
-//   return (
-//     <div className="p-8 space-y-6">
-//       <BillingForm onCreateBill={handleCreateBill} />
-
-//       {bills.length > 0 && (
-//         <Card className="mt-8 border border-border shadow-sm dark:bg-neutral-950">
-//           <CardHeader>
-//             <CardTitle>Generated Bills</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <Table>
-//               <TableHeader>
-//                 <TableRow>
-//                   <TableHead>Patient Name</TableHead>
-//                   <TableHead>Patient ID</TableHead>
-//                   <TableHead>Service</TableHead>
-//                   <TableHead className="text-right">Price (₹)</TableHead>
-//                   <TableHead className="text-right">Discount (₹)</TableHead>
-//                   <TableHead className="text-right">Total (₹)</TableHead>
-//                   <TableHead>Payment</TableHead>
-//                 </TableRow>
-//               </TableHeader>
-
-//               <TableBody>
-//                 {bills.map((bill, index) => (
-//                   <TableRow key={index} className="hover:bg-muted/30">
-//                     <TableCell>{bill.patientName}</TableCell>
-//                     <TableCell>{bill.patientId}</TableCell>
-//                     <TableCell>{bill.serviceName}</TableCell>
-//                     <TableCell className="text-right">
-//                       ₹{bill.unitPrice}
-//                     </TableCell>
-//                     <TableCell className="text-right">
-//                       ₹{bill.discount}
-//                     </TableCell>
-//                     <TableCell className="text-right font-medium">
-//                       ₹{bill.total}
-//                     </TableCell>
-//                     <TableCell className="capitalize">
-//                       {bill.paymentMethod}
-//                     </TableCell>
-//                   </TableRow>
-//                 ))}
-//               </TableBody>
-//             </Table>
-//           </CardContent>
-//         </Card>
-//       )}
-//     </div>
-//   );
-// }
-
 "use client";
 
-import * as React from "react";
-import BillingForm, { BillData } from "@/Components/forms/BillingForm";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 
+import { Table } from "@/components/Table/Table"; 
+import { type ColumnDef } from "@tanstack/react-table";
+import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
+import { getShortId } from "@/utils/getShortId";
+import { useSidebar } from "@/components/ui/sidebar";
+
+type Transaction = {
+  id: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+
+  patientName: string | null;
+  patientPhone: string | null;
+  patientGender: string | null;
+
+  appointmentDate: string | null;
+  appointmentTime: string | null;
+};
+
+
 export default function BillingPage() {
-  const [bills, setBills] = React.useState<any[]>([]);
-  const [showBillingForm, setShowBillingForm] = React.useState(false); // State for showing the billing form
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [visibleFields, setVisibleFields] = useState<string[]>([
+    "patientPhone",
+    "patientGender",
+    "appointmentDate",
+  ]);
 
-  const handleCreateBill = (bill: BillData & { total: number }) => {
-    setBills((prev) => [...prev, bill]);
-    setShowBillingForm(false); // Hide form after bill is created
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  const totalPages = Math.ceil(transactions.length / rowsPerPage);
+
+  const paginatedData = transactions.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/transactions");
+        const data = await res.json();
+
+        if (!data.success) return toast.error("Failed to load transactions");
+        console.log("tarnsaction data",data)
+        setTransactions(data.data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Error loading transactions");
+      }
+    };
+
+    load();
+  }, []);
+
+
+  const baseColumns: ColumnDef<Transaction>[] = [
+    {
+              accessorKey: "transactionId",
+              header: "transactionId",
+              cell: ({ row }) => {
+                const id = row.getValue("transactionId") as string;
+                return <span>{getShortId(id)}</span>;
+              },
+            },
+    {
+      header: "Patient Name",
+      accessorKey: "patientName",
+    },
+    {
+      header: "Amount (₹)",
+      accessorKey: "amount",
+      cell: ({ row }) => <span className="font-semibold">₹{row.original.amount}</span>,
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }) => row.original.status?.toUpperCase(),
+    },
+    {
+      header: "Payment",
+      accessorKey: "paymentMethod",
+    },
+  ];
+
+ const optionalColumns: ColumnDef<Transaction>[] = [
+  { header: "Phone", accessorKey: "patientPhone" },
+  { header: "Gender", accessorKey: "patientGender" },
+  { header: "Appointment Date", accessorKey: "appointmentDate" },
+  { header: "Appointment Time", accessorKey: "appointmentTime" },
+];
+
+  const columns: ColumnDef<Transaction>[] = [
+  ...baseColumns,
+  ...optionalColumns.filter(
+    (col): col is ColumnDef<Transaction> & { accessorKey: keyof Transaction } =>
+      "accessorKey" in col && visibleFields.includes(col.accessorKey as string)
+  ),
+];
+const { state } = useSidebar();
+ const isCollapsed = state === "collapsed";
   return (
-    <div className="p-8 space-y-6">
+    <div className={`px-6 py-8 space-y-6 transition-all duration-200 ${
+        isCollapsed
+          ? "w-[calc(100vw-100px)]"
+          : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
+      }`}>
+      <div className="flex justify-between items-center mb-2 px-4">
+        <h2 className="text-xl font-semibold">
+          Transactions ({transactions.length})
+        </h2>
 
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Billing</h2>
-        <Button
-          onClick={() => setShowBillingForm((prev) => !prev)} 
-          
-        >
-          {showBillingForm ? "Cancel" : "Create Billing"}
-        </Button>
+        <FieldSelectorDropdown
+          columns={optionalColumns}
+          visibleFields={visibleFields}
+          onToggle={(key: string, checked: boolean) =>
+            setVisibleFields((prev) =>
+              checked ? [...prev, key] : prev.filter((f) => f !== key)
+            )
+          }
+        />
       </div>
+        {/* <div className="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+  Transaction History
+</div> */}
 
-     
-      {showBillingForm && <BillingForm onCreateBill={handleCreateBill} />}
+      <Table data={paginatedData} columns={columns} />
+          
+      {transactions.length > rowsPerPage && (
+        <div className="flex justify-between items-center mt-4 px-2">
+          <div className="flex items-center gap-2">
+            Rows per page:
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border px-2 py-1 rounded-md bg-transparent"
+            >
+              {[5, 10, 20, 50].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {bills.length > 0 && (
-        <Card className="mt-8 border border-border shadow-sm dark:bg-neutral-950">
-          <CardHeader>
-            <CardTitle>Generated Bills</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient Name</TableHead>
-                  <TableHead>Patient ID</TableHead>
-                  <TableHead>Service</TableHead>
-                  <TableHead className="text-right">Price (₹)</TableHead>
-                  <TableHead className="text-right">Discount (₹)</TableHead>
-                  <TableHead className="text-right">Total (₹)</TableHead>
-                  <TableHead>Payment</TableHead>
-                </TableRow>
-              </TableHeader>
+          <div className="flex items-center gap-4">
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
 
-              <TableBody>
-                {bills.map((bill, index) => (
-                  <TableRow key={index} className="hover:bg-muted/30">
-                    <TableCell>{bill.patientName}</TableCell>
-                    <TableCell>{bill.patientId}</TableCell>
-                    <TableCell>{bill.serviceName}</TableCell>
-                    <TableCell className="text-right">
-                      ₹{bill.unitPrice}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ₹{bill.discount}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{bill.total}
-                    </TableCell>
-                    <TableCell className="capitalize">
-                      {bill.paymentMethod}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
       isFollowUp: body.isFollowUp || false,
       previousAppointmentId: body.previousAppointmentId || null,
       scheduledBy: user.id,
+      services:body.services,
     });
 
     return NextResponse.json({

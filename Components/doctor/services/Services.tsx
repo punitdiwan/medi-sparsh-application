@@ -27,6 +27,7 @@ type Service = {
   name: string;
   amount: string;
   description: string;
+  isDeleted:boolean;
 };
 
 export default function Services() {
@@ -114,6 +115,8 @@ export default function Services() {
               <TableRow>
                 <TableHead>Service Name</TableHead>
                 <TableHead>Amount (₹)</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,8 +132,9 @@ export default function Services() {
                 services.map((service) => (
                   <TableRow key={service.id}>
                     <TableCell>{service.name}</TableCell>
-                    <TableCell>{service.amount}</TableCell>
-
+                    <TableCell>{service.amount}₹</TableCell>
+                    <TableCell>{service.description}</TableCell>
+                    <TableCell>{service.isDeleted ? <span className="text-red-500">Inactive</span> :<span className="text-green-600">Active</span>}</TableCell>
                     <TableCell className="flex gap-3">
                       <Pencil
                         className="h-4 w-4 cursor-pointer"

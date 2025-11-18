@@ -9,7 +9,8 @@ import {
   userInAuth as user,
   memberInAuth as member,
   specializations,
-  services
+  services,
+  transactions
 } from "./migrations/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type {
@@ -478,4 +479,60 @@ export async function deleteService(id: string) {
     .returning();
 
   return result[0];
+}
+
+// ===================================================
+// transaction query
+// ===================================================
+
+export async function createTransaction(data: {
+  hospitalId: string;
+  patientId: string;
+  appointmentsId: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  notes?: string;
+}) {
+  const result = await db
+    .insert(transactions)
+    .values({
+      hospitalId: data.hospitalId,
+      patientId: data.patientId,
+      appointmentsId: data.appointmentsId,
+      amount: data.amount,
+      status: data.status,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes ?? null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function getTransactionsByHospital(hospitalId: string) {
+  const result = await db
+    .select({
+      transactionId: transactions.id,
+      hospitalId: transactions.hospitalId,
+      patientId: transactions.patientId,
+      appointmentId: transactions.appointmentsId,
+      amount: transactions.amount,
+      status: transactions.status,
+      paymentMethod: transactions.paymentMethod,
+      createdAt: transactions.createdAt,
+      patientName: patients.name,
+      patientPhone: patients.mobileNumber,
+      patientGender: patients.gender,
+      appointmentStatus: appointments.status,
+      appointmentDate: appointments.appointmentDate,
+      appointmentTime: appointments.appointmentTime,
+    })
+    .from(transactions)
+    .leftJoin(patients, eq(patients.id, transactions.patientId))
+    .leftJoin(appointments, eq(appointments.id, transactions.appointmentsId))
+    .where(eq(transactions.hospitalId, hospitalId))
+    .orderBy(transactions.createdAt);
+
+  return result;
 }

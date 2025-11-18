@@ -55,7 +55,7 @@ export default function AddServicePage({ initialData, onSuccess }: AddServicePag
         {/* <h2 className="text-2xl font-semibold">
           {service.id ? "Edit Service" : "Add Service"}
         </h2> */}
-        <p className="text-muted-foreground text-sm">{!service.id && "Create a new service offered at your clinic."}</p>
+        <p className="text-muted-foreground text-sm">{!service.id ? "Create a new service offered at your clinic." : "Make changes on your service from here."}</p>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
