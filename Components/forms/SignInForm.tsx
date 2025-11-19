@@ -19,7 +19,7 @@ import { authClient } from "@/lib/auth-client";
 
 
 
-export function SignInForm() {
+export function SignInForm({ Hospitaldata }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +27,6 @@ export function SignInForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const { data, error } = await authClient.signIn.email({
         email,
@@ -35,11 +34,13 @@ export function SignInForm() {
       });
 
       if (error) throw new Error(error.message);
-      // console.log("User:", data.user);
-
-      // user_id: data.user.id
-      // Get user details (including role)
-
+      const session = await authClient.getSession();
+      const sess: any = session.data?.session;
+      if (sess?.activeOrganizationId !== Hospitaldata?.hospitalId) {
+        await authClient.signOut()
+        toast.error("You are not an employee of this organization");
+        return;
+      }
       router.push("/doctor")
       toast.success("Welcome Doctor")
       // toast.success(`Welcome ${user.role}!`);

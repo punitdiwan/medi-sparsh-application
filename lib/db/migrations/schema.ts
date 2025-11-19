@@ -227,6 +227,7 @@ export const appointments = pgTable("appointments", {
 	isFollowUp: boolean("is_follow_up").default(false),
 	previousAppointmentId: text("previous_appointment_id"),
 	scheduledBy: text("scheduled_by"),
+	services: jsonb(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [

@@ -1,95 +1,172 @@
 "use client";
-
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import AddServicePage from "./AddServicePage";
+import { toast } from "sonner";
 
-// Mock services stored in state (frontend only)
-const initialServices = [
-  {
-    id: "1",
-    name: "General Consultation",
-    category: "Consultation",
-    amount: "500",
-    duration: "15",
-    description: "Basic consultation",
-  },
-  {
-    id: "2",
-    name: "X-Ray",
-    category: "Imaging",
-    amount: "1000",
-    duration: "10",
-    description: "Chest X-Ray",
-  },
-  {
-    id: "3",
-    name: "Follows up",
-    category: "FollowsUp",
-    amount: "1000",
-    duration: "10",
-    description: "Chest X-Ray",
-  },
- 
-];
+type ServiceForm = {
+  id?: string;
+  name: string;
+  amount: string;
+  description: string;
+};
+
+type Service = {
+  id: string;
+  name: string;
+  amount: string;
+  description: string;
+  isDeleted:boolean;
+};
 
 export default function Services() {
-  const [services, setServices] = useState(initialServices);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
+  const [editService, setEditService] = useState<ServiceForm>();
+
+  const fetchServices = async () => {
+    try {
+      const res = await fetch("/api/services");
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      console.log("service data",data);
+      setServices(data);
+    } catch (err) {
+      toast.error("Failed to load services");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const handleSave = async (data: ServiceForm) => {
+    try {
+      const response = await fetch(
+        data.id ? `/api/services/${data.id}` : "/api/services",
+        {
+          method: data.id ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) throw new Error();
+
+      await fetchServices();
+      setOpenModal(false);
+      setEditService(undefined);
+      toast.success("Service saved successfully!");
+    } catch (err) {
+      toast.error("Something went wrong!");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/services/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error();
+
+      await fetchServices();
+      toast.success("Service deleted successfully!");
+    } catch (err) {
+      toast.error("Failed to delete service!");
+    }
+  };
+
+  if (loading) return <p className="p-5">Loading...</p>;
 
   return (
     <div className="p-5">
       <Card className="p-4">
         <CardHeader className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Our Services</h2>
-          <Link href="/doctor/services/newServices">
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" /> Add Service
-            </Button>
-          </Link>
+
+          <Button variant="outline" onClick={() => {
+            setEditService(undefined);
+            setOpenModal(true);
+          }}>
+            <Plus className="mr-2 h-4 w-4" /> Add Service
+          </Button>
         </CardHeader>
 
         <CardContent>
           <Table>
             <TableHeader>
-  <TableRow>
-    <TableHead className="font-semibold uppercase">Service Name</TableHead>
-    <TableHead className="font-semibold uppercase">Category</TableHead>
-    <TableHead className="font-semibold uppercase">Amount (₹)</TableHead>
-    <TableHead className="font-semibold uppercase">Action</TableHead>
-  </TableRow>
-</TableHeader>
-
+              <TableRow>
+                <TableHead>Service Name</TableHead>
+                <TableHead>Amount (₹)</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
             <TableBody>
-              {services.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.category}</TableCell>
-                  <TableCell>{service.amount}</TableCell>
-                  <TableCell className="flex gap-3">
-                    <Link href={`/doctor/services/edit/${service.id}`}>
-                      <Pencil className="mr-1 h-4 w-4" />
-                    </Link>
-
-                    <Trash2 className="mr-1 h-4 w-4" />
+              {services.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-gray-500 py-6">
+                    No Service Added
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                services.map((service) => (
+                  <TableRow key={service.id}>
+                    <TableCell>{service.name}</TableCell>
+                    <TableCell>{service.amount}₹</TableCell>
+                    <TableCell>{service.description}</TableCell>
+                    <TableCell>{service.isDeleted ? <span className="text-red-500">Inactive</span> :<span className="text-green-600">Active</span>}</TableCell>
+                    <TableCell className="flex gap-3">
+                      <Pencil
+                        className="h-4 w-4 cursor-pointer"
+                        onClick={() => {
+                          setEditService(service);
+                          setOpenModal(true);
+                        }}
+                      />
+
+                      <Trash2 
+                        className="h-4 w-4 cursor-pointer text-red-500"
+                        onClick={() => handleDelete(service.id)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editService ? "Edit Service" : "Add New Service"}
+            </DialogTitle>
+          </DialogHeader>
+          <AddServicePage initialData={editService} onSuccess={handleSave} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

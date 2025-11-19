@@ -25,7 +25,7 @@ export function Table<TData>({ data, columns }: TableProps<TData>) {
   return (
     <div
       className={`transition-all duration-200 rounded-md border bg-card shadow-sm overflow-x-auto ${
-        isCollapsed ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
+       isCollapsed  ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
       } scrollbar-show`}
     >
       <table className="min-w-max w-full text-sm text-foreground border-collapse relative">
@@ -86,3 +86,5 @@ export function Table<TData>({ data, columns }: TableProps<TData>) {
     </div>
   );
 }
+
+export type { ColumnDef };

@@ -48,6 +48,9 @@ const formSchema = z.object({
   patientId: z.string().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
+  services: z.array(z.string())
+    .min(1, "Please select at least one service"),
+
 });
 
 type AppointmentFormType = z.infer<typeof formSchema>;
@@ -80,28 +83,33 @@ export default function AppointmentModal({
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   const [doctorSearch, setDoctorSearch] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [dbServices, setDbServices] = useState<any[]>([]);
 
-  // Fetch doctors
+  // Fetch doctors and services
   useEffect(() => {
-    const fetchDoctors = async () => {
+    const fetchDoctorsAndServices = async () => {
       try {
-        const response = await fetch("/api/employees");
-        const result = await response.json();
+        // Fetch doctors
+        const doctorResponse = await fetch("/api/employees");
+        const doctorResult = await doctorResponse.json();
 
-        if (result.success) {
-          // Filter only doctors (those with doctorData)
-          const doctorsList = result.data.filter((emp: any) => emp.doctorData);
-          console.log("Doctors:", doctorsList);
+        if (doctorResult.success) {
+          const doctorsList = doctorResult.data.filter((emp: any) => emp.doctorData);
           setDoctors(doctorsList);
         }
+
+        // Fetch services from database
+        const serviceResponse = await fetch("/api/services");
+        const services = await serviceResponse.json();
+        setDbServices(services || []);
       } catch (error) {
-        console.error("Error fetching doctors:", error);
-        toast.error("Failed to load doctors");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
       }
     };
 
     if (open) {
-      fetchDoctors();
+      fetchDoctorsAndServices();
     }
   }, [open]);
 
@@ -122,6 +130,14 @@ export default function AppointmentModal({
         return;
       }
 
+      const selectedServices = dbServices.filter((service) =>
+        values.services.includes(service.id)
+      ).map((item)=>{
+        return{
+          ...item,
+          is_paid:true,
+        }
+      });
       const appointmentData = {
         patientId: values.patientId,
         doctorUserId: values.doctorUserId,
@@ -130,8 +146,8 @@ export default function AppointmentModal({
         reason: values.reason || "",
         notes: values.notes || "",
         isFollowUp: false,
+        services: selectedServices|| [],
       };
-
       const response = await fetch("/api/appointments", {
         method: "POST",
         headers: {
@@ -144,11 +160,23 @@ export default function AppointmentModal({
 
       if (result.success) {
         toast.success("Appointment booked successfully!");
-        form.reset();
-        onOpenChange(false);
-        if (onSuccess) {
-          onSuccess();
-        }
+        try {
+          console.log("appointment success data",result);
+            await fetch("/api/transaction", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                appointment: result.data, 
+              }),
+            });
+          } catch (err) {
+            console.error("Transaction create error:", err);
+            toast.error("Transaction create failed!");
+          }
+
+          form.reset();
+          onOpenChange(false);
+          if (onSuccess) onSuccess();
       } else {
         toast.error(result.error || "Failed to book appointment");
       }
@@ -159,6 +187,8 @@ export default function AppointmentModal({
       setSubmitting(false);
     }
   };
+  const [showServicesDropdown, setShowServicesDropdown] = useState(false);
+  const [serviceSearch, setServiceSearch] = useState("");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -343,6 +373,111 @@ export default function AppointmentModal({
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="services"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Services</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-between"
+                          onClick={() => setShowServicesDropdown(prev => !prev)}
+                        >
+                          {field.value?.length
+                            ? `${field.value.length} selected`
+                            : "Select services"}
+                        </Button>
+
+                        {showServicesDropdown && (
+                          <div className="absolute mt-2 w-full rounded-md border bg-white shadow-lg z-50">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search service..."
+                                value={serviceSearch}
+                                onValueChange={setServiceSearch}
+                              />
+
+                              <CommandList className="max-h-60 overflow-auto">
+                                <CommandEmpty>No service found.</CommandEmpty>
+
+                                <CommandGroup>
+                                  {dbServices
+                                    .filter((service: any) =>
+                                      service.name.toLowerCase().includes(serviceSearch.toLowerCase())
+                                    )
+                                    .map((service: any) => {
+                                      const isSelected = field.value?.includes(service.id);
+                                      const currentValues = field.value ?? [];
+                                      return (
+                                        <CommandItem
+                                          key={service.id}
+                                          onSelect={() => {
+                                            let updated = [];
+
+                                            if (isSelected) {
+                                              updated = currentValues.filter(
+                                                item => item !== service.id
+                                              );
+                                            } else {
+                                              updated = [...(field.value ?? []), service.id];
+                                            }
+
+                                            field.onChange(updated);
+                                          }}
+                                        >
+                                          <div className="flex gap-2 items-center">
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected || false}
+                                              onChange={() => { }}
+                                            />
+                                            <span>{service.name}</span>
+                                          </div>
+                                        </CommandItem>
+                                      );
+                                    })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+
+                    {/* Selected Services UI */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {(field.value ?? []).map((serviceId: string) => {
+                        const serviceName = dbServices.find((s: any) => s.id === serviceId)?.name || serviceId;
+                        return (
+                          <div
+                            key={serviceId}
+                            className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1"
+                          >
+                            {serviceName}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentValues = field.value ?? [];
+                                const updated = currentValues.filter(item => item !== serviceId);
+                                field.onChange(updated);
+                              }}
+                              className="text-red-500"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
