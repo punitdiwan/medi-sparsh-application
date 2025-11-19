@@ -162,7 +162,7 @@ export default function AppointmentModal({
         toast.success("Appointment booked successfully!");
         try {
           console.log("appointment success data",result);
-            await fetch("/api/transactions", {
+            await fetch("/api/transaction", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

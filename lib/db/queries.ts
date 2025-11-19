@@ -12,7 +12,7 @@ import {
   services,
   transactions
 } from "./migrations/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import type {
   NewPatient,
   NewStaff,
@@ -532,7 +532,7 @@ export async function getTransactionsByHospital(hospitalId: string) {
     .leftJoin(patients, eq(patients.id, transactions.patientId))
     .leftJoin(appointments, eq(appointments.id, transactions.appointmentsId))
     .where(eq(transactions.hospitalId, hospitalId))
-    .orderBy(transactions.createdAt);
+    .orderBy(sql`${transactions.createdAt} DESC`);
 
   return result;
 }
