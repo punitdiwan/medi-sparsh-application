@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import PrescriptionPdf from "@/Components/prescriptionPad/PrescriptionPdf";
 import calculateAge from "@/utils/ageCalculator";
+import { pdf } from "@react-pdf/renderer";
 
 type PrescriptionDetail = {
   id: string;
@@ -16,8 +17,21 @@ type PrescriptionDetail = {
   patientName: string;
   patientAge: number;
   patientGender: string;
+  patientAddress: any;     
   doctorName: string;
   doctorSpecialization: string;
+  appointment: {
+    id: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    status: string;
+    reason: string | null;
+    notes: string | null;
+    isFollowUp: boolean;
+    previousAppointmentId: string | null;
+    scheduledBy: string | null;
+    services: Array<any> | null;
+  } | null;
   diagnosis: string;
   symptoms: string | null;
   medicines: Array<{
@@ -37,7 +51,13 @@ type PrescriptionDetail = {
   followUpNotes: string | null;
   additionalNotes: string | null;
   createdAt: string;
+  organization: {
+    id: string;
+    name: string;
+    metadata: any | null;
+  };
 };
+
 
 export default function PrescriptionDetail() {
   const params = useParams();
@@ -46,6 +66,51 @@ export default function PrescriptionDetail() {
 
   const [prescription, setPrescription] = useState<PrescriptionDetail | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const printPDF = async () => {
+  if (!prescription) return;
+
+  const blob = await pdf(
+    <PrescriptionPdf
+      patientName={prescription.patientName}
+      patientAge={prescription.patientAge}
+      patientGender={prescription.patientGender}
+      patientId={prescription.patientId}
+      patientAddress={prescription.patientAddress}
+      doctorName={prescription.doctorName}
+      doctorSpecialization={prescription.doctorSpecialization}
+      appointmentDate={prescription.appointment?.appointmentDate}
+      appointmentTime={prescription.appointment?.appointmentTime}
+      appointmentId={prescription.appointment?.id}
+      appointmentStatus={prescription.appointment?.status}
+      appointmentReason={prescription.appointment?.reason}
+      appointmentNotes={prescription.appointment?.notes}
+      isFollowUp={prescription.appointment?.isFollowUp}
+      previousAppointmentId={prescription.appointment?.previousAppointmentId}
+      diagnosis={prescription.diagnosis}
+      symptoms={prescription.symptoms}
+      medicines={prescription.medicines}
+      labTests={prescription.labTests}
+      vitals={prescription.vitals}
+      followUpRequired={prescription.followUpRequired}
+      followUpDate={prescription.followUpDate}
+      followUpNotes={prescription.followUpNotes}
+      notes={prescription.additionalNotes || ""}
+      prescriptionId={prescription.id}
+      organization={prescription.organization}
+      date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}   />
+  ).toBlob();
+
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url);
+
+  if (win) {
+    win.onload = () => {
+      win.focus();
+      win.print();
+    };
+  }
+};
 
   useEffect(() => {
     const fetchPrescription = async () => {
@@ -56,7 +121,7 @@ export default function PrescriptionDetail() {
 
         if (result.success) {
           const d = result.data;
-
+          console.log("data :",d)
           const normalized = {
             id: d.id ?? "",
             createdAt: d.createdAt ?? "",
@@ -64,6 +129,7 @@ export default function PrescriptionDetail() {
             patientName: d.patientName ?? "",
             patientGender: d.patientData?.gender ?? "",
             patientAge: calculateAge(d.patientData?.dob),
+            patientAddress: d.patientData?.address ?? "",
             doctorName: d.doctorName ?? "",
             doctorSpecialization: d.doctorSpecialization ?? "",
             diagnosis: d.diagnosis ?? "",
@@ -84,6 +150,23 @@ export default function PrescriptionDetail() {
             followUpDate: d.followUpDate ?? null,
             followUpNotes: d.followUpNotes ?? "",
             additionalNotes: d.additionalNotes ?? "",
+            appointment: {
+              id: d.appointment?.id ?? "",
+              appointmentDate: d.appointment?.appointmentDate ?? "",
+              appointmentTime: d.appointment?.appointmentTime ?? "",
+              status: d.appointment?.status ?? "",
+              reason: d.appointment?.reason ?? "",
+              notes: d.appointment?.notes ?? "",
+              isFollowUp: Boolean(d.appointment?.isFollowUp),
+              previousAppointmentId: d.appointment?.previousAppointmentId ?? null,
+              scheduledBy: d.appointment?.scheduledBy ?? "",
+              services: d.appointment?.services ?? [],
+            },
+            organization: {
+              id: d.organization?.id ?? "",
+              name: d.organization?.name ?? "",
+              metadata: d.organization?.metadata ?? null
+            },
           };
 
           console.log("Normalized: ", normalized);
@@ -141,13 +224,31 @@ export default function PrescriptionDetail() {
                 patientName={prescription.patientName}
                 patientAge={prescription.patientAge}
                 patientGender={prescription.patientGender}
+                patientId={prescription.patientId}
+                patientAddress={prescription.patientAddress}
                 doctorName={prescription.doctorName}
                 doctorSpecialization={prescription.doctorSpecialization}
+                appointmentDate={prescription.appointment?.appointmentDate}
+                appointmentTime={prescription.appointment?.appointmentTime}
+                appointmentId={prescription.appointment?.id}
+                appointmentStatus={prescription.appointment?.status}
+                appointmentReason={prescription.appointment?.reason}
+                appointmentNotes={prescription.appointment?.notes}
+                isFollowUp={prescription.appointment?.isFollowUp}
+                previousAppointmentId={prescription.appointment?.previousAppointmentId}
                 diagnosis={prescription.diagnosis}
+                symptoms={prescription.symptoms}
                 medicines={prescription.medicines}
+                labTests={prescription.labTests}
+                vitals={prescription.vitals}
+                followUpRequired={prescription.followUpRequired}
+                followUpDate={prescription.followUpDate}
+                followUpNotes={prescription.followUpNotes}
                 notes={prescription.additionalNotes || ""}
-                date={new Date(prescription.createdAt).toLocaleDateString()}
-              />
+                prescriptionId={prescription.id}
+                organization={prescription.organization}
+                date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}              />
+
             }
             fileName={`prescription_${prescription.patientName.replace(/ /g, "_")}_${new Date(prescription.createdAt).toLocaleDateString().replace(/\//g, "-")}.pdf`}
           >
@@ -326,11 +427,13 @@ export default function PrescriptionDetail() {
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => window.print()}>
-            Print
+          <Button variant="outline" onClick={printPDF}>
+            Print PDF
           </Button>
+
         </div>
       </div>
+      
     </div>
   );
 }

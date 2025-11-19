@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface AddServicePageProps {
   initialData?: {
+    isDeleted: boolean;
     id?: string;
     name: string;
     // category: string;
@@ -23,6 +24,7 @@ interface ServiceForm {
   // category: string;
   amount: string;
   description: string;
+  isDeleted: boolean;
 }
 export default function AddServicePage({ initialData, onSuccess }: AddServicePageProps) {
   const [service, setService] = useState<ServiceForm>({
@@ -31,13 +33,17 @@ export default function AddServicePage({ initialData, onSuccess }: AddServicePag
   // category: "",
   amount: "",
   description: "",
+  isDeleted: false,   
 });
 
 
   useEffect(() => {
     if (initialData) {
-      setService(initialData);
-    }
+    setService({
+      ...initialData,
+      isDeleted: initialData.isDeleted ?? false,
+    });
+  }
   }, [initialData]);
 
   const handleChange = (field: string, value: string) => {

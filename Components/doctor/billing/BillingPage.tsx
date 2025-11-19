@@ -10,7 +10,8 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { getShortId } from "@/utils/getShortId";
 import { useSidebar } from "@/components/ui/sidebar";
-
+import { FaFileDownload } from "react-icons/fa";
+import { MdLocalPrintshop } from "react-icons/md";
 type Transaction = {
   id: string;
   amount: number;
@@ -91,7 +92,46 @@ export default function BillingPage() {
       header: "Payment",
       accessorKey: "paymentMethod",
     },
+    
   ];
+
+  const actionsColumn: ColumnDef<Transaction> = {
+    header: "Actions",
+    id: "actions",
+    cell: ({ row }) => {
+      const transaction = row.original;
+
+      return (
+       <div className="flex gap-2">
+        <div className="relative group">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/billing/print/${transaction.id}`, "_blank")}
+          >
+            <MdLocalPrintshop />
+          </Button>
+          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Print
+          </span>
+        </div>
+        <div className="relative group">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(`/billing/download/${transaction.id}`, "_blank")}
+          >
+            <FaFileDownload />
+          </Button>
+          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Download
+          </span>
+        </div>
+      </div>
+      );
+    },
+  };
+
 
  const optionalColumns: ColumnDef<Transaction>[] = [
   { header: "Phone", accessorKey: "patientPhone" },
@@ -106,6 +146,7 @@ export default function BillingPage() {
     (col): col is ColumnDef<Transaction> & { accessorKey: keyof Transaction } =>
       "accessorKey" in col && visibleFields.includes(col.accessorKey as string)
   ),
+  actionsColumn,
 ];
 const { state } = useSidebar();
  const isCollapsed = state === "collapsed";
@@ -130,9 +171,6 @@ const { state } = useSidebar();
           }
         />
       </div>
-        {/* <div className="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
-  Transaction History
-</div> */}
 
       <Table data={paginatedData} columns={columns} />
           

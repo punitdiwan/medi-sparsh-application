@@ -457,6 +457,7 @@ export async function updateService(id: string, data: {
   name?: string;
   amount?: string;
   description?: string;
+  isDeleted?: boolean;
 }) {
   const result = await db
     .update(services)
@@ -464,6 +465,7 @@ export async function updateService(id: string, data: {
       ...(data.name && { name: data.name }),
       ...(data.amount && { amount: data.amount }),
       ...(data.description !== undefined && { description: data.description }),
+      ...(data.isDeleted !== undefined && { isDeleted: data.isDeleted }),
     })
     .where(eq(services.id, id))
     .returning();

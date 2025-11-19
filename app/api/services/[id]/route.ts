@@ -20,6 +20,7 @@ export async function PUT(
       name: body.name,
       amount: body.amount,
       description: body.description,
+      isDeleted:body.isDeleted,
     });
 
     return NextResponse.json(updatedService, { status: 200 });

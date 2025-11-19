@@ -86,7 +86,7 @@ export default function SettingsComponent() {
         <Button
           variant="ghost"
           onClick={() => router.back()}
-          className="mb-6"
+          className="mb-6 cursor-pointer"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back

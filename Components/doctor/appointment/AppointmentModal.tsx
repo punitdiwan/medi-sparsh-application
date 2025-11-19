@@ -101,7 +101,8 @@ export default function AppointmentModal({
         // Fetch services from database
         const serviceResponse = await fetch("/api/services");
         const services = await serviceResponse.json();
-        setDbServices(services || []);
+        const activeServices = services.filter((s: any) => s.isDeleted === false);
+        setDbServices(activeServices || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
@@ -191,7 +192,16 @@ export default function AppointmentModal({
   const [serviceSearch, setServiceSearch] = useState("");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => {
+      if (!val) {
+        form.reset(); 
+        setDoctorSearch("");
+        setShowDoctorDropdown(false);
+        setServiceSearch("");
+        setShowServicesDropdown(false);
+      }
+      onOpenChange(val);
+    }}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Book Appointment</DialogTitle>
