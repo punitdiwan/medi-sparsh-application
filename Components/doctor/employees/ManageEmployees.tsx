@@ -190,7 +190,10 @@ export default function SpecializationsManager() {
       </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent>
+        <DialogContent 
+          onInteractOutside={(e) => e.preventDefault()}  
+          onEscapeKeyDown={(e) => e.preventDefault()}   
+        >
           <DialogHeader>
             <DialogTitle>Edit Specialization</DialogTitle>
           </DialogHeader>

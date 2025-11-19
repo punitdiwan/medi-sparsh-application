@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
@@ -26,6 +26,17 @@ import { useAuth } from "@/context/AuthContext";
 export default function Header() {
   const router = useRouter();
   const {logout}= useAuth();
+  const [open, setOpen] = useState(false);
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut();
+      logout();
+      router.push("/sign-in");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      toast.error("Failed to logout");
+    }
+  };
 
   return (
     <header className="sticky top-0 bg-background z-[999] flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -42,7 +53,7 @@ export default function Header() {
         <ModeToggle />
 
         <div>
-          <DropdownMenu>
+          <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger>
               <Image
                 src={ProfileImg}
@@ -55,31 +66,42 @@ export default function Header() {
             <DropdownMenuContent>
               <DropdownMenuLabel>My profile</DropdownMenuLabel>
               <DropdownMenuSeparator />
+
+              {/* Normal items close dropdown on click */}
               <DropdownMenuItem>
-                <Link
-                  href="/doctor/settings/profile"
-                  className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                >
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  href="/doctor/billing"
-                  className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                >
-                  Payment History
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link
-                  href="/doctor/todolist"
-                  className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                >
-                  Todo list
-                </Link>
+                <div onClick={() => setOpen(false)}>
+                  <Link
+                    href="/doctor/settings/profile"
+                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
+                  >
+                    Profile
+                  </Link>
+                </div>
               </DropdownMenuItem>
 
+              <DropdownMenuItem >
+                <div onClick={() => setOpen(false)}>
+                  <Link
+                    href="/doctor/billing"
+                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
+                  >
+                    Payment History
+                  </Link>
+                </div>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem>
+                <div onClick={() => setOpen(false)}>
+                  <Link
+                    href="/doctor/todolist"
+                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
+                  >
+                    Todo list
+                  </Link>
+                </div>
+              </DropdownMenuItem>
+
+              {/* asChild item stays open because we do NOT call setOpen(false) */}
               <DropdownMenuItem asChild>
                 <ConfirmDialog
                   trigger={
@@ -91,17 +113,7 @@ export default function Header() {
                   description="You’ll be signed out of your account and redirected to the login page."
                   actionLabel="Logout"
                   cancelLabel="Cancel"
-                  onConfirm={async () => {
-                    try {
-                      await authClient.signOut();
-                      // clearSession();
-                      logout();
-                      router.push("/sign-in");
-                    } catch (err) {
-                      console.error("Logout failed:", err);
-                      toast.error("Failed to logout");
-                    }
-                  }}
+                  onConfirm={handleLogout}
                   onCancel={() => console.log("Logout cancelled")}
                 />
               </DropdownMenuItem>

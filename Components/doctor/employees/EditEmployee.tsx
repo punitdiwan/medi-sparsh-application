@@ -250,7 +250,10 @@ export function EditEmployeeModal({
 
   return (
     <Dialog open={!!employeeId} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] p-6">
+      <DialogContent className="max-w-2xl max-h-[80vh] p-6"
+        onInteractOutside={(e) => e.preventDefault()}  
+        onEscapeKeyDown={(e) => e.preventDefault()}   
+      >
         <DialogHeader>
           <DialogTitle>Edit Employee</DialogTitle>
         </DialogHeader>

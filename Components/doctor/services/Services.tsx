@@ -14,12 +14,14 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import AddServicePage from "./AddServicePage";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 type ServiceForm = {
   id?: string;
   name: string;
   amount: string;
   description: string;
+  isDeleted: boolean;
 };
 
 type Service = {
@@ -27,7 +29,7 @@ type Service = {
   name: string;
   amount: string;
   description: string;
-  isDeleted:boolean;
+  isDeleted: boolean;
 };
 
 export default function Services() {
@@ -77,17 +79,22 @@ export default function Services() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (data: ServiceForm) => {
+    const updatedData = {
+      ...data,
+      isDeleted: !data.isDeleted, 
+    };
     try {
-      const response = await fetch(`/api/services/${id}`, {
-        method: "DELETE",
+      const response = await fetch(`/api/services/${data.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
       });
 
       if (!response.ok) throw new Error();
 
       await fetchServices();
-      toast.success("Service deleted successfully!");
+      toast.success("Service updated successfully!");
     } catch (err) {
       toast.error("Failed to delete service!");
     }
@@ -135,7 +142,7 @@ export default function Services() {
                     <TableCell>{service.amount}₹</TableCell>
                     <TableCell>{service.description}</TableCell>
                     <TableCell>{service.isDeleted ? <span className="text-red-500">Inactive</span> :<span className="text-green-600">Active</span>}</TableCell>
-                    <TableCell className="flex gap-3">
+                    <TableCell className="flex gap-3 items-center">
                       <Pencil
                         className="h-4 w-4 cursor-pointer"
                         onClick={() => {
@@ -144,9 +151,9 @@ export default function Services() {
                         }}
                       />
 
-                      <Trash2 
-                        className="h-4 w-4 cursor-pointer text-red-500"
-                        onClick={() => handleDelete(service.id)}
+                      <Switch
+                        checked={!service.isDeleted} 
+                        onCheckedChange={() => handleDelete(service)}
                       />
                     </TableCell>
                   </TableRow>
@@ -158,7 +165,10 @@ export default function Services() {
       </Card>
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg"
+          onInteractOutside={(e) => e.preventDefault()}  
+          onEscapeKeyDown={(e) => e.preventDefault()}   
+        >
           <DialogHeader>
             <DialogTitle>
               {editService ? "Edit Service" : "Add New Service"}

@@ -26,7 +26,10 @@ const AddPatientDialog: React.FC<AddPatientDialogProps> = ({ onPatientAdded }) =
 
       {/* Patient Registration Dialog */}
       <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto"
+          onInteractOutside={(e) => e.preventDefault()}  
+          onEscapeKeyDown={(e) => e.preventDefault()}   
+        >
           <DialogHeader>
             <DialogTitle>Add New Patient</DialogTitle>
           </DialogHeader>

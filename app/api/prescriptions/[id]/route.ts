@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getPrescriptionById } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { prescriptions, patients, userInAuth as user } from "@/lib/db/migrations/schema";
+import { prescriptions, patients, userInAuth as user, appointments, organizationInAuth } from "@/lib/db/migrations/schema";
 import { eq, and } from "drizzle-orm";
 
 // GET /api/prescriptions/[id] - Get a specific prescription
@@ -21,6 +21,8 @@ export async function GET(
       .from(prescriptions)
       .innerJoin(patients, eq(prescriptions.patientId, patients.id))
       .innerJoin(user, eq(prescriptions.doctorUserId, user.id))
+      .innerJoin(appointments, eq(prescriptions.appointmentId, appointments.id))
+      .innerJoin(organizationInAuth, eq(prescriptions.hospitalId, organizationInAuth.id)) 
       .where(
         and(
           eq(prescriptions.id, id),
@@ -28,7 +30,7 @@ export async function GET(
         )
       )
       .limit(1);
-      console.log("Prescription data",result);
+    console.log("Prescription data", result);
     if (result.length === 0) {
       return NextResponse.json(
         {
@@ -55,6 +57,24 @@ export async function GET(
       followUpNotes: result[0].prescriptions.followUpNotes,
       additionalNotes: result[0].prescriptions.additionalNotes,
       createdAt: result[0].prescriptions.createdAt,
+      appointment: {
+        id: result[0].appointments.id,
+        appointmentDate: result[0].appointments.appointmentDate,
+        appointmentTime: result[0].appointments.appointmentTime,
+        status: result[0].appointments.status,
+        reason: result[0].appointments.reason,
+        notes: result[0].appointments.notes,
+        isFollowUp: result[0].appointments.isFollowUp,
+        previousAppointmentId: result[0].appointments.previousAppointmentId,
+        scheduledBy: result[0].appointments.scheduledBy,
+        services: result[0].appointments.services,
+      },
+      organization: {
+        id: result[0].organization.id,
+        name: result[0].organization.name,
+        metadata: result[0].organization.metadata
+      }
+
     };
     return NextResponse.json({
       success: true,

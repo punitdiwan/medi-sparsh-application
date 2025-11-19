@@ -1,210 +1,459 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
+  headRow: {
+    flexDirection: "row",
+  },
+  headLabel: {
+    fontWeight: "bold",
+    textTransform: "capitalize", 
+  }
+  ,
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
     padding: 30,
-    fontFamily: 'Helvetica',
+    backgroundColor: "#fff",
+    fontFamily: "Helvetica",
+    fontSize: 11,
+  },
+  sectionBox: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 12,
+  },
+  
+  doctorInfoRow: {
+    flexDirection: "row",
+    marginBottom: 3,
+    fontSize:"15px",
+  },
+
+  doctorLabel: {
+    width: 130,
+    fontWeight: "bold",
+  },
+
+  doctorValue: {
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
-    paddingBottom: 10,
+    borderBottomColor: "#ccc",
+    marginBottom: 10,
+    backgroundColor: "#008C9E",
+    color:"white",
+  },
+  hospitalBlock: {
+    flexDirection: "column",
   },
   hospitalName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 1,
+    textTransform: "uppercase", 
   },
-  hospitalAddress: {
-    fontSize: 10,
-    color: '#666666',
+  doctorBlock: {
+    textAlign: "right",
+    maxWidth: 200,
   },
-  patientInfo: {
-    marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
-    paddingBottom: 10,
+  doctorName: {
+    fontSize: 14,
+    fontWeight: "bold",
   },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
+  doctorSpecialization: {
+    fontSize: 11,
+    color: "#444",
   },
-  infoLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    width: 80,
-  },
-  infoValue: {
-    fontSize: 12,
+
+  section: {
+    marginTop: 15,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333333',
+    fontSize: 13,
+    fontWeight: "bold",
     borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee',
-    paddingBottom: 5,
+    borderBottomColor: "#ddd",
+    paddingBottom: 4,
+    marginBottom: 8,
+    textTransform: "capitalize", 
   },
-  medicineTable: {
-    flexDirection: 'column',
-    width: 'auto',
-    marginBottom: 15,
+
+  row: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  label: {
+    width: 120,
+    fontWeight: "bold",
+    textTransform: "capitalize",
+  },
+  value: {
+    flex: 1,
+  },
+  table: {
     borderWidth: 1,
-    borderColor: '#cccccc',
+    borderColor: "#aaa",
+    marginTop: 8,
+    marginBottom: 10,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#eeeeee',
-    alignItems: 'center',
-    minHeight: 24,
+    borderBottomColor: "#ddd",
   },
-  tableColHeader: {
-    width: '25%',
-    padding: 5,
-    backgroundColor: '#f0f0f0',
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#cccccc',
-  },
-  tableCol: {
-    width: '25%',
-    padding: 5,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#eeeeee',
-  },
-  tableCellHeader: {
-    margin: 'auto',
+  tableHeader: {
+    flex: 1,
+    padding: 6,
+    textAlign: "center",
+    backgroundColor: "#f0f0f0",
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tableCell: {
-    margin: 'auto',
+    flex: 1,
+    padding: 6,
     fontSize: 10,
+    textAlign: "center",
   },
+  twoColumnBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 20,
+  },
+
+  column: {
+    flex: 1,
+  },
+
+
   footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 30,
-    textAlign: 'center',
-    fontSize: 10,
-    color: '#666666',
-    borderTopWidth: 1,
-    borderTopColor: '#cccccc',
-    paddingTop: 10,
-  },
-  doctorSignature: {
     marginTop: 30,
-    textAlign: 'right',
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 10,
+    textAlign: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#ccc",
+    padding: 8,
+    color: "#777",
   },
+  
 });
 
-interface Medicine {
-  name: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-}
+const style1 = StyleSheet.create({
+  sectionBox: {
+  padding: 8,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: "#ccc",
+  borderRadius: 4
+},
+row: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginBottom: 4
+},
+sectionTitle: {
+  fontSize: 14,
+  fontWeight: "bold",
+  marginBottom: 6
+},
+label: {
+  fontSize: 12,
+  fontWeight: "bold"
+},
+value: {
+  fontSize: 12
+},
+headerFixed: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+},
+
+footerFixed: {
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+},
+contentWrapper: {
+  marginTop: 80,     
+  marginBottom: 60,  
+  textTransform: "capitalize", 
+},
+
+
+})
 
 interface PrescriptionPdfProps {
+  id: string;
+  prescriptionId: string;
+  createdAt: string;
+  patientId: string;
   patientName: string;
-  patientAge: number;
   patientGender: string;
+  patientAge: number;
+  patientAddress: any;
   doctorName: string;
   doctorSpecialization: string;
   diagnosis: string;
-  medicines: Medicine[];
+  symptoms: string | null;
+  appointmentId?: string | null;
+  appointmentDate?: string | null;
+  appointmentTime?: string | null;
+  appointmentStatus?: string | null;
+  appointmentReason?: string | null;
+  appointmentNotes?: string | null;
+  isFollowUp?: boolean | null;
+  previousAppointmentId?: string | null;
+  medicines: Array<{
+    name: string;
+    dosage: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
+  }>;
+
+  labTests: Array<{
+    name: string;
+    description?: string;
+  }> | null;
+
+  vitals: Record<string, any> | null;
+
+  followUpRequired: boolean;
+  followUpDate: string | null;
+  followUpNotes: string | null;
+
+  additionalNotes: string | null;
   notes: string;
   date: string;
+  organization: {
+    id: string;
+    name: string;
+    metadata: string | null;
+  };
 }
 
-const PrescriptionPdf: React.FC<PrescriptionPdfProps> = ({
-  patientName,
-  patientAge,
-  patientGender,
-  doctorName,
-  doctorSpecialization,
-  diagnosis,
-  medicines,
-  notes,
-  date,
-}) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.hospitalName}>MediSparsh Hospital</Text>
-          <Text style={styles.hospitalAddress}>123 Health St, Wellness City, 12345</Text>
-          <Text style={styles.hospitalAddress}>Phone: (123) 456-7890 | Email: info@medisparsh.com</Text>
-        </View>
-        <Text style={styles.hospitalAddress}>Date: {date}</Text>
-      </View>
+const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
+  const {
+    patientName,
+    patientAge,
+    patientGender,
+    patientAddress,
+    doctorName,
+    doctorSpecialization,
+    diagnosis,
+    symptoms,
+    medicines,
+    labTests,
+    vitals,
+    appointmentDate,
+    appointmentTime,
+    appointmentReason,
+    appointmentStatus,
+    appointmentNotes,
+    followUpRequired,
+    followUpDate,
+    followUpNotes,
+    notes,
+    date,
+    organization
+  } = props;
+  const parsedMetadata = organization?.metadata
+    ? JSON.parse(organization.metadata)
+    : null;
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* HEADER */}
+        <View style={[styles.header, style1.headerFixed]}>
+            <View>
+              <Text style={styles.hospitalName}>
+                {organization?.name || "MediSparsh Hospital"}
+              </Text>
 
-      <View style={styles.patientInfo}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Patient Name:</Text>
-          <Text style={styles.infoValue}>{patientName}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Age/Gender:</Text>
-          <Text style={styles.infoValue}>{patientAge}/{patientGender}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Doctor:</Text>
-          <Text style={styles.infoValue}>{doctorName} ({doctorSpecialization})</Text>
-        </View>
-      </View>
+              <View style={styles.headRow}>
+                <Text style={styles.headLabel}>Address:</Text>
+                <Text> {parsedMetadata?.address || "123 Health St, Wellness City"}</Text>
+              </View>
 
-      <View style={styles.sectionTitle}>
-        <Text>Diagnosis</Text>
-      </View>
-      <Text style={{ marginBottom: 15, fontSize: 12 }}>{diagnosis}</Text>
+              <View style={styles.headRow}>
+                <Text style={styles.headLabel}>Contact:</Text>
+                <Text> {parsedMetadata?.phone || "+91-0000000000"}</Text>
+              </View>
 
-      <View style={styles.sectionTitle}>
-        <Text>Medication</Text>
-      </View>
-      <View style={styles.medicineTable}>
-        <View style={styles.tableRow}>
-          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Medicine</Text></View>
-          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Dosage</Text></View>
-          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Frequency</Text></View>
-          <View style={styles.tableColHeader}><Text style={styles.tableCellHeader}>Duration/Day</Text></View>
-        </View>
-        {medicines.map((med, index) => (
-          <View style={styles.tableRow} key={index}>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>{med.name}</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>{med.dosage}</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>{med.frequency}</Text></View>
-            <View style={styles.tableCol}><Text style={styles.tableCell}>{med.duration}</Text></View>
+              <View style={styles.headRow}>
+                <Text style={styles.headLabel}>Email:</Text>
+                <Text> {parsedMetadata?.email || "contact@example.com"}</Text>
+              </View>
+            </View>
+
+            <View>
+              <View style={styles.doctorInfoRow}>
+                <Text style={{textTransform: "capitalize"}}>Dr.</Text>
+                <Text style={{fontWeight: "bold", textTransform: "uppercase"}}>{doctorName}</Text>
+              </View>
+            </View>
           </View>
-        ))}
-      </View>
 
-      <View style={styles.sectionTitle}>
-        <Text>Notes / Instructions</Text>
-      </View>
-      <Text style={{ marginBottom: 30, fontSize: 12 }}>{notes}</Text>
+        <View style={style1.contentWrapper}>
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>Patient & Appointment Details</Text>
 
-      <Text style={styles.doctorSignature}>Dr. {doctorName}</Text>
-      <Text style={{ textAlign: 'right', fontSize: 10, color: '#666666' }}>{doctorSpecialization}</Text>
+            <View style={styles.twoColumnBox}>
 
-      <Text style={styles.footer}>
-        This is a computer generated prescription and does not require a signature.
-      </Text>
-    </Page>
-  </Document>
-);
+              {/* LEFT COLUMN — PATIENT INFO */}
+              <View style={styles.column}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Name:</Text>
+                  <Text style={styles.value}>{patientName}</Text>
+                </View>
+
+                <View style={styles.row}>
+                  <Text style={styles.label}>Age / Gender:</Text>
+                  <Text style={styles.value}>{patientAge} / {patientGender}</Text>
+                </View>
+
+                <View style={styles.row}>
+                  <Text style={styles.label}>Address:</Text>
+                  <Text style={styles.value}>{patientAddress || "—"}</Text>
+                </View>
+              </View>
+
+              {/* RIGHT COLUMN — APPOINTMENT INFO */}
+              <View style={styles.column}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Date:</Text>
+                  <Text style={styles.value}>{appointmentDate || "—"}</Text>
+                </View>
+
+                <View style={styles.row}>
+                  <Text style={styles.label}>Time:</Text>
+                  <Text style={styles.value}>{appointmentTime || "—"}</Text>
+                </View>
+
+                <View style={styles.row}>
+                  <Text style={styles.label}>Status:</Text>
+                  <Text style={styles.value}>{appointmentStatus || "—"}</Text>
+                </View>
+
+                <View style={styles.row}>
+                  <Text style={styles.label}>Reason:</Text>
+                  <Text style={styles.value}>{appointmentReason || "—"}</Text>
+                </View>
+
+                {appointmentNotes && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Notes:</Text>
+                    <Text style={styles.value}>{appointmentNotes}</Text>
+                  </View>
+                )}
+              </View>
+
+            </View>
+          </View>
+
+
+            {/* TWO COLUMN WRAPPER */}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+
+              {/* LEFT COLUMN — DIAGNOSIS + SYMPTOMS */}
+              <View style={{ flex: 1 }}>
+                <View style={styles.sectionBox}>
+                  <Text style={styles.sectionTitle}>Diagnosis</Text>
+                  <Text>{diagnosis || "—"}</Text>
+                </View>
+
+                {symptoms && (
+                  <View style={styles.sectionBox}>
+                    <Text style={styles.sectionTitle}>Symptoms</Text>
+                    <Text>{symptoms}</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* RIGHT COLUMN — VITALS ONLY */}
+              <View style={{ flex: 1 }}>
+                {vitals && Object.keys(vitals).length > 0 && (
+                  <View style={styles.sectionBox}>
+                    <Text style={styles.sectionTitle}>Vitals</Text>
+
+                    {Object.entries(vitals).map(([key, value]) => (
+                      <View style={styles.row} key={key}>
+                        <Text style={styles.label}>{key}:</Text>
+                        <Text style={styles.value}>{String(value)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+            </View>
+
+
+          {/* MEDICINES */}
+          <View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>Medicines</Text>
+
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <Text style={styles.tableHeader}>Medicine</Text>
+                <Text style={styles.tableHeader}>Dosage</Text>
+                <Text style={styles.tableHeader}>Frequency</Text>
+                <Text style={styles.tableHeader}>Duration</Text>
+              </View>
+
+              {medicines.map((m, i) => (
+                <View style={styles.tableRow} key={i}>
+                  <Text style={styles.tableCell}>{m.name}</Text>
+                  <Text style={styles.tableCell}>{m.dosage}</Text>
+                  <Text style={styles.tableCell}>{m.frequency}</Text>
+                  <Text style={styles.tableCell}>{m.duration}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* LAB TESTS */}
+          {labTests && labTests.length > 0 && (
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>Lab Tests</Text>
+              {labTests.map((t, i) => (
+                <Text key={i}>• {t.name} {t.description ? ` - ${t.description}` : ""}</Text>
+              ))}
+            </View>
+          )}
+
+          {/* FOLLOW UP */}
+          {followUpDate &&<View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>Follow Up</Text>
+
+            <Text>Required: {followUpRequired ? "Yes" : "No"}</Text>
+            {followUpDate && <Text>Follow Up Date: {followUpDate}</Text>}
+            {followUpNotes && <Text>Notes: {followUpNotes}</Text>}
+          </View>}
+
+          {/* ADDITIONAL NOTES */}
+          {notes&&<View style={styles.sectionBox}>
+            <Text style={styles.sectionTitle}>Additional Notes</Text>
+            <Text>{notes}</Text>
+          </View>}
+        </View>
+
+        {/* FOOTER */}
+         <View style={[styles.footer, style1.footerFixed]}>
+            <Text>This is a generated prescription and does not require a signature.</Text>
+          </View>
+      </Page>
+    </Document>
+  );
+};
 
 export default PrescriptionPdf;
