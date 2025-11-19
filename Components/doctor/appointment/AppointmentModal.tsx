@@ -201,8 +201,13 @@ export default function AppointmentModal({
         setShowServicesDropdown(false);
       }
       onOpenChange(val);
-    }}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+    }}
+    
+    >
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}  
+        onEscapeKeyDown={(e) => e.preventDefault()}    
+      >
         <DialogHeader>
           <DialogTitle>Book Appointment</DialogTitle>
         </DialogHeader>

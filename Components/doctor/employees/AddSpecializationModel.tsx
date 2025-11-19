@@ -55,7 +55,10 @@ export default function AddDataModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background ">
+      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background " 
+        onInteractOutside={(e) => e.preventDefault()}  
+        onEscapeKeyDown={(e) => e.preventDefault()}   
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>

@@ -94,7 +94,7 @@ export default function Services() {
       if (!response.ok) throw new Error();
 
       await fetchServices();
-      toast.success("Service deleted successfully!");
+      toast.success("Service updated successfully!");
     } catch (err) {
       toast.error("Failed to delete service!");
     }
@@ -165,7 +165,10 @@ export default function Services() {
       </Card>
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg"
+          onInteractOutside={(e) => e.preventDefault()}  
+          onEscapeKeyDown={(e) => e.preventDefault()}   
+        >
           <DialogHeader>
             <DialogTitle>
               {editService ? "Edit Service" : "Add New Service"}

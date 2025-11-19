@@ -12,20 +12,25 @@ import { getShortId } from "@/utils/getShortId";
 import { useSidebar } from "@/components/ui/sidebar";
 import { FaFileDownload } from "react-icons/fa";
 import { MdLocalPrintshop } from "react-icons/md";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { TransactionPDF } from "./TransactionPDF";
 type Transaction = {
-  id: string;
   amount: number;
-  status: string;
-  paymentMethod: string;
+  appointmentDate: string;
+  appointmentId: string;
+  appointmentStatus: string;
+  appointmentTime: string;
   createdAt: string;
-
-  patientName: string | null;
-  patientPhone: string | null;
-  patientGender: string | null;
-
-  appointmentDate: string | null;
-  appointmentTime: string | null;
+  hospitalId: string;
+  patientGender: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  paymentMethod: string;
+  status: string;
+  transactionId: string;
 };
+
 
 
 export default function BillingPage() {
@@ -96,18 +101,21 @@ export default function BillingPage() {
   ];
 
   const actionsColumn: ColumnDef<Transaction> = {
-    header: "Actions",
-    id: "actions",
-    cell: ({ row }) => {
-      const transaction = row.original;
+  header: "Actions",
+  id: "actions",
+  cell: ({ row }) => {
+    const transaction = row.original;
 
-      return (
-       <div className="flex gap-2">
+    return (
+      <div className="flex gap-2">
+        {/* Print Button */}
         <div className="relative group">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(`/billing/print/${transaction.id}`, "_blank")}
+            onClick={() =>
+              window.open(`/billing/print/${transaction.transactionId}`, "_blank")
+            }
           >
             <MdLocalPrintshop />
           </Button>
@@ -115,22 +123,45 @@ export default function BillingPage() {
             Print
           </span>
         </div>
+
+        {/* Download PDF Button */}
         <div className="relative group">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(`/billing/download/${transaction.id}`, "_blank")}
+          <PDFDownloadLink
+            document={<TransactionPDF
+              transaction={{
+                amount: transaction.amount,
+                appointmentDate: transaction.appointmentDate || "",
+                appointmentId: transaction.appointmentId, 
+                appointmentStatus: "scheduled", 
+                appointmentTime: transaction.appointmentTime || "",
+                createdAt: transaction.createdAt,
+                hospitalId: "unknown", 
+                patientGender: transaction.patientGender || "",
+                patientId: "unknown", 
+                patientName: transaction.patientName || "",
+                patientPhone: transaction.patientPhone || "",
+                paymentMethod: transaction.paymentMethod,
+                status: transaction.status,
+                transactionId: transaction.transactionId,
+              }}
+            />}
+            fileName={`transaction-${transaction.transactionId}.pdf`}
           >
-            <FaFileDownload />
-          </Button>
+            {({ loading }) => (
+              <Button variant="outline" size="sm">
+                {loading ? "Generating..." : <FaFileDownload />}
+              </Button>
+            )}
+          </PDFDownloadLink>
           <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             Download
           </span>
         </div>
       </div>
-      );
-    },
-  };
+    );
+  },
+};
+
 
 
  const optionalColumns: ColumnDef<Transaction>[] = [
