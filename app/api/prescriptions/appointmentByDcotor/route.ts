@@ -11,7 +11,6 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const appointmentId = url.searchParams.get("appointmentId");
 
-    console.log("🚀 appointmentId from API:", appointmentId);
 
     if (!appointmentId) {
       return NextResponse.json(
@@ -33,7 +32,6 @@ export async function GET(req: NextRequest) {
         )
       );
 
-    console.log("📝 Raw DB result:", result);
 
     if (!result || result.length === 0) {
       console.log("⚠️ No prescription found for this appointment.");
@@ -58,7 +56,6 @@ export async function GET(req: NextRequest) {
       createdAt: row.prescriptions.createdAt,
     }));
 
-    console.log("✅ Mapped prescription data:", prescriptionData);
 
     return NextResponse.json({ success: true, data: prescriptionData });
   } catch (error) {

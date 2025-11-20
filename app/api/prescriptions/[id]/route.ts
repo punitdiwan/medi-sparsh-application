@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getPrescriptionById } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { prescriptions, patients, userInAuth as user, appointments, organizationInAuth } from "@/lib/db/migrations/schema";
+import { prescriptions, patients, userInAuth as user, appointments, organizationInAuth, doctors, staff } from "@/lib/db/migrations/schema";
 import { eq, and } from "drizzle-orm";
 
 // GET /api/prescriptions/[id] - Get a specific prescription
@@ -30,7 +30,8 @@ export async function GET(
         )
       )
       .limit(1);
-    console.log("Prescription data", result);
+
+
     if (result.length === 0) {
       return NextResponse.json(
         {
@@ -40,6 +41,16 @@ export async function GET(
         { status: 404 }
       );
     }
+    const doctorData = await db
+    .select()
+    .from(doctors)
+    .innerJoin(staff, eq(doctors.staffId, staff.id))
+    .innerJoin(user, eq(staff.userId, user.id))
+    .where(eq(user.id, result[0].prescriptions.doctorUserId))
+    .limit(1);
+
+
+    const doctor = doctorData.length > 0 ? doctorData[0] : null;
 
     const prescriptionData = {
       id: result[0].prescriptions.id,
@@ -73,8 +84,14 @@ export async function GET(
         id: result[0].organization.id,
         name: result[0].organization.name,
         metadata: result[0].organization.metadata
-      }
-
+      },
+      doctorDetails: doctor
+        ? {
+            specialization: doctor.doctors.specialization,
+            qualification: doctor.doctors.qualification,
+            experience: doctor.doctors.experience,
+          }
+        : null,
     };
     return NextResponse.json({
       success: true,

@@ -2,21 +2,28 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/migrations/schema";
 import { eq ,and} from "drizzle-orm";
+import { getCurrentHospital } from "@/lib/tenant";
 
 
 export async function GET() {
   try {
-    const result = await db.select().from(settings);
+    const hospital = await getCurrentHospital();
 
-    if (result.length > 0) {
-      return NextResponse.json({ success: true, data: result[0] });
-    } else {
-      // Default to false if not found
-      return NextResponse.json({ success: true, data: { value: "false" } });
-    }
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.organizationId, hospital.hospitalId));
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    });
   } catch (error) {
-    console.error("Error fetching setting:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch setting" }, { status: 500 });
+    console.error("Error fetching settings:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch settings" },
+      { status: 500 }
+    );
   }
 }
 
@@ -24,32 +31,52 @@ export async function POST(req: Request) {
   try {
     const { orgId, key, value } = await req.json();
 
-    if (typeof value !== "boolean") {
+    if (typeof key !== "string") {
       return NextResponse.json(
-        { success: false, error: "Invalid value, must be boolean" },
+        { success: false, error: "Key is required" },
         { status: 400 }
       );
     }
 
-    const stringValue = String(value);
-
-    const updateResult = await db
-      .update(settings)
-      .set({ value: stringValue, updatedAt: new Date().toISOString() })
-      .where(
-        and(
-          eq(settings.key, key),
-          eq(settings.organizationId, orgId)
-        )
+    if (typeof value !== "boolean") {
+      return NextResponse.json(
+        { success: false, error: "Value must be boolean" },
+        { status: 400 }
       );
-
-    if (updateResult.length > 0) {
-      return NextResponse.json({ success: true, data: { key, value: stringValue } });
     }
 
+    const stringValue = value ? "true" : "false";
 
-    return NextResponse.json({ success: true, data: { key, value: stringValue } });
+    const updated = await db
+      .update(settings)
+      .set({
+        value: stringValue,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(and(eq(settings.key, key), eq(settings.organizationId, orgId)))
+      .returning();
 
+    if (updated.length > 0) {
+      return NextResponse.json({
+        success: true,
+        data: updated[0],
+      });
+    }
+
+    // const inserted = await db
+    //   .insert(settings)
+    //   .values({
+    //     key,
+    //     value: stringValue,
+    //     organizationId: orgId,
+    //     createdAt: new Date().toISOString(),
+    //   })
+    //   .returning();
+
+    // return NextResponse.json({
+    //   success: true,
+    //   data: inserted[0],
+    // });
   } catch (error) {
     console.error("Error updating setting:", error);
     return NextResponse.json(
