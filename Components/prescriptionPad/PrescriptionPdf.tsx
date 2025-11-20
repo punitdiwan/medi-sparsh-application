@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 12,
   },
-  
+
   doctorInfoRow: {
     flexDirection: "row",
     marginBottom: 3,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     padding: 8,
     color: "#777",
   },
-  
+
 });
 
 const style1 = StyleSheet.create({
@@ -183,9 +183,9 @@ footerFixed: {
   right: 0,
 },
 contentWrapper: {
-  marginTop: 100,     
-  marginBottom: 60,  
-  textTransform: "capitalize", 
+  marginTop: 100,
+  marginBottom: 60,
+  textTransform: "capitalize",
 },
 
 
@@ -239,6 +239,7 @@ interface PrescriptionPdfProps {
     name: string;
     metadata: string | null;
   };
+  orgModeCheck: boolean;
 }
 
 const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
@@ -264,7 +265,8 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
     followUpNotes,
     notes,
     date,
-    organization
+    organization,
+    orgModeCheck
   } = props;
   const parsedMetadata = organization?.metadata
     ? JSON.parse(organization.metadata)
@@ -272,16 +274,17 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* HEADER */}
-        <View style={[styles.header, style1.headerFixed]}>
+
+        {orgModeCheck ? (
+          <View style={[styles.header, style1.headerFixed]}>
             <View>
-              <Text style={styles.hospitalName}>
+              <Text style={[styles.hospitalName, { fontSize: 22 }]}>
                 {organization?.name || "MediSparsh Hospital"}
               </Text>
 
               <View style={styles.headRow}>
                 <Text style={styles.headLabel}>Address:</Text>
-                <Text> {parsedMetadata?.address || "123 Health St, Wellness City"}</Text>
+                <Text> {parsedMetadata?.address || "123 Health St"}</Text>
               </View>
 
               <View style={styles.headRow}>
@@ -295,16 +298,40 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
               </View>
             </View>
 
-            <View>
-              <View style={styles.doctorInfoRow}>
-                <Text style={{textTransform: "capitalize"}}>Dr.</Text>
-                <Text style={{fontWeight: "bold", textTransform: "uppercase"}}>{doctorName}</Text>
-              </View>
-              <View style={{}}>
-                <Text style={{fontSize:"10px", textTransform: "uppercase"}}>({doctorSpecialization})</Text>
-              </View>
+            <View style={styles.doctorBlock}>
+              <Text style={[styles.doctorName, { fontSize: 14 }]}>
+                Dr. {doctorName}
+              </Text>
+              <Text style={styles.doctorSpecialization}>
+                {doctorSpecialization}
+              </Text>
             </View>
           </View>
+        ) : (
+          <View style={[styles.header, style1.headerFixed]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 20, fontWeight: "bold", textTransform: "uppercase" }}>
+                Dr. {doctorName}
+              </Text>
+              <Text style={{ fontSize: 12 ,color:"white"}}>{doctorSpecialization}</Text>
+            </View>
+            <View style={{ flex: 1, textAlign: "right" }}>
+              <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+                {organization?.name || "Clinic Name"}
+              </Text>
+
+              <Text style={{ fontSize: 10 }}>
+                {parsedMetadata?.address || "123 Health St"}
+              </Text>
+              <Text style={{ fontSize: 10 }}>
+                {parsedMetadata?.phone || "+91-0000000000"}
+              </Text>
+              <Text style={{ fontSize: 10 }}>
+                {parsedMetadata?.email || "example@mail.com"}
+              </Text>
+            </View>
+          </View>
+        )}
 
         <View style={style1.contentWrapper}>
           <View style={styles.sectionBox}>

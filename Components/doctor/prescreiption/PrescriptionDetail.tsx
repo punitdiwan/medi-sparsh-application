@@ -11,6 +11,13 @@ import PrescriptionPdf from "@/Components/prescriptionPad/PrescriptionPdf";
 import calculateAge from "@/utils/ageCalculator";
 import { pdf } from "@react-pdf/renderer";
 
+type Setting = {
+  key: string;
+  value: string;
+  organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+};
 type PrescriptionDetail = {
   id: string;
   patientId: string;
@@ -75,7 +82,7 @@ export default function PrescriptionDetail() {
 
   const [prescription, setPrescription] = useState<PrescriptionDetail | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [Org, setOrg] = useState<boolean>(true);
   const printPDF = async () => {
   if (!prescription) return;
 
@@ -107,6 +114,7 @@ export default function PrescriptionDetail() {
       notes={prescription.additionalNotes || ""}
       prescriptionId={prescription.id}
       organization={prescription.organization}
+      orgModeCheck={Org}
       date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}   />
   ).toBlob();
 
@@ -120,7 +128,7 @@ export default function PrescriptionDetail() {
     };
   }
 };
-
+ 
   useEffect(() => {
     const fetchPrescription = async () => {
       try {
@@ -130,7 +138,6 @@ export default function PrescriptionDetail() {
 
         if (result.success) {
           const d = result.data;
-          console.log("data :",d)
           const normalized = {
             id: d.id ?? "",
             createdAt: d.createdAt ?? "",
@@ -184,8 +191,6 @@ export default function PrescriptionDetail() {
               consultationFee: d.doctorDetails?.consultationFee ?? "",
             },
           };
-
-          console.log("Normalized: ", normalized);
           setPrescription(normalized);
         } else {
           toast.error(result.error || "Failed to load prescription");
@@ -204,6 +209,39 @@ export default function PrescriptionDetail() {
       fetchPrescription();
     }
   }, [prescriptionId, router]);
+
+  useEffect(() => {
+  const checkOrg = async () => {
+    try {
+      const response = await fetch("/api/settings/phone-validation");
+      const data = await response.json();
+      if (!data.success) {
+        toast.error("Failed to load settings");
+        return;
+      }
+
+      const map: Record<string, Setting> = {};
+      data.data.forEach((s: Setting) => {
+        map[s.key] = s;
+      });
+
+      const orgMode = map["organization_mode_check"]?.value;
+
+      if (orgMode !== undefined) {
+        const isHospital = orgMode === "true";
+        setOrg(isHospital);
+
+        console.log("Organization Mode:", isHospital ? "Hospital" : "Clinic");
+      }
+
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      toast.error("Failed to load settings");
+    }
+  };
+
+  checkOrg();
+}, []);
 
   if (loading) {
     return (
@@ -263,6 +301,7 @@ export default function PrescriptionDetail() {
                 notes={prescription.additionalNotes || ""}
                 prescriptionId={prescription.id}
                 organization={prescription.organization}
+                orgModeCheck={Org}
                 date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}              />
 
             }
