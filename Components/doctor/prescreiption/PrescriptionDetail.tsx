@@ -56,6 +56,15 @@ type PrescriptionDetail = {
     name: string;
     metadata: any | null;
   };
+   doctor: {
+    name: string;
+    specialization: Array<{
+      name: string;
+    }>;
+    qualification: string;
+    experience: string;
+    consultationFee?: string;
+  };
 };
 
 
@@ -77,8 +86,8 @@ export default function PrescriptionDetail() {
       patientGender={prescription.patientGender}
       patientId={prescription.patientId}
       patientAddress={prescription.patientAddress}
-      doctorName={prescription.doctorName}
-      doctorSpecialization={prescription.doctorSpecialization}
+      doctorName={prescription.doctor.name}
+      doctorSpecialization={prescription.doctor.qualification}
       appointmentDate={prescription.appointment?.appointmentDate}
       appointmentTime={prescription.appointment?.appointmentTime}
       appointmentId={prescription.appointment?.id}
@@ -167,6 +176,13 @@ export default function PrescriptionDetail() {
               name: d.organization?.name ?? "",
               metadata: d.organization?.metadata ?? null
             },
+            doctor: {
+              name: d.doctorName ?? "",
+              specialization: d.doctorDetails?.specialization || [],
+              qualification: d.doctorDetails?.qualification ?? "",
+              experience: d.doctorDetails?.experience ?? "",
+              consultationFee: d.doctorDetails?.consultationFee ?? "",
+            },
           };
 
           console.log("Normalized: ", normalized);
@@ -226,8 +242,8 @@ export default function PrescriptionDetail() {
                 patientGender={prescription.patientGender}
                 patientId={prescription.patientId}
                 patientAddress={prescription.patientAddress}
-                doctorName={prescription.doctorName}
-                doctorSpecialization={prescription.doctorSpecialization}
+                doctorName={prescription.doctor.name}
+                doctorSpecialization={prescription.doctor.qualification}
                 appointmentDate={prescription.appointment?.appointmentDate}
                 appointmentTime={prescription.appointment?.appointmentTime}
                 appointmentId={prescription.appointment?.id}

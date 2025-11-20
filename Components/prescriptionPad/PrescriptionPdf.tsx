@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 10,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
     marginBottom: 10,
@@ -183,7 +183,7 @@ footerFixed: {
   right: 0,
 },
 contentWrapper: {
-  marginTop: 80,     
+  marginTop: 100,     
   marginBottom: 60,  
   textTransform: "capitalize", 
 },
@@ -299,6 +299,9 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
               <View style={styles.doctorInfoRow}>
                 <Text style={{textTransform: "capitalize"}}>Dr.</Text>
                 <Text style={{fontWeight: "bold", textTransform: "uppercase"}}>{doctorName}</Text>
+              </View>
+              <View style={{}}>
+                <Text style={{fontSize:"10px", textTransform: "uppercase"}}>({doctorSpecialization})</Text>
               </View>
             </View>
           </View>

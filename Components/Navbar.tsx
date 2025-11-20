@@ -79,17 +79,6 @@ export default function Header() {
                 </div>
               </DropdownMenuItem>
 
-              <DropdownMenuItem >
-                <div onClick={() => setOpen(false)}>
-                  <Link
-                    href="/doctor/billing"
-                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                  >
-                    Payment History
-                  </Link>
-                </div>
-              </DropdownMenuItem>
-
               <DropdownMenuItem>
                 <div onClick={() => setOpen(false)}>
                   <Link

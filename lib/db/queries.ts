@@ -10,7 +10,8 @@ import {
   memberInAuth as member,
   specializations,
   services,
-  transactions
+  transactions,
+  organizationInAuth
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -529,10 +530,21 @@ export async function getTransactionsByHospital(hospitalId: string) {
       appointmentStatus: appointments.status,
       appointmentDate: appointments.appointmentDate,
       appointmentTime: appointments.appointmentTime,
+      orgName: organizationInAuth.name,
+      orgLogo: organizationInAuth.logo,
+      orgMetaData: organizationInAuth.metadata,
+      doctorName: user.name,
+      doctorQualification: doctors.qualification,
+      doctorExperience: doctors.experience,
+      doctorSpecialization: doctors.specialization,
     })
     .from(transactions)
     .leftJoin(patients, eq(patients.id, transactions.patientId))
     .leftJoin(appointments, eq(appointments.id, transactions.appointmentsId))
+    .leftJoin(staff, eq(staff.userId, appointments.doctorUserId))
+    .leftJoin(doctors, eq(doctors.staffId, staff.id))
+    .leftJoin(user, eq(user.id, staff.userId))
+    .leftJoin(organizationInAuth, eq(organizationInAuth.id, transactions.hospitalId))
     .where(eq(transactions.hospitalId, hospitalId))
     .orderBy(sql`${transactions.createdAt} DESC`);
 

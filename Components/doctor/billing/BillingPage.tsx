@@ -12,8 +12,15 @@ import { getShortId } from "@/utils/getShortId";
 import { useSidebar } from "@/components/ui/sidebar";
 import { FaFileDownload } from "react-icons/fa";
 import { MdLocalPrintshop } from "react-icons/md";
-import { PDFDownloadLink } from "@react-pdf/renderer";
+import { pdf, PDFDownloadLink } from "@react-pdf/renderer";
 import { TransactionPDF } from "./TransactionPDF";
+
+type OrganizationMetaData = {
+  address?: string;
+  phone?: string;
+  email?: string;
+};
+
 type Transaction = {
   amount: number;
   appointmentDate: string;
@@ -29,6 +36,14 @@ type Transaction = {
   paymentMethod: string;
   status: string;
   transactionId: string;
+  orgName: string | null;
+  orgLogo: string | null;
+  orgMetaData: OrganizationMetaData | null;
+  doctorName: string | null;
+  doctorQualification: string | null;
+  doctorExperience: string | null;
+  doctorSpecialization: Array<{ name: string }> | null;
+
 };
 
 
@@ -58,8 +73,13 @@ export default function BillingPage() {
         const data = await res.json();
 
         if (!data.success) return toast.error("Failed to load transactions");
-        console.log("tarnsaction data",data)
-        setTransactions(data.data);
+          const parsedData = data.data.map((t: any) => ({
+          ...t,
+          orgMetaData: t.orgMetaData ? JSON.parse(t.orgMetaData) : null,
+        }));
+        console.log("Tdata",parsedData)
+        setTransactions(parsedData);
+
       } catch (err) {
         console.error(err);
         toast.error("Error loading transactions");
@@ -106,17 +126,44 @@ export default function BillingPage() {
   cell: ({ row }) => {
     const transaction = row.original;
 
+    const handlePrint = async () => {
+      const blob = await pdf(
+        <TransactionPDF
+          transaction={{
+            amount: transaction.amount,
+            appointmentDate: transaction.appointmentDate || "",
+            appointmentId: transaction.appointmentId, 
+            appointmentStatus: "scheduled", 
+            appointmentTime: transaction.appointmentTime || "",
+            createdAt: transaction.createdAt,
+            hospitalId: "unknown", 
+            hospitalName:transaction.orgName,
+            hospitalContact: transaction.orgMetaData,
+            hospitalLogo: transaction.orgLogo,
+            patientGender: transaction.patientGender || "",
+            patientId: "unknown", 
+            patientName: transaction.patientName || "",
+            patientPhone: transaction.patientPhone || "",
+            paymentMethod: transaction.paymentMethod,
+            status: transaction.status,
+            transactionId: transaction.transactionId,
+            doctorName: transaction.doctorName || "",
+            doctorQualification: transaction.doctorQualification || "",
+            doctorExperience: transaction.doctorExperience || "",
+            doctorSpecialization: transaction.doctorSpecialization || [],
+          }}
+        />
+      ).toBlob();
+
+      const fileURL = URL.createObjectURL(blob);
+      const printWindow = window.open(fileURL);
+      printWindow?.focus();
+      printWindow?.print();
+    };
     return (
       <div className="flex gap-2">
-        {/* Print Button */}
         <div className="relative group">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              window.open(`/billing/print/${transaction.transactionId}`, "_blank")
-            }
-          >
+          <Button variant="outline" size="sm" onClick={handlePrint}>
             <MdLocalPrintshop />
           </Button>
           <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -124,7 +171,6 @@ export default function BillingPage() {
           </span>
         </div>
 
-        {/* Download PDF Button */}
         <div className="relative group">
           <PDFDownloadLink
             document={<TransactionPDF
@@ -136,6 +182,9 @@ export default function BillingPage() {
                 appointmentTime: transaction.appointmentTime || "",
                 createdAt: transaction.createdAt,
                 hospitalId: "unknown", 
+                hospitalName:transaction.orgName,
+                hospitalContact: transaction.orgMetaData,
+                hospitalLogo: transaction.orgLogo,
                 patientGender: transaction.patientGender || "",
                 patientId: "unknown", 
                 patientName: transaction.patientName || "",

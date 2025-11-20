@@ -7,7 +7,7 @@ export async function GET() {
     try {
         const hospital = await getCurrentHospital();
         const transactions = await getTransactionsByHospital(hospital.hospitalId);
-        console.log("traaction data ",transactions)
+
         return NextResponse.json(
             { success: true, data: transactions },
             { status: 200 }
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
     const body = await req.json();
 
-    console.log("Body:", body);
     const appointment = body.appointment;
 
     if (!appointment || !appointment.id) {
@@ -42,8 +41,6 @@ export async function POST(req: NextRequest) {
       const amt = Number(service.amount || 0);
       return sum + amt;
     }, 0);
-
-    console.log("Appointment Received:", appointment, "Total:", totalAmount);
 
 
     const transaction = await createTransaction({
@@ -95,9 +92,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    console.log("📝 Update Request:", body);
-
-    
 
     return NextResponse.json(
       {
