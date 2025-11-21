@@ -155,12 +155,15 @@ export default function FloorManager() {
             method: "DELETE",
           });
 
-          if (!response.ok) throw new Error("Failed to delete floor");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to delete floor");
+          }
           setFloors((prev) => prev.filter((f) => f.id !== id));
           toast.success("Floor deleted successfully");
         } catch (error) {
           console.error("Error deleting floor:", error);
-          toast.error("Failed to delete floor");
+          toast.error(error instanceof Error ? error.message : "Failed to delete floor");
         }
       }
     }

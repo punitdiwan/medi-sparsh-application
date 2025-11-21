@@ -13,7 +13,8 @@ import {
   transactions,
   organizationInAuth,
   floors,
-  bedsTypes
+  bedsTypes,
+  bedGroups
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -715,4 +716,134 @@ export async function permanentlyDeleteBedType(bedTypeId: string) {
     .returning();
 
   return result[0];
+}
+
+// ===================================================
+// Bed Group Queries
+// ===================================================
+
+export async function getBedGroupsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.hospitalId, hospitalId), eq(bedGroups.isDeleted, false)))
+    .orderBy(desc(bedGroups.createdAt));
+}
+
+export async function getDeletedBedGroupsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.hospitalId, hospitalId), eq(bedGroups.isDeleted, true)))
+    .orderBy(desc(bedGroups.updatedAt));
+}
+
+export async function getBedGroupById(bedGroupId: string) {
+  const result = await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.id, bedGroupId), eq(bedGroups.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createBedGroup(data: {
+  hospitalId: string;
+  name: string;
+  floorId: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(bedGroups)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      floorId: data.floorId,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateBedGroup(bedGroupId: string, data: {
+  name?: string;
+  floorId?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(bedGroups)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.floorId && { floorId: data.floorId }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteBedGroup(bedGroupId: string) {
+  const result = await db
+    .update(bedGroups)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteBedGroup(bedGroupId: string) {
+  const result = await db
+    .delete(bedGroups)
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+// Check if bed groups exist for a floor
+export async function getBedGroupCountByFloor(floorId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(bedGroups)
+    .where(and(eq(bedGroups.floorId, floorId), eq(bedGroups.isDeleted, false)))
+    .limit(1);
+
+  return result[0]?.count || 0;
 }
