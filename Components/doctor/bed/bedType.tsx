@@ -155,12 +155,15 @@ export default function BedTypeManager() {
             method: "DELETE",
           });
 
-          if (!response.ok) throw new Error("Failed to delete bed type");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to delete bed type");
+          }
           setBedTypes((prev) => prev.filter((b) => b.id !== id));
           toast.success("Bed Type deleted successfully");
         } catch (error) {
           console.error("Error deleting bed type:", error);
-          toast.error("Failed to delete bed type");
+          toast.error(error instanceof Error ? error.message : "Failed to delete bed type");
         }
       }
     }

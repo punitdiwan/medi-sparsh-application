@@ -1,105 +1,182 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import BedModal from "./bedModel";
 import { toast } from "sonner";
+import BedModal from "./bedModel";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type Bed = {
   id: string;
   name: string;
   bedTypeId: string;
   bedGroupId: string;
-  bedTypeName: string;
-  bedGroupName: string;
-  notAvailable: boolean;
+  bedTypeName: string | null;
+  bedGroupName: string | null;
+  floorName: string | null;
+  hospitalId: string;
   isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export default function BedManager() {
   const [beds, setBeds] = useState<Bed[]>([]);
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const rowsPerPage = 5;
 
-  const dummyBeds: Bed[] = [
-    {
-      id: "1",
-      name: "Bed A1",
-      bedTypeId: "ICU",
-      bedGroupId: "G1",
-      bedTypeName: "ICU",
-      bedGroupName: "General Ward",
-      notAvailable: false,
-      isDeleted: false,
-    },
-    {
-      id: "2",
-      name: "Bed B2",
-      bedTypeId: "NICU",
-      bedGroupId: "G2",
-      bedTypeName: "NICU",
-      bedGroupName: "Children Ward",
-      notAvailable: true,
-      isDeleted: false,
-    },
-    {
-      id: "3",
-      name: "Bed C3",
-      bedTypeId: "Deluxe",
-      bedGroupId: "G3",
-      bedTypeName: "Deluxe",
-      bedGroupName: "Premium Ward",
-      notAvailable: false,
-      isDeleted: true,
-    },
-  ];
-
+  // Fetch user role and beds on mount
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      const filtered = showDeleted ? dummyBeds : dummyBeds.filter(b => !b.isDeleted);
-      setBeds(filtered);
-      setLoading(false);
-    }, 500);
+    fetchUserRole();
+    fetchBeds();
+  }, []);
+
+  // Refetch beds when showDeleted changes
+  useEffect(() => {
+    fetchBeds();
   }, [showDeleted]);
 
-  const filteredBeds = useMemo(() => {
-    return beds.filter((b) =>
-      b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.bedGroupName.toLowerCase().includes(search.toLowerCase()) ||
-      b.bedTypeName.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [beds, search]);
-
-  const totalPages = Math.ceil(filteredBeds.length / rowsPerPage);
-  const paginatedBeds = filteredBeds.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-
-  const handleSave = async (bed: any) => {
-    if (bed.id) {
-      toast.success("Updated (Dummy)");
-      setBeds(prev => prev.map(x => (x.id === bed.id ? { ...x, ...bed } : x)));
-    } else {
-      toast.success("Created (Dummy)");
-      const newBed = { ...bed, id: Date.now().toString(), bedTypeName: "ICU", bedGroupName: "General" };
-      setBeds(prev => [...prev, newBed]);
+  const fetchUserRole = async () => {
+    try {
+      const response = await fetch("/api/user/role");
+      if (response.ok) {
+        const data = await response.json();
+        setUserRole(data.data.member);
+      }
+    } catch (error) {
+      console.error("Error fetching user role:", error);
     }
   };
 
-  const handleDelete = (id: string, isDeleted: boolean) => {
-    const confirmDelete = confirm(
-      isDeleted ? "Permanently delete this bed?" : "Delete this bed?"
-    );
-    if (!confirmDelete) return;
+  const fetchBeds = async () => {
+    try {
+      setLoading(true);
+      const url = new URL("/api/beds", window.location.origin);
+      url.searchParams.set("showDeleted", showDeleted.toString());
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Failed to fetch beds");
+      const data = await response.json();
+      setBeds(data);
+    } catch (error) {
+      console.error("Error fetching beds:", error);
+      toast.error("Failed to load beds");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    toast.success(isDeleted ? "Permanently Deleted (Dummy)" : "Deleted (Dummy)");
-    setBeds(prev => prev.filter(b => b.id !== id));
+  // Filter beds by search
+  const filteredBeds = useMemo(() => {
+    return beds.filter((b) =>
+      b.name.toLowerCase().includes(search.toLowerCase()) ||
+      (b.bedGroupName?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+      (b.bedTypeName?.toLowerCase().includes(search.toLowerCase()) ?? false)
+    );
+  }, [beds, search]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBeds.length / rowsPerPage);
+  const paginatedBeds = filteredBeds.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handleSave = async (bed: { id?: string; name: string; bedTypeId: string; bedGroupId: string }) => {
+    try {
+      if (bed.id) {
+        // Update
+        const response = await fetch(`/api/beds/${bed.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: bed.name,
+            bedTypeId: bed.bedTypeId,
+            bedGroupId: bed.bedGroupId,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to update bed");
+        const updatedBed = await response.json();
+        fetchBeds();
+        setBeds((prev) => prev.map((b) => (b.id === bed.id ? updatedBed : b)));
+        toast.success("Bed updated successfully");
+      } else {
+        // Add
+        const response = await fetch("/api/beds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: bed.name,
+            bedTypeId: bed.bedTypeId,
+            bedGroupId: bed.bedGroupId,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create bed");
+        const newBed = await response.json();
+        fetchBeds();
+        setBeds((prev) => [...prev, newBed]);
+        toast.success("Bed added successfully");
+      }
+    } catch (error) {
+      console.error("Error saving bed:", error);
+      toast.error("Failed to save bed");
+    }
+  };
+
+  const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
+    const bed = beds.find((b) => b.id === id);
+    
+    // If bed is already soft deleted and user is owner, offer permanent deletion
+    if (isAlreadyDeleted && userRole === "owner") {
+      // Use ConfirmDialog for permanent deletion
+      return; // Will be triggered by ConfirmDialog
+    } else if (isAlreadyDeleted && userRole !== "owner") {
+      toast.error("Only owner can permanently delete beds");
+    } else {
+      // Soft delete - will be triggered by ConfirmDialog
+      return;
+    }
+  };
+
+  const performDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
+    try {
+      if (isAlreadyDeleted && userRole === "owner") {
+        // Permanent delete
+        const response = await fetch(`/api/beds/${id}?permanent=true`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to permanently delete bed");
+        }
+        
+        setBeds((prev) => prev.filter((b) => b.id !== id));
+        toast.success("Bed permanently deleted");
+      } else {
+        // Soft delete
+        const response = await fetch(`/api/beds/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) throw new Error("Failed to delete bed");
+        setBeds((prev) => prev.filter((b) => b.id !== id));
+        toast.success("Bed deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting bed:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete bed");
+    }
   };
 
   return (
@@ -130,7 +207,7 @@ export default function BedManager() {
             <TableHead>Name</TableHead>
             <TableHead>Bed Type</TableHead>
             <TableHead>Bed Group</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Floor</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -138,31 +215,44 @@ export default function BedManager() {
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">
-                Loading dummy beds...
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                Loading beds...
               </TableCell>
             </TableRow>
           ) : paginatedBeds.length > 0 ? (
             paginatedBeds.map((b) => (
-              <TableRow key={b.id} className={b.isDeleted ? "opacity-50" : ""}>
+              <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
                 <TableCell>{b.name}</TableCell>
-                <TableCell>{b.bedTypeName}</TableCell>
-                <TableCell>{b.bedGroupName}</TableCell>
-                <TableCell>{b.notAvailable ? "Not Available" : "Available"}</TableCell>
+                <TableCell>{b.bedTypeName || "-"}</TableCell>
+                <TableCell>{b.bedGroupName || "-"}</TableCell>
+                <TableCell>{b.floorName || "-"}</TableCell>
 
                 <TableCell className="text-right space-x-2">
                   {!b.isDeleted && <BedModal initialData={b} onSave={handleSave} />}
 
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(b.id, b.isDeleted)}>
-                    {b.isDeleted ? "Permanent Delete" : "Delete"}
-                  </Button>
+                  <ConfirmDialog
+                    trigger={
+                      <Button size="sm" variant="destructive">
+                        {b.isDeleted ? "Permanently Delete" : "Delete"}
+                      </Button>
+                    }
+                    title={b.isDeleted ? "Permanently Delete Bed?" : "Delete Bed?"}
+                    description={
+                      b.isDeleted
+                        ? "This bed is already deleted. Click confirm to permanently delete it."
+                        : "Are you sure you want to delete this bed?"
+                    }
+                    actionLabel={b.isDeleted ? "Permanently Delete" : "Delete"}
+                    cancelLabel="Cancel"
+                    onConfirm={() => performDelete(b.id, b.isDeleted)}
+                  />
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
               <TableCell colSpan={5} className="text-center text-muted-foreground">
-                No dummy beds found
+                No beds found.
               </TableCell>
             </TableRow>
           )}
@@ -170,25 +260,23 @@ export default function BedManager() {
       </Table>
 
       {totalPages > 1 && (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end space-x-2 mt-2">
           <Button
             variant="outline"
             size="sm"
             disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             Prev
           </Button>
-
-          <span className="px-2">
-            Page {currentPage} / {totalPages}
+          <span className="flex items-center px-2">
+            Page {currentPage} of {totalPages}
           </span>
-
           <Button
             variant="outline"
             size="sm"
             disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
             Next
           </Button>

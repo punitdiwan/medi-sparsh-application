@@ -1,4 +1,4 @@
-import { updateBedType, deleteBedType, permanentlyDeleteBedType, getUserRole, getBedCountByBedType } from "@/lib/db/queries";
+import { updateBed, deleteBed, permanentlyDeleteBed, getUserRole } from "@/lib/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -13,28 +13,43 @@ export async function PUT(
 
     if (!id) {
       return NextResponse.json(
-        { error: "Bed Type ID is required" },
+        { error: "Bed ID is required" },
         { status: 400 }
       );
     }
 
     if (body.name && !body.name.trim()) {
       return NextResponse.json(
-        { error: "Bed type name cannot be empty" },
+        { error: "Bed name cannot be empty" },
         { status: 400 }
       );
     }
 
-    const updatedBedType = await updateBedType(id, {
+    if (body.bedTypeId && !body.bedTypeId.trim()) {
+      return NextResponse.json(
+        { error: "Bed type cannot be empty" },
+        { status: 400 }
+      );
+    }
+
+    if (body.bedGroupId && !body.bedGroupId.trim()) {
+      return NextResponse.json(
+        { error: "Bed group cannot be empty" },
+        { status: 400 }
+      );
+    }
+
+    const updatedBed = await updateBed(id, {
       name: body.name,
-      description: body.description,
+      bedTypeId: body.bedTypeId,
+      bedGroupId: body.bedGroupId,
     });
 
-    return NextResponse.json(updatedBedType, { status: 200 });
+    return NextResponse.json(updatedBed, { status: 200 });
   } catch (error) {
     console.error("PUT Error:", error);
     return NextResponse.json(
-      { error: "Failed to update bed type" },
+      { error: "Failed to update bed" },
       { status: 500 }
     );
   }
@@ -50,17 +65,8 @@ export async function DELETE(
 
     if (!id) {
       return NextResponse.json(
-        { error: "Bed Type ID is required" },
+        { error: "Bed ID is required" },
         { status: 400 }
-      );
-    }
-
-    // Check if beds exist for this bed type
-    const bedCount = await getBedCountByBedType(id);
-    if (bedCount > 0) {
-      return NextResponse.json(
-        { error: `Cannot delete bed type. ${bedCount} bed(s) are using this bed type.` },
-        { status: 409 }
       );
     }
 
@@ -73,22 +79,22 @@ export async function DELETE(
       // Only owner can permanently delete
       if (userRole !== "owner") {
         return NextResponse.json(
-          { error: "Only owner can permanently delete bed types" },
+          { error: "Only owner can permanently delete beds" },
           { status: 403 }
         );
       }
 
-      const deletedBedType = await permanentlyDeleteBedType(id);
-      return NextResponse.json(deletedBedType, { status: 200 });
+      const deletedBed = await permanentlyDeleteBed(id);
+      return NextResponse.json(deletedBed, { status: 200 });
     } else {
       // Soft delete (anyone can do this)
-      const deletedBedType = await deleteBedType(id);
-      return NextResponse.json(deletedBedType, { status: 200 });
+      const deletedBed = await deleteBed(id);
+      return NextResponse.json(deletedBed, { status: 200 });
     }
   } catch (error) {
     console.error("DELETE Error:", error);
     return NextResponse.json(
-      { error: "Failed to delete bed type" },
+      { error: "Failed to delete bed" },
       { status: 500 }
     );
   }
