@@ -102,6 +102,7 @@ export default function BedGroupManager() {
 
         if (!response.ok) throw new Error("Failed to update bed group");
         const updatedBedGroup = await response.json();
+        fetchBedGroups();
         setBedGroups((prev) => prev.map((b) => (b.id === bedGroup.id ? updatedBedGroup : b)));
         toast.success("Bed Group updated successfully");
       } else {
@@ -118,6 +119,7 @@ export default function BedGroupManager() {
 
         if (!response.ok) throw new Error("Failed to create bed group");
         const newBedGroup = await response.json();
+        fetchBedGroups();
         setBedGroups((prev) => [...prev, newBedGroup]);
         toast.success("Bed Group added successfully");
       }

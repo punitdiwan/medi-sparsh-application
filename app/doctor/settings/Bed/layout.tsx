@@ -1,29 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname  } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+
 
 export default function BedLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const menu = [
+    { name: 'Bed', href: '/doctor/settings/Bed'},
     { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus" },
     { name: "Floor", href: "/doctor/settings/Bed/Floor" },
     { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
     { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup" },
   ];
-
-  useEffect(() => {
-    if (pathname === "/doctor/settings/Bed") {
-      router.replace("/doctor/settings/Bed/BedStatus");
-    }
-  }, [pathname, router]);
 
   const currentChild = menu.find((item) => pathname === item.href);
   const subHeading = currentChild ? currentChild.name : "";
