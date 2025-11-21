@@ -31,7 +31,7 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-start p-2">
       <Card
-        className="w-64 rounded shadow"
+        className="w-62 rounded shadow"
         style={{ backgroundColor: "var(--sidebar)", color: "var(--sidebar-foreground)" }}
       >
         <CardContent className="p-0">
