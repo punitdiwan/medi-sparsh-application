@@ -1,0 +1,76 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+
+export default function BedLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const menu = [
+    { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus" },
+    { name: "Floor", href: "/doctor/settings/Bed/Floor" },
+    { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
+    { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup" },
+  ];
+
+  useEffect(() => {
+    if (pathname === "/doctor/settings/Bed") {
+      router.replace("/doctor/settings/Bed/BedStatus");
+    }
+  }, [pathname, router]);
+
+  const currentChild = menu.find((item) => pathname === item.href);
+  const subHeading = currentChild ? currentChild.name : "";
+
+  return (
+    <div className="flex items-start p-2">
+      <Card
+        className="w-64 rounded shadow"
+        style={{ backgroundColor: "var(--sidebar)", color: "var(--sidebar-foreground)" }}
+      >
+        <CardContent className="p-0">
+          <ScrollArea className="h-full p-2">
+            <div className="space-y-2">
+              {menu.map((item) => {
+                const isActive = pathname === item.href;
+
+                return (
+                  <Button
+                    key={item.href}
+                    asChild
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start rounded-xl text-left font-medium",
+                      "transition-colors duration-150",
+                      isActive
+                        ? "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)] hover:bg-[var(--sidebar-primary)]"
+                        : "text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
+                    )}
+                  >
+                    <Link href={item.href}>{item.name}</Link>
+                  </Button>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <div className="flex-1 p-6 bg-background text-foreground">
+        {subHeading && (
+          <h2 className="text-2xl font-semibold mb-4 border-b border-border pb-2">
+            {subHeading}
+          </h2>
+        )}
+
+        {children}
+      </div>
+    </div>
+  );
+}

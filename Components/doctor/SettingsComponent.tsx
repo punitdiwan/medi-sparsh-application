@@ -59,9 +59,12 @@ export default function SettingsComponent() {
         }
 
         const map: Record<string, Setting> = {};
-        (data.data as Setting[]).forEach((s) => {
-          map[s.key] = s;
-        });
+          data.data.forEach((s:any) => {
+            if (SETTINGS_META[s.key]) {  
+              map[s.key] = s;
+            }
+          });
+
 
         setSettings(map);
       } catch (error) {
@@ -209,13 +212,14 @@ export default function SettingsComponent() {
 };
 
 
-  const patientRegistrationKeys = Object.keys(SETTINGS_META).filter(
-    (k) => SETTINGS_META[k].group === "Patient Registration"
+  const patientRegistrationKeys = Object.keys(settings).filter(
+    (k) => SETTINGS_META[k]?.group === "Patient Registration"
   );
 
-  const organizationKeys = Object.keys(SETTINGS_META).filter(
-    (k) => SETTINGS_META[k].group === "Organization"
+  const organizationKeys = Object.keys(settings).filter(
+    (k) => SETTINGS_META[k]?.group === "Organization"
   );
+
 
   return (
     <div className="p-6 min-h-screen">
