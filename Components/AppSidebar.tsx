@@ -65,8 +65,9 @@ const items: SidebarItem[] = [
       { title: 'Profile', url: '/doctor/settings/profile' },
       { title: 'Stats', url: '/doctor/settings/stats' },
       { title: 'Team', url: '/doctor/settings/ourTeam' },
+      { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Payments History' , url : '/doctor/billing'},
-      { title: 'App Settings', url: '/doctor/settings/config'}
+      { title: 'App Settings', url: '/doctor/settings/config'},
     ],
   },
 ];
@@ -84,6 +85,10 @@ const isCollapsed = state === 'collapsed';
       [title]: !prev[title],
     }));
   };
+  const closeSidebar = () => {
+  const collapseBtn = document.querySelector('[data-sidebar="trigger"]');
+  if (collapseBtn) (collapseBtn as HTMLElement).click();
+};
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -123,7 +128,8 @@ const isCollapsed = state === 'collapsed';
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => toggleMenu(item.title)}
+                                onClick={() => {toggleMenu(item.title)}}
+                                  
                                 className={`flex items-center p-3 rounded-md w-full transition-all duration-150
                                   ${
                                     isCollapsed
@@ -178,6 +184,11 @@ const isCollapsed = state === 'collapsed';
                                   <Link
                                     key={subItem.title}
                                     href={subItem.url}
+                                    onClick={() => {
+                                      if (item.title === "Settings" && subItem.title === "Bed") {
+                                        closeSidebar();
+                                      }
+                                    }}
                                     className={`block px-4 py-2 rounded-md text-sm transition-colors
                                       ${
                                         isSubActive

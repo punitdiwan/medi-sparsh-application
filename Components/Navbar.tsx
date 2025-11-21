@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-
+import { FaBed } from "react-icons/fa6";
 export default function Header() {
   const router = useRouter();
   const {logout}= useAuth();
@@ -46,8 +46,12 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2 px-4">
-        <div className="hidden md:flex">
+        <div className="hidden md:flex md:items-center">
           <KbdInputGroup />
+          <div className="px-4 cursor-pointer">
+            <FaBed />
+          </div>
+          
         </div>
 
         <ModeToggle />

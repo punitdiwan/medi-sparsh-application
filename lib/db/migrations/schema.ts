@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm"
 export const auth = pgSchema("auth");
 
 const useUUIDv7 = process.env.UUID_V7_NATIVE_SUPPORT
-  ? sql`useUUIDv7`
+  ? sql`uuidv7()`
   : sql`uuid_generate_v7()`;
 
 export const verificationInAuth = auth.table("verification", {
@@ -325,6 +325,68 @@ export const transactions = pgTable("transactions", {
   paymentMethod: text("payment_method").notNull(), // e.g., 'credit_card', 'cash', 'insurance'
   transactionDate: timestamp("transaction_date", { withTimezone: true }).defaultNow().notNull(),
   notes: text("notes"),  
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+
+// BedsTypes table
+export const bedsTypes  = pgTable("beds_types", {
+  id: text("id").default(useUUIDv7).primaryKey(),
+  hospitalId: text("hospital_id")
+	.notNull()
+	.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDeleted: boolean("is_deleted").default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Floors table
+export const floors  = pgTable("floors", {
+  id: text("id").default(useUUIDv7).primaryKey(),
+  hospitalId: text("hospital_id")
+	.notNull()
+	.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDeleted: boolean("is_deleted").default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+
+// BedGroups table
+export const bedGroups  = pgTable("bed_groups", {
+  id: text("id").default(useUUIDv7).primaryKey(),
+  hospitalId: text("hospital_id")
+	.notNull()
+	.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  floorId: text("floor_id")
+	.notNull()
+	.references(() => floors.id, { onDelete: "cascade" }),
+  isDeleted: boolean("is_deleted").default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Beds Table
+export const beds  = pgTable("beds", {
+  id: text("id").default(useUUIDv7).primaryKey(),
+  hospitalId: text("hospital_id")
+	.notNull()
+	.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  bedTypeId: text("bed_type_id")
+	.notNull()
+	.references(() => bedsTypes.id, { onDelete: "cascade" }),
+  bedGroupId: text("bed_group_id")
+	.notNull()
+	.references(() => bedGroups.id, { onDelete: "cascade" }),
+  isDeleted: boolean("is_deleted").default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

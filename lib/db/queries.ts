@@ -11,7 +11,11 @@ import {
   specializations,
   services,
   transactions,
-  organizationInAuth
+  organizationInAuth,
+  floors,
+  bedsTypes,
+  bedGroups,
+  beds
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -549,4 +553,443 @@ export async function getTransactionsByHospital(hospitalId: string) {
     .orderBy(sql`${transactions.createdAt} DESC`);
 
   return result;
+}
+
+// ===================================================
+// Floor Queries
+// ===================================================
+
+export async function getFloorsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.hospitalId, hospitalId), eq(floors.isDeleted, false)))
+    .orderBy(desc(floors.createdAt));
+}
+
+export async function getDeletedFloorsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.hospitalId, hospitalId), eq(floors.isDeleted, true)))
+    .orderBy(desc(floors.updatedAt));
+}
+
+export async function getFloorById(floorId: string) {
+  const result = await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.id, floorId), eq(floors.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createFloor(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(floors)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateFloor(floorId: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(floors)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteFloor(floorId: string) {
+  const result = await db
+    .update(floors)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteFloor(floorId: string) {
+  const result = await db
+    .delete(floors)
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Bed Type Queries
+// ===================================================
+
+export async function getBedTypesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.hospitalId, hospitalId), eq(bedsTypes.isDeleted, false)))
+    .orderBy(desc(bedsTypes.createdAt));
+}
+
+export async function getDeletedBedTypesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.hospitalId, hospitalId), eq(bedsTypes.isDeleted, true)))
+    .orderBy(desc(bedsTypes.updatedAt));
+}
+
+export async function getBedTypeById(bedTypeId: string) {
+  const result = await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.id, bedTypeId), eq(bedsTypes.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createBedType(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(bedsTypes)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateBedType(bedTypeId: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(bedsTypes)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(bedsTypes.id, bedTypeId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteBedType(bedTypeId: string) {
+  const result = await db
+    .update(bedsTypes)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(bedsTypes.id, bedTypeId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteBedType(bedTypeId: string) {
+  const result = await db
+    .delete(bedsTypes)
+    .where(eq(bedsTypes.id, bedTypeId))
+    .returning();
+
+  return result[0];
+}
+
+// Check if beds exist for a bed type
+export async function getBedCountByBedType(bedTypeId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(beds)
+    .where(and(eq(beds.bedTypeId, bedTypeId), eq(beds.isDeleted, false)))
+    .limit(1);
+
+  return result[0]?.count || 0;
+}
+
+// ===================================================
+// Bed Group Queries
+// ===================================================
+
+export async function getBedGroupsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.hospitalId, hospitalId), eq(bedGroups.isDeleted, false)))
+    .orderBy(desc(bedGroups.createdAt));
+}
+
+export async function getDeletedBedGroupsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.hospitalId, hospitalId), eq(bedGroups.isDeleted, true)))
+    .orderBy(desc(bedGroups.updatedAt));
+}
+
+export async function getBedGroupById(bedGroupId: string) {
+  const result = await db
+    .select({
+      id: bedGroups.id,
+      name: bedGroups.name,
+      description: bedGroups.description,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: bedGroups.hospitalId,
+      isDeleted: bedGroups.isDeleted,
+      createdAt: bedGroups.createdAt,
+      updatedAt: bedGroups.updatedAt,
+    })
+    .from(bedGroups)
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(bedGroups.id, bedGroupId), eq(bedGroups.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createBedGroup(data: {
+  hospitalId: string;
+  name: string;
+  floorId: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(bedGroups)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      floorId: data.floorId,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateBedGroup(bedGroupId: string, data: {
+  name?: string;
+  floorId?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(bedGroups)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.floorId && { floorId: data.floorId }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteBedGroup(bedGroupId: string) {
+  const result = await db
+    .update(bedGroups)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteBedGroup(bedGroupId: string) {
+  const result = await db
+    .delete(bedGroups)
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
+// Check if bed groups exist for a floor
+export async function getBedGroupCountByFloor(floorId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(bedGroups)
+    .where(and(eq(bedGroups.floorId, floorId), eq(bedGroups.isDeleted, false)))
+    .limit(1);
+
+  return result[0]?.count || 0;
+}
+
+// ===================================================
+// Bed Queries
+// ===================================================
+
+export async function getBedsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: beds.id,
+      name: beds.name,
+      bedTypeId: beds.bedTypeId,
+      bedGroupId: beds.bedGroupId,
+      bedTypeName: bedsTypes.name,
+      bedGroupName: bedGroups.name,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: beds.hospitalId,
+      isDeleted: beds.isDeleted,
+      createdAt: beds.createdAt,
+      updatedAt: beds.updatedAt,
+    })
+    .from(beds)
+    .leftJoin(bedsTypes, eq(beds.bedTypeId, bedsTypes.id))
+    .leftJoin(bedGroups, eq(beds.bedGroupId, bedGroups.id))
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(beds.hospitalId, hospitalId), eq(beds.isDeleted, false)))
+    .orderBy(desc(beds.createdAt));
+}
+
+export async function getDeletedBedsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: beds.id,
+      name: beds.name,
+      bedTypeId: beds.bedTypeId,
+      bedGroupId: beds.bedGroupId,
+      bedTypeName: bedsTypes.name,
+      bedGroupName: bedGroups.name,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: beds.hospitalId,
+      isDeleted: beds.isDeleted,
+      createdAt: beds.createdAt,
+      updatedAt: beds.updatedAt,
+    })
+    .from(beds)
+    .leftJoin(bedsTypes, eq(beds.bedTypeId, bedsTypes.id))
+    .leftJoin(bedGroups, eq(beds.bedGroupId, bedGroups.id))
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(beds.hospitalId, hospitalId), eq(beds.isDeleted, true)))
+    .orderBy(desc(beds.updatedAt));
+}
+
+export async function getBedById(bedId: string) {
+  const result = await db
+    .select({
+      id: beds.id,
+      name: beds.name,
+      bedTypeId: beds.bedTypeId,
+      bedGroupId: beds.bedGroupId,
+      bedTypeName: bedsTypes.name,
+      bedGroupName: bedGroups.name,
+      floorId: bedGroups.floorId,
+      floorName: floors.name,
+      hospitalId: beds.hospitalId,
+      isDeleted: beds.isDeleted,
+      createdAt: beds.createdAt,
+      updatedAt: beds.updatedAt,
+    })
+    .from(beds)
+    .leftJoin(bedsTypes, eq(beds.bedTypeId, bedsTypes.id))
+    .leftJoin(bedGroups, eq(beds.bedGroupId, bedGroups.id))
+    .leftJoin(floors, eq(bedGroups.floorId, floors.id))
+    .where(and(eq(beds.id, bedId), eq(beds.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createBed(data: {
+  hospitalId: string;
+  name: string;
+  bedTypeId: string;
+  bedGroupId: string;
+}) {
+  const result = await db
+    .insert(beds)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      bedTypeId: data.bedTypeId,
+      bedGroupId: data.bedGroupId,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateBed(bedId: string, data: {
+  name?: string;
+  bedTypeId?: string;
+  bedGroupId?: string;
+}) {
+  const result = await db
+    .update(beds)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.bedTypeId && { bedTypeId: data.bedTypeId }),
+      ...(data.bedGroupId && { bedGroupId: data.bedGroupId }),
+      updatedAt: new Date(),
+    })
+    .where(eq(beds.id, bedId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteBed(bedId: string) {
+  const result = await db
+    .update(beds)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(beds.id, bedId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteBed(bedId: string) {
+  const result = await db
+    .delete(beds)
+    .where(eq(beds.id, bedId))
+    .returning();
+
+  return result[0];
 }

@@ -1,0 +1,266 @@
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { BedTypeModal } from "./bedTypeModel";
+
+type BedType = {
+  id: string;
+  name: string;
+  description: string | null;
+  hospitalId: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export default function BedTypeManager() {
+  const [bedTypes, setBedTypes] = useState<BedType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const rowsPerPage = 5;
+
+  // Fetch user role and bed types on mount
+  useEffect(() => {
+    fetchUserRole();
+    fetchBedTypes();
+  }, []);
+
+  // Refetch bed types when showDeleted changes
+  useEffect(() => {
+    fetchBedTypes();
+  }, [showDeleted]);
+
+  const fetchUserRole = async () => {
+    try {
+      const response = await fetch("/api/user/role");
+      if (response.ok) {
+        const data = await response.json();
+        setUserRole(data.data.member);
+      }
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+    }
+  };
+
+  const fetchBedTypes = async () => {
+    try {
+      setLoading(true);
+      const url = new URL("/api/bed-types", window.location.origin);
+      url.searchParams.set("showDeleted", showDeleted.toString());
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Failed to fetch bed types");
+      const data = await response.json();
+      setBedTypes(data);
+    } catch (error) {
+      console.error("Error fetching bed types:", error);
+      toast.error("Failed to load bed types");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter bed types by search
+  const filteredBedTypes = useMemo(() => {
+    return bedTypes.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()));
+  }, [bedTypes, search]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBedTypes.length / rowsPerPage);
+  const paginatedBedTypes = filteredBedTypes.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+  const handleSave = async (bedType: { id?: string; name: string; description?: string }) => {
+    try {
+      if (bedType.id) {
+        // Update
+        const response = await fetch(`/api/bed-types/${bedType.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: bedType.name,
+            description: bedType.description,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to update bed type");
+        const updatedBedType = await response.json();
+        setBedTypes((prev) => prev.map((b) => (b.id === bedType.id ? updatedBedType : b)));
+        toast.success("Bed Type updated successfully");
+      } else {
+        // Add
+        const response = await fetch("/api/bed-types", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: bedType.name,
+            description: bedType.description,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create bed type");
+        const newBedType = await response.json();
+        setBedTypes((prev) => [...prev, newBedType]);
+        toast.success("Bed Type added successfully");
+      }
+    } catch (error) {
+      console.error("Error saving bed type:", error);
+      toast.error("Failed to save bed type");
+    }
+  };
+
+  const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
+    const bedType = bedTypes.find((b) => b.id === id);
+    
+    // If bed type is already soft deleted and user is owner, offer permanent deletion
+    if (isAlreadyDeleted && userRole === "owner") {
+      const confirmPermanent = confirm(
+        "This bed type is already deleted. Click OK to permanently delete it, or Cancel to keep it."
+      );
+      
+      if (confirmPermanent) {
+        try {
+          const response = await fetch(`/api/bed-types/${id}?permanent=true`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to permanently delete bed type");
+          }
+          
+          setBedTypes((prev) => prev.filter((b) => b.id !== id));
+          toast.success("Bed Type permanently deleted");
+        } catch (error) {
+          console.error("Error permanently deleting bed type:", error);
+          toast.error(error instanceof Error ? error.message : "Failed to permanently delete bed type");
+        }
+      }
+    } else if (isAlreadyDeleted && userRole !== "owner") {
+      toast.error("Only owner can permanently delete bed types");
+    } else {
+      // Soft delete
+      const confirmDelete = confirm("Are you sure you want to delete this bed type?");
+      if (confirmDelete) {
+        try {
+          const response = await fetch(`/api/bed-types/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to delete bed type");
+          }
+          setBedTypes((prev) => prev.filter((b) => b.id !== id));
+          toast.success("Bed Type deleted successfully");
+        } catch (error) {
+          console.error("Error deleting bed type:", error);
+          toast.error(error instanceof Error ? error.message : "Failed to delete bed type");
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-4">
+      {/* Top bar: Search + Switch + Add */}
+      <div className="flex justify-between items-center gap-4">
+        <Input
+          placeholder="Search bed type..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        
+        <div className="flex items-center gap-2">
+          <Switch
+            id="show-deleted"
+            checked={showDeleted}
+            onCheckedChange={setShowDeleted}
+          />
+          <Label htmlFor="show-deleted" className="cursor-pointer">
+            Show Deleted Only
+          </Label>
+        </div>
+        
+        <BedTypeModal onSave={handleSave} />
+      </div>
+
+      {/* Bed Type Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center text-muted-foreground">
+                Loading bed types...
+              </TableCell>
+            </TableRow>
+          ) : paginatedBedTypes.length > 0 ? (
+            paginatedBedTypes.map((b) => (
+              <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
+                <TableCell>{b.name}</TableCell>
+                <TableCell>{b.description || "-"}</TableCell>
+                <TableCell className="text-right space-x-2">
+                  {!b.isDeleted && <BedTypeModal bedType={b} onSave={handleSave} />}
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => handleDelete(b.id, b.isDeleted)}
+                  >
+                    {b.isDeleted ? "Permanently Delete" : "Delete"}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center text-muted-foreground">
+                No bed types found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-end space-x-2 mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
+            Prev
+          </Button>
+          <span className="flex items-center px-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
