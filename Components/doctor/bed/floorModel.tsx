@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 type FloorModalProps = {
-  floor?: { id?: string; name: string; description: string };
-  onSave: (floor: { name: string; description: string; id?: string }) => void;
+  floor?: { id?: string; name: string; description: string | null };
+  onSave: (floor: { name: string; description?: string; id?: string }) => void;
 };
 
 export function FloorModal({ floor, onSave }: FloorModalProps) {
@@ -27,7 +27,7 @@ export function FloorModal({ floor, onSave }: FloorModalProps) {
   useEffect(() => {
     if (floor) {
       setName(floor.name);
-      setDescription(floor.description);
+      setDescription(floor.description || "");
     } else {
       setName("");
       setDescription("");

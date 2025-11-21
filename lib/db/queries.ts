@@ -11,7 +11,8 @@ import {
   specializations,
   services,
   transactions,
-  organizationInAuth
+  organizationInAuth,
+  floors
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -549,4 +550,86 @@ export async function getTransactionsByHospital(hospitalId: string) {
     .orderBy(sql`${transactions.createdAt} DESC`);
 
   return result;
+}
+
+// ===================================================
+// Floor Queries
+// ===================================================
+
+export async function getFloorsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.hospitalId, hospitalId), eq(floors.isDeleted, false)))
+    .orderBy(desc(floors.createdAt));
+}
+
+export async function getDeletedFloorsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.hospitalId, hospitalId), eq(floors.isDeleted, true)))
+    .orderBy(desc(floors.updatedAt));
+}
+
+export async function getFloorById(floorId: string) {
+  const result = await db
+    .select()
+    .from(floors)
+    .where(and(eq(floors.id, floorId), eq(floors.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createFloor(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(floors)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateFloor(floorId: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(floors)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteFloor(floorId: string) {
+  const result = await db
+    .update(floors)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteFloor(floorId: string) {
+  const result = await db
+    .delete(floors)
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
 }
