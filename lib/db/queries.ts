@@ -12,7 +12,8 @@ import {
   services,
   transactions,
   organizationInAuth,
-  floors
+  floors,
+  bedsTypes
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -629,6 +630,88 @@ export async function permanentlyDeleteFloor(floorId: string) {
   const result = await db
     .delete(floors)
     .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Bed Type Queries
+// ===================================================
+
+export async function getBedTypesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.hospitalId, hospitalId), eq(bedsTypes.isDeleted, false)))
+    .orderBy(desc(bedsTypes.createdAt));
+}
+
+export async function getDeletedBedTypesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.hospitalId, hospitalId), eq(bedsTypes.isDeleted, true)))
+    .orderBy(desc(bedsTypes.updatedAt));
+}
+
+export async function getBedTypeById(bedTypeId: string) {
+  const result = await db
+    .select()
+    .from(bedsTypes)
+    .where(and(eq(bedsTypes.id, bedTypeId), eq(bedsTypes.isDeleted, false)))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createBedType(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(bedsTypes)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateBedType(bedTypeId: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(bedsTypes)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(bedsTypes.id, bedTypeId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteBedType(bedTypeId: string) {
+  const result = await db
+    .update(bedsTypes)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(bedsTypes.id, bedTypeId))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteBedType(bedTypeId: string) {
+  const result = await db
+    .delete(bedsTypes)
+    .where(eq(bedsTypes.id, bedTypeId))
     .returning();
 
   return result[0];
