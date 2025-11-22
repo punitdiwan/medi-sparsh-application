@@ -1,0 +1,1 @@
+ALTER TABLE "charge_types" ADD COLUMN "is_deleted" boolean DEFAULT false;

@@ -420,6 +420,7 @@ export const chargeTypes = pgTable("charge_types", {
 		.notNull()
 		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
 	modules: jsonb("modules").notNull(),
+	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -435,6 +436,18 @@ export const chargeCategories = pgTable("charge_categories", {
 	chargeTypeId: text("charge_type_id")
 		.notNull()
 		.references(() => chargeTypes.id, { onDelete: "cascade" }),
+	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Modules Table
+export const modules = pgTable("modules", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	name: text("name").notNull(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

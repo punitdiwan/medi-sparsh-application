@@ -18,7 +18,9 @@ import {
   beds,
   units,
   charges,
-  taxCategories
+  taxCategories,
+  modules,
+  chargeTypes
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1161,4 +1163,72 @@ export async function getChargeCountByTaxCategory(taxCategoryId: string) {
     .limit(1);
 
   return result[0]?.count || 0;
+}
+
+// ===================================================
+// Module Queries
+// ===================================================
+
+export async function getModulesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(modules)
+    .where(and(eq(modules.hospitalId, hospitalId), eq(modules.isDeleted, false)))
+    .orderBy(desc(modules.createdAt));
+}
+
+// ===================================================
+// Charge Type Queries
+// ===================================================
+
+export async function getChargeTypesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(chargeTypes)
+    .where(and(eq(chargeTypes.hospitalId, hospitalId)))
+    .orderBy(desc(chargeTypes.createdAt));
+}
+
+export async function createChargeType(data: {
+  hospitalId: string;
+  name: string;
+  modules: any;
+}) {
+  const result = await db
+    .insert(chargeTypes)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      modules: data.modules,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateChargeType(id: string, data: {
+  name?: string;
+  modules?: any;
+}) {
+  const result = await db
+    .update(chargeTypes)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.modules && { modules: data.modules }),
+      updatedAt: new Date(),
+    })
+    .where(eq(chargeTypes.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteChargeType(id: string) {
+  const result = await db
+    .update(chargeTypes)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(chargeTypes.id, id))
+    .returning();
+
+  return result[0];
 }
