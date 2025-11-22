@@ -181,7 +181,7 @@ export function AppSidebar() {
                                     key={subItem.title}
                                     href={subItem.url}
                                     onClick={() => {
-                                      if (item.title === "Settings" && subItem.title === "Bed") {
+                                      if (item.title === "Settings" && subItem.title === "Bed"||"hospitalCharges") {
                                         closeSidebar();
                                       }
                                     }}

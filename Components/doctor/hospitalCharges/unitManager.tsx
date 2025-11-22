@@ -71,12 +71,7 @@ export default function UnitManager(): JSX.Element {
   return (
     <div className="p-6 space-y-5">
 
-      <Card className="border shadow-md rounded-xl">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Unit Manager</CardTitle>
-        </CardHeader>
-
-        <CardContent className="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
           <Input
             placeholder="Search unit..."
             value={search}
@@ -92,13 +87,10 @@ export default function UnitManager(): JSX.Element {
           >
             + Add Unit
           </Button>
-        </CardContent>
-      </Card>
+       </div>
 
-      <Card >
-        <CardContent className="p-0 overflow-auto">
           <Table>
-            <TableHeader className="sticky top-0 bg-muted z-10">
+            <TableHeader className="sticky top-0 items-center z-10">
               <TableRow>
                 <TableHead className="w-20">ID</TableHead>
                 <TableHead>Name</TableHead>
@@ -146,8 +138,6 @@ export default function UnitManager(): JSX.Element {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
 
       {totalPages > 1 && (
         <div className="flex justify-end items-center gap-3">

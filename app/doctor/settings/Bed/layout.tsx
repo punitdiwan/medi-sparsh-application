@@ -40,11 +40,8 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
                     asChild
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start rounded-xl text-left font-medium",
-                      "transition-colors duration-150",
-                      isActive
-                        ? "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)] hover:bg-[var(--sidebar-primary)]"
-                        : "text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
+                      "w-full justify-start rounded-xl text-left font-medium transition-colors duration-150",
+                      "text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
                     )}
                   >
                     <Link href={item.href}>{item.name}</Link>
