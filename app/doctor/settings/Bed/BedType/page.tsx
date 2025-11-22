@@ -1,10 +1,10 @@
 import BedTypeManager from '@/Components/doctor/bed/bedType'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const BedType = () => {
   return (
     <>
-      <BedTypeManager/>
+      <BedTypeManager />
     </>
   )
 }

@@ -1,10 +1,10 @@
 import FloorManager from '@/Components/doctor/bed/floor'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const Floor = () => {
   return (
     <>
-     <FloorManager/>
+      <FloorManager />
     </>
   )
 }
