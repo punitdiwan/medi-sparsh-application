@@ -1,10 +1,10 @@
 import BedStatusPage from '@/Components/doctor/bed/bedStatus'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const BedStatus = () => {
   return (
     <>
-     <BedStatusPage/> 
+      <BedStatusPage />
     </>
   )
 }

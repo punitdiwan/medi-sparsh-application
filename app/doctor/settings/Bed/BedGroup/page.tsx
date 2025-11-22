@@ -1,10 +1,9 @@
 import BedGroupManager from '@/Components/doctor/bed/bedGroupManger'
-import React from 'react'
-
-const  BedGroup = () => {
+export const dynamic = "force-dynamic";
+const BedGroup = () => {
   return (
     <>
-      <BedGroupManager/>
+      <BedGroupManager />
     </>
   )
 }

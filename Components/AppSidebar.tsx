@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {  useState } from 'react';
+import { useState } from 'react';
 
 import {
   Calendar,
@@ -57,30 +57,28 @@ const items: SidebarItem[] = [
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen },
   { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus },
   { title: 'Services', url: '/doctor/services', icon: ServerCog },
-  { title:'Employees', url: '/doctor/employees', icon:Users2},
   {
     title: 'Settings',
     icon: Settings,
     children: [
+      { title: 'Members', url: '/doctor/employees' },
       { title: 'Profile', url: '/doctor/settings/profile' },
       { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
       { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Stats', url: '/doctor/settings/stats' },
-      { title: 'Team', url: '/doctor/settings/ourTeam' },
-      { title: 'Payments History' , url : '/doctor/billing'},
-      { title: 'App Settings', url: '/doctor/settings/config'},
-      
+      { title: 'Payments History', url: '/doctor/billing' },
+      { title: 'App Settings', url: '/doctor/settings/config' },
     ],
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
-const { state } = useSidebar();
-const isCollapsed = state === 'collapsed';
-  const {user}= useAuth();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
+  const { user } = useAuth();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
-  const [staffData,setStaffData] = useState<any>();
+  const [staffData, setStaffData] = useState<any>();
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({
       ...prev,
@@ -88,9 +86,9 @@ const isCollapsed = state === 'collapsed';
     }));
   };
   const closeSidebar = () => {
-  const collapseBtn = document.querySelector('[data-sidebar="trigger"]');
-  if (collapseBtn) (collapseBtn as HTMLElement).click();
-};
+    const collapseBtn = document.querySelector('[data-sidebar="trigger"]');
+    if (collapseBtn) (collapseBtn as HTMLElement).click();
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -100,7 +98,7 @@ const isCollapsed = state === 'collapsed';
             {!isCollapsed && (
               <>
                 <SidebarGroupLabel className="text-foreground font-semibold text-xl">
-                  {user?.hospital?.name||"Clinic Name"}
+                  {user?.hospital?.name || "Clinic Name"}
                 </SidebarGroupLabel>
                 <SidebarGroupLabel className="mb-2 text-muted-foreground">
                   Dr.{user?.userData?.name}
@@ -130,31 +128,27 @@ const isCollapsed = state === 'collapsed';
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => {toggleMenu(item.title)}}
-                                  
+                                onClick={() => { toggleMenu(item.title) }}
+
                                 className={`flex items-center p-3 rounded-md w-full transition-all duration-150
-                                  ${
-                                    isCollapsed
-                                      ? 'justify-center'
-                                      : 'justify-between gap-2'
+                                  ${isCollapsed
+                                    ? 'justify-center'
+                                    : 'justify-between gap-2'
                                   }
-                                  ${
-                                    isActive
-                                      ? 'bg-muted text-foreground font-semibold'
-                                      : 'hover:bg-muted text-muted-foreground'
+                                  ${isActive
+                                    ? 'bg-muted text-foreground font-semibold'
+                                    : 'hover:bg-muted text-muted-foreground'
                                   }`}
                               >
                                 <div
-                                  className={`flex items-center ${
-                                    isCollapsed ? 'justify-center' : 'gap-2'
-                                  }`}
+                                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
+                                    }`}
                                 >
                                   <item.icon
-                                    className={`w-5 h-5 ${
-                                      isActive
-                                        ? 'text-foreground'
-                                        : 'text-muted-foreground'
-                                    }`}
+                                    className={`w-5 h-5 ${isActive
+                                      ? 'text-foreground'
+                                      : 'text-muted-foreground'
+                                      }`}
                                   />
                                   {!isCollapsed && (
                                     <span className="truncate font-semibold">
@@ -192,10 +186,9 @@ const isCollapsed = state === 'collapsed';
                                       }
                                     }}
                                     className={`block px-4 py-2 rounded-md text-sm transition-colors
-                                      ${
-                                        isSubActive
-                                          ? 'bg-muted text-foreground font-medium'
-                                          : 'text-muted-foreground hover:bg-muted'
+                                      ${isSubActive
+                                        ? 'bg-muted text-foreground font-medium'
+                                        : 'text-muted-foreground hover:bg-muted'
                                       }`}
                                   >
                                     {subItem.title}
@@ -214,18 +207,16 @@ const isCollapsed = state === 'collapsed';
                                 href={item.url!}
                                 className={`flex items-center p-3 rounded-md w-full transition-all duration-150
                                   ${isCollapsed ? 'justify-center' : 'gap-2'}
-                                  ${
-                                    isActive
-                                      ? 'bg-muted text-foreground font-semibold'
-                                      : 'text-muted-foreground hover:bg-muted'
+                                  ${isActive
+                                    ? 'bg-muted text-foreground font-semibold'
+                                    : 'text-muted-foreground hover:bg-muted'
                                   }`}
                               >
                                 <item.icon
-                                  className={`w-5 h-5 ${
-                                    isActive
-                                      ? 'text-foreground'
-                                      : 'text-muted-foreground'
-                                  }`}
+                                  className={`w-5 h-5 ${isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground'
+                                    }`}
                                 />
                                 {!isCollapsed && (
                                   <span className="truncate font-semibold">
