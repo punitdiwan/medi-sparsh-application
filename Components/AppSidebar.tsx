@@ -63,11 +63,13 @@ const items: SidebarItem[] = [
     icon: Settings,
     children: [
       { title: 'Profile', url: '/doctor/settings/profile' },
+      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
+      { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Stats', url: '/doctor/settings/stats' },
       { title: 'Team', url: '/doctor/settings/ourTeam' },
-      { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Payments History' , url : '/doctor/billing'},
       { title: 'App Settings', url: '/doctor/settings/config'},
+      
     ],
   },
 ];
