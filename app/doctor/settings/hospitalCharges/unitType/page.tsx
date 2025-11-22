@@ -1,10 +1,10 @@
 import UnitManager from '@/Components/doctor/hospitalCharges/unitManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (
     <>
-     <UnitManager/> 
+      <UnitManager />
     </>
   )
 }

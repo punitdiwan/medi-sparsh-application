@@ -1,10 +1,10 @@
 import ChargeTypeManager from '@/Components/doctor/hospitalCharges/chargeType'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (
     <>
-     <ChargeTypeManager/> 
+      <ChargeTypeManager />
     </>
   )
 }

@@ -1,10 +1,10 @@
 import TaxManagerPage from '@/Components/doctor/hospitalCharges/taxManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (
     <>
-      <TaxManagerPage/>
+      <TaxManagerPage />
     </>
   )
 }

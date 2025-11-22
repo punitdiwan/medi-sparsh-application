@@ -1224,6 +1224,16 @@ export async function updateChargeType(id: string, data: {
   return result[0];
 }
 
+export async function deleteChargeType(id: string) {
+  const result = await db
+    .update(chargeTypes)
+    .set({ isDeleted: true })
+    .where(eq(chargeTypes.id, id))
+    .returning();
+
+  return result[0];
+}
+
 
 
 // ===================================================
