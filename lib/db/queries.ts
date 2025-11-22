@@ -15,7 +15,10 @@ import {
   floors,
   bedsTypes,
   bedGroups,
-  beds
+  beds,
+  units,
+  charges,
+  taxCategories
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -188,8 +191,8 @@ export async function getStaffWithDoctorDetails(hospitalId: string) {
   const staffList = await db
     .select()
     .from(staff)
-    .innerJoin(member,eq(staff.userId,member.userId))
-    .innerJoin(user,eq(member.userId,user.id))
+    .innerJoin(member, eq(staff.userId, member.userId))
+    .innerJoin(user, eq(member.userId, user.id))
     .where(and(eq(staff.hospitalId, hospitalId), eq(staff.isDeleted, false)))
     .orderBy(desc(staff.createdAt));
 
@@ -200,7 +203,7 @@ export async function getStaffWithDoctorDetails(hospitalId: string) {
         .from(doctors)
         .where(and(eq(doctors.staffId, staffMember.staff.id), eq(doctors.hospitalId, hospitalId)))
         .limit(1);
-      
+
       return {
         ...staffMember,
         doctorData: doctorDetails[0] || null,
@@ -378,13 +381,13 @@ export async function getPrescriptionByAppointment(appointmentId: string) {
   return result[0] || null;
 }
 
-export async function getPrescriptionsByHospital(hospitalId: string,doctor_id :string) {
+export async function getPrescriptionsByHospital(hospitalId: string, doctor_id: string) {
   const prescriptionsList = await db
     .select()
     .from(prescriptions)
     .innerJoin(patients, eq(prescriptions.patientId, patients.id))
     .innerJoin(user, eq(prescriptions.doctorUserId, user.id))
-    .where(and(eq(prescriptions.hospitalId, hospitalId),eq(prescriptions.doctorUserId,doctor_id)))
+    .where(and(eq(prescriptions.hospitalId, hospitalId), eq(prescriptions.doctorUserId, doctor_id)))
     .orderBy(desc(prescriptions.createdAt));
 
   return prescriptionsList.map((item) => ({
@@ -430,13 +433,13 @@ export async function getUserRole(userId: string, organizationId: string) {
 // ============================================
 // Service Queries
 // =============================================
-export async function getServicesByHospital(hospitalId:string) {
-    const result = await db
+export async function getServicesByHospital(hospitalId: string) {
+  const result = await db
     .select()
     .from(services)
-    .where(eq(services.hospitalId,hospitalId));
+    .where(eq(services.hospitalId, hospitalId));
 
-    return result || null;
+  return result || null;
 }
 
 export async function createService(data: {
@@ -992,4 +995,170 @@ export async function permanentlyDeleteBed(bedId: string) {
     .returning();
 
   return result[0];
+}
+
+// ===================================================
+// Unit Queries
+// ===================================================
+
+export async function getUnits() {
+  return await db
+    .select()
+    .from(units)
+    .orderBy(desc(units.name));
+}
+
+export async function getUnitById(unitId: string) {
+  const result = await db
+    .select()
+    .from(units)
+    .where(eq(units.id, unitId))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createUnit(data: { name: string }) {
+  const result = await db
+    .insert(units)
+    .values({
+      name: data.name,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateUnit(unitId: string, data: { name: string }) {
+  const result = await db
+    .update(units)
+    .set({
+      name: data.name,
+    })
+    .where(eq(units.id, unitId))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteUnit(unitId: string) {
+  const result = await db
+    .delete(units)
+    .where(eq(units.id, unitId))
+    .returning();
+
+  return result[0];
+}
+
+// Check if charges exist for a unit
+export async function getChargeCountByUnit(unitId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(charges)
+    .where(eq(charges.unitId, unitId))
+    .limit(1);
+
+  return result[0]?.count || 0;
+}
+
+// ===================================================
+// Tax Category Queries
+// ===================================================
+
+export async function getTaxCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(taxCategories)
+    .where(and(eq(taxCategories.hospitalId, hospitalId), eq(taxCategories.isDeleted, false)))
+    .orderBy(desc(taxCategories.createdAt));
+}
+
+export async function getDeletedTaxCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(taxCategories)
+    .where(and(eq(taxCategories.hospitalId, hospitalId), eq(taxCategories.isDeleted, true)))
+    .orderBy(desc(taxCategories.updatedAt));
+}
+
+export async function getTaxCategoryById(id: string) {
+  const result = await db
+    .select()
+    .from(taxCategories)
+    .where(eq(taxCategories.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createTaxCategory(data: {
+  hospitalId: string;
+  name: string;
+  percent: string;
+}) {
+  const result = await db
+    .insert(taxCategories)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      percent: data.percent,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateTaxCategory(id: string, data: {
+  name?: string;
+  percent?: string;
+}) {
+  const result = await db
+    .update(taxCategories)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.percent && { percent: data.percent }),
+      updatedAt: new Date(),
+    })
+    .where(eq(taxCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function softDeleteTaxCategory(id: string) {
+  const result = await db
+    .update(taxCategories)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(taxCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function restoreTaxCategory(id: string) {
+  const result = await db
+    .update(taxCategories)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(taxCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteTaxCategory(id: string) {
+  const result = await db
+    .delete(taxCategories)
+    .where(eq(taxCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// Check if charges exist for a tax category
+export async function getChargeCountByTaxCategory(taxCategoryId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(charges)
+    .where(eq(charges.taxCategoryId, taxCategoryId))
+    .limit(1);
+
+  return result[0]?.count || 0;
 }
