@@ -1343,3 +1343,148 @@ export async function getChargeCountByChargeCategory(chargeCategoryId: string) {
 
   return result[0]?.count || 0;
 }
+
+// ===================================================
+// Charges Queries
+// ===================================================
+
+export async function getChargesByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: charges.id,
+      name: charges.name,
+      description: charges.description,
+      amount: charges.amount,
+      chargeCategoryId: charges.chargeCategoryId,
+      chargeCategoryName: chargeCategories.name,
+      chargeTypeId: charges.chargeTypeId,
+      chargeTypeName: chargeTypes.name,
+      taxCategoryId: charges.taxCategoryId,
+      taxCategoryName: taxCategories.name,
+      taxPercent: taxCategories.percent,
+      unitId: charges.unitId,
+      unitName: units.name,
+      isDeleted: charges.isDeleted,
+      createdAt: charges.createdAt,
+      updatedAt: charges.updatedAt,
+    })
+    .from(charges)
+    .leftJoin(chargeCategories, eq(charges.chargeCategoryId, chargeCategories.id))
+    .leftJoin(chargeTypes, eq(charges.chargeTypeId, chargeTypes.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
+    .leftJoin(units, eq(charges.unitId, units.id))
+    .where(and(eq(charges.hospitalId, hospitalId), eq(charges.isDeleted, false)))
+    .orderBy(desc(charges.createdAt));
+}
+
+export async function getDeletedChargesByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: charges.id,
+      name: charges.name,
+      description: charges.description,
+      amount: charges.amount,
+      chargeCategoryId: charges.chargeCategoryId,
+      chargeCategoryName: chargeCategories.name,
+      chargeTypeId: charges.chargeTypeId,
+      chargeTypeName: chargeTypes.name,
+      taxCategoryId: charges.taxCategoryId,
+      taxCategoryName: taxCategories.name,
+      taxPercent: taxCategories.percent,
+      unitId: charges.unitId,
+      unitName: units.name,
+      isDeleted: charges.isDeleted,
+      createdAt: charges.createdAt,
+      updatedAt: charges.updatedAt,
+    })
+    .from(charges)
+    .leftJoin(chargeCategories, eq(charges.chargeCategoryId, chargeCategories.id))
+    .leftJoin(chargeTypes, eq(charges.chargeTypeId, chargeTypes.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
+    .leftJoin(units, eq(charges.unitId, units.id))
+    .where(and(eq(charges.hospitalId, hospitalId), eq(charges.isDeleted, true)))
+    .orderBy(desc(charges.updatedAt));
+}
+
+export async function createCharge(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+  amount: string;
+  chargeCategoryId: string;
+  chargeTypeId: string;
+  taxCategoryId: string;
+  unitId: string;
+}) {
+  const result = await db
+    .insert(charges)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description,
+      amount: data.amount,
+      chargeCategoryId: data.chargeCategoryId,
+      chargeTypeId: data.chargeTypeId,
+      taxCategoryId: data.taxCategoryId,
+      unitId: data.unitId,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateCharge(id: string, data: {
+  name?: string;
+  description?: string;
+  amount?: string;
+  chargeCategoryId?: string;
+  chargeTypeId?: string;
+  taxCategoryId?: string;
+  unitId?: string;
+}) {
+  const result = await db
+    .update(charges)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description && { description: data.description }),
+      ...(data.amount && { amount: data.amount }),
+      ...(data.chargeCategoryId && { chargeCategoryId: data.chargeCategoryId }),
+      ...(data.chargeTypeId && { chargeTypeId: data.chargeTypeId }),
+      ...(data.taxCategoryId && { taxCategoryId: data.taxCategoryId }),
+      ...(data.unitId && { unitId: data.unitId }),
+      updatedAt: new Date(),
+    })
+    .where(eq(charges.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function softDeleteCharge(id: string) {
+  const result = await db
+    .update(charges)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(charges.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function restoreCharge(id: string) {
+  const result = await db
+    .update(charges)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(charges.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteCharge(id: string) {
+  const result = await db
+    .delete(charges)
+    .where(eq(charges.id, id))
+    .returning();
+
+  return result[0];
+}
