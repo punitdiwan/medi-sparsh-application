@@ -10,7 +10,15 @@ import { MdEdit } from "react-icons/md";
 import { ChargeCategoryModal } from "./chargeCategoryModal";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
-// ---------------- Types ----------------
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 export interface ChargeCategoryItem {
   id: string;
   categoryType: string;
@@ -18,7 +26,6 @@ export interface ChargeCategoryItem {
   description: string;
   isDeleted?: boolean;
 }
-// ---------------------------------------
 
 export default function ChargeCategoryManager() {
   const [data, setData] = useState<ChargeCategoryItem[]>([
@@ -41,14 +48,12 @@ export default function ChargeCategoryManager() {
   const [search, setSearch] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<ChargeCategoryItem | null>(null);
 
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ---------------- Filter + Search ----------------
   const filtered = useMemo(() => {
     return data.filter((item) => {
       const matchSearch =
@@ -68,16 +73,13 @@ export default function ChargeCategoryManager() {
     currentPage * rowsPerPage
   );
 
-  // ---------------- Save (Add/Edit) ----------------
   const handleSubmit = (item: Omit<ChargeCategoryItem, "id"> & { id?: string }) => {
     if (editItem) {
-      // Edit
       setData((prev) =>
         prev.map((i) => (i.id === editItem.id ? { ...editItem, ...item } : i))
       );
-      toast.success("Category updated successfully!");
+      toast.success("Category updated!");
     } else {
-      // Add
       const newItem: ChargeCategoryItem = {
         id: crypto.randomUUID(),
         ...item,
@@ -91,7 +93,6 @@ export default function ChargeCategoryManager() {
     setEditItem(null);
   };
 
-  // ---------------- Soft Delete ----------------
   const handleSoftDelete = (id: string) => {
     setData((prev) =>
       prev.map((i) => (i.id === id ? { ...i, isDeleted: true } : i))
@@ -99,13 +100,11 @@ export default function ChargeCategoryManager() {
     toast.success("Category soft deleted");
   };
 
-  // ---------------- Permanent Delete ----------------
   const handleHardDelete = (id: string) => {
     setData((prev) => prev.filter((i) => i.id !== id));
     toast.success("Category permanently deleted");
   };
 
-  // ---------------- Reactivate ----------------
   const handleReactivate = (id: string) => {
     setData((prev) =>
       prev.map((i) => (i.id === id ? { ...i, isDeleted: false } : i))
@@ -114,11 +113,12 @@ export default function ChargeCategoryManager() {
   };
 
   return (
-    <div className="p-6 space-y-4">
-      {/* Search + Toggle + Add */}
+    <div className="p-4 space-y-4">
+
+      {/* Top Controls */}
       <div className="flex items-center justify-between gap-4">
         <Input
-          placeholder="Search categories..."
+          placeholder="Search category..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
@@ -126,11 +126,11 @@ export default function ChargeCategoryManager() {
 
         <div className="flex items-center gap-2">
           <Switch
-            id="show-deleted"
+            id="deleted-filter"
             checked={showDeleted}
             onCheckedChange={setShowDeleted}
           />
-          <Label htmlFor="show-deleted">Show Deleted Only</Label>
+          <Label htmlFor="deleted-filter">Show Deleted Only</Label>
         </div>
 
         <Button
@@ -144,36 +144,33 @@ export default function ChargeCategoryManager() {
       </div>
 
       {/* Table */}
-      <div className="overflow-auto border rounded-md max-h-[430px]">
-        <table className="w-full table-auto">
-          <thead className="sticky top-0 bg-muted z-10">
-            <tr>
-              <th className="border p-2">Category Type</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Description</th>
-              <th className="border p-2 text-right">Actions</th>
-            </tr>
-          </thead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Type</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
 
-          <tbody>
-            {paginated.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="text-center py-4 text-muted-foreground">
-                  No Categories Found
-                </td>
-              </tr>
-            ) : (
-              paginated.map((item) => (
-                <tr key={item.id} className={item.isDeleted ? "opacity-60" : ""}>
-                  <td className="border p-2">{item.categoryType}</td>
-                  <td className="border p-2">{item.name}</td>
-                  <td className="border p-2">{item.description}</td>
+        <TableBody>
+          {paginated.length > 0 ? (
+            paginated.map((item) => (
+              <TableRow
+                key={item.id}
+                className={item.isDeleted ? "opacity-50" : ""}
+              >
+                <TableCell>{item.categoryType}</TableCell>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.description}</TableCell>
 
-                  <td className="border p-2 text-right space-x-2">
-                    {!item.isDeleted && (
+                <TableCell className="text-right space-x-2">
+                  {!item.isDeleted ? (
+                    <>
                       <Button
-                        variant="outline"
                         size="sm"
+                        variant="outline"
                         onClick={() => {
                           setEditItem(item);
                           setModalOpen(true);
@@ -181,58 +178,62 @@ export default function ChargeCategoryManager() {
                       >
                         <MdEdit />
                       </Button>
-                    )}
 
-                    {item.isDeleted ? (
-                      <>
-                        {/* Reactivate */}
-                        <ConfirmDialog
-                          title="Reactivate Category?"
-                          description="This will restore the category."
-                          onConfirm={() => handleReactivate(item.id)}
-                          trigger={
-                            <Button variant="outline" size="sm">
-                              Reactivate
-                            </Button>
-                          }
-                        />
-
-                        {/* Hard Delete */}
-                        <ConfirmDialog
-                          title="Permanently remove?"
-                          description="This action cannot be undone."
-                          onConfirm={() => handleHardDelete(item.id)}
-                          trigger={
-                            <Button variant="destructive" size="sm">
-                              Permanent Delete
-                            </Button>
-                          }
-                        />
-                      </>
-                    ) : (
-                      // Soft Delete
                       <ConfirmDialog
                         title="Delete Category?"
                         description="This will soft delete the category."
                         onConfirm={() => handleSoftDelete(item.id)}
                         trigger={
-                          <Button variant="destructive" size="sm">
+                          <Button size="sm" variant="destructive">
                             Delete
                           </Button>
                         }
                       />
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </>
+                  ) : (
+                    <>
+                      <ConfirmDialog
+                        title="Restore Category?"
+                        description="This will reactivate the category."
+                        onConfirm={() => handleReactivate(item.id)}
+                        trigger={
+                          <Button size="sm" variant="outline">
+                            Restore
+                          </Button>
+                        }
+                      />
+
+                      <ConfirmDialog
+                        title="Delete Permanently?"
+                        description="This cannot be undone."
+                        onConfirm={() => handleHardDelete(item.id)}
+                        trigger={
+                          <Button size="sm" variant="destructive">
+                            Delete Forever
+                          </Button>
+                        }
+                      />
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={7}
+                className="py-4 text-center text-muted-foreground"
+              >
+                No categories found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-end gap-2 items-center mt-3">
+        <div className="flex justify-end gap-2 items-center">
           <Button
             variant="outline"
             size="sm"
@@ -257,7 +258,7 @@ export default function ChargeCategoryManager() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       <ChargeCategoryModal
         open={modalOpen}
         onClose={() => {
