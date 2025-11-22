@@ -20,7 +20,8 @@ import {
   charges,
   taxCategories,
   modules,
-  chargeTypes
+  chargeTypes,
+  chargeCategories
 } from "./migrations/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1223,12 +1224,122 @@ export async function updateChargeType(id: string, data: {
   return result[0];
 }
 
-export async function deleteChargeType(id: string) {
+
+
+// ===================================================
+// Charge Category Queries
+// ===================================================
+
+export async function getChargeCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: chargeCategories.id,
+      name: chargeCategories.name,
+      description: chargeCategories.description,
+      chargeTypeId: chargeCategories.chargeTypeId,
+      categoryType: chargeTypes.name, // Join to get Charge Type Name
+      isDeleted: chargeCategories.isDeleted,
+      createdAt: chargeCategories.createdAt,
+      updatedAt: chargeCategories.updatedAt,
+    })
+    .from(chargeCategories)
+    .leftJoin(chargeTypes, eq(chargeCategories.chargeTypeId, chargeTypes.id))
+    .where(and(eq(chargeCategories.hospitalId, hospitalId), eq(chargeCategories.isDeleted, false)))
+    .orderBy(desc(chargeCategories.createdAt));
+}
+
+export async function getDeletedChargeCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: chargeCategories.id,
+      name: chargeCategories.name,
+      description: chargeCategories.description,
+      chargeTypeId: chargeCategories.chargeTypeId,
+      categoryType: chargeTypes.name,
+      isDeleted: chargeCategories.isDeleted,
+      createdAt: chargeCategories.createdAt,
+      updatedAt: chargeCategories.updatedAt,
+    })
+    .from(chargeCategories)
+    .leftJoin(chargeTypes, eq(chargeCategories.chargeTypeId, chargeTypes.id))
+    .where(and(eq(chargeCategories.hospitalId, hospitalId), eq(chargeCategories.isDeleted, true)))
+    .orderBy(desc(chargeCategories.updatedAt));
+}
+
+export async function createChargeCategory(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+  chargeTypeId: string;
+}) {
   const result = await db
-    .update(chargeTypes)
-    .set({ isDeleted: true, updatedAt: new Date() })
-    .where(eq(chargeTypes.id, id))
+    .insert(chargeCategories)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description,
+      chargeTypeId: data.chargeTypeId,
+    })
     .returning();
 
   return result[0];
+}
+
+export async function updateChargeCategory(id: string, data: {
+  name?: string;
+  description?: string;
+  chargeTypeId?: string;
+}) {
+  const result = await db
+    .update(chargeCategories)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description && { description: data.description }),
+      ...(data.chargeTypeId && { chargeTypeId: data.chargeTypeId }),
+      updatedAt: new Date(),
+    })
+    .where(eq(chargeCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function softDeleteChargeCategory(id: string) {
+  const result = await db
+    .update(chargeCategories)
+    .set({ isDeleted: true, updatedAt: new Date() })
+    .where(eq(chargeCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function restoreChargeCategory(id: string) {
+  const result = await db
+    .update(chargeCategories)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(chargeCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function permanentlyDeleteChargeCategory(id: string) {
+  const result = await db
+    .delete(chargeCategories)
+    .where(eq(chargeCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// Check if charges exist for a charge category
+export async function getChargeCountByChargeCategory(chargeCategoryId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(charges)
+    .where(eq(charges.chargeCategoryId, chargeCategoryId))
+    .limit(1);
+
+  return result[0]?.count || 0;
 }
