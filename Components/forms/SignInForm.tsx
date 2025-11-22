@@ -13,7 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Command } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
@@ -52,9 +51,9 @@ export function SignInForm({ Hospitaldata }: any) {
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     localStorage.clear();
-  },[]);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
