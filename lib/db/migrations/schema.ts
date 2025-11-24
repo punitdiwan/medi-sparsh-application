@@ -1,4 +1,7 @@
-import { pgTable, pgSchema, decimal, check, text, timestamp, unique, serial, boolean, foreignKey, date, jsonb, primaryKey, varchar } from "drizzle-orm/pg-core"
+import {
+	pgTable, pgSchema, decimal, check, text, timestamp, unique, serial, boolean, foreignKey, date, jsonb, primaryKey, varchar,
+	integer,
+} from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const auth = pgSchema("auth");
@@ -522,3 +525,26 @@ export const doctorShifts = pgTable("doctor_shifts", {
 }, (table) => [
 	unique("doctor_shift_unique").on(table.doctorUserId, table.shiftId)
 ]);
+
+// Doctor Slots Table
+export const doctorSlots = pgTable("doctor_slots", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	doctorId: text("doctor_id")
+		.notNull()
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	shiftId: text("shift_id")
+		.notNull()
+		.references(() => shifts.id, { onDelete: "cascade" }),
+	day: text("day").notNull(),
+	timeFrom: text("time_from").notNull(),
+	timeTo: text("time_to").notNull(),
+	durationMins: integer("duration_mins").notNull(),
+	chargeId: text("charge_id")
+		.notNull()
+		.references(() => charges.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

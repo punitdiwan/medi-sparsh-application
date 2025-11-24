@@ -64,6 +64,13 @@
       "when": 1763984629370,
       "tag": "0010_complex_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1763986285841,
+      "tag": "0011_soft_quicksilver",
+      "breakpoints": true
     }
   ]
 }
