@@ -14,8 +14,8 @@ export function ShiftModal({ open, onClose, onSubmit, initialData }) {
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || "");
-      setTimeFrom(initialData.timeFrom || "");
-      setTimeTo(initialData.timeTo || "");
+      setTimeFrom(initialData.startTime || "");
+      setTimeTo(initialData.endTime || "");
     } else {
       setName("");
       setTimeFrom("");
@@ -29,8 +29,8 @@ export function ShiftModal({ open, onClose, onSubmit, initialData }) {
     onSubmit({
       id: initialData?.id,
       name,
-      timeFrom,
-      timeTo,
+      startTime: timeFrom,
+      endTime: timeTo,
     });
 
     onClose();
