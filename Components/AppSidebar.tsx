@@ -65,6 +65,7 @@ const items: SidebarItem[] = [
       { title: 'Profile', url: '/doctor/settings/profile' },
       { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
       { title: 'Bed', url: '/doctor/settings/Bed'},
+      { title: 'Appointment', url: '/doctor/settings/appointment'},
       { title: 'Stats', url: '/doctor/settings/stats' },
       { title: 'Payments History', url: '/doctor/billing' },
       { title: 'App Settings', url: '/doctor/settings/config' },
