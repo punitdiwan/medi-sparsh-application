@@ -216,14 +216,18 @@ export default function SlotManagerPage() {
     }
   };
 
+
   const handleAddNew = () => {
-    if (!selectedDay) return toast.error("Please select a day first.");
+    if (!showWeekPanel) return toast.error("Please search for a doctor and shift first.");
     setEditingSlotId(null);
     setModalInitialData(null);
+    setSelectedDay(WEEK_DAYS[0]); // Default to Monday for new slots
     setIsModalOpen(true);
   };
 
+
   const handleEdit = (day, slot) => {
+    setSelectedDay(day);
     setEditingSlotId(slot.id);
     setModalInitialData(slot);
     setIsModalOpen(true);
@@ -257,7 +261,7 @@ export default function SlotManagerPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-12 gap-4 items-end">
-        <div className="col-span-5">
+        <div className="col-span-4">
           <Label>Doctor *</Label>
           <Select value={doctorId} onValueChange={setDoctorId}>
             <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
@@ -269,7 +273,7 @@ export default function SlotManagerPage() {
           </Select>
         </div>
 
-        <div className="col-span-5">
+        <div className="col-span-4">
           <Label>Shift *</Label>
           <Select value={shiftId} onValueChange={setShiftId}>
             <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
@@ -283,6 +287,10 @@ export default function SlotManagerPage() {
 
         <div className="col-span-2">
           <Button className="w-full" onClick={handleSearch}>Search</Button>
+        </div>
+
+        <div className="col-span-2">
+          <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
         </div>
       </div>
 
@@ -329,47 +337,61 @@ export default function SlotManagerPage() {
       </div>
 
       {showWeekPanel && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-2">
-            {WEEK_DAYS.map((day) => (
-              <div
-                key={day}
-                onClick={() => setSelectedDay(day)}
-                className={`p-3 text-center border rounded-lg cursor-pointer ${selectedDay === day ? "bg-background border-blue-500 ring-1 ring-blue-500" : "bg-background hover:bg-muted"
-                  }`}
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {selectedDay && (
-            <div className="p-4 border rounded-xl shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-lg">{selectedDay} Slots</h4>
-                <Button onClick={handleAddNew}>Add New Slot</Button>
-              </div>
-
-              <div className="space-y-2 mt-4">
-                {slotsByDay[selectedDay].length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No slots added for this day.</p>
-                ) : (
-                  slotsByDay[selectedDay].map((s) => (
-                    <div key={s.id} className="flex justify-between items-center p-3 border rounded-md hover:bg-muted/50">
-                      <div>
-                        <div className="font-medium">{s.text}</div>
-                        <div className="text-xs text-muted-foreground">Duration: {s.durationMins} mins | Amount: {s.amount}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <MdEdit className="text-blue-600 cursor-pointer h-5 w-5" onClick={() => handleEdit(selectedDay, s)} />
-                        <MdDelete className="text-red-600 cursor-pointer h-5 w-5" onClick={() => handleDelete(selectedDay, s.id)} />
-                      </div>
+        <div className="border rounded-xl shadow-sm overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-muted/50">
+                {WEEK_DAYS.map((day) => (
+                  <th key={day} className="p-3 text-left font-semibold border-r last:border-r-0">
+                    {day}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {WEEK_DAYS.map((day) => (
+                  <td key={day} className="p-2 align-top border-r last:border-r-0 min-w-[150px]">
+                    <div className="space-y-2">
+                      {slotsByDay[day].length === 0 ? (
+                        <p className="text-muted-foreground text-xs text-center py-4">No slots</p>
+                      ) : (
+                        slotsByDay[day].map((s) => (
+                          <div key={s.id} className="group relative">
+                            <div className="flex justify-between items-start p-2 border rounded-md hover:bg-muted/50 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm truncate">{s.text}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {s.durationMins} mins
+                                </div>
+                              </div>
+                              <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MdEdit
+                                  className="text-blue-600 cursor-pointer h-4 w-4"
+                                  onClick={() => handleEdit(day, s)}
+                                  title="Edit slot"
+                                />
+                                <MdDelete
+                                  className="text-red-600 cursor-pointer h-4 w-4"
+                                  onClick={() => handleDelete(day, s.id)}
+                                  title="Delete slot"
+                                />
+                              </div>
+                            </div>
+                            {/* Tooltip for amount */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Amount: ₹{s.amount}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 
