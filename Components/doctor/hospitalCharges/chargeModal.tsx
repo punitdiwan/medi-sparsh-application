@@ -6,117 +6,124 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export interface ChargeItem {
-  isDeleted: any;
   id?: string;
-  chargeType: string;
-  category: string;
-  unitType: string;
+  chargeTypeId: string;
+  chargeCategoryId: string;
+  unitId: string;
   name: string;
-  taxCategory: string;
-  taxPercentage: number;
-  standardCharge: number;
+  taxCategoryId: string;
+  amount: string;
   description: string;
+  isDeleted?: boolean;
+}
+
+interface Option {
+  id: string;
+  name: string;
+}
+
+interface TaxOption extends Option {
+  percent: string;
+}
+
+interface ChargeCategoryOption extends Option {
+  chargeTypeId: string;
 }
 
 interface ChargeModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: ChargeItem) => void;
-  defaultData?: ChargeItem | null;
+  defaultData?: any | null;
+  chargeTypes: Option[];
+  chargeCategories: ChargeCategoryOption[];
+  units: Option[];
+  taxCategories: TaxOption[];
 }
-
-const CHARGE_TYPES = ["OPD", "IPD", "LAB", "Radiology", "Pharmacy"];
-const UNIT_TYPES = ["Per Visit", "Per Day", "Per Test", "Per Unit"];
-
-const CATEGORY_BY_TYPE: Record<string, string[]> = {
-  OPD: ["Consultation", "Procedure"],
-  IPD: ["Room", "Nursing", "Surgery"],
-  LAB: ["Blood Test", "Urine Test", "Pathology"],
-  Radiology: ["X-Ray", "CT Scan", "MRI"],
-  Pharmacy: ["Tablet", "Syrup", "Injection"],
-};
-
-const TAX_CATEGORIES = [
-  { name: "GST 18%", percentage: 18 },
-  { name: "GST 12%", percentage: 12 },
-  { name: "GST 5%", percentage: 5 },
-  { name: "No Tax", percentage: 0 },
-];
 
 export function ChargeModal({
   open,
   onClose,
   onSubmit,
   defaultData,
+  chargeTypes,
+  chargeCategories,
+  units,
+  taxCategories,
 }: ChargeModalProps) {
-  const [chargeType, setChargeType] = useState("");
-  const [category, setCategory] = useState("");
-  const [unitType, setUnitType] = useState("");
+  const [chargeTypeId, setChargeTypeId] = useState("");
+  const [chargeCategoryId, setChargeCategoryId] = useState("");
+  const [unitId, setUnitId] = useState("");
   const [name, setName] = useState("");
-  const [taxCategory, setTaxCategory] = useState("");
-  const [taxPercentage, setTaxPercentage] = useState(0);
-  const [standardCharge, setStandardCharge] = useState<number | string>("");
+  const [taxCategoryId, setTaxCategoryId] = useState("");
+  const [taxPercentage, setTaxPercentage] = useState("");
+  const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
   // Load default data for edit
   useEffect(() => {
     if (defaultData) {
-      setChargeType(defaultData.chargeType);
-      setCategory(defaultData.category);
-      setUnitType(defaultData.unitType);
+      setChargeTypeId(defaultData.chargeTypeId || "");
+      setChargeCategoryId(defaultData.chargeCategoryId || "");
+      setUnitId(defaultData.unitId || "");
       setName(defaultData.name);
-      setTaxCategory(defaultData.taxCategory);
-      setTaxPercentage(defaultData.taxPercentage);
-      setStandardCharge(defaultData.standardCharge);
+      setTaxCategoryId(defaultData.taxCategoryId || "");
+      setAmount(defaultData.amount);
       setDescription(defaultData.description);
+
+      // Set tax percentage based on loaded taxCategoryId
+      const tax = taxCategories.find(t => t.id === defaultData.taxCategoryId);
+      setTaxPercentage(tax ? tax.percent : "");
     } else {
-      setChargeType("");
-      setCategory("");
-      setUnitType("");
+      setChargeTypeId("");
+      setChargeCategoryId("");
+      setUnitId("");
       setName("");
-      setTaxCategory("");
-      setTaxPercentage(0);
-      setStandardCharge("");
+      setTaxCategoryId("");
+      setTaxPercentage("");
+      setAmount("");
       setDescription("");
     }
-  }, [defaultData]);
+  }, [defaultData, taxCategories]);
 
   // When chargeType changes → reset category
   const handleChargeTypeChange = (value: string) => {
-    setChargeType(value);
-    setCategory(""); // Clear old category
+    setChargeTypeId(value);
+    setChargeCategoryId(""); // Clear old category
   };
 
   const handleTaxCategoryChange = (value: string) => {
-    setTaxCategory(value);
-    const selected = TAX_CATEGORIES.find((t) => t.name === value);
-    setTaxPercentage(selected ? selected.percentage : 0);
+    setTaxCategoryId(value);
+    const selected = taxCategories.find((t) => t.id === value);
+    setTaxPercentage(selected ? selected.percent : "");
   };
 
   const handleSubmit = () => {
-    if (!chargeType || !category || !unitType || !name) {
-      return alert("Please fill all required fields");
+    if (!chargeTypeId || !chargeCategoryId || !unitId || !name || !amount || !taxCategoryId) {
+      return toast.error("Please fill all required fields");
     }
 
     onSubmit({
       id: defaultData?.id,
-      chargeType,
-      category,
-      unitType,
+      chargeTypeId,
+      chargeCategoryId,
+      unitId,
       name,
-      taxCategory,
-      taxPercentage,
-      standardCharge: Number(standardCharge),
+      taxCategoryId,
+      amount,
       description,
-      isDeleted: undefined,
     });
 
     onClose();
   };
 
-  const filteredCategories = chargeType ? CATEGORY_BY_TYPE[chargeType] : [];
+  // Filter categories based on selected charge type
+  const filteredCategories = chargeTypeId
+    ? chargeCategories.filter(c => c.chargeTypeId === chargeTypeId)
+    : [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -131,53 +138,53 @@ export function ChargeModal({
 
           <div className="space-y-4">
             <div className="flex flex-col gap-1">
-              <Label>Charge Type *</Label>
+              <Label>Charge Type <span className="text-red-500">*</span></Label>
               <select
                 className="border p-2 rounded-md w-full bg-background"
-                value={chargeType}
+                value={chargeTypeId}
                 onChange={(e) => handleChargeTypeChange(e.target.value)}
               >
                 <option value="">Select Type</option>
-                {CHARGE_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
+                {chargeTypes.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label>Charge Category *</Label>
+              <Label>Charge Category <span className="text-red-500">*</span></Label>
               <select
                 className="border p-2 rounded-md w-full bg-background"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                disabled={!chargeType}
+                value={chargeCategoryId}
+                onChange={(e) => setChargeCategoryId(e.target.value)}
+                disabled={!chargeTypeId}
               >
                 <option value="">
-                  {chargeType ? "Select Category" : "Select Charge Type First"}
+                  {chargeTypeId ? "Select Category" : "Select Charge Type First"}
                 </option>
 
                 {filteredCategories.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label>Unit Type *</Label>
+              <Label>Unit Type <span className="text-red-500">*</span></Label>
               <select
                 className="border p-2 rounded-md w-full bg-background"
-                value={unitType}
-                onChange={(e) => setUnitType(e.target.value)}
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
               >
                 <option value="">Select Unit</option>
-                {UNIT_TYPES.map((u) => (
-                  <option key={u}>{u}</option>
+                {units.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label>Charge Name *</Label>
+              <Label>Charge Name <span className="text-red-500">*</span></Label>
               <Input
                 placeholder="Enter charge name"
                 value={name}
@@ -188,31 +195,31 @@ export function ChargeModal({
 
           <div className="space-y-4">
             <div className="flex flex-col gap-1">
-              <Label>Tax Category</Label>
+              <Label>Tax Category <span className="text-red-500">*</span></Label>
               <select
                 className="border p-2 rounded-md w-full bg-background"
-                value={taxCategory}
+                value={taxCategoryId}
                 onChange={(e) => handleTaxCategoryChange(e.target.value)}
               >
                 <option value="">Select Tax</option>
-                {TAX_CATEGORIES.map((t) => (
-                  <option key={t.name}>{t.name}</option>
+                {taxCategories.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-1">
               <Label>Tax Percentage</Label>
-              <Input readOnly value={taxPercentage + "%"} />
+              <Input readOnly value={taxPercentage ? `${taxPercentage}%` : ""} placeholder="0%" />
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label>Standard Charge *</Label>
+              <Label>Standard Charge <span className="text-red-500">*</span></Label>
               <Input
                 type="number"
                 placeholder="Enter amount"
-                value={standardCharge}
-                onChange={(e) => setStandardCharge(e.target.value)}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
               />
             </div>
 

@@ -1,10 +1,10 @@
 import ChargeManager from '@/Components/doctor/hospitalCharges/ChargeManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (
     <>
-     <ChargeManager/>
+      <ChargeManager />
     </>
   )
 }

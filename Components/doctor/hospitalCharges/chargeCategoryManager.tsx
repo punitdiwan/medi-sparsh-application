@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,29 +21,22 @@ import {
 
 export interface ChargeCategoryItem {
   id: string;
-  categoryType: string;
+  categoryType: string; // This is the Charge Type Name
+  chargeTypeId: string;
   name: string;
   description: string;
   isDeleted?: boolean;
 }
 
+interface ChargeType {
+  id: string;
+  name: string;
+}
+
 export default function ChargeCategoryManager() {
-  const [data, setData] = useState<ChargeCategoryItem[]>([
-    {
-      id: "1",
-      categoryType: "OPD",
-      name: "Consultation Fee",
-      description: "Doctor consultation charges.",
-      isDeleted: false,
-    },
-    {
-      id: "2",
-      categoryType: "LAB",
-      name: "Blood Test",
-      description: "General blood test category.",
-      isDeleted: true,
-    },
-  ]);
+  const [data, setData] = useState<ChargeCategoryItem[]>([]);
+  const [chargeTypes, setChargeTypes] = useState<ChargeType[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
@@ -54,17 +47,47 @@ export default function ChargeCategoryManager() {
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Fetch Data
+  useEffect(() => {
+    fetchData();
+    fetchChargeTypes();
+  }, [showDeleted]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/charge-categories?showDeleted=${showDeleted}`);
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchChargeTypes = async () => {
+    try {
+      const response = await fetch("/api/charge-types");
+      if (!response.ok) throw new Error("Failed to fetch charge types");
+      const result = await response.json();
+      setChargeTypes(result);
+    } catch (error) {
+      console.error("Error fetching charge types:", error);
+    }
+  };
+
   const filtered = useMemo(() => {
     return data.filter((item) => {
       const matchSearch =
         item.name.toLowerCase().includes(search.toLowerCase()) ||
-        item.categoryType.toLowerCase().includes(search.toLowerCase());
+        (item.categoryType && item.categoryType.toLowerCase().includes(search.toLowerCase()));
 
-      const matchDeleted = showDeleted ? item.isDeleted : !item.isDeleted;
-
-      return matchSearch && matchDeleted;
+      return matchSearch;
     });
-  }, [data, search, showDeleted]);
+  }, [data, search]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
@@ -73,43 +96,91 @@ export default function ChargeCategoryManager() {
     currentPage * rowsPerPage
   );
 
-  const handleSubmit = (item: Omit<ChargeCategoryItem, "id"> & { id?: string }) => {
-    if (editItem) {
-      setData((prev) =>
-        prev.map((i) => (i.id === editItem.id ? { ...editItem, ...item } : i))
-      );
-      toast.success("Category updated!");
-    } else {
-      const newItem: ChargeCategoryItem = {
-        id: crypto.randomUUID(),
-        ...item,
-        isDeleted: false,
-      };
-      setData((prev) => [...prev, newItem]);
-      toast.success("Category added!");
+  const handleSubmit = async (item: any) => {
+    try {
+      if (editItem) {
+        // Update
+        const response = await fetch(`/api/charge-categories/${editItem.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+
+        if (!response.ok) throw new Error("Failed to update category");
+
+        toast.success("Category updated!");
+      } else {
+        // Create
+        const response = await fetch("/api/charge-categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+
+        if (!response.ok) throw new Error("Failed to create category");
+
+        toast.success("Category added!");
+      }
+      fetchData(); // Refresh list
+      setModalOpen(false);
+      setEditItem(null);
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast.error("Failed to save category");
     }
-
-    setModalOpen(false);
-    setEditItem(null);
   };
 
-  const handleSoftDelete = (id: string) => {
-    setData((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, isDeleted: true } : i))
-    );
-    toast.success("Category soft deleted");
+  const handleSoftDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/charge-categories/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.status === 409) {
+        toast.error("Cannot delete: Charges exist for this category");
+        return;
+      }
+
+      if (!response.ok) throw new Error("Failed to delete");
+
+      toast.success("Category soft deleted");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
+    }
   };
 
-  const handleHardDelete = (id: string) => {
-    setData((prev) => prev.filter((i) => i.id !== id));
-    toast.success("Category permanently deleted");
+  const handleHardDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/charge-categories/${id}?permanent=true`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete permanently");
+
+      toast.success("Category permanently deleted");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
+    }
   };
 
-  const handleReactivate = (id: string) => {
-    setData((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, isDeleted: false } : i))
-    );
-    toast.success("Category restored");
+  const handleReactivate = async (id: string) => {
+    try {
+      const response = await fetch(`/api/charge-categories/${id}`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) throw new Error("Failed to restore");
+
+      toast.success("Category restored");
+      fetchData();
+    } catch (error) {
+      console.error("Error restoring category:", error);
+      toast.error("Failed to restore category");
+    }
   };
 
   return (
@@ -144,92 +215,100 @@ export default function ChargeCategoryManager() {
       </div>
 
       {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Type</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {paginated.length > 0 ? (
-            paginated.map((item) => (
-              <TableRow
-                key={item.id}
-                className={item.isDeleted ? "opacity-50" : ""}
-              >
-                <TableCell>{item.categoryType}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.description}</TableCell>
-
-                <TableCell className="text-right space-x-2">
-                  {!item.isDeleted ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditItem(item);
-                          setModalOpen(true);
-                        }}
-                      >
-                        <MdEdit />
-                      </Button>
-
-                      <ConfirmDialog
-                        title="Delete Category?"
-                        description="This will soft delete the category."
-                        onConfirm={() => handleSoftDelete(item.id)}
-                        trigger={
-                          <Button size="sm" variant="destructive">
-                            Delete
-                          </Button>
-                        }
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <ConfirmDialog
-                        title="Restore Category?"
-                        description="This will reactivate the category."
-                        onConfirm={() => handleReactivate(item.id)}
-                        trigger={
-                          <Button size="sm" variant="outline">
-                            Restore
-                          </Button>
-                        }
-                      />
-
-                      <ConfirmDialog
-                        title="Delete Permanently?"
-                        description="This cannot be undone."
-                        onConfirm={() => handleHardDelete(item.id)}
-                        trigger={
-                          <Button size="sm" variant="destructive">
-                            Delete Forever
-                          </Button>
-                        }
-                      />
-                    </>
-                  )}
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  Loading...
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={7}
-                className="py-4 text-center text-muted-foreground"
-              >
-                No categories found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ) : paginated.length > 0 ? (
+              paginated.map((item) => (
+                <TableRow
+                  key={item.id}
+                  className={item.isDeleted ? "opacity-50" : ""}
+                >
+                  <TableCell>{item.categoryType || "N/A"}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.description || "-"}</TableCell>
+
+                  <TableCell className="text-right space-x-2">
+                    {!item.isDeleted ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditItem(item);
+                            setModalOpen(true);
+                          }}
+                        >
+                          <MdEdit />
+                        </Button>
+
+                        <ConfirmDialog
+                          title="Delete Category?"
+                          description="This will soft delete the category."
+                          onConfirm={() => handleSoftDelete(item.id)}
+                          trigger={
+                            <Button size="sm" variant="destructive">
+                              Delete
+                            </Button>
+                          }
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <ConfirmDialog
+                          title="Restore Category?"
+                          description="This will reactivate the category."
+                          onConfirm={() => handleReactivate(item.id)}
+                          trigger={
+                            <Button size="sm" variant="outline">
+                              Restore
+                            </Button>
+                          }
+                        />
+
+                        <ConfirmDialog
+                          title="Delete Permanently?"
+                          description="This cannot be undone."
+                          onConfirm={() => handleHardDelete(item.id)}
+                          trigger={
+                            <Button size="sm" variant="destructive">
+                              Delete Forever
+                            </Button>
+                          }
+                        />
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="py-4 text-center text-muted-foreground"
+                >
+                  No categories found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -266,16 +345,10 @@ export default function ChargeCategoryManager() {
           setEditItem(null);
         }}
         onSubmit={handleSubmit}
-        defaultData={
-          editItem
-            ? {
-                categoryType: editItem.categoryType,
-                name: editItem.name,
-                description: editItem.description,
-              }
-            : null
-        }
+        defaultData={editItem}
+        chargeTypes={chargeTypes}
       />
     </div>
   );
 }
+

@@ -21,7 +21,7 @@ import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 interface Tax {
   id: string;
   name: string;
-  percentage: number;
+  percent: string; // API returns string for decimal
   isDeleted: boolean;
 }
 
@@ -41,31 +41,41 @@ export default function TaxManager() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editData, setEditData] = useState<Tax | null>(null);
 
-  // ------------ Load Dummy Data ------------
+  // ------------ Fetch Data ------------
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setTaxes([
-        { id: "1", name: "GST", percentage: 18, isDeleted: false },
-        { id: "2", name: "Service Tax", percentage: 12, isDeleted: false },
-        { id: "3", name: "Luxury Tax", percentage: 28, isDeleted: true },
-      ]);
+    fetchTaxes();
+  }, [showDeleted]);
+
+  const fetchTaxes = async () => {
+    try {
+      setLoading(true);
+      const url = new URL("/api/tax-categories", window.location.origin);
+      url.searchParams.set("showDeleted", showDeleted.toString());
+
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error("Failed to fetch tax categories");
+
+      const data = await response.json();
+      setTaxes(data);
+    } catch (error) {
+      console.error("Error fetching taxes:", error);
+      toast.error("Failed to load tax categories");
+    } finally {
       setLoading(false);
-    }, 300);
-  }, []);
+    }
+  };
 
   // ------------ Filter & Search ------------
   const filtered = useMemo(() => {
     return taxes.filter((tax) => {
       const matchSearch =
         tax.name.toLowerCase().includes(search.toLowerCase()) ||
-        tax.percentage.toString().includes(search);
+        tax.percent.toString().includes(search);
 
-      const matchDeleted = showDeleted ? tax.isDeleted : !tax.isDeleted;
-
-      return matchSearch && matchDeleted;
+      // API handles showDeleted, but we filter search results locally
+      return matchSearch;
     });
-  }, [taxes, search, showDeleted]);
+  }, [taxes, search]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const paginated = filtered.slice(
@@ -74,53 +84,106 @@ export default function TaxManager() {
   );
 
   // ------------ Add / Edit Handler ------------
-  const handleSubmit = (data: { name: string; percentage: number }) => {
-    if (editData) {
-      // Edit Mode
-      setTaxes((prev) =>
-        prev.map((t) =>
-          t.id === editData.id ? { ...t, name: data.name, percentage: data.percentage } : t
-        )
-      );
-      toast.success("Tax updated successfully!");
-    } else {
-      // Add Mode
-      const newTax: Tax = {
-        id: crypto.randomUUID(),
-        name: data.name,
-        percentage: data.percentage,
-        isDeleted: false,
-      };
+  const handleSubmit = async (data: { name: string; percentage: number }) => {
+    try {
+      if (editData) {
+        // Edit Mode
+        const response = await fetch(`/api/tax-categories/${editData.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: data.name, percent: data.percentage }),
+        });
 
-      setTaxes((prev) => [...prev, newTax]);
-      toast.success("Tax added successfully!");
+        if (!response.ok) throw new Error("Failed to update tax category");
+        const updatedTax = await response.json();
+
+        setTaxes((prev) =>
+          prev.map((t) =>
+            t.id === editData.id ? updatedTax : t
+          )
+        );
+        toast.success("Tax updated successfully!");
+      } else {
+        // Add Mode
+        const response = await fetch("/api/tax-categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: data.name, percent: data.percentage }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create tax category");
+        const newTax = await response.json();
+
+        setTaxes((prev) => [newTax, ...prev]);
+        toast.success("Tax added successfully!");
+      }
+
+      setModalOpen(false);
+      setEditData(null);
+    } catch (error) {
+      console.error("Error saving tax:", error);
+      toast.error("Failed to save tax category");
     }
-
-    setModalOpen(false);
-    setEditData(null);
   };
 
   // ------------ Soft Delete ------------
-  const handleDelete = (id: string) => {
-    setTaxes((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isDeleted: true } : t))
-    );
-    toast.success("Tax deleted (soft)!");
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/tax-categories/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete tax category");
+      }
+
+      // Remove from list (since we are showing active only)
+      setTaxes((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Tax deleted (soft)!");
+    } catch (error) {
+      console.error("Error deleting tax:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete tax category");
+    }
   };
 
   // ------------ Permanent Delete ------------
-  const handlePermanentDelete = (id: string) => {
-    setTaxes((prev) => prev.filter((t) => t.id !== id));
-    toast.success("Tax permanently deleted!");
+  const handlePermanentDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/tax-categories/${id}?permanent=true`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to permanently delete tax category");
+      }
+
+      setTaxes((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Tax permanently deleted!");
+    } catch (error) {
+      console.error("Error permanently deleting tax:", error);
+      toast.error("Failed to permanently delete tax category");
+    }
   };
 
   // ------------ Reactivate ------------
-    const handleReactivate = (id: string) => {
-    setTaxes((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, isDeleted: false } : t))
-    );
-    toast.success("Tax reactivated successfully!");
-    };
+  const handleReactivate = async (id: string) => {
+    try {
+      const response = await fetch(`/api/tax-categories/${id}`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) throw new Error("Failed to restore tax category");
+
+      // Remove from deleted list (since we are showing deleted only)
+      setTaxes((prev) => prev.filter((t) => t.id !== id));
+      toast.success("Tax reactivated successfully!");
+    } catch (error) {
+      console.error("Error restoring tax:", error);
+      toast.error("Failed to restore tax category");
+    }
+  };
 
 
   return (
@@ -174,61 +237,61 @@ export default function TaxManager() {
             paginated.map((tax) => (
               <TableRow key={tax.id} className={tax.isDeleted ? "opacity-60" : ""}>
                 <TableCell>{tax.name}</TableCell>
-                <TableCell>{tax.percentage}%</TableCell>
+                <TableCell>{tax.percent}%</TableCell>
 
                 <TableCell className="text-right space-x-2">
-                {!tax.isDeleted && (
+                  {!tax.isDeleted && (
                     <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
                         setEditData(tax);
                         setModalOpen(true);
-                    }}
+                      }}
                     >
-                    Edit
+                      Edit
                     </Button>
-                )}
+                  )}
 
-                {tax.isDeleted ? (
+                  {tax.isDeleted ? (
                     <>
-                    {/* Reactivate with confirmation */}
-                    <ConfirmDialog
+                      {/* Reactivate with confirmation */}
+                      <ConfirmDialog
                         title="Reactivate Tax?"
                         description="This will restore the tax back to active list."
                         onConfirm={() => handleReactivate(tax.id)}
                         trigger={
-                        <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm">
                             Reactivate
-                        </Button>
+                          </Button>
                         }
-                    />
+                      />
 
-                    {/* Permanent Delete */}
-                    <ConfirmDialog
+                      {/* Permanent Delete */}
+                      <ConfirmDialog
                         title="Permanently delete?"
                         description="This action cannot be undone."
                         onConfirm={() => handlePermanentDelete(tax.id)}
                         trigger={
-                        <Button variant="destructive" size="sm">
+                          <Button variant="destructive" size="sm">
                             Permanent Delete
-                        </Button>
+                          </Button>
                         }
-                    />
+                      />
                     </>
-                ) : (
+                  ) : (
                     /* Soft Delete */
                     <ConfirmDialog
-                    title="Delete Tax?"
-                    description="This will soft delete the tax."
-                    onConfirm={() => handleDelete(tax.id)}
-                    trigger={
+                      title="Delete Tax?"
+                      description="This will soft delete the tax."
+                      onConfirm={() => handleDelete(tax.id)}
+                      trigger={
                         <Button variant="destructive" size="sm">
-                        Delete
+                          Delete
                         </Button>
-                    }
+                      }
                     />
-                )}
+                  )}
                 </TableCell>
 
               </TableRow>
@@ -280,7 +343,7 @@ export default function TaxManager() {
         onSubmit={handleSubmit}
         defaultData={
           editData
-            ? { name: editData.name, percentage: editData.percentage }
+            ? { name: editData.name, percentage: Number(editData.percent) }
             : null
         }
       />

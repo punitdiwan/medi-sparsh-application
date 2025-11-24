@@ -8,31 +8,17 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 // ---------- TYPES ----------
-export type ChargeTypeFlags = {
-  appointment?: boolean;
-  opd?: boolean;
-  ipd?: boolean;
-  pathology?: boolean;
-  radiology?: boolean;
-  bloodBank?: boolean;
-  ambulance?: boolean;
-
-  [key: string]: boolean | undefined;
-};
-
-
-
-export interface ChargeTypeItem {
+interface Module {
   id: string;
   name: string;
-  flags: ChargeTypeFlags;
 }
 
 interface ChargeTypeModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { id?: string; name: string; flags: ChargeTypeFlags }) => void;
-  defaultData?: ChargeTypeItem | null;
+  onSubmit: (data: { id?: string; name: string; modules: string[] }) => void;
+  defaultData?: { id: string; name: string; modules: string[] } | null;
+  modules: Module[];
 }
 // ---------------------------------------------
 
@@ -41,22 +27,27 @@ export function ChargeTypeModal({
   onClose,
   onSubmit,
   defaultData,
+  modules,
 }: ChargeTypeModalProps) {
   const [name, setName] = useState<string>("");
-  const [flags, setFlags] = useState<ChargeTypeFlags>({});
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
   useEffect(() => {
     if (defaultData) {
       setName(defaultData.name);
-      setFlags(defaultData.flags);
+      setSelectedModules(defaultData.modules || []);
     } else {
       setName("");
-      setFlags({});
+      setSelectedModules([]);
     }
   }, [defaultData]);
 
-  const toggleFlag = (key: keyof ChargeTypeFlags) => {
-    setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleModule = (moduleId: string) => {
+    setSelectedModules((prev) =>
+      prev.includes(moduleId)
+        ? prev.filter((id) => id !== moduleId)
+        : [...prev, moduleId]
+    );
   };
 
   const handleSubmit = () => {
@@ -68,7 +59,7 @@ export function ChargeTypeModal({
     onSubmit({
       id: defaultData?.id,
       name: name.trim(),
-      flags,
+      modules: selectedModules,
     });
 
     onClose();
@@ -102,69 +93,22 @@ export function ChargeTypeModal({
               Module <span className="text-red-500">*</span>
             </Label>
 
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.appointment}
-                  onChange={() => toggleFlag("appointment")}
-                />
-                Appointment
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.opd}
-                  onChange={() => toggleFlag("opd")}
-                />
-                OPD
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.ipd}
-                  onChange={() => toggleFlag("ipd")}
-                />
-                IPD
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.pathology}
-                  onChange={() => toggleFlag("pathology")}
-                />
-                Pathology
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.radiology}
-                  onChange={() => toggleFlag("radiology")}
-                />
-                Radiology
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.bloodBank}
-                  onChange={() => toggleFlag("bloodBank")}
-                />
-                Blood Bank
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!!flags.ambulance}
-                  onChange={() => toggleFlag("ambulance")}
-                />
-                Ambulance
-              </label>
+            <div className="grid grid-cols-2 gap-2 mt-1 max-h-[200px] overflow-y-auto">
+              {modules.length > 0 ? (
+                modules.map((mod) => (
+                  <label key={mod.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedModules.includes(mod.id)}
+                      onChange={() => toggleModule(mod.id)}
+                      className="cursor-pointer"
+                    />
+                    {mod.name}
+                  </label>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No modules found.</p>
+              )}
             </div>
           </div>
 

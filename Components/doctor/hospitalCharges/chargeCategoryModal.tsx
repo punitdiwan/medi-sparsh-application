@@ -10,47 +10,43 @@ import { toast } from "sonner";
 
 export interface ChargeCategoryItem {
   id?: string;
-  categoryType: string; 
+  chargeTypeId: string;
   name: string;
   description: string;
 }
 
+interface ChargeType {
+  id: string;
+  name: string;
+}
 
 interface ChargeCategoryModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: ChargeCategoryItem) => void;
-  defaultData?: ChargeCategoryItem | null;
+  defaultData?: any | null;
+  chargeTypes: ChargeType[];
 }
-
-const CHARGE_TYPES = [
-  "Consultation",
-  "Procedure",
-  "Test / Lab",
-  "Radiology",
-  "IPD Charge",
-  "Ambulance",
-  "Other",
-];
 
 export function ChargeCategoryModal({
   open,
   onClose,
   onSubmit,
   defaultData,
+  chargeTypes,
 }: ChargeCategoryModalProps) {
-  const [categoryType, setCategoryType] = useState("");
+  const [chargeTypeId, setChargeTypeId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
   // Load Edit Data
   useEffect(() => {
     if (defaultData) {
-      setCategoryType(defaultData.categoryType || "");
+      setChargeTypeId(defaultData.chargeTypeId || "");
       setName(defaultData.name);
       setDescription(defaultData.description);
     } else {
-      setCategoryType("");
+      setChargeTypeId("");
       setName("");
       setDescription("");
     }
@@ -58,16 +54,15 @@ export function ChargeCategoryModal({
 
   // Submit Handler
   const handleSubmit = () => {
-    if (!categoryType) return toast.error("Please select charge type");
+    if (!chargeTypeId) return toast.error("Please select charge type");
     if (!name.trim()) return toast.error("Name is required");
 
     onSubmit({
-    id: defaultData?.id, 
-    categoryType,
-    name,
-    description,
+      id: defaultData?.id,
+      chargeTypeId,
+      name,
+      description,
     });
-
 
     onClose();
   };
@@ -90,17 +85,17 @@ export function ChargeCategoryModal({
             </Label>
 
             <select
-                className="border rounded-md p-2 bg-background"
-                value={categoryType}
-                onChange={(e) => setCategoryType(e.target.value)}
-                >
-                <option value="">Select Type</option>
-                {CHARGE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                    {t}
-                    </option>
-                ))}
-                </select>
+              className="border rounded-md p-2 bg-background"
+              value={chargeTypeId}
+              onChange={(e) => setChargeTypeId(e.target.value)}
+            >
+              <option value="">Select Type</option>
+              {chargeTypes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
 
           </div>
 

@@ -1,100 +1,178 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { ChargeTypeModal } from "./ChargeTypeModal";
+import { toast } from "sonner";
 
-type ChargeTypeFlags = {
-  opd: boolean;
-  ipd: boolean;
-  lab: boolean;
-  radiology: boolean;
-  ambulance?: boolean;
-};
-
-type ChargeTypeItem = {
+// Types
+interface Module {
   id: string;
-  chargeName: string;
-  flags: ChargeTypeFlags;
-};
+  name: string;
+}
 
-const MODULES = ["opd", "ipd", "lab", "radiology", "ambulance"] as const;
+interface ChargeType {
+  id: string;
+  name: string;
+  modules: string[]; // Array of Module IDs
+}
 
 export default function ChargeTypeManager() {
-  const [data, setData] = useState<ChargeTypeItem[]>([
-    {
-      id: "1",
-      chargeName: "Registration Charge",
-      flags: { opd: true, ipd: false, lab: false, radiology: true, ambulance: false },
-    },
-    {
-      id: "2",
-      chargeName: "Doctor Consultation",
-      flags: { opd: true, ipd: true, lab: false, radiology: false, ambulance: false },
-    },
-    {
-      id: "3",
-      chargeName: "Blood Test",
-      flags: { opd: false, ipd: false, lab: true, radiology: false, ambulance: false },
-    },
-  ]);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [chargeTypes, setChargeTypes] = useState<ChargeType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editItem, setEditItem] = useState<ChargeTypeItem | null>(null);
+  const [editItem, setEditItem] = useState<ChargeType | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
 
-  const paginated = data.slice(
+  // Fetch Data
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [modulesRes, chargeTypesRes] = await Promise.all([
+        fetch("/api/modules"),
+        fetch("/api/charge-types"),
+      ]);
+
+      if (!modulesRes.ok) {
+        console.error("Modules API failed:", modulesRes.status, modulesRes.statusText);
+      }
+      if (!chargeTypesRes.ok) {
+        console.error("Charge Types API failed:", chargeTypesRes.status, chargeTypesRes.statusText);
+      }
+
+      if (!modulesRes.ok || !chargeTypesRes.ok) {
+        throw new Error("Failed to fetch data");
+      }
+
+      const modulesData = await modulesRes.json();
+      const chargeTypesData = await chargeTypesRes.json();
+
+      setModules(modulesData);
+      setChargeTypes(chargeTypesData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const paginated = chargeTypes.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
-  const totalPages = Math.ceil(data.length / rowsPerPage);
+  const totalPages = Math.ceil(chargeTypes.length / rowsPerPage);
 
-  const toggleFlag = (id: string, module: keyof ChargeTypeFlags) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, flags: { ...item.flags, [module]: !item.flags[module] } }
-          : item
-      )
-    );
-  };
+  const toggleFlag = async (chargeTypeId: string, moduleId: string) => {
+    const chargeType = chargeTypes.find((c) => c.id === chargeTypeId);
+    if (!chargeType) return;
 
-  const handleSubmit = (dataFromModal: any) => {
-    if (dataFromModal.id) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === dataFromModal.id
-            ? {
-                ...item,
-                chargeName: dataFromModal.name,
-                flags: dataFromModal.flags,
-              }
-            : item
-        )
-      );
+    const currentModules = chargeType.modules || [];
+    const isEnabled = currentModules.includes(moduleId);
+
+    let newModules;
+    if (isEnabled) {
+      newModules = currentModules.filter((id) => id !== moduleId);
     } else {
-      setData((prev) => [
-        ...prev,
-        {
-          id: String(Date.now()),
-          chargeName: dataFromModal.name,
-          flags: dataFromModal.flags,
-        },
-      ]);
+      newModules = [...currentModules, moduleId];
     }
 
-    setModalOpen(false);
+    // Optimistic Update
+    setChargeTypes((prev) =>
+      prev.map((c) =>
+        c.id === chargeTypeId ? { ...c, modules: newModules } : c
+      )
+    );
+
+    try {
+      const response = await fetch(`/api/charge-types/${chargeTypeId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: chargeType.name, modules: newModules }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update");
+    } catch (error) {
+      console.error("Error updating module:", error);
+      toast.error("Failed to update module");
+      // Revert on error
+      setChargeTypes((prev) =>
+        prev.map((c) =>
+          c.id === chargeTypeId ? { ...c, modules: currentModules } : c
+        )
+      );
+    }
+  };
+
+  const handleSubmit = async (dataFromModal: { id?: string; name: string; modules: string[] }) => {
+    try {
+      if (dataFromModal.id) {
+        // Edit
+        const response = await fetch(`/api/charge-types/${dataFromModal.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: dataFromModal.name, modules: dataFromModal.modules }),
+        });
+
+        if (!response.ok) throw new Error("Failed to update charge type");
+        const updated = await response.json();
+
+        setChargeTypes((prev) =>
+          prev.map((item) => (item.id === updated.id ? updated : item))
+        );
+        toast.success("Charge Type updated successfully");
+      } else {
+        // Add
+        const response = await fetch("/api/charge-types", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: dataFromModal.name, modules: dataFromModal.modules }),
+        });
+
+        if (!response.ok) throw new Error("Failed to create charge type");
+        const created = await response.json();
+
+        setChargeTypes((prev) => [created, ...prev]);
+        toast.success("Charge Type created successfully");
+      }
+      setModalOpen(false);
+      setEditItem(null);
+    } catch (error) {
+      console.error("Error saving charge type:", error);
+      toast.error("Failed to save charge type");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/charge-types/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete");
+
+      setChargeTypes((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Charge Type deleted");
+    } catch (error) {
+      console.error("Error deleting charge type:", error);
+      toast.error("Failed to delete charge type");
+    }
   };
 
   return (
     <div className="p-6 bg-background space-y-4">
 
       <div className="flex justify-between items-center">
-
         <Button
           onClick={() => {
             setEditItem(null);
@@ -113,9 +191,9 @@ export default function ChargeTypeManager() {
                 Charge Name
               </th>
 
-              {MODULES.map((mod) => (
-                <th key={mod} className="border p-2 text-center">
-                  {mod.toUpperCase()}
+              {modules.map((mod) => (
+                <th key={mod.id} className="border p-2 text-center">
+                  {mod.name.toUpperCase()}
                 </th>
               ))}
 
@@ -126,74 +204,89 @@ export default function ChargeTypeManager() {
           </thead>
 
           <tbody>
-            {paginated.map((item) => (
-              <tr key={item.id}>
-                <td className="border p-2 sticky left-0 bg-background z-10">
-                  {item.chargeName}
-                </td>
-
-                {MODULES.map((mod) => (
-                  <td key={mod} className="border p-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={item.flags[mod] || false}
-                      onChange={() => toggleFlag(item.id, mod)}
-                    />
-                  </td>
-                ))}
-
-                <td className="border p-2 sticky right-0 bg-background z-10">
-                  <div className="flex gap-2 justify-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditItem(item);
-                        setModalOpen(true);
-                      }}
-                    >
-                      <MdEdit />
-                    </Button>
-
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        setData((prev) => prev.filter((i) => i.id !== item.id))
-                      }
-                    >
-                      <MdDelete />
-                    </Button>
-                  </div>
+            {loading ? (
+              <tr>
+                <td colSpan={modules.length + 2} className="text-center p-4">
+                  Loading...
                 </td>
               </tr>
-            ))}
+            ) : paginated.length > 0 ? (
+              paginated.map((item) => (
+                <tr key={item.id}>
+                  <td className="border p-2 sticky left-0 bg-background z-10">
+                    {item.name}
+                  </td>
+
+                  {modules.map((mod) => (
+                    <td key={mod.id} className="border p-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={(item.modules || []).includes(mod.id)}
+                        onChange={() => toggleFlag(item.id, mod.id)}
+                      />
+                    </td>
+                  ))}
+
+                  <td className="border p-2 sticky right-0 bg-background z-10">
+                    <div className="flex gap-2 justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditItem(item);
+                          setModalOpen(true);
+                        }}
+                      >
+                        <MdEdit />
+                      </Button>
+
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <MdDelete />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={modules.length + 2} className="text-center p-4">
+                  No charge types found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-      <div className="flex justify-between items-center mt-4">
-        <p className="text-sm">
-          Page {currentPage} of {totalPages}
-        </p>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <p className="text-sm">
+            Page {currentPage} of {totalPages}
+          </p>
 
-          <Button
-            variant="outline"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Next
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              Prev
+            </Button>
+
+            <Button
+              variant="outline"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <ChargeTypeModal
         open={modalOpen}
@@ -202,12 +295,13 @@ export default function ChargeTypeManager() {
         defaultData={
           editItem
             ? {
-                id: editItem.id,
-                name: editItem.chargeName,
-                flags: editItem.flags,
-              }
+              id: editItem.id,
+              name: editItem.name,
+              modules: editItem.modules || [],
+            }
             : null
         }
+        modules={modules}
       />
     </div>
   );
