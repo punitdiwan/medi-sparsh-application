@@ -504,3 +504,21 @@ export const shifts = pgTable("shifts", {
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Doctor Shifts Table
+export const doctorShifts = pgTable("doctor_shifts", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	doctorUserId: text("doctor_user_id")
+		.notNull()
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	shiftId: text("shift_id")
+		.notNull()
+		.references(() => shifts.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+	unique("doctor_shift_unique").on(table.doctorUserId, table.shiftId)
+]);
