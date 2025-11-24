@@ -9,11 +9,8 @@ import { MdEdit, MdDelete } from "react-icons/md";
 
 export function PriorityManagerPage() {
   const [search, setSearch] = useState("");
-  const [priorities, setPriorities] = useState([
-    { id: 1, name: "High" },
-    { id: 2, name: "Medium" },
-    { id: 3, name: "Low" },
-  ]); // Dummy data
+  const [priorities, setPriorities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [filtered, setFiltered] = useState([]);
 
@@ -25,9 +22,30 @@ export function PriorityManagerPage() {
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
+  const fetchPriorities = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/appointmentPriority");
+      if (res.ok) {
+        const data = await res.json();
+        setPriorities(data);
+      } else {
+        console.error("Failed to fetch priorities");
+      }
+    } catch (error) {
+      console.error("Error fetching priorities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPriorities();
+  }, []);
+
   useEffect(() => {
     const result = priorities.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+      p.priority.toLowerCase().includes(search.toLowerCase())
     );
     setFiltered(result);
   }, [search, priorities]);
@@ -40,23 +58,46 @@ export function PriorityManagerPage() {
   const totalPages = Math.ceil(filtered.length / pageSize);
 
   // Add + Edit handler
-  const handleSave = (data) => {
-    if (data.id) {
-      // Update existing
-      setPriorities((prev) =>
-        prev.map((p) => (p.id === data.id ? { ...p, name: data.name } : p))
-      );
-    } else {
-      // Add new
-      setPriorities((prev) => [
-        ...prev,
-        { id: Date.now(), name: data.name },
-      ]);
+  const handleSave = async (data) => {
+    try {
+      if (data.id) {
+        // Update existing
+        const res = await fetch(`/api/appointmentPriority/${data.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ priority: data.name }),
+        });
+        if (res.ok) {
+          fetchPriorities();
+        }
+      } else {
+        // Add new
+        const res = await fetch("/api/appointmentPriority", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ priority: data.name }),
+        });
+        if (res.ok) {
+          fetchPriorities();
+        }
+      }
+    } catch (error) {
+      console.error("Error saving priority:", error);
     }
   };
 
-  const handleDelete = (id) => {
-    setPriorities((prev) => prev.filter((p) => p.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this priority?")) return;
+    try {
+      const res = await fetch(`/api/appointmentPriority/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchPriorities();
+      }
+    } catch (error) {
+      console.error("Error deleting priority:", error);
+    }
   };
 
   return (
@@ -93,39 +134,45 @@ export function PriorityManagerPage() {
           </TableHeader>
 
           <TableBody>
-            {paginatedData.length === 0 && (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center py-4">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : paginatedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-4">
                   No results found
                 </TableCell>
               </TableRow>
+            ) : (
+              paginatedData.map((item, index) => (
+                <TableRow key={item.id}>
+                  <TableCell className="text-center">{(page - 1) * pageSize + index + 1}</TableCell>
+                  <TableCell>{item.priority}</TableCell>
+
+                  <TableCell className="flex justify-center gap-3">
+                    {/* Edit */}
+                    <MdEdit
+                      className="cursor-pointer text-blue-600"
+                      size={20}
+                      onClick={() => {
+                        setSelected({ id: item.id, name: item.priority });
+                        setModalOpen(true);
+                      }}
+                    />
+
+                    {/* Delete */}
+                    <MdDelete
+                      className="cursor-pointer text-red-600"
+                      size={20}
+                      onClick={() => handleDelete(item.id)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
             )}
-
-            {paginatedData.map((item, index) => (
-              <TableRow key={item.id}>
-                <TableCell className="text-center">{(page - 1) * pageSize + index + 1}</TableCell>
-                <TableCell>{item.name}</TableCell>
-
-                <TableCell className="flex justify-center gap-3">
-                  {/* Edit */}
-                  <MdEdit
-                    className="cursor-pointer text-blue-600"
-                    size={20}
-                    onClick={() => {
-                      setSelected(item);
-                      setModalOpen(true);
-                    }}
-                  />
-
-                  {/* Delete */}
-                  <MdDelete
-                    className="cursor-pointer text-red-600"
-                    size={20}
-                    onClick={() => handleDelete(item.id)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
           </TableBody>
         </Table>
       </div>
