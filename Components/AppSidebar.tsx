@@ -63,8 +63,9 @@ const items: SidebarItem[] = [
     children: [
       { title: 'Members', url: '/doctor/employees' },
       { title: 'Profile', url: '/doctor/settings/profile' },
+      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
+      { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Stats', url: '/doctor/settings/stats' },
-      { title: 'Bed', url: '/doctor/settings/Bed' },
       { title: 'Payments History', url: '/doctor/billing' },
       { title: 'App Settings', url: '/doctor/settings/config' },
     ],
@@ -180,7 +181,7 @@ export function AppSidebar() {
                                     key={subItem.title}
                                     href={subItem.url}
                                     onClick={() => {
-                                      if (item.title === "Settings" && subItem.title === "Bed") {
+                                      if (item.title === "Settings" && subItem.title === "Bed"||"hospitalCharges") {
                                         closeSidebar();
                                       }
                                     }}

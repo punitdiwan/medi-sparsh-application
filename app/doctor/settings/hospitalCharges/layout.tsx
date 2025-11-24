@@ -1,22 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname  } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-
-export default function BedLayout({ children }: { children: React.ReactNode }) {
+export default function HospitalChargesLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const menu = [
-    { name: 'Bed', href: '/doctor/settings/Bed'},
-    { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus" },
-    { name: "Floor", href: "/doctor/settings/Bed/Floor" },
-    { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
-    { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup" },
+    { name: "Charges", href: "/doctor/settings/hospitalCharges"},
+    { name: "Charges Category", href: "/doctor/settings/hospitalCharges/chargeCategory" },
+    { name: "Charge Type", href: "/doctor/settings/hospitalCharges/chargeType" },
+    { name: "Tax Category", href: "/doctor/settings/hospitalCharges/taxCategory" },
+    { name: "Unit Type", href: "/doctor/settings/hospitalCharges/unitType" },
   ];
 
   const currentChild = menu.find((item) => pathname === item.href);
@@ -32,8 +31,6 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
           <ScrollArea className="h-full p-2">
             <div className="space-y-2">
               {menu.map((item) => {
-                const isActive = pathname === item.href;
-
                 return (
                   <Button
                     key={item.href}
