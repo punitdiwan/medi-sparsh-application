@@ -1,96 +1,100 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { MdSearch } from "react-icons/md";
 
-const DOCTORS = [
-  { id: "1", name: "Dr. Amit Verma" },
-  { id: "2", name: "Dr. Neha Sharma" },
-  { id: "3", name: "Dr. Rahul Singh" },
-  { id: "4", name: "Dr. Karan Mehta" },
-  { id: "5", name: "Dr. Ritika Bhatia" },
-  { id: "6", name: "Dr. Varun Patel" },
-  { id: "7", name: "Dr. Aarti Kapoor" },
-];
+interface Shift {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+}
 
-const SHIFTS = [
-  { id: "morning", name: "Morning" },
-  { id: "afternoon", name: "Afternoon" },
-  { id: "evening", name: "Evening" },
-  { id: "night", name: "Night" },
-];
-
-type ShiftKey = "morning" | "afternoon" | "evening" | "night";
-
-type DoctorShift = {
+interface Doctor {
   doctorId: string;
   doctorName: string;
-  shifts: Record<ShiftKey, boolean>;
-};
+  shifts: Record<string, boolean>;
+}
 
 export default function DoctorShiftManagerPage() {
   const [search, setSearch] = useState("");
-
-  const [doctorShiftData, setDoctorShiftData] = useState<DoctorShift[]>([
-    {
-      doctorId: "1",
-      doctorName: "Dr. Amit Verma",
-      shifts: { morning: true, afternoon: false, evening: true, night: false },
-    },
-    {
-      doctorId: "2",
-      doctorName: "Dr. Neha Sharma",
-      shifts: { morning: false, afternoon: true, evening: false, night: false },
-    },
-    {
-      doctorId: "3",
-      doctorName: "Dr. Rahul Singh",
-      shifts: { morning: false, afternoon: false, evening: true, night: true },
-    },
-    {
-      doctorId: "4",
-      doctorName: "Dr. Karan Mehta",
-      shifts: { morning: true, afternoon: true, evening: false, night: false },
-    },
-    {
-      doctorId: "5",
-      doctorName: "Dr. Ritika Bhatia",
-      shifts: { morning: false, afternoon: false, evening: false, night: true },
-    },
-    {
-      doctorId: "6",
-      doctorName: "Dr. Varun Patel",
-      shifts: { morning: true, afternoon: true, evening: true, night: false },
-    },
-    {
-      doctorId: "7",
-      doctorName: "Dr. Aarti Kapoor",
-      shifts: { morning: false, afternoon: false, evening: true, night: false },
-    },
-  ]);
+  const [loading, setLoading] = useState(true);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [shifts, setShifts] = useState<Shift[]>([]);
 
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
 
-  const toggleDoctorShift = (doctorId: string, shiftKey: ShiftKey) => {
-    setDoctorShiftData((prev) =>
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/doctorShifts");
+      if (res.ok) {
+        const data = await res.json();
+        setDoctors(data.doctors);
+        setShifts(data.shifts);
+      } else {
+        toast.error("Failed to fetch doctor shifts");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Error fetching data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const toggleDoctorShift = async (doctorId: string, shiftId: string, currentStatus: boolean) => {
+    // Optimistic update
+    const previousDoctors = [...doctors];
+    setDoctors((prev) =>
       prev.map((doc) =>
         doc.doctorId === doctorId
           ? {
-              ...doc,
-              shifts: {
-                ...doc.shifts,
-                [shiftKey]: !doc.shifts[shiftKey], 
-              },
-            }
+            ...doc,
+            shifts: {
+              ...doc.shifts,
+              [shiftId]: !currentStatus,
+            },
+          }
           : doc
       )
     );
+
+    try {
+      const res = await fetch("/api/doctorShifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          doctorId,
+          shiftId,
+          assigned: !currentStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update");
+      }
+      toast.success("Shift updated successfully");
+    } catch (error) {
+      console.error("Error updating shift:", error);
+      toast.error("Failed to update shift");
+      // Revert on error
+      setDoctors(previousDoctors);
+    }
   };
 
-  const filteredDoctors = doctorShiftData.filter((d) =>
+  const filteredDoctors = doctors.filter((d) =>
     d.doctorName.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -102,95 +106,119 @@ export default function DoctorShiftManagerPage() {
   const totalPages = Math.ceil(filteredDoctors.length / rowsPerPage);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <div>
+            <CardTitle className="text-2xl font-bold text-foreground">Doctor Shift Management</CardTitle>
+            <CardDescription className="text-muted-foreground mt-1">
+              Assign shifts to doctors.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <Separator />
+        <CardContent className="pt-6 space-y-6">
+          {/* Search */}
+          <div className="relative w-full md:w-1/3">
+            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search by doctor name..."
+              className="pl-9 bg-background/50 border-muted focus:border-primary transition-colors"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
 
-      <div>
-        <Input
-          placeholder="Search by doctor name..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
+          {/* Table */}
+          <div className="rounded-lg border border-border/50 overflow-hidden shadow-sm bg-background">
+            <table className="w-full border-collapse">
+              <thead className="bg-muted/40">
+                <tr>
+                  <th className="p-3 border-b text-left font-semibold text-muted-foreground">Doctor</th>
+                  {shifts.map((shift) => (
+                    <th key={shift.id} className="p-3 border-b text-center font-semibold text-muted-foreground">
+                      <div className="flex flex-col items-center">
+                        <span>{shift.name}</span>
+                        <span className="text-[10px] font-normal text-muted-foreground/70">
+                          {shift.startTime} - {shift.endTime}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-      <div className="border rounded-xl overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead className="bg-muted">
-            <tr>
-              <th className="p-3 border text-left">Doctor</th>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground animate-pulse">
+                      Loading data...
+                    </td>
+                  </tr>
+                ) : paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground">
+                      No doctors found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((doc) => (
+                    <tr key={doc.doctorId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="p-3 font-medium">{doc.doctorName}</td>
+                      {shifts.map((shift) => (
+                        <td key={shift.id} className="p-3 text-center">
+                          <Checkbox
+                            className="border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            checked={!!doc.shifts[shift.id]}
+                            onCheckedChange={() =>
+                              toggleDoctorShift(doc.doctorId, shift.id, !!doc.shifts[shift.id])
+                            }
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
-              {SHIFTS.map((shift) => (
-                <th key={shift.id} className="p-3 border text-center">
-                  {shift.name}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          {/* Pagination */}
+          <div className="flex justify-between items-center pt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing <span className="font-medium">{paginatedData.length}</span> of <span className="font-medium">{filteredDoctors.length}</span> doctors
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="h-8"
+              >
+                Previous
+              </Button>
 
-          <tbody>
-            {paginatedData.map((doc) => (
-              <tr key={doc.doctorId} className="border-b">
-                <td className="p-3 border">{doc.doctorName}</td>
+              <div className="text-sm font-medium px-2">
+                Page {page} of {totalPages || 1}
+              </div>
 
-                {SHIFTS.map((shift) => (
-                  <td key={shift.id} className="p-3 border text-center">
-                    <Checkbox
-                      className="border border-gray-500 dark:border-gray-300"
-                      checked={doc.shifts[shift.id as ShiftKey]}
-                      onCheckedChange={() =>
-                        toggleDoctorShift(doc.doctorId, shift.id as ShiftKey)
-                      }
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-
-            {paginatedData.length === 0 && (
-              <tr>
-                <td
-                  className="p-4 text-center text-gray-500"
-                  colSpan={1 + SHIFTS.length}
-                >
-                  No doctors found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex justify-between items-center px-2">
-        <p className="text-sm text-muted-foreground">
-          Showing {(page - 1) * rowsPerPage + 1}–
-          {Math.min(page * rowsPerPage, filteredDoctors.length)} of{" "}
-          {filteredDoctors.length}
-        </p>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </Button>
-
-          <span className="font-medium">
-            Page {page} / {totalPages}
-          </span>
-
-          <Button
-            variant="outline"
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                className="h-8"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
