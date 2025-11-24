@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
+import SlotModal from "./slotModal";
 
 const WEEK_DAYS = [
   "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
@@ -31,9 +32,6 @@ export default function SlotManagerPage() {
   const [chargeId, setChargeId] = useState("");
   const [amount, setAmount] = useState("");
 
-  const [timeFrom, setTimeFrom] = useState("");
-  const [timeTo, setTimeTo] = useState("");
-
   const [showWeekPanel, setShowWeekPanel] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
 
@@ -45,6 +43,8 @@ export default function SlotManagerPage() {
   });
 
   const [editingSlotId, setEditingSlotId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalInitialData, setModalInitialData] = useState(null);
 
   // Fetch initial data
   useEffect(() => {
@@ -135,8 +135,8 @@ export default function SlotManagerPage() {
               timeTo: slot.timeTo,
               durationMins: slot.durationMins,
               chargeId: slot.chargeId,
-              amount: slot.amount, // Assuming API returns amount
-              categoryId: slot.categoryId // Assuming API returns categoryId
+              amount: slot.amount,
+              categoryId: slot.categoryId
             });
           }
         });
@@ -165,41 +165,13 @@ export default function SlotManagerPage() {
     return false;
   };
 
-  const validateShiftTime = (from, to) => {
-    const selectedShift = shifts.find(s => s.id === shiftId);
-    if (!selectedShift) return true;
+  const handleSaveSlot = async (slotData) => {
+    const { day, timeFrom, timeTo } = slotData;
 
-    // Simple string comparison for HH:mm works
-    if (from < selectedShift.startTime || from > selectedShift.endTime) {
-      toast.error(`Time From must be between ${selectedShift.startTime} and ${selectedShift.endTime}`);
-      return false;
-    }
-    // Note: 'to' can be equal to endTime
-    if (to < selectedShift.startTime || to > selectedShift.endTime) {
-      // Allow 'to' to be exactly endTime, but strictly speaking a slot ending at 12:00 is fine if shift ends at 12:00
-      // If shift is 06:00-12:00, slot 11:30-12:00 is valid.
-      // So 'to' > endTime is the error condition.
-      if (to > selectedShift.endTime) {
-        toast.error(`Time To must be between ${selectedShift.startTime} and ${selectedShift.endTime}`);
-        return false;
-      }
-    }
-    if (from >= to) {
-      toast.error("Time To must be greater than Time From");
-      return false;
-    }
-    return true;
-  };
+    if (!durationMins) return toast.error("Please enter duration in Consultation Details.");
+    if (!chargeId) return toast.error("Please select a charge in Consultation Details.");
 
-  const handleAddOrUpdateSlot = async () => {
-    if (!selectedDay) return toast.error("Please select a day first.");
-    if (!timeFrom || !timeTo) return toast.error("Please select both times.");
-    if (!durationMins) return toast.error("Please enter duration.");
-    if (!chargeId) return toast.error("Please select a charge.");
-
-    if (!validateShiftTime(timeFrom, timeTo)) return;
-
-    const isOverlap = checkSlotOverlap(selectedDay, timeFrom, timeTo);
+    const isOverlap = checkSlotOverlap(day, timeFrom, timeTo);
     if (isOverlap) {
       return toast.error("This time slot overlaps with an existing slot!");
     }
@@ -207,7 +179,7 @@ export default function SlotManagerPage() {
     const payload = {
       doctorId,
       shiftId,
-      day: selectedDay,
+      day,
       timeFrom,
       timeTo,
       durationMins,
@@ -231,16 +203,9 @@ export default function SlotManagerPage() {
       }
 
       if (res.ok) {
-        const savedSlot = await res.json();
         toast.success(editingSlotId ? "Slot Updated" : "Slot Added");
-
-        // Refresh slots
-        handleSearch();
-
-        // Reset form
-        setEditingSlotId(null);
-        setTimeFrom("");
-        setTimeTo("");
+        handleSearch(); // Refresh slots
+        setIsModalOpen(false);
       } else {
         const err = await res.json();
         toast.error(err.error || "Failed to save slot");
@@ -252,20 +217,16 @@ export default function SlotManagerPage() {
   };
 
   const handleAddNew = () => {
+    if (!selectedDay) return toast.error("Please select a day first.");
     setEditingSlotId(null);
-    setTimeFrom("");
-    setTimeTo("");
+    setModalInitialData(null);
+    setIsModalOpen(true);
   };
 
   const handleEdit = (day, slot) => {
-    setSelectedDay(day);
     setEditingSlotId(slot.id);
-    setTimeFrom(slot.timeFrom);
-    setTimeTo(slot.timeTo);
-    setDurationMins(slot.durationMins);
-    setCategoryId(slot.categoryId || ""); // Ensure category is set if available
-    setChargeId(slot.chargeId);
-    setAmount(slot.amount);
+    setModalInitialData(slot);
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (day, id) => {
@@ -278,7 +239,6 @@ export default function SlotManagerPage() {
 
       if (res.ok) {
         toast.success("Slot deleted");
-        // Optimistic update or refresh
         setSlotsByDay((prev) => ({
           ...prev,
           [day]: prev[day].filter((s) => s.id !== id),
@@ -291,6 +251,8 @@ export default function SlotManagerPage() {
       toast.error("Error deleting slot");
     }
   };
+
+  const selectedShift = shifts.find(s => s.id === shiftId);
 
   return (
     <div className="p-6 space-y-6">
@@ -385,31 +347,7 @@ export default function SlotManagerPage() {
             <div className="p-4 border rounded-xl shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-lg">{selectedDay} Slots</h4>
-              </div>
-
-              <div className="w-full flex flex-wrap gap-4 items-end">
-                <div className="w-auto flex flex-col gap-1">
-                  <Label>Time From</Label>
-                  <Input type="time" value={timeFrom}
-                    onChange={(e) => setTimeFrom(e.target.value)}
-                  />
-                </div>
-
-                <div className="w-auto flex flex-col gap-1">
-                  <Label>Time To</Label>
-                  <Input type="time" value={timeTo}
-                    onChange={(e) => setTimeTo(e.target.value)}
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={handleAddNew}>
-                    Add New
-                  </Button>
-                  <Button onClick={handleAddOrUpdateSlot}>
-                    {editingSlotId ? "Update" : "Save"}
-                  </Button>
-                </div>
+                <Button onClick={handleAddNew}>Add New Slot</Button>
               </div>
 
               <div className="space-y-2 mt-4">
@@ -434,6 +372,17 @@ export default function SlotManagerPage() {
           )}
         </div>
       )}
+
+      <SlotModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSlot}
+        initialData={modalInitialData}
+        shiftRange={selectedShift}
+        selectedDay={selectedDay}
+        durationMins={durationMins}
+        chargeId={chargeId}
+      />
     </div>
   );
 }
