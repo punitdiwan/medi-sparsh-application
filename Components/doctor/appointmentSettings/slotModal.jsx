@@ -11,7 +11,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+
+const WEEK_DAYS = [
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+];
 
 export default function SlotModal({
     isOpen,
@@ -25,9 +36,11 @@ export default function SlotModal({
 }) {
     const [timeFrom, setTimeFrom] = useState("");
     const [timeTo, setTimeTo] = useState("");
+    const [day, setDay] = useState(selectedDay || "Monday");
 
     useEffect(() => {
         if (isOpen) {
+            setDay(selectedDay || "Monday");
             if (initialData) {
                 setTimeFrom(initialData.timeFrom || "");
                 setTimeTo(initialData.timeTo || "");
@@ -37,7 +50,7 @@ export default function SlotModal({
                 setTimeTo("");
             }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, selectedDay]);
 
     const handleSubmit = () => {
         if (!timeFrom || !timeTo) return toast.error("Please select both times.");
@@ -62,7 +75,7 @@ export default function SlotModal({
         }
 
         onSave({
-            day: selectedDay,
+            day: day,
             timeFrom,
             timeTo
         });
@@ -72,10 +85,31 @@ export default function SlotModal({
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>{initialData ? "Edit Slot" : "Add New Slot"} - {selectedDay}</DialogTitle>
+                    <DialogTitle>
+                        {initialData ? "Edit Slot" : "Add New Slot"}
+                        {shiftRange && (
+                            <span className="text-sm font-normal text-muted-foreground ml-2">
+                                - {shiftRange.name} ({shiftRange.startTime} - {shiftRange.endTime})
+                            </span>
+                        )}
+                    </DialogTitle>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
+                    <div className="flex flex-col gap-2">
+                        <Label>Day *</Label>
+                        <Select value={day} onValueChange={setDay}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select day" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {WEEK_DAYS.map((d) => (
+                                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
                             <Label>Time From *</Label>

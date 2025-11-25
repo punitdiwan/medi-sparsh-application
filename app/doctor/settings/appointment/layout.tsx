@@ -1,64 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname  } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-
-export default function BedLayout({ children }: { children: React.ReactNode }) {
+export default function AppointmentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const menu = [
+  const tabs = [
+    { name: "Doctor Shift", href: "/doctor/settings/appointment" },
     { name: "Slots", href: "/doctor/settings/appointment/slots" },
-     { name: 'Doctor Shift', href: '/doctor/settings/appointment'},
     { name: "Shift", href: "/doctor/settings/appointment/shifts" },
     { name: "Appointment Priority", href: "/doctor/settings/appointment/appointmentPriority" },
   ];
 
-  const currentChild = menu.find((item) => pathname === item.href);
-  const subHeading = currentChild ? currentChild.name : "";
+  // Determine the active tab based on the current pathname
+  const activeTab = tabs.find((tab) => tab.href === pathname)?.href || tabs[0].href;
 
   return (
-    <div className="flex items-start p-2">
-      <Card
-        className="w-54 rounded shadow"
-        style={{ backgroundColor: "var(--sidebar)", color: "var(--sidebar-foreground)" }}
-      >
-        <CardContent className="p-0">
-          <ScrollArea className="h-full p-2">
-            <div className="space-y-2">
-              {menu.map((item) => {
-                const isActive = pathname === item.href;
+    <div className="p-6 space-y-6">
+      <Tabs value={activeTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.href} value={tab.href} asChild>
+              <Link href={tab.href}>{tab.name}</Link>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-                return (
-                  <Button
-                    key={item.href}
-                    asChild
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start rounded-xl text-left font-medium transition-colors duration-150",
-                      "text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]"
-                    )}
-                  >
-                    <Link href={item.href}>{item.name}</Link>
-                  </Button>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-
-      <div className="flex-1 p-6 bg-background text-foreground">
-        {subHeading && (
-          <h2 className="text-2xl font-semibold mb-4 border-b border-border pb-2">
-            {subHeading}
-          </h2>
-        )}
-
+      <div className="bg-background text-foreground">
         {children}
       </div>
     </div>
