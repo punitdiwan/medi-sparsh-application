@@ -35,7 +35,7 @@ export default function PatientSearchBox({
   const [patientResults, setPatientResults] = useState<PatientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-
+  const [patientInfo, setPatientInfo] = useState<any>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
   const handleSearch = useCallback((term: string) => {
@@ -55,6 +55,7 @@ export default function PatientSearchBox({
       try {
         const res = await fetch(`/api/patients?search=${encodeURIComponent(term)}`);
         const data = await res.json();
+        console.log("patients",data);
         setPatientResults(data.success ? data.data || [] : []);
       } catch (error) {
         console.error("Error searching patients:", error);

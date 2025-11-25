@@ -15,6 +15,7 @@ import {
   ClipboardPlus,
   Settings,
   ServerCog,
+  Stethoscope,
 } from 'lucide-react';
 
 import {
@@ -54,6 +55,7 @@ const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
   { title: 'Patients', url: '/doctor/patient', icon: User },
   { title: 'Appointment', url: '/doctor/appointment', icon: Calendar },
+  { title: "OPD-Out Patient" ,url:'/doctor/OPD', icon:Stethoscope},
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen },
   { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus },
   { title: 'Services', url: '/doctor/services', icon: ServerCog },

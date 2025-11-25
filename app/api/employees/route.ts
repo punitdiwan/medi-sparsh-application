@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     const hospital = await getCurrentHospital();
 
     const employees = await getStaffWithDoctorDetails(hospital.hospitalId);
-
     return NextResponse.json({
       success: true,
       data: employees,
