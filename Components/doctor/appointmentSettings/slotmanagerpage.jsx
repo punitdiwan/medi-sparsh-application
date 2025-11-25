@@ -13,46 +13,18 @@ import {
 } from "@/components/ui/select";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
-
-const DOCTORS = [
-  { id: "1", name: "Dr. Amit Verma" },
-  { id: "2", name: "Dr. Neha Sharma" },
-  { id: "3", name: "Dr. Rahul Singh" },
-];
-const DOCTOR_SHIFT_MAP = {
-  "1": ["1", "2"],       
-  "2": ["2", "3"],       
-  "3": ["1", "3"],       
-};
-
-const SHIFTS = [
-  { id: "1", name: "Morning" },
-  { id: "2", name: "Afternoon" },
-  { id: "3", name: "Night" },
-];
-
-const CHARGE_CATEGORIES = [
-  { id: "1", name: "OPD" },
-  { id: "2", name: "Emergency" },
-];
-
-const CHARGES_MAP = {
-  "1": [
-    { id: "11", name: "General OPD", amount: 300 },
-    { id: "12", name: "Specialist OPD", amount: 500 },
-  ],
-  "2": [{ id: "21", name: "Emergency Charge", amount: 800 }],
-};
+import SlotModal from "./slotModal";
 
 const WEEK_DAYS = [
-  "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday",
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
 ];
-const shiftRanges = {
-  "1": { from: "06:00", to: "12:00" }, 
-  "2": { from: "12:00", to: "18:00" },
-  "3": { from: "18:00", to: "23:59" }
-};
+
 export default function SlotManagerPage() {
+  const [doctors, setDoctors] = useState([]);
+  const [shifts, setShifts] = useState([]);
+  const [chargeCategories, setChargeCategories] = useState([]);
+  const [charges, setCharges] = useState([]);
+
   const [doctorId, setDoctorId] = useState("");
   const [shiftId, setShiftId] = useState("");
   const [durationMins, setDurationMins] = useState("");
@@ -60,184 +32,254 @@ export default function SlotManagerPage() {
   const [chargeId, setChargeId] = useState("");
   const [amount, setAmount] = useState("");
 
-  const [timeFrom, setTimeFrom] = useState("");
-  const [timeTo, setTimeTo] = useState("");
-
   const [showWeekPanel, setShowWeekPanel] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
 
   const [filteredShifts, setFilteredShifts] = useState([]);
-
   const [slotsByDay, setSlotsByDay] = useState(() => {
     const init = {};
     WEEK_DAYS.forEach((d) => (init[d] = []));
     return init;
   });
 
-  const [daySlotInput, setDaySlotInput] = useState("");
   const [editingSlotId, setEditingSlotId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalInitialData, setModalInitialData] = useState(null);
 
+  // Fetch initial data
   useEffect(() => {
-  if (!doctorId) {
-    setFilteredShifts([]);
-    setShiftId("");
-    return;
-  }
+    const fetchInitialData = async () => {
+      try {
+        // Fetch doctors and their shifts
+        const docRes = await fetch("/api/doctorShifts");
+        if (docRes.ok) {
+          const data = await docRes.json();
+          setDoctors(data.doctors);
+          setShifts(data.shifts);
+        }
 
-  const allowedShifts = DOCTOR_SHIFT_MAP[doctorId] ?? [];
-  const finalList = SHIFTS.filter((s) => allowedShifts.includes(s.id));
+        // Fetch charge categories
+        const catRes = await fetch("/api/charge-categories");
+        if (catRes.ok) {
+          const data = await catRes.json();
+          setChargeCategories(data);
+        }
 
-  setFilteredShifts(finalList);
-  setShiftId(""); 
-}, [doctorId]);
+        // Fetch charges
+        const chargeRes = await fetch("/api/charges");
+        if (chargeRes.ok) {
+          const data = await chargeRes.json();
+          setCharges(data);
+        }
 
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        toast.error("Failed to load initial data");
+      }
+    };
 
+    fetchInitialData();
+  }, []);
+
+  // Filter shifts based on selected doctor
   useEffect(() => {
-    const list = CHARGES_MAP[categoryId] ?? [];
-    setChargeId("");
-    setAmount("");
-  }, [categoryId]);
+    if (!doctorId) {
+      setFilteredShifts([]);
+      setShiftId("");
+      return;
+    }
 
+    const selectedDoc = doctors.find((d) => d.doctorId === doctorId);
+    if (selectedDoc) {
+      // Filter shifts that are assigned to this doctor (value is true)
+      const assignedShiftIds = Object.entries(selectedDoc.shifts)
+        .filter(([_, assigned]) => assigned)
+        .map(([id]) => id);
+
+      const allowedShifts = shifts.filter((s) => assignedShiftIds.includes(s.id));
+      setFilteredShifts(allowedShifts);
+      setShiftId("");
+    }
+  }, [doctorId, doctors, shifts]);
+
+  // Update amount when charge is selected
   useEffect(() => {
-    if (!chargeId) return setAmount("");
-    const found = (CHARGES_MAP[categoryId] ?? []).find((c) => c.id === chargeId);
-    setAmount(found ? String(found.amount) : "");
-  }, [chargeId, categoryId]);
+    if (!chargeId) {
+      setAmount("");
+      return;
+    }
+    const selectedCharge = charges.find((c) => c.id === chargeId);
+    if (selectedCharge) {
+      setAmount(String(selectedCharge.standardCharge || selectedCharge.amount || ""));
+    }
+  }, [chargeId, charges]);
 
-  const handleSearch = () => {
-    if (!doctorId) return alert("Please select doctor");
-    if (!shiftId) return alert("Please select shift");
-    setShowWeekPanel(true);
+  const handleSearch = async () => {
+    if (!doctorId) return toast.error("Please select doctor");
+    if (!shiftId) return toast.error("Please select shift");
+
+    try {
+      const res = await fetch(`/api/doctorSlots?doctorId=${doctorId}&shiftId=${shiftId}`);
+      if (res.ok) {
+        const slots = await res.json();
+        // Group slots by day
+        const grouped = {};
+        WEEK_DAYS.forEach((d) => (grouped[d] = []));
+
+        slots.forEach(slot => {
+          if (grouped[slot.day]) {
+            grouped[slot.day].push({
+              id: slot.id,
+              text: `${slot.timeFrom} - ${slot.timeTo}`,
+              timeFrom: slot.timeFrom,
+              timeTo: slot.timeTo,
+              durationMins: slot.durationMins,
+              chargeId: slot.chargeId,
+              amount: slot.amount,
+              categoryId: slot.categoryId
+            });
+          }
+        });
+        setSlotsByDay(grouped);
+        setShowWeekPanel(true);
+        setSelectedDay(WEEK_DAYS[0]);
+      } else {
+        toast.error("Failed to fetch slots");
+      }
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      toast.error("Error fetching slots");
+    }
   };
 
   const checkSlotOverlap = (day, newFrom, newTo) => {
-  const existingSlots = slotsByDay[day];
-
-  for (const slot of existingSlots) {
-
-    if (editingSlotId && slot.id === editingSlotId) continue;
-
-    const existingFrom = slot.timeFrom;
-    const existingTo = slot.timeTo;
-
-    if (newFrom < existingTo && newTo > existingFrom) {
-      return true;
+    const existingSlots = slotsByDay[day];
+    for (const slot of existingSlots) {
+      if (editingSlotId && slot.id === editingSlotId) continue;
+      const existingFrom = slot.timeFrom;
+      const existingTo = slot.timeTo;
+      if (newFrom < existingTo && newTo > existingFrom) {
+        return true;
+      }
     }
-  }
-  return false;
-};
-
-const handleAddOrUpdateSlot = () => {
-  if (!selectedDay) return toast.error("Please select a day first.");
-  if (!timeFrom || !timeTo) return toast.error("Please select both times.");
-
-  if (!validateShiftTime(timeFrom, timeTo)) return;
-
-  const isOverlap = checkSlotOverlap(selectedDay, timeFrom, timeTo);
-  if (isOverlap) {
-    return toast.error("This time slot overlaps with an existing slot!");
-  }
-
-  const newSlot = {
-    id: editingSlotId || Date.now().toString(),
-    text: `${timeFrom} - ${timeTo}`,
-    timeFrom,
-    timeTo,
-    shiftId,
-    doctorId,
-    durationMins,
-    categoryId,
-    chargeId,
-    amount,
+    return false;
   };
 
-  setSlotsByDay((prev) => {
-    const updated = [...prev[selectedDay]];
+  const handleSaveSlot = async (slotData) => {
+    const { day, timeFrom, timeTo } = slotData;
 
-    if (editingSlotId) {
-      const index = updated.findIndex((s) => s.id === editingSlotId);
-      updated[index] = newSlot;
-    } else {
-      updated.push(newSlot);
+    if (!durationMins) return toast.error("Please enter duration in Consultation Details.");
+    if (!chargeId) return toast.error("Please select a charge in Consultation Details.");
+
+    const isOverlap = checkSlotOverlap(day, timeFrom, timeTo);
+    if (isOverlap) {
+      return toast.error("This time slot overlaps with an existing slot!");
     }
 
-    return { ...prev, [selectedDay]: updated };
-  });
+    const payload = {
+      doctorId,
+      shiftId,
+      day,
+      timeFrom,
+      timeTo,
+      durationMins,
+      chargeId
+    };
 
-  setEditingSlotId(null);
-  setTimeFrom("");
-  setTimeTo("");
+    try {
+      let res;
+      if (editingSlotId) {
+        res = await fetch(`/api/doctorSlots/${editingSlotId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/doctorSlots", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
-  toast.success(editingSlotId ? "Slot Updated" : "Slot Added");
-};
+      if (res.ok) {
+        toast.success(editingSlotId ? "Slot Updated" : "Slot Added");
+        handleSearch(); // Refresh slots
+        setIsModalOpen(false);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to save slot");
+      }
+    } catch (error) {
+      console.error("Error saving slot:", error);
+      toast.error("Error saving slot");
+    }
+  };
 
-const handleAddNew = () => {
-  setEditingSlotId(null);
-  setTimeFrom("");
-  setTimeTo("");
-};
+
+  const handleAddNew = () => {
+    if (!showWeekPanel) return toast.error("Please search for a doctor and shift first.");
+    setEditingSlotId(null);
+    setModalInitialData(null);
+    setSelectedDay(WEEK_DAYS[0]); // Default to Monday for new slots
+    setIsModalOpen(true);
+  };
 
 
   const handleEdit = (day, slot) => {
     setSelectedDay(day);
     setEditingSlotId(slot.id);
-    setTimeFrom(slot.timeFrom);
-    setTimeTo(slot.timeTo);
-    setDurationMins(slot.durationMins);
-    setCategoryId(slot.categoryId);
-    setChargeId(slot.chargeId);
-    setAmount(slot.amount);
+    setModalInitialData(slot);
+    setIsModalOpen(true);
   };
 
-  const handleDelete = (day, id) => {
-    setSlotsByDay((prev) => ({
-      ...prev,
-      [day]: prev[day].filter((s) => s.id !== id),
-    }));
+  const handleDelete = async (day, id) => {
+    if (!confirm("Are you sure you want to delete this slot?")) return;
+
+    try {
+      const res = await fetch(`/api/doctorSlots/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        toast.success("Slot deleted");
+        setSlotsByDay((prev) => ({
+          ...prev,
+          [day]: prev[day].filter((s) => s.id !== id),
+        }));
+      } else {
+        toast.error("Failed to delete slot");
+      }
+    } catch (error) {
+      console.error("Error deleting slot:", error);
+      toast.error("Error deleting slot");
+    }
   };
-  const validateShiftTime = (from, to) => {
-  const shift = shiftRanges[shiftId];
-  if (!shift) return true;
 
-  if (from < shift.from || from > shift.to) {
-    toast.error(`Time From must be between ${shift.from} and ${shift.to}`);
-    return false;
-  }
-  if (to < shift.from || to > shift.to) {
-    toast.error(`Time To must be between ${shift.from} and ${shift.to}`);
-    return false;
-  }
-  if (from >= to) {
-    toast.error("Time To must be greater than Time From");
-    return false;
-  }
+  const selectedShift = shifts.find(s => s.id === shiftId);
 
-  return true;
-};
   return (
     <div className="p-6 space-y-6">
-
       <div className="grid grid-cols-12 gap-4 items-end">
-        
-        <div className="col-span-5">
+        <div className="col-span-4">
           <Label>Doctor *</Label>
           <Select value={doctorId} onValueChange={setDoctorId}>
             <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
             <SelectContent>
-              {DOCTORS.map((d) => (
-                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+              {doctors.map((d) => (
+                <SelectItem key={d.doctorId} value={d.doctorId}>{d.doctorName}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="col-span-5">
+        <div className="col-span-4">
           <Label>Shift *</Label>
           <Select value={shiftId} onValueChange={setShiftId}>
             <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
             <SelectContent>
               {filteredShifts.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                <SelectItem key={s.id} value={s.id}>{s.name} ({s.startTime} - {s.endTime})</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -246,14 +288,16 @@ const handleAddNew = () => {
         <div className="col-span-2">
           <Button className="w-full" onClick={handleSearch}>Search</Button>
         </div>
-      </div>
 
+        <div className="col-span-2">
+          <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
+        </div>
+      </div>
 
       <div className="p-4 border rounded-xl shadow-sm">
         <h3 className="font-semibold mb-3">Consultation Details</h3>
 
         <div className="grid grid-cols-4 gap-4">
-
           <div className="flex flex-col gap-1">
             <Label>Duration (mins)</Label>
             <Input type="number" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} />
@@ -264,7 +308,7 @@ const handleAddNew = () => {
             <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
-                {CHARGE_CATEGORIES.map((c) => (
+                {chargeCategories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -276,9 +320,11 @@ const handleAddNew = () => {
             <Select value={chargeId} disabled={!categoryId} onValueChange={setChargeId}>
               <SelectTrigger><SelectValue placeholder="Select charge" /></SelectTrigger>
               <SelectContent>
-                {(CHARGES_MAP[categoryId] ?? []).map((x) => (
-                  <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
-                ))}
+                {charges
+                  .filter(c => c.chargeCategoryId === categoryId)
+                  .map((x) => (
+                    <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -287,82 +333,78 @@ const handleAddNew = () => {
             <Label>Amount</Label>
             <Input value={amount} readOnly />
           </div>
-
         </div>
       </div>
 
-
       {showWeekPanel && (
-        <div className="space-y-4">
-          
-          <div className="grid grid-cols-7 gap-2">
-            {WEEK_DAYS.map((day) => (
-              <div
-                key={day}
-                onClick={() => setSelectedDay(day)}
-                className={`p-3 text-center border rounded-lg cursor-pointer ${
-                  selectedDay === day ? "bg-background border-blue-500" : "bg-background"
-                }`}
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-
-
-          {selectedDay && (
-            <div className="p-4 border rounded-xl shadow-sm space-y-4">
-
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-lg">{selectedDay} Slots</h4>
-              </div>
-
-              <div className="w-full flex flex-wrap gap-2">
-
-                <div className="w-auto flex flex-col gap-1">
-                  <Label>Time From</Label>
-                  <Input type="time" value={timeFrom} 
-                  onChange={(e) => setTimeFrom(e.target.value)}
-                  min={shiftRanges[shiftId]?.from} />
-                </div>
-
-                <div className="w-auto flex flex-col gap-1">
-                  <Label>Time To</Label>
-                  <Input type="time" value={timeTo} 
-                  onChange={(e) => setTimeTo(e.target.value)}
-                  max={shiftRanges[shiftId]?.to} />
-                </div>
-
-              </div>
-                <div className="col-span-6 flex gap-3 justify-between">
-                  <Button variant="outline" className="w-32" onClick={handleAddNew}>
-                    Add New
-                  </Button>
-                  <Button className="w-32" onClick={handleAddOrUpdateSlot}>
-                    {editingSlotId ? "Update" : "Save"}
-                  </Button>
-                </div>
-
-
-              <div className="space-y-2">
-                {slotsByDay[selectedDay].map((s) => (
-                  <div key={s.id} className="flex justify-between items-center p-3 border rounded-md">
-                    <div>
-                      <div className="font-medium">{s.text}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <MdEdit className="text-blue-600 cursor-pointer" onClick={() => handleEdit(selectedDay, s)} />
-                      <MdDelete className="text-red-600 cursor-pointer" onClick={() => handleDelete(selectedDay, s.id)} />
-                    </div>
-                  </div>
+        <div className="border rounded-xl shadow-sm overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-muted/50">
+                {WEEK_DAYS.map((day) => (
+                  <th key={day} className="p-3 text-left font-semibold border-r last:border-r-0">
+                    {day}
+                  </th>
                 ))}
-              </div>
-
-            </div>
-          )}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {WEEK_DAYS.map((day) => (
+                  <td key={day} className="p-2 align-top border-r last:border-r-0 min-w-[150px]">
+                    <div className="space-y-2">
+                      {slotsByDay[day].length === 0 ? (
+                        <p className="text-muted-foreground text-xs text-center py-4">No slots</p>
+                      ) : (
+                        slotsByDay[day].map((s) => (
+                          <div key={s.id} className="group relative">
+                            <div className="flex justify-between items-start p-2 border rounded-md hover:bg-muted/50 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm truncate">{s.text}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {s.durationMins} mins
+                                </div>
+                              </div>
+                              <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MdEdit
+                                  className="text-blue-600 cursor-pointer h-4 w-4"
+                                  onClick={() => handleEdit(day, s)}
+                                  title="Edit slot"
+                                />
+                                <MdDelete
+                                  className="text-red-600 cursor-pointer h-4 w-4"
+                                  onClick={() => handleDelete(day, s.id)}
+                                  title="Delete slot"
+                                />
+                              </div>
+                            </div>
+                            {/* Tooltip for amount */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                              Amount: ₹{s.amount}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 
+      <SlotModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSlot}
+        initialData={modalInitialData}
+        shiftRange={selectedShift}
+        selectedDay={selectedDay}
+        durationMins={durationMins}
+        chargeId={chargeId}
+      />
     </div>
   );
 }
