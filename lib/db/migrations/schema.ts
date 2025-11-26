@@ -81,6 +81,7 @@ export const invitationInAuth = auth.table("invitation", {
 	organizationId: text().notNull(),
 	email: text().notNull(),
 	role: text(),
+	teamId: text("team_id"),
 	status: text().default('pending').notNull(),
 	expiresAt: timestamp({ mode: 'string' }).notNull(),
 	inviterId: text().notNull(),
@@ -94,6 +95,11 @@ export const invitationInAuth = auth.table("invitation", {
 		columns: [table.inviterId],
 		foreignColumns: [userInAuth.id],
 		name: "invitation_inviterId_user_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.teamId],
+		foreignColumns: [teamInAuth.id],
+		name: "invitation_teamId_team_id_fk"
 	}).onDelete("cascade")
 ]);
 
@@ -126,6 +132,7 @@ export const sessionInAuth = auth.table("session", {
 	userAgent: text(),
 	userId: text().notNull(),
 	activeOrganizationId: text(),
+	activeTeamId: text("active_team_id"),
 }, (table) => [
 	foreignKey({
 		columns: [table.userId],
@@ -136,6 +143,11 @@ export const sessionInAuth = auth.table("session", {
 		columns: [table.activeOrganizationId],
 		foreignColumns: [organizationInAuth.id],
 		name: "session_activeOrganizationId_organization_id_fk"
+	}),
+	foreignKey({
+		columns: [table.activeTeamId],
+		foreignColumns: [teamInAuth.id],
+		name: "session_activeTeamId_team_id_fk"
 	}),
 	unique("session_token_unique").on(table.token)
 
@@ -426,6 +438,29 @@ export const chargeTypes = pgTable("charge_types", {
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Teams Table
+export const teamInAuth = auth.table("team", {
+	id: text("id").primaryKey(),
+	name: text("name").notNull(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Team Member Table
+export const teamMemberInAuth = auth.table("team_member", {
+	id: text("id").primaryKey(),
+	teamId: text("team_id")
+		.notNull()
+		.references(() => teamInAuth.id, { onDelete: "cascade" }),
+	userId: text("user_id")
+		.notNull()
+		.references(() => userInAuth.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at"),
 });
 
 // Charge Category Table
