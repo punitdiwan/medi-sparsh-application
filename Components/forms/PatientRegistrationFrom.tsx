@@ -97,7 +97,8 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
         const data = await response.json();
         if (data.success) {
           console.log("Validation data",data);
-          const isEnabled = data.data.value === "true";
+          const setting = data.data.find((item: any) => item.key === "phone_validation");
+          const isEnabled = setting.value === "true";
           setPhoneValidationEnabled(isEnabled);
         }
       } catch (error) {

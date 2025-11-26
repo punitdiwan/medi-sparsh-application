@@ -148,7 +148,7 @@ export const FullScreenBedModal = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-start justify-center bg-background/50 p-4"
+            className="fixed inset-0 z-50 flex items-start justify-center bg-background p-4"
             role="dialog"
             aria-modal="true"
             aria-label="Hospital bed status full screen modal"
@@ -156,25 +156,25 @@ export const FullScreenBedModal = ({
                 if (e.key === "Escape") onClose?.();
             }}
         >
-            <div className="relative h-[92vh] w-full max-w-[1400px] overflow-hidden rounded-2xl bg-background shadow-2xl">
+            <div className="relative h-[92vh] w-full overflow-hidden rounded-2xl bg-zinc-600 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-4 border-b p-4">
                     <div>
                         <h2 className="text-xl font-semibold">Hospital Bed Status</h2>
-                        <p className="text-sm text-muted-foreground">Live overview of bed occupancy</p>
+                        <p className="text-sm text-zinc-200">Live overview of bed occupancy</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-sm">
                             <div className="flex flex-col items-end">
-                                <span className="text-xs text-muted-foreground">Total</span>
+                                <span className="text-xs text-zinc-200">Total</span>
                                 <span className="font-medium">{summary.total}</span>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-xs text-muted-foreground">Vacant</span>
+                                <span className="text-xs text-zinc-200">Vacant</span>
                                 <span className="font-medium text-[var(--chart-1)]">{summary.vacant}</span>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-xs text-muted-foreground">Occupied</span>
+                                <span className="text-xs text-zinc-200">Occupied</span>
                                 <span className="font-medium text-[var(--destructive)]">{summary.occupied}</span>
                             </div>
                         </div>
@@ -227,7 +227,7 @@ export const FullScreenBedModal = ({
                             <option value="status">Status</option>
                         </select>
 
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-zinc-200">
                             {loading ? "Loading..." : error ? `Error: ${error}` : `${visibleBeds.length} shown`}
                         </div>
                     </div>

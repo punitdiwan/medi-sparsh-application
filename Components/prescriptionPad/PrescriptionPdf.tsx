@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   doctorSpecialization: {
     fontSize: 11,
-    color: "#444",
+    color: "white",
   },
 
   section: {
