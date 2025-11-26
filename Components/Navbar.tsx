@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
@@ -23,7 +23,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { FaBed } from "react-icons/fa6";
+import {FullScreenBedModal} from "../Components/doctor/bed/BedBookingmodel"
 export default function Header() {
+  const [IsBedopen, setBedOpen] = useState(false);
   const router = useRouter();
   const {logout}= useAuth();
   const [open, setOpen] = useState(false);
@@ -37,7 +39,6 @@ export default function Header() {
       toast.error("Failed to logout");
     }
   };
-
   return (
     <header className="sticky top-0 bg-background z-[999] flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <div className="flex items-center gap-2 px-4">
@@ -49,7 +50,14 @@ export default function Header() {
         <div className="hidden md:flex md:items-center">
           <KbdInputGroup />
           <div className="px-4 cursor-pointer">
-            <FaBed />
+            <FaBed 
+              onClick={() => setBedOpen(true)}
+            />
+            <FullScreenBedModal
+              isOpen={IsBedopen}
+              onClose={() => setBedOpen(false)}
+              fetchUrl="/api/beds"   
+            />
           </div>
           
         </div>
