@@ -1,17 +1,31 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { z } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const vitalSchema = z.object({
+  name: z.string().min(2, "Vital name is required"),
+  from: z.string().min(1, "From value is required"),
+  to: z.string().min(1, "To value is required"),
+  unit: z.string().min(1, "Unit is required"),
+});
 
 export type Vital = {
   id: string;
   name: string;
-  from: string; 
-  to?: string;
+  from: string;
+  to: string;
   unit: string;
 };
+
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -24,28 +38,37 @@ export function VitalModal({ open, onOpenChange, vital, onSave }: Props) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [unit, setUnit] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setName(vital?.name ?? "");
     setFrom(vital?.from ?? "");
     setTo(vital?.to ?? "");
     setUnit(vital?.unit ?? "");
+    setError(null);
   }, [vital, open]);
 
   const handleSubmit = () => {
-    if (!name.trim()) return alert("Vital name is required");
-    if (!from.trim()) return alert("From value is required");
-    if (!unit.trim()) return alert("Unit is required");
+    try {
+      const parsed = vitalSchema.parse({
+        name: name.trim(),
+        from: from.trim(),
+        to: to.trim(),
+        unit: unit.trim(),
+      });
 
-    onSave({
-      id: vital?.id ?? `v_${Date.now()}`,
-      name: name.trim(),
-      from: from.trim(),
-      to: to.trim() || undefined,
-      unit: unit.trim(),
-    });
+      const payload: Vital = {
+        id: vital?.id ?? `v_${Date.now()}`,
+        ...parsed,
+      };
 
-    onOpenChange(false);
+      onSave(payload);
+      onOpenChange(false);
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        setError(e.issues[0]?.message);
+      }
+    }
   };
 
   return (
@@ -56,27 +79,39 @@ export function VitalModal({ open, onOpenChange, vital, onSave }: Props) {
         </DialogHeader>
 
         <div className="grid gap-4 mt-2">
-          {/* Name */}
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
           <div>
             <label className="text-sm mb-1 block">Vital Name *</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Weight" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Weight"
+            />
           </div>
 
-          {/* Range */}
+
           <div>
             <label className="text-sm mb-1 block">
-              Reference Range <span className="text-muted-foreground">(If single value, enter only From)</span>
+              Reference Range
             </label>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs block mb-1">From</label>
-                <Input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="e.g. 90" />
+                <label className="text-xs block mb-1">From *</label>
+                <Input
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  placeholder="e.g. 90"
+                />
               </div>
-
               <div>
-                <label className="text-xs block mb-1">To (optional)</label>
-                <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="e.g. 140" />
+                <label className="text-xs block mb-1">To *</label>
+                <Input
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  placeholder="e.g. 140"
+                />
               </div>
             </div>
           </div>
@@ -84,7 +119,11 @@ export function VitalModal({ open, onOpenChange, vital, onSave }: Props) {
           {/* Unit */}
           <div>
             <label className="text-sm mb-1 block">Unit *</label>
-            <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="e.g. mmHg" />
+            <Input
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="e.g. mmHg"
+            />
           </div>
 
           {/* Actions */}

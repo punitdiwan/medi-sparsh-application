@@ -31,7 +31,7 @@ export type Vital = {
   id: string;
   name: string;
   from: string;
-  to?: string;
+  to: string;
   unit: string;
 };
 
