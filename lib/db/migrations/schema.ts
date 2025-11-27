@@ -620,3 +620,15 @@ export const medicineCompanies = pgTable("medicine_companies", {
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Medicine Category Table
+export const medicineCategories = pgTable("medicine_categories", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+
