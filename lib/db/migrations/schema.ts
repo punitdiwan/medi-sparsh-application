@@ -608,3 +608,15 @@ export const medicineUnits = pgTable("medicine_units", {
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Medicine Companies Table
+export const medicineCompanies = pgTable("medicine_companies", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
