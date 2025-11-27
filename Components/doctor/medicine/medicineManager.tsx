@@ -1,7 +1,7 @@
 // MedicineManager.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,20 +16,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import { MedicineModal, Medicine } from "./medicineModal";
+import { getMedicines, deleteMedicine } from "@/lib/actions/medicines";
+import { getMedicineCategories } from "@/lib/actions/medicineCategories";
+import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
+import { getMedicineUnits } from "@/lib/actions/medicineUnits";
+import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
 
 export default function MedicineManager() {
-  const categories = ["Tablet", "Syrup", "Injection"];
-  const companies = ["Cipla", "Sun Pharma", "Alkem"];
-  const units = ["mg", "ml", "mm"];
-
   const [search, setSearch] = useState("");
   const [data, setData] = useState<Medicine[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<Medicine | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch medicines and related data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [medicinesRes, categoriesRes, companiesRes, unitsRes] = await Promise.all([
+          getMedicines(),
+          getMedicineCategories(),
+          getMedicineCompanies(),
+          getMedicineUnits(),
+        ]);
+
+        if (medicinesRes.data) {
+          setData(medicinesRes.data as Medicine[]);
+        }
+        if (categoriesRes.data) {
+          setCategories(categoriesRes.data);
+        }
+        if (companiesRes.data) {
+          setCompanies(companiesRes.data);
+        }
+        if (unitsRes.data) {
+          setUnits(unitsRes.data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load medicines");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filtered = useMemo(() => {
     return data.filter((m) =>
-      m.medicineName.toLowerCase().includes(search.toLowerCase())
+      m.name.toLowerCase().includes(search.toLowerCase())
     );
   }, [search, data]);
 
@@ -44,9 +87,44 @@ export default function MedicineManager() {
     setEditing(undefined);
   };
 
-  const handleDelete = (id: string) => {
-    setData((prev) => prev.filter((x) => x.id !== id));
-    toast.success("Medicine Deleted");
+  const handleDeleteClick = (medicine: Medicine) => {
+    setMedicineToDelete(medicine);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!medicineToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteMedicine(medicineToDelete.id);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setData((prev) => prev.filter((x) => x.id !== medicineToDelete.id));
+        toast.success("Medicine deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting medicine:", error);
+      toast.error("Failed to delete medicine");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setMedicineToDelete(null);
+    }
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find((c) => c.id === categoryId)?.name || "-";
+  };
+
+  const getCompanyName = (companyId: string) => {
+    return companies.find((c) => c.id === companyId)?.name || "-";
+  };
+
+  const getUnitName = (unitId: string) => {
+    return units.find((u) => u.id === unitId)?.name || "-";
   };
 
   return (
@@ -92,15 +170,21 @@ export default function MedicineManager() {
             </TableHeader>
 
             <TableBody>
-              {filtered.length > 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center">
+                    Loading medicines...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length > 0 ? (
                 filtered.map((item, idx) => (
                   <TableRow key={item.id}>
                     <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{item.medicineName}</TableCell>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.company}</TableCell>
-                    <TableCell>{item.unit}</TableCell>
-                    <TableCell>{item.note || "-"}</TableCell>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{getCategoryName(item.categoryId)}</TableCell>
+                    <TableCell>{getCompanyName(item.companyName)}</TableCell>
+                    <TableCell>{getUnitName(item.unitId)}</TableCell>
+                    <TableCell>{item.notes || "-"}</TableCell>
 
                     <TableCell className="text-right space-x-2">
                       <Button
@@ -117,7 +201,7 @@ export default function MedicineManager() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDeleteClick(item)}
                       >
                         <MdDelete size={18} className="text-red-500" />
                       </Button>
@@ -144,6 +228,16 @@ export default function MedicineManager() {
           companies={companies}
           units={units}
           onSave={handleSave}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Medicine"
+          description={`Are you sure you want to permanently delete "${medicineToDelete?.name}"? This action cannot be undone.`}
+          onConfirm={handleConfirmDelete}
+          isLoading={isDeleting}
         />
       </CardContent>
     </Card>

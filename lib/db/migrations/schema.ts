@@ -632,3 +632,23 @@ export const medicineCategories = pgTable("medicine_categories", {
 });
 
 
+// Medicine Table
+export const medicines = pgTable("medicines", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	categoryId: text("category_id")
+		.notNull()
+		.references(() => medicineCategories.id, { onDelete: "cascade" }),
+	companyName: text("company_name").notNull()
+		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
+	unitId: text("unit_id")
+		.notNull()
+		.references(() => medicineUnits.id, { onDelete: "cascade" }),
+	notes: text("notes"),
+	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
