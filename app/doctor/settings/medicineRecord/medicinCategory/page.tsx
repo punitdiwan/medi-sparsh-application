@@ -1,6 +1,6 @@
 
 import MedicineCategoryManager from '@/Components/doctor/medicine/medicineCategoryManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (

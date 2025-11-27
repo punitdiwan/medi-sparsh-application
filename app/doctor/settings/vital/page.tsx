@@ -1,5 +1,5 @@
 import VitalsManager from '@/Components/doctor/vitals/vitalsManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (

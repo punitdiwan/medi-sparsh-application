@@ -1,6 +1,6 @@
-import React from 'react'
-import {PriorityManagerPage} from "../../../../../Components/doctor/appointmentSettings/PriorityManagerPage"
 
+import {PriorityManagerPage} from "../../../../../Components/doctor/appointmentSettings/PriorityManagerPage"
+export const dynamic = "force-dynamic";
 const page = () => {
   return (
     <>

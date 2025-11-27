@@ -1,5 +1,5 @@
 import CompanyManager from '@/Components/doctor/medicine/medicineCompanyManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (

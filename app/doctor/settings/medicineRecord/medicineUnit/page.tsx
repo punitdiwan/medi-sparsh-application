@@ -1,5 +1,5 @@
 import MedicineUnitManager from '@/Components/doctor/medicine/medicineUnitManager'
-import React from 'react'
+export const dynamic = "force-dynamic";
 
 const page = () => {
   return (
