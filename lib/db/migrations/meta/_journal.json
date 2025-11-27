@@ -85,6 +85,20 @@
       "when": 1764074671817,
       "tag": "0013_loud_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1764243729307,
+      "tag": "0014_tough_owl",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1764246571122,
+      "tag": "0015_rare_princess_powerful",
+      "breakpoints": true
     }
   ]
 }
