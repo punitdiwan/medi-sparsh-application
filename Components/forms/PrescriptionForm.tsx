@@ -56,8 +56,6 @@ function PrescriptionForm() {
 
         if (response.ok && result.success && result.data?.length > 0) {
           const data = result.data[0];
-          console.log("Fetched prescription:", data);
-          console.log("Prescription id",data.id);
           setFormData({
             prescriptionId: data.id || "",
             vitals: data.vitals || {},
