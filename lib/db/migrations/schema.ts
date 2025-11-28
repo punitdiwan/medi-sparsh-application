@@ -34,8 +34,8 @@ export const userInAuth = auth.table("user", {
 	email: text().notNull(),
 	emailVerified: boolean().default(false).notNull(),
 	image: text(),
-	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	unique("user_email_unique").on(table.email),
 
@@ -53,8 +53,8 @@ export const accountInAuth = auth.table("account", {
 	refreshTokenExpiresAt: timestamp({ mode: 'string' }),
 	scope: text(),
 	password: text(),
-	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ mode: 'string' }).notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
 }, (table) => [
 	foreignKey({
 		columns: [table.userId],
@@ -108,7 +108,7 @@ export const memberInAuth = auth.table("member", {
 	organizationId: text().notNull(),
 	userId: text().notNull(),
 	role: text().default('admin').notNull(),
-	createdAt: timestamp({ mode: 'string' }).notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
 }, (table) => [
 	foreignKey({
 		columns: [table.organizationId],
