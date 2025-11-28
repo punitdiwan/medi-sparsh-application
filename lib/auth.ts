@@ -10,8 +10,8 @@ const url = "https://abc.medisparsh.com";
 export const auth = betterAuth({
   socialProviders: {
     google: {
-      prompt: "select_account",
-      accessType: "offline", 
+      // prompt: "select_account",
+      // accessType: "offline", 
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
@@ -58,7 +58,7 @@ export const auth = betterAuth({
   },
 
   trustedOrigins: [url, "http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
-  baseURL: url,
+  //baseURL: url,
   basePath: "/api/auth",
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
