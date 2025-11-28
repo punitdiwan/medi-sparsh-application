@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,9 @@ export function SignInForm({ Hospitaldata }: any) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Handle form submission for email/password login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -53,7 +56,52 @@ export function SignInForm({ Hospitaldata }: any) {
 
   useEffect(() => {
     localStorage.clear();
-  }, []);
+
+    // Handle OAuth callback errors
+    const error = searchParams.get("error");
+    const message = searchParams.get("message");
+
+    if (error) {
+      switch (error) {
+        case "hospital_not_found":
+          toast.error("Hospital not found. Please check the URL.");
+          break;
+        case "authentication_failed":
+          toast.error("Authentication failed. Please try again.");
+          break;
+        case "not_member":
+          toast.error(message || "You are not registered with any hospital. Please contact your administrator.");
+          break;
+        case "wrong_organization":
+          toast.error(message || `You are not an employee of ${Hospitaldata?.name || "this organization"}.`);
+          break;
+        case "callback_failed":
+          toast.error(message || "Authentication failed. Please try again.");
+          break;
+        default:
+          toast.error("An error occurred during sign-in.");
+      }
+
+      // Clean up URL parameters
+      router.replace("/sign-in");
+    }
+  }, [searchParams, router, Hospitaldata]);
+
+  // Handle Google social login
+  const signInWithGoogle = async () => {
+    try {
+      setIsLoading(true);
+      await authClient.signIn.social({
+        provider: "google",
+      });
+    } catch (error: any) {
+      console.error("Google sign-in error:", error);
+      toast.error(error.message || "Failed to sign in with Google");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   return (
     <div className="flex min-h-screen">
@@ -101,14 +149,16 @@ export function SignInForm({ Hospitaldata }: any) {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </form>
           </CardContent>
 
-          <CardFooter className="flex-col gap-2">
-            <Button variant="outline" className="w-full">
+          <CardFooter className="flex-col gap-2" >
+            <Button type="button" variant="outline"
+              className="relative w-full cursor-pointer"
+              onClick={signInWithGoogle}>
               Login with Google
             </Button>
 
