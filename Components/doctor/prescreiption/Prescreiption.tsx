@@ -12,6 +12,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { FaFileDownload } from "react-icons/fa";
 import { MdLocalPrintshop } from "react-icons/md";
+import { useAuth } from "@/context/AuthContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 type Prescription = {
   id: string;
   patientId: string;
@@ -28,7 +31,11 @@ export default function PrescriptionPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [activeTab, setActiveTab] = useState<"today" | "all" | "old">("all");
+
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
+  const [activeTab, setActiveTab] = useState<"today" | "all" | "week" | "custom">("all");
 
   useEffect(() => {
     const fetchPrescriptions = async () => {
@@ -47,16 +54,31 @@ export default function PrescriptionPage() {
     fetchPrescriptions();
   }, []);
 
-  const todayStr = new Date().toISOString().split("T")[0];
-
   const filteredData = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+
+    const weekStart = new Date();
+    weekStart.setDate(today.getDate() - 7);
+    const weekStartStr = weekStart.toISOString().split("T")[0];
+
     return data.filter((item) => {
       const itemDate = item.date.split("T")[0];
+
       if (activeTab === "today") return itemDate === todayStr;
-      if (activeTab === "old") return itemDate < todayStr;
-      return true;
+
+      if (activeTab === "week") {
+        return itemDate >= weekStartStr && itemDate <= todayStr;
+      }
+
+      if (activeTab === "custom") {
+        if (!customFrom || !customTo) return true;
+        return itemDate >= customFrom && itemDate <= customTo;
+      }
+
+      return true; // ALL
     });
-  }, [data, activeTab, todayStr]);
+  }, [data, activeTab, customFrom, customTo]);
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
@@ -65,18 +87,25 @@ export default function PrescriptionPage() {
     return filteredData.slice(start, start + rowsPerPage);
   }, [filteredData, currentPage, rowsPerPage]);
 
-  const activeCount = useMemo(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-
-    return filteredData.length; 
-  }, [filteredData]);
+  const activeCount = filteredData.length;
 
   const columns: ColumnDef<Prescription>[] = [
-    { accessorKey: "id", header: "ID", cell: ({ row }) => <span>{getShortId(row.original.id)}</span> },
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => <span>{getShortId(row.original.id)}</span>,
+    },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "diagnosis", header: "Diagnosis" },
-    { accessorKey: "date", header: "Date", cell: ({ row }) => new Date(row.original.date).toLocaleDateString() },
-    { accessorKey: "followUpDate", header: "Follow-up", cell: ({ row }) =>
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }) => new Date(row.original.date).toLocaleDateString(),
+    },
+    {
+      accessorKey: "followUpDate",
+      header: "Follow-up",
+      cell: ({ row }) =>
         row.original.followUpRequired && row.original.followUpDate
           ? new Date(row.original.followUpDate).toLocaleDateString()
           : "N/A",
@@ -91,87 +120,154 @@ export default function PrescriptionPage() {
       ),
     },
   ];
-
+  const { user } = useAuth();
   const generatePDF = (type: "download" | "print") => {
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Prescriptions`, 14, 20);
 
-    const tableColumn = ["ID", "Patient Name", "Diagnosis", "Date", "Follow-up"];
-    const tableRows = filteredData.map((p) => [
+    const hospitalName =
+      user?.hospital?.name ?? "City Hospital";
+    const hospitalAddress =
+      user?.hospital?.metadata?.address ??
+      "123 Main St, City, State";
+    const hospitalPhone =
+      user?.hospital?.metadata?.phone ?? "+91 9876543210";
+    const hospitalEmail =
+      user?.hospital?.metadata?.email ?? "info@cityhospital.com";
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont(undefined, "bold");
+    doc.text(hospitalName, 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+    doc.text(`Address: ${hospitalAddress}`, 14, 27);
+    doc.text(`Phone: ${hospitalPhone}`, 14, 32);
+    doc.text(`Email: ${hospitalEmail}`, 14, 37);
+
+    // Title
+    doc.setFontSize(14);
+    doc.setFont(undefined, "bold");
+    doc.text(`${activeTab.toUpperCase()} Prescriptions`, 14, 45);
+
+    // Table rows
+    const rows = filteredData.map((p) => [
       getShortId(p.id),
       p.patientName,
       p.diagnosis,
       new Date(p.date).toLocaleDateString(),
-      p.followUpDate ? new Date(p.followUpDate).toLocaleDateString() : "N/A",
+      p.followUpDate
+        ? new Date(p.followUpDate).toLocaleDateString()
+        : "N/A",
     ]);
 
+    let finalY = 0;
+
     autoTable(doc, {
-      startY: 45, // below header
-      head: [["ID", "Patient Name", "Diagnosis", "Date", "Follow-up"]],
-      body: filteredData.map((p) => [
-        getShortId(p.id),
-        p.patientName,
-        p.diagnosis,
-        new Date(p.date).toLocaleDateString(),
-        p.followUpDate ? new Date(p.followUpDate).toLocaleDateString() : "N/A",
-      ]),
-      headStyles: { fillColor: [30, 144, 255], textColor: 255, fontStyle: "bold" },
+      startY: 50,
+      head: [["ID", "Patient", "Diagnosis", "Date", "Follow-up"]],
+      body: rows,
+      theme: "grid",
+      headStyles: {
+        fillColor: [30, 144, 255],
+        textColor: 255,
+        halign: "center",
+      },
+      bodyStyles: { fontSize: 10 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
-      styles: { fontSize: 10 },
-      columnStyles: { 1: { cellWidth: 50 }, 2: { cellWidth: 50 } },
-      didDrawCell: (data) => {
-        // Highlight today's prescription
-        if (data.column.index === 3 && data.cell.raw === todayStr) {
-          doc.setFillColor(255, 255, 0); // yellow
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, "F");
+      didDrawPage: (data) => {
+        if (data.cursor && typeof data.cursor.y === "number") {
+          finalY = data.cursor.y;
         }
       },
     });
 
+    // Total
+    doc.setFontSize(12);
+    doc.setFont(undefined, "bold");
+    doc.text(`Total Records: ${filteredData.length}`, 14, finalY + 10);
 
-    if (type === "download") {
-      doc.save(`prescriptions_${activeTab}.pdf`);
-    } else {
-      doc.autoPrint({ variant: "non-conform" });
+    if (type === "download") doc.save(`prescriptions_${activeTab}.pdf`);
+    else {
+      doc.autoPrint();
       doc.output("dataurlnewwindow");
     }
   };
+  const getButtonLabel = () => {
+    switch (activeTab) {
+      case "today":
+        return "Today";
+      case "week":
+        return "This Week";
+      case "custom":
+        return "Custom Range";
+      default:
+        return "All";
+    }
+  };
+
 
   if (loading)
-    return <p className="text-center mt-6 text-muted-foreground">Loading prescriptions...</p>;
+    return (
+      <p className="text-center mt-6 text-muted-foreground">
+        Loading prescriptions...
+      </p>
+    );
 
   return (
-    <div className="p-6 min-h-screen bg-background text-foreground">
+    <div className="p-6 mt-2 min-h-screen bg-background text-foreground">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h3 className="text-2xl font-semibold">Prescriptions ({activeCount})</h3>
-          <p className="text-sm text-muted-foreground">Manage and view patient prescriptions</p>
+          <h3 className="text-2xl font-semibold">
+            Prescriptions ({activeCount})
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Manage and view patient prescriptions
+          </p>
         </div>
+
         <div className="flex gap-2">
-          <div className="relative group">
-            <Button onClick={() => generatePDF("download")}><FaFileDownload/></Button>
-            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Download PDF
-            </span>
-          </div>
-          <div className="relative group">
-            <Button onClick={() => generatePDF("print")}><MdLocalPrintshop/></Button>
-            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Print PDF
-            </span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={() => generatePDF("download")}>
+                <FaFileDownload />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download {getButtonLabel()}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={() => generatePDF("print")}>
+                <MdLocalPrintshop />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Print {getButtonLabel()}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
+
       </div>
 
-      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as typeof activeTab); setCurrentPage(1); }}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(val) => {
+          setActiveTab(val as typeof activeTab);
+          setCurrentPage(1);
+        }}
+      >
         <TabsList className="mb-4">
-          <TabsTrigger value="all">All Prescriptions</TabsTrigger>          
-          <TabsTrigger value="today">Today Prescriptions</TabsTrigger>
-          <TabsTrigger value="old">Old Prescriptions</TabsTrigger>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="today">Today</TabsTrigger>
+          <TabsTrigger value="week">This Week</TabsTrigger>
+          <TabsTrigger value="custom">Custom</TabsTrigger>
         </TabsList>
 
-        {["today", "all", "old"].map((tab) => (
+        {/* ALL / TODAY / WEEK */}
+        {["today", "all", "week"].map((tab) => (
           <TabsContent key={tab} value={tab}>
             <div className="rounded-xl overflow-hidden bg-background shadow-sm">
               {filteredData.length === 0 ? (
@@ -181,19 +277,72 @@ export default function PrescriptionPage() {
               )}
             </div>
 
-            {filteredData.length > rowsPerPage && (
+            {(
               <div className="flex justify-center mt-4">
                 <PaginationControl
                   currentPage={currentPage}
                   totalPages={totalPages}
                   rowsPerPage={rowsPerPage}
                   onPageChange={setCurrentPage}
-                  onRowsPerPageChange={(val) => { setRowsPerPage(val); setCurrentPage(1); }}
+                  onRowsPerPageChange={(val) => {
+                    setRowsPerPage(val);
+                    setCurrentPage(1);
+                  }}
                 />
               </div>
             )}
           </TabsContent>
         ))}
+
+        {/* CUSTOM FILTER */}
+        <TabsContent value="custom">
+          <div className="flex gap-4 mb-4">
+            <div>
+              <label className="text-sm text-muted-foreground">From</label>
+              <input
+                type="date"
+                className="border rounded p-2"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm text-muted-foreground">To</label>
+              <input
+                type="date"
+                className="border rounded p-2"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl overflow-hidden bg-background shadow-sm">
+            {filteredData.length === 0 ? (
+              <p className="text-center p-6 text-muted-foreground">
+                No prescriptions found.
+              </p>
+            ) : (
+              <Table data={paginatedData} columns={columns} />
+            )}
+          </div>
+
+          {filteredData.length > rowsPerPage && (
+            <div className="flex justify-center mt-4">
+              <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(val) => {
+                  setRowsPerPage(val);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );

@@ -16,6 +16,7 @@ import { PaginationControl } from "@/components/pagination";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useAuth } from "@/context/AuthContext";
 
 type OrganizationMetaData = { address?: string; phone?: string; email?: string; };
 type Transaction = {
@@ -89,17 +90,17 @@ export default function BillingPage() {
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice((currentPage-1)*rowsPerPage, currentPage*rowsPerPage);
+  const {user}= useAuth();
 
   const exportBulk = () => {
   const doc = new jsPDF();
 
-  // Hospital Info (Example: replace with your dynamic data)
-  const hospitalName = "City Hospital";
-  const hospitalAddress = "123 Main St, City, State";
-  const hospitalPhone = "+91 9876543210";
-  const hospitalEmail = "info@cityhospital.com";
+  const hospitalName = user?.hospital?.name ?? "City Hospital";
+  const hospitalAddress = user?.hospital?.metadata?.address ?? "123 Main St.2.0, City, State";
+  const hospitalPhone = user?.hospital?.metadata?.phone ?? "+91 9876543210";
+  const hospitalEmail = user?.hospital?.metadata?.email ?? "info@cityhospital.com";
 
-  // Header: Hospital Info
+  // Header
   doc.setFontSize(18);
   doc.setFont(undefined, "bold");
   doc.text(hospitalName, 14, 20);
@@ -110,26 +111,27 @@ export default function BillingPage() {
   doc.text(`Phone: ${hospitalPhone}`, 14, 32);
   doc.text(`Email: ${hospitalEmail}`, 14, 37);
 
-  // Title for table
   doc.setFontSize(14);
   doc.setFont(undefined, "bold");
-  doc.text(`Transactions (${activeTab.toUpperCase()})`, 14, 45);
+  doc.text(`${activeTab.toUpperCase()} Transactions`, 14, 45);
 
-  // Table columns
   const tableColumn = ["Txn ID", "Patient", "Amount", "Status", "Date"];
 
-  // Table rows
   const tableRows = filteredData.map((t) => [
     getShortId(t.transactionId),
     t.patientName,
-    `₹${t.amount}`,
+    `${t.amount}`,
     t.status?.toUpperCase(),
     new Date(t.createdAt).toLocaleDateString(),
   ]);
 
-  // Draw table below header
+  const totalAmount = filteredData.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const totalCount = filteredData.length;
+
+  let finalY = 0;
+
   autoTable(doc, {
-    startY: 50, // space after hospital info + title
+    startY: 50,
     head: [tableColumn],
     body: tableRows,
     theme: "grid",
@@ -146,28 +148,21 @@ export default function BillingPage() {
     alternateRowStyles: {
       fillColor: [245, 245, 245],
     },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 35 },
-    },
-    didDrawCell: (data) => {
-      // Highlight today's transactions
-      if (data.column.index === 4) {
-        const todayStr = new Date().toLocaleDateString();
-        if (data.cell.text[0] === todayStr) {
-          doc.setFillColor(255, 255, 0);
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, "F");
-        }
+    didDrawPage: (data) => {
+      if (data.cursor && typeof data.cursor.y === "number") {
+        finalY = data.cursor.y;
       }
     },
   });
 
-  // Save PDF
+  doc.setFontSize(12);
+  doc.setFont(undefined, "bold");
+  doc.text(`Total Transactions: ${totalCount}`, 14, finalY + 10);
+  doc.text(`Total Amount: ${totalAmount}`, 14, finalY + 15);
+
   doc.save(`transactions_${activeTab}.pdf`);
 };
+
 
 
 
@@ -241,15 +236,7 @@ export default function BillingPage() {
               <FieldSelectorDropdown columns={optionalColumns} visibleFields={visibleFields} onToggle={(key, checked)=>setVisibleFields(p=>checked?[...p,key]:p.filter(f=>f!==key))}/>
               <div className="flex gap-2">
                 <Button onClick={exportBulk}><FaFileDownload/> Download {tab}</Button>
-                <Button onClick={async ()=>{
-                  const doc = new jsPDF();
-                  autoTable(doc,{
-                    head:[["Txn ID","Patient","Amount","Status","Date"]],
-                    body: filteredData.map(t=>[getShortId(t.transactionId),t.patientName,`₹${t.amount}`,t.status,new Date(t.createdAt).toLocaleDateString()])
-                  });
-                  const url = URL.createObjectURL(doc.output("blob"));
-                  const win = window.open(url); win?.print();
-                }}><MdLocalPrintshop/> Print {tab}</Button>
+                {/* <Button onClick={exportBulk}><MdLocalPrintshop/> Print {tab}</Button> */}
               </div>
             </div>
 

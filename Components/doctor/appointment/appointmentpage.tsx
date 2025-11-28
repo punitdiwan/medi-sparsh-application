@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import FilterBar from "@/features/filterbar/FilterBar";
-import { appointmentFilters } from "@/features/filterbar/configs/appointmentFilters";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -14,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { UserPlus, X } from "lucide-react";
 import { PaginationControl } from "@/components/pagination";
@@ -27,7 +24,6 @@ type Appointment = {
   id: number;
   patient_id: string;
   doctor_id: string;
-  purpose: string;
   date: string;
   time: string;
   status: string;
@@ -40,13 +36,15 @@ export default function AppointmentPage() {
   const [filteredData, setFilteredData] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appointmentFilter, setAppointmentFilter] = useState<string>("active");
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [appointmentFilter, setAppointmentFilter] = useState("active");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  //= FILTER STATES =//
+  const [search, setSearch] = useState("");
+  const [date, setDate] = useState("");
 
   // Fetch appointments from API
   const fetchAppointments = async () => {
@@ -57,16 +55,11 @@ export default function AppointmentPage() {
 
       if (result.success) {
         setAllData(result.data || []);
-        setFilteredData(result.data || []);
       } else {
-        console.error("Failed to fetch appointments:", result.error);
         setAllData([]);
-        setFilteredData([]);
       }
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
+    } catch {
       setAllData([]);
-      setFilteredData([]);
     } finally {
       setLoading(false);
     }
@@ -88,12 +81,11 @@ export default function AppointmentPage() {
 
       if (result.success) {
         toast.success("Appointment cancelled successfully");
-        fetchAppointments(); // Refresh the list
+        fetchAppointments();
       } else {
-        toast.error(result.error || "Failed to cancel appointment");
+        toast.error(result.error || "Failed to cancel");
       }
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
+    } catch {
       toast.error("Failed to cancel appointment");
     } finally {
       setCancellingId(null);
@@ -104,48 +96,92 @@ export default function AppointmentPage() {
     fetchAppointments();
   }, []);
 
+  //= UNIFIED FILTER SYSTEM =//
+  useEffect(() => {
+    let data = [...allData];
+
+    // Status filter
+    switch (appointmentFilter) {
+      case "active":
+        data = data.filter(
+          (item) =>
+            item.status === "scheduled" || item.status === "confirmed"
+        );
+        break;
+      case "cancelled":
+        data = data.filter((item) => item.status === "cancelled");
+        break;
+      case "closed":
+        data = data.filter((item) => item.status === "completed");
+        break;
+      case "all":
+      default:
+        break;
+    }
+
+    // Search
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      data = data.filter((item) =>
+        Object.entries(item)
+          .filter(([key]) => key !== "time")
+          .some(([_, value]) =>
+            value?.toString().toLowerCase().includes(s)
+          )
+      );
+    }
+
+    // Date
+    if (date) {
+      data = data.filter((item) => item.date === date);
+    }
+
+    setFilteredData(data);
+    setCurrentPage(1);
+  }, [allData, appointmentFilter, search, date]);
+
+  //= TABLE COLUMNS =//
   const columns: ColumnDef<Appointment>[] = [
     {
       accessorKey: "id",
       header: "ID",
-      cell: ({ row }) => {
-        const id = row.getValue("id") as string;
-        return <span>{getShortId(id)}</span>;
-      },
+      cell: ({ row }) => (
+        <span>{getShortId(row.getValue("id"))}</span>
+      ),
     },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "contact", header: "Contact" },
-    { accessorKey: "purpose", header: "Purpose" },
     { accessorKey: "date", header: "Date" },
     { accessorKey: "time", header: "Time" },
     { accessorKey: "status", header: "Status" },
+
     {
       id: "action",
       header: "Action",
       cell: ({ row }) => {
-        const appointment = row.original;
+        const ap = row.original;
 
         return (
           <div className="flex items-center gap-2">
-            {/* Visit / Edit Button */}
-            {appointment.status === "completed" ? (
+            {ap.status === "completed" ? (
               <Link
-                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(
-                  appointment.patientName || ""
-                )}&appointmentId=${appointment.id}&mode=edit`}
+                href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                  ap.patientName || ""
+                )}&appointmentId=${ap.id}&mode=edit`}
               >
-                <Button variant="outline" size="sm">Edit</Button>
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
               </Link>
-
-            ) : appointment.status === "cancelled" ? (
+            ) : ap.status === "cancelled" ? (
               <Button variant="outline" size="sm" disabled>
                 Visit
               </Button>
             ) : (
               <Link
-                href={`/doctor/appointment/vistiPatient/${appointment.patient_id}?name=${encodeURIComponent(
-                  appointment.patientName || ""
-                )}&appointmentId=${appointment.id}`}
+                href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                  ap.patientName || ""
+                )}&appointmentId=${ap.id}`}
               >
                 <Button variant="outline" size="sm">
                   Visit
@@ -153,23 +189,21 @@ export default function AppointmentPage() {
               </Link>
             )}
 
-            {/* Cancel Button */}
             <ConfirmDialog
               title="Cancel Appointment"
-              description="Are you sure you want to cancel this appointment? This action cannot be undone."
+              description="Are you sure you want to cancel this appointment?"
               actionLabel="Yes, Cancel"
-              cancelLabel="No"
-              onConfirm={() => handleCancelAppointment(appointment.id)}
+              onConfirm={() => handleCancelAppointment(ap.id)}
               trigger={
                 <Button
                   variant="ghost"
                   size="sm"
                   disabled={
-                    cancellingId === appointment.id ||
-                    appointment.status === "cancelled" ||
-                    appointment.status === "completed"
+                    ap.status === "cancelled" ||
+                    ap.status === "completed" ||
+                    cancellingId === ap.id
                   }
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -178,92 +212,8 @@ export default function AppointmentPage() {
           </div>
         );
       },
-    }
-
-
-
+    },
   ];
-
-  // Filter appointments based on appointment type
-  useEffect(() => {
-    let filtered = allData;
-
-    switch (appointmentFilter) {
-      case "active":
-        // Active: scheduled and confirmed appointments
-        filtered = allData.filter((item) =>
-          item.status === "scheduled" || item.status === "confirmed"
-        );
-        break;
-      case "cancelled":
-        filtered = allData.filter((item) => item.status === "cancelled");
-        break;
-      case "closed":
-        // Closed: completed appointments
-        filtered = allData.filter((item) => item.status === "completed");
-        break;
-      case "all":
-        filtered = allData;
-        break;
-      default:
-        filtered = allData.filter((item) =>
-          item.status === "scheduled" || item.status === "confirmed"
-        );
-    }
-
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [appointmentFilter, allData]);
-
-  const handleFilter = (appliedFilters: Record<string, string>) => {
-    // First filter by appointment type
-    let statusFiltered = allData;
-
-    switch (appointmentFilter) {
-      case "active":
-        statusFiltered = allData.filter((item) =>
-          item.status === "scheduled" || item.status === "confirmed"
-        );
-        break;
-      case "cancelled":
-        statusFiltered = allData.filter((item) => item.status === "cancelled");
-        break;
-      case "closed":
-        statusFiltered = allData.filter((item) => item.status === "completed");
-        break;
-      case "all":
-        statusFiltered = allData;
-        break;
-      default:
-        statusFiltered = allData.filter((item) =>
-          item.status === "scheduled" || item.status === "confirmed"
-        );
-    }
-
-    // Then apply other filters
-    const filtered = statusFiltered.filter((item) => {
-      const matchesSearch = appliedFilters.search
-        ? item.patientName
-          ?.toLowerCase()
-          .includes(appliedFilters.search.toLowerCase()) ||
-        item.id.toString() === appliedFilters.search
-        : true;
-
-      const matchesDate = appliedFilters.date
-        ? item.date === appliedFilters.date
-        : true;
-
-      const matchesType = appliedFilters.appointmentType
-        ? item.purpose?.toLowerCase() ===
-        appliedFilters.appointmentType.toLowerCase()
-        : true;
-
-      return matchesSearch && matchesDate && matchesType;
-    });
-
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  };
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
@@ -274,47 +224,44 @@ export default function AppointmentPage() {
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
       <div className="space-y-4 mt-6">
+        {/* HEADER */}
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">My Appointments</h2>
+          <div>
+            <h3 className="text-2xl font-semibold">My Appointments</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage and view patient appointments
+            </p>
+          </div>
 
-          <Button variant="outline" onClick={() => setIsModalOpen(true)} className="btn-theme">
+          <Button
+            variant="outline"
+            onClick={() => setIsModalOpen(true)}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
-            <span>New Appointment</span>
+            New Appointment
           </Button>
         </div>
 
+        {/* FILTER BAR */}
         <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-sm border bg-card">
-          {appointmentFilters.map((field) => {
-            switch (field.type) {
-              case "text":
-                return (
-                  <Input
-                    key={field.key}
-                    placeholder={field.placeholder || field.label}
-                    className="w-52"
-                    onChange={(e) => handleFilter({ [field.key]: e.target.value })}
-                  />
-                );
-              case "date":
-                return (
-                  <Input
-                    key={field.key}
-                    type="date"
-                    className="w-44"
-                    onChange={(e) => handleFilter({ [field.key]: e.target.value })}
-                  />
-                );
-              default:
-                return null;
-            }
-          })}
+          <Input
+            placeholder="Search"
+            className="w-52"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <Input
+            type="date"
+            className="w-44"
+            onChange={(e) => setDate(e.target.value)}
+          />
 
           <Select
             value={appointmentFilter}
             onValueChange={setAppointmentFilter}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
@@ -324,17 +271,29 @@ export default function AppointmentPage() {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" onClick={() => handleFilter({})}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearch("");
+              setDate("");
+              setAppointmentFilter("active");
+            }}
+          >
             Reset
           </Button>
         </div>
       </div>
 
+      {/* TABLE */}
       <div className="mt-6 text-sm">
         {loading ? (
-          <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">Loading appointments...</p>
+          <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">
+            Loading appointments...
+          </p>
         ) : filteredData.length === 0 ? (
-          <p className="text-muted-foreground mt-4">No appointments found.</p>
+          <p className="text-muted-foreground mt-4">
+            No appointments found.
+          </p>
         ) : (
           <>
             <Table data={paginatedData} columns={columns} />
@@ -353,6 +312,7 @@ export default function AppointmentPage() {
         )}
       </div>
 
+      {/* MODAL */}
       <AppointmentModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
