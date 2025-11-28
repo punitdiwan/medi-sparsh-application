@@ -29,6 +29,7 @@ import { Plus, Trash2, Pencil } from "lucide-react";
 import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicines } from "@/lib/actions/medicines";
 import { toast } from "sonner";
+import MedicineCombobox from "./MedicineCombobox";
 
 interface MedicineCategory {
   id: string;
@@ -42,7 +43,7 @@ interface MedicineData {
 }
 
 interface Medicine {
-  category: string; 
+  category: string;
   name: string;
   frequency: string;
   timing: string;
@@ -105,6 +106,20 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
   useEffect(() => {
     onChange?.(medicines);
   }, [medicines]);
+
+  const refetchMedicines = async () => {
+    try {
+      const medResult = await getMedicines();
+      if (medResult.error) {
+        toast.error(medResult.error);
+        return;
+      }
+      setAllMedicines(medResult.data || []);
+    } catch (error) {
+      console.error("Error refetching medicines:", error);
+      toast.error("Failed to reload medicines");
+    }
+  };
 
   const handleChange = (name: string, value: string) => {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -195,22 +210,16 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
           {/* Medicine Name */}
           <div>
             <Label className="text-xs text-muted-foreground">Medicine Name</Label>
-            <Select
+            <MedicineCombobox
+              medicines={filteredMedicines}
+              categories={categories}
+              selectedCategory={categories.find((cat) => cat.name === form.category)?.id || ""}
               value={form.name}
-              onValueChange={(value) => handleChange("name", value)}
-              disabled={!form.category} // disable until category selected
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select medicine" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredMedicines.map((med) => (
-                  <SelectItem key={med.id} value={med.name}>
-                    {med.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(value) => handleChange("name", value)}
+              onMedicineAdded={refetchMedicines}
+              disabled={!form.category}
+              placeholder="Select medicine"
+            />
           </div>
 
           {/* Frequency */}
