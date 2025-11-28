@@ -76,7 +76,7 @@ export default function PrescriptionPage() {
         return itemDate >= customFrom && itemDate <= customTo;
       }
 
-      return true; // ALL
+      return true; 
     });
   }, [data, activeTab, customFrom, customTo]);
 
@@ -182,7 +182,6 @@ export default function PrescriptionPage() {
       },
     });
 
-    // Total
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text(`Total Records: ${filteredData.length}`, 14, finalY + 10);
@@ -266,7 +265,6 @@ export default function PrescriptionPage() {
           <TabsTrigger value="custom">Custom</TabsTrigger>
         </TabsList>
 
-        {/* ALL / TODAY / WEEK */}
         {["today", "all", "week"].map((tab) => (
           <TabsContent key={tab} value={tab}>
             <div className="rounded-xl overflow-hidden bg-background shadow-sm">
