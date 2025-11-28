@@ -185,7 +185,7 @@ export default function MedicineManager() {
                     <TableCell>{getCompanyName(item.companyName)}</TableCell>
                     <TableCell>{getUnitName(item.unitId)}</TableCell>
                     <TableCell>{item.notes || "-"}</TableCell>
-
+ 
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="ghost"
