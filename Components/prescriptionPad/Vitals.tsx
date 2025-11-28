@@ -5,17 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { getVitals } from "@/lib/actions/vitals";
+import { toast } from "sonner";
 
-// Predefined vitals
-const vitalsData = [
-  { key: "bloodPressure", label: "Blood Pressure", type: "text" },
-  { key: "heartRate", label: "Heart Rate", type: "number" },
-  { key: "respiratoryRate", label: "Respiratory Rate", type: "number" },
-  { key: "temperature", label: "Temperature", type: "number" },
-  { key: "oxygenSaturation", label: "Oxygen Saturation", type: "number" },
-  { key: "painLevel", label: "Pain Level", type: "number" },
-  { key: "consciousness", label: "Consciousness", type: "text" },
-];
+interface VitalData {
+  name: string;
+  vitalsUnit: string;
+  from: string;
+  to: string;
+  type?: "bp";
+}
 
 interface VitalsProps {
   value: Record<string, any>;
@@ -24,8 +23,31 @@ interface VitalsProps {
 
 function Vitals({ value, onChange }: VitalsProps) {
   const [enabledVitals, setEnabledVitals] = useState<string[]>([]);
+  const [vitalsData, setVitalsData] = useState<VitalData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // ✅ When editing, auto-enable vitals that already have data
+  useEffect(() => {
+    const fetchVitals = async () => {
+      try {
+        setLoading(true);
+        const result = await getVitals();
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
+        setVitalsData(result.data || []);
+      } catch (error) {
+        console.error("Error fetching vitals:", error);
+        toast.error("Failed to load vitals");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVitals();
+  }, []);
+
   useEffect(() => {
     if (value && Object.keys(value).length > 0) {
       const filledKeys = Object.keys(value).filter((key) => value[key] !== "" && value[key] != null);
@@ -33,21 +55,98 @@ function Vitals({ value, onChange }: VitalsProps) {
     }
   }, [value]);
 
-  const handleToggleVital = (key: string) => {
-    setEnabledVitals((prev) => {
-      const updated = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
-      // If unchecked, remove it from parent data
-      if (!updated.includes(key)) {
-        const newVitals = { ...value };
-        delete newVitals[key];
-        onChange(newVitals);
-      }
-      return updated;
-    });
+  const handleToggleVital = (vitalName: string) => {
+    const nextState = enabledVitals.includes(vitalName)
+      ? enabledVitals.filter((k) => k !== vitalName)
+      : [...enabledVitals, vitalName];
+
+    setEnabledVitals(nextState);
+
+    if (!nextState.includes(vitalName)) {
+      const { [vitalName]: _, ...rest } = errors;
+      setErrors(rest);
+
+      const newVitals = { ...value };
+      delete newVitals[vitalName];
+      onChange(newVitals);
+    }
   };
 
-  const handleInput = (key: string, val: string) => {
-    onChange({ ...value, [key]: val });
+  const handleInput = (vitalName: string, val: string) => {
+    const vital = vitalsData.find((v) => v.name === vitalName);
+    if (!vital) return;
+
+    const isBP = vital.type === "bp" || (vital.from.includes("/") && vital.to.includes("/"));
+
+    let sysMin, sysMax, diaMin, diaMax;
+    if (isBP) {
+      const [fromSys, fromDia] = vital.from.split("/").map(Number);
+      const [toSys, toDia] = vital.to.split("/").map(Number);
+      sysMin = fromSys;
+      diaMin = fromDia;
+      sysMax = toSys;
+      diaMax = toDia;
+    }
+
+    if (val === "") {
+      onChange({ ...value, [vitalName]: "" });
+      setErrors((prev) => ({ ...prev, [vitalName]: "" }));
+      return;
+    }
+
+    if (
+      val === "." ||
+      val.endsWith(".") ||
+      val.endsWith("/") ||
+      /^[0-9.]*\/?[0-9.]*$/.test(val)
+    ) {
+      onChange({ ...value, [vitalName]: val });
+      setErrors((prev) => ({ ...prev, [vitalName]: "" }));
+
+      if (isBP && val.split("/").some((p) => p === "")) return;
+    }
+
+    if (isBP && val.includes("/")) {
+      const [sysStr, diaStr] = val.split("/");
+      const sys = Number(sysStr);
+      const dia = Number(diaStr);
+
+      if (isNaN(sys) || isNaN(dia)) {
+        setErrors((prev) => ({ ...prev, [vitalName]: "Invalid BP format" }));
+        return;
+      }
+
+      let errorMsg = "";
+      if (sys < sysMin! || sys > sysMax!) errorMsg = `Systolic must be between ${sysMin}-${sysMax}`;
+      if (dia < diaMin! || dia > diaMax!)
+        errorMsg = errorMsg
+          ? `${errorMsg} | Diastolic must be between ${diaMin}-${diaMax}`
+          : `Diastolic must be between ${diaMin}-${diaMax}`;
+
+      setErrors((prev) => ({ ...prev, [vitalName]: errorMsg }));
+      onChange({ ...value, [vitalName]: val });
+      return;
+    }
+
+    const numVal = Number(val);
+    const min = Number(vital.from);
+    const max = Number(vital.to);
+
+    if (isNaN(numVal)) {
+      setErrors((prev) => ({ ...prev, [vitalName]: "Enter a valid number" }));
+      return;
+    }
+
+    if (numVal < min || numVal > max) {
+      setErrors((prev) => ({
+        ...prev,
+        [vitalName]: `Value must be between ${min} - ${max}`,
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, [vitalName]: "" }));
+    }
+
+    onChange({ ...value, [vitalName]: val });
   };
 
   return (
@@ -56,40 +155,54 @@ function Vitals({ value, onChange }: VitalsProps) {
         <CardTitle>Vitals</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Vitals Selection */}
-        <div>
-          <Label className="mb-2 block text-sm font-medium">Select Vitals</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {vitalsData.map((vital) => (
-              <div key={vital.key} className="flex items-center gap-2">
-                <Checkbox
-                  checked={enabledVitals.includes(vital.key)}
-                  onCheckedChange={() => handleToggleVital(vital.key)}
-                />
-                <span className="text-sm">{vital.label}</span>
+        {loading ? (
+          <div className="text-center py-4 text-muted-foreground">Loading vitals...</div>
+        ) : vitalsData.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">No vitals configured</div>
+        ) : (
+          <>
+            <div>
+              <Label className="mb-2 block text-sm font-medium">Select Vitals</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {vitalsData.map((vital) => (
+                  <div key={vital.name} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={enabledVitals.includes(vital.name)}
+                      onCheckedChange={() => handleToggleVital(vital.name)}
+                    />
+                    <span className="text-sm">{vital.name}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Inputs for Enabled Vitals */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {vitalsData
-            .filter((vital) => enabledVitals.includes(vital.key))
-            .map((vital) => (
-              <div key={vital.key}>
-                <Label htmlFor={vital.key} className="mb-1">
-                  {vital.label}
-                </Label>
-                <Input
-                  id={vital.key}
-                  type={vital.type}
-                  value={value[vital.key] || ""}
-                  onChange={(e) => handleInput(vital.key, e.target.value)}
-                />
-              </div>
-            ))}
-        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {vitalsData
+                .filter((vital) => enabledVitals.includes(vital.name))
+                .map((vital) => (
+                  <div key={vital.name}>
+                    <Label htmlFor={vital.name} className="mb-1">
+                      {vital.name} 
+                    </Label>
+                    <Input
+                      id={vital.name}
+                      type="text"
+                      placeholder={`${vital.from} - ${vital.to}`}
+                      value={value[vital.name] || ""}
+                      onChange={(e) => handleInput(vital.name, e.target.value)}
+                      className={errors[vital.name] ? "border-red-500" : ""}
+                    />
+                    {errors[vital.name] && (
+                      <p className="text-xs text-red-600 mt-1">{errors[vital.name]}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Range: {vital.from} - {vital.to}{vital.vitalsUnit}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

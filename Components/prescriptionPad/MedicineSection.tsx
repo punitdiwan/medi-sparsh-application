@@ -26,8 +26,24 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Plus, Trash2, Pencil } from "lucide-react";
+import { getMedicineCategories } from "@/lib/actions/medicineCategories";
+import { getMedicines } from "@/lib/actions/medicines";
+import { toast } from "sonner";
+import MedicineCombobox from "./MedicineCombobox";
+
+interface MedicineCategory {
+  id: string;
+  name: string;
+}
+
+interface MedicineData {
+  id: string;
+  name: string;
+  categoryId: string;
+}
 
 interface Medicine {
+  category: string;
   name: string;
   frequency: string;
   timing: string;
@@ -36,34 +52,86 @@ interface Medicine {
 }
 
 interface MedicineProps {
-  value?: Medicine[]; 
+  value?: Medicine[];
   onChange?: (medicines: Medicine[]) => void;
 }
 
 function MedicineSection({ value = [], onChange }: MedicineProps) {
+  const [categories, setCategories] = useState<MedicineCategory[]>([]);
+  const [allMedicines, setAllMedicines] = useState<MedicineData[]>([]);
   const [medicines, setMedicines] = useState<Medicine[]>(value);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [form, setForm] = useState<Medicine>({
+    category: "",
     name: "",
     frequency: "",
     timing: "",
     duration: "",
     instruction: "",
   });
+
   useEffect(() => {
-  setMedicines(value);
-}, [value]);
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        const [catResult, medResult] = await Promise.all([
+          getMedicineCategories(),
+          getMedicines(),
+        ]);
+
+        if (catResult.error) {
+          toast.error(catResult.error);
+          return;
+        }
+        if (medResult.error) {
+          toast.error(medResult.error);
+          return;
+        }
+
+        setCategories(catResult.data || []);
+        setAllMedicines(medResult.data || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, []);
 
   useEffect(() => {
     onChange?.(medicines);
   }, [medicines]);
 
+  const refetchMedicines = async () => {
+    try {
+      const medResult = await getMedicines();
+      if (medResult.error) {
+        toast.error(medResult.error);
+        return;
+      }
+      setAllMedicines(medResult.data || []);
+    } catch (error) {
+      console.error("Error refetching medicines:", error);
+      toast.error("Failed to reload medicines");
+    }
+  };
+
   const handleChange = (name: string, value: string) => {
     setForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "category") {
+      setForm((prev) => ({ ...prev, name: "" }));
+    }
   };
 
   const resetForm = () =>
     setForm({
+      category: "",
       name: "",
       frequency: "",
       timing: "",
@@ -73,22 +141,18 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
 
   const handleAddOrUpdate = (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) return;
-
-    const instruction =
-      form.instruction.trim() || "";
+    if (!form.category || !form.name.trim()) {
+      toast.error("Please select category and medicine");
+      return;
+    }
 
     if (editIndex !== null) {
-      // Update existing medicine
       setMedicines((prev) =>
-        prev.map((med, i) =>
-          i === editIndex ? { ...form, instruction } : med
-        )
+        prev.map((med, i) => (i === editIndex ? { ...form } : med))
       );
       setEditIndex(null);
     } else {
-      // Add new medicine
-      setMedicines((prev) => [...prev, { ...form, instruction }]);
+      setMedicines((prev) => [...prev, { ...form }]);
     }
 
     resetForm();
@@ -101,14 +165,16 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
 
   const handleRemove = (index: number) => {
     setMedicines((prev) => prev.filter((_, i) => i !== index));
-    if (editIndex === index) {
-      resetForm();
-      setEditIndex(null);
-    }
+    if (editIndex === index) resetForm();
   };
 
+  const filteredMedicines = allMedicines.filter(
+    (med) =>
+      categories.find((cat) => cat.name === form.category)?.id === med.categoryId
+  );
+
   return (
-    <Card className="m-5 shadow-sm border border-border bg-card ">
+    <Card className="m-5 shadow-sm border border-border bg-card">
       <CardHeader>
         <CardTitle className="text-base font-semibold text-foreground">
           Medicines
@@ -119,16 +185,40 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
         {/* Add/Edit Medicine Form */}
         <form
           onSubmit={handleAddOrUpdate}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-5"
         >
+          {/* Category */}
+          <div>
+            <Label className="text-xs text-muted-foreground">Category</Label>
+            <Select
+              value={form.category}
+              onValueChange={(value) => handleChange("category", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Medicine Name */}
           <div>
             <Label className="text-xs text-muted-foreground">Medicine Name</Label>
-            <Input
-              name="name"
+            <MedicineCombobox
+              medicines={filteredMedicines}
+              categories={categories}
+              selectedCategory={categories.find((cat) => cat.name === form.category)?.id || ""}
               value={form.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Enter medicine"
+              onChange={(value) => handleChange("name", value)}
+              onMedicineAdded={refetchMedicines}
+              disabled={!form.category}
+              placeholder="Select medicine"
             />
           </div>
 
@@ -233,6 +323,7 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
               <TableHeader>
                 <TableRow className="bg-muted/40">
                   <TableHead>#</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Frequency</TableHead>
                   <TableHead>Timing</TableHead>
@@ -246,6 +337,7 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
                 {medicines.map((med, index) => (
                   <TableRow key={index}>
                     <TableCell>{index + 1}</TableCell>
+                    <TableCell>{med.category}</TableCell>
                     <TableCell>{med.name}</TableCell>
                     <TableCell>{med.frequency}</TableCell>
                     <TableCell>{med.timing}</TableCell>
