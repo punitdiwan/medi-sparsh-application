@@ -4,9 +4,17 @@ import { cookies } from "next/headers";
 
 export async function getActiveOrganization() {
     const cookieStore = await cookies();
-    const token = (await cookieStore.get("medisparsh.session_token"))?.value;
+    const token =
+      cookieStore.get("medisparsh.session_token") ??
+      cookieStore.get("__Secure-medisparsh.session_token");
+
+    if (!token) {
+        console.log("No session cookie found");
+        return null;
+    }
+    const cookieHeader = `${token.name}=${token.value}`;
     const session = await auth.api.getSession({
-        headers: { cookie: `medisparsh.session_token=${token}` },
+        headers: { cookie: cookieHeader },
     });
     if (!session?.user) return null
 
@@ -15,7 +23,7 @@ export async function getActiveOrganization() {
         query: {
             organizationId: session.session.activeOrganizationId || undefined,
         },
-        headers: { cookie: `medisparsh.session_token=${token}` },
+        headers: { cookie: cookieHeader },
     })
 
     return org
