@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -11,10 +11,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import AddServicePage from "./AddServicePage";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { PaginationControl } from "@/components/pagination";
 
 type ServiceForm = {
   id?: string;
@@ -38,13 +39,15 @@ export default function Services() {
   const [openModal, setOpenModal] = useState(false);
   const [editService, setEditService] = useState<ServiceForm>();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
   const fetchServices = async () => {
     try {
       const res = await fetch("/api/services");
       if (!res.ok) throw new Error();
 
       const data = await res.json();
-      console.log("service data",data);
       setServices(data);
     } catch (err) {
       toast.error("Failed to load services");
@@ -80,10 +83,7 @@ export default function Services() {
   };
 
   const handleDelete = async (data: ServiceForm) => {
-    const updatedData = {
-      ...data,
-      isDeleted: !data.isDeleted, 
-    };
+    const updatedData = { ...data, isDeleted: !data.isDeleted };
     try {
       const response = await fetch(`/api/services/${data.id}`, {
         method: "PUT",
@@ -96,22 +96,27 @@ export default function Services() {
       await fetchServices();
       toast.success("Service updated successfully!");
     } catch (err) {
-      toast.error("Failed to delete service!");
+      toast.error("Failed to update service!");
     }
   };
+
+  const totalPages = Math.ceil(services.length / rowsPerPage);
+
+  const paginatedServices = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return services.slice(start, end);
+  }, [services, currentPage, rowsPerPage]);
 
   if (loading) return <p className="p-5">Loading...</p>;
 
   return (
     <div className="p-5">
-      <Card className="p-4">
+      <Card className="p-4 mb-4">
         <CardHeader className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Our Services</h2>
 
-          <Button variant="outline" onClick={() => {
-            setEditService(undefined);
-            setOpenModal(true);
-          }}>
+          <Button variant="outline" onClick={() => { setEditService(undefined); setOpenModal(true); }}>
             <Plus className="mr-2 h-4 w-4" /> Add Service
           </Button>
         </CardHeader>
@@ -129,30 +134,28 @@ export default function Services() {
             </TableHeader>
 
             <TableBody>
-              {services.length === 0 ? (
+              {paginatedServices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-gray-500 py-6">
+                  <TableCell colSpan={5} className="text-center text-gray-500 py-6">
                     No Service Added
                   </TableCell>
                 </TableRow>
               ) : (
-                services.map((service) => (
+                paginatedServices.map((service) => (
                   <TableRow key={service.id}>
                     <TableCell>{service.name}</TableCell>
                     <TableCell>{service.amount}₹</TableCell>
                     <TableCell>{service.description}</TableCell>
-                    <TableCell>{service.isDeleted ? <span className="text-red-500">Inactive</span> :<span className="text-green-600">Active</span>}</TableCell>
+                    <TableCell>
+                      {service.isDeleted ? <span className="text-red-500">Inactive</span> : <span className="text-green-600">Active</span>}
+                    </TableCell>
                     <TableCell className="flex gap-3 items-center">
                       <Pencil
                         className="h-4 w-4 cursor-pointer"
-                        onClick={() => {
-                          setEditService(service);
-                          setOpenModal(true);
-                        }}
+                        onClick={() => { setEditService(service); setOpenModal(true); }}
                       />
-
                       <Switch
-                        checked={!service.isDeleted} 
+                        checked={!service.isDeleted}
                         onCheckedChange={() => handleDelete(service)}
                       />
                     </TableCell>
@@ -164,15 +167,28 @@ export default function Services() {
         </CardContent>
       </Card>
 
+      {(
+        <div className="flex justify-center">
+          <PaginationControl
+            currentPage={currentPage}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setCurrentPage}
+            onRowsPerPageChange={(val) => {
+              setRowsPerPage(val);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+      )}
+
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="max-w-lg"
-          onInteractOutside={(e) => e.preventDefault()}  
-          onEscapeKeyDown={(e) => e.preventDefault()}   
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>
-              {editService ? "Edit Service" : "Add New Service"}
-            </DialogTitle>
+            <DialogTitle>{editService ? "Edit Service" : "Add New Service"}</DialogTitle>
           </DialogHeader>
           <AddServicePage initialData={editService} onSuccess={handleSave} />
         </DialogContent>
