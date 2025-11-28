@@ -221,7 +221,12 @@ useEffect(() => {
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
       <div className="flex justify-between items-center gap-4 flex-wrap">
-        <h2 className="text-xl font-semibold">Patients</h2>
+        <div className="mb-6">
+          <h3 className="text-2xl font-semibold">Patients</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage and view patients 
+          </p>
+        </div>
         <div className="flex items-center gap-3 flex-wrap">
           <FieldSelectorDropdown
             columns={allColumns as TypedColumn<Patient>[]}
