@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,20 +11,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import { UnitModal, Unit } from "./medicineUnit";
+import { getMedicineUnits, createMedicineUnit, updateMedicineUnit, deleteMedicineUnit } from "@/lib/actions/medicineUnits";
 
 export default function MedicineUnitManager() {
-  const [units, setUnits] = useState<Unit[]>([
-    { id: "1", unitName: "mm" },
-    { id: "2", unitName: "mg" },
-  ]);
-
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  const fetchUnits = async () => {
+    try {
+      setLoading(true);
+      const result = await getMedicineUnits();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setUnits(result.data?.map(u => ({ id: u.id, unitName: u.name })) || []);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      toast.error("Failed to load units");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUnits = useMemo(() => {
     return units.filter((u) =>
@@ -32,23 +63,62 @@ export default function MedicineUnitManager() {
     );
   }, [units, search]);
 
-  const handleSave = (data: Unit) => {
-    if (editingUnit) {
-      setUnits((prev) =>
-        prev.map((u) => (u.id === data.id ? data : u))
-      );
-      toast.success("Unit updated");
-    } else {
-      setUnits((prev) => [...prev, data]);
-      toast.success("Unit added");
-    }
+  const handleSave = async (data: Unit) => {
+    try {
+      const exists = units.some((u) => u.id === data.id);
 
-    setEditingUnit(undefined);
+      let result;
+      if (exists) {
+        // Update existing unit
+        result = await updateMedicineUnit(data.id, {
+          name: data.unitName,
+        });
+      } else {
+        // Create new unit
+        result = await createMedicineUnit({
+          name: data.unitName,
+        });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(exists ? "Unit updated" : "Unit added");
+      fetchUnits();
+      setEditingUnit(undefined);
+    } catch (error) {
+      console.error("Error saving unit:", error);
+      toast.error("Failed to save unit");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setUnits((prev) => prev.filter((u) => u.id !== id));
-    toast.success("Unit deleted");
+  const handleDeleteClick = (id: string) => {
+    setUnitToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!unitToDelete) return;
+
+    try {
+      const result = await deleteMedicineUnit(unitToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setUnits((prev) => prev.filter((u) => u.id !== unitToDelete));
+      toast.success("Unit deleted");
+    } catch (error) {
+      console.error("Error deleting unit:", error);
+      toast.error("Failed to delete unit");
+    } finally {
+      setDeleteDialogOpen(false);
+      setUnitToDelete(null);
+    }
   };
 
   return (
@@ -91,7 +161,13 @@ export default function MedicineUnitManager() {
             </TableHeader>
 
             <TableBody>
-              {filteredUnits.length > 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-4">
+                    Loading units...
+                  </TableCell>
+                </TableRow>
+              ) : filteredUnits.length > 0 ? (
                 filteredUnits.map((unit, index) => (
                   <TableRow key={unit.id}>
                     <TableCell>{index + 1}</TableCell>
@@ -112,7 +188,7 @@ export default function MedicineUnitManager() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(unit.id)}
+                        onClick={() => handleDeleteClick(unit.id)}
                       >
                         <MdDelete size={18} className="text-red-500" />
                       </Button>
@@ -139,6 +215,24 @@ export default function MedicineUnitManager() {
         unit={editingUnit}
         onSave={handleSave}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the medicine unit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

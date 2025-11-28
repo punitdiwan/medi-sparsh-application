@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,32 +11,59 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  CardContent,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+
 import { MedicineCategoryModal, MedicineCategory } from "./medicineCategoryModel";
+import { getMedicineCategories, createMedicineCategory, updateMedicineCategory, deleteMedicineCategory } from "../../../lib/actions/medicineCategories";
 
-export default function MedicineCategoryManager() {
-  const [categories, setCategories] = useState<MedicineCategory[]>([
-    { id: "c1", name: "Syrup" },
-    { id: "c2", name: "Capsule" },
-    { id: "c3", name: "Injection" },
-  ]);
-
+export default function CategoryManager() {
+  const [categories, setCategories] = useState<MedicineCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MedicineCategory | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const result = await getMedicineCategories();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setCategories(result.data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!search.trim()) return categories;
@@ -44,26 +71,66 @@ export default function MedicineCategoryManager() {
     return categories.filter((c) => c.name.toLowerCase().includes(q));
   }, [search, categories]);
 
-  const handleSave = (item: MedicineCategory) => {
-    setCategories((prev) => {
-      const exists = prev.some((c) => c.id === item.id);
-      return exists
-        ? prev.map((c) => (c.id === item.id ? item : c))
-        : [...prev, item];
-    });
-    setEditing(null);
+  const handleSave = async (item: MedicineCategory) => {
+    try {
+      const exists = categories.some((c) => c.id === item.id);
+
+      let result;
+      if (exists) {
+        result = await updateMedicineCategory(item.id, { name: item.name });
+      } else {
+        result = await createMedicineCategory({ name: item.name });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(exists ? "Category updated" : "Category added");
+      fetchCategories();
+      setEditing(null);
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast.error("Failed to save category");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setCategoryToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return;
+
+    try {
+      const result = await deleteMedicineCategory(categoryToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete));
+      toast.success("Category deleted");
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
+    } finally {
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+    }
   };
 
   return (
     <Card className="p-4 shadow-sm">
       <CardHeader>
         <CardTitle>Medicine Categories</CardTitle>
-        <CardDescription>Manage medicine categories for inventory.</CardDescription>
+        <CardDescription>Manage all medicine categories.</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-5">
-
-        {/* Top row: Search + Add */}
         <div className="flex justify-between items-center flex-wrap gap-3">
           <Input
             placeholder="Search category..."
@@ -71,11 +138,9 @@ export default function MedicineCategoryManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
-
           <Button onClick={() => setOpen(true)}>Add Category</Button>
         </div>
 
-        {/* Table */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
             <TableHeader className="bg-muted/40">
@@ -86,17 +151,22 @@ export default function MedicineCategoryManager() {
             </TableHeader>
 
             <TableBody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center py-6 text-muted-foreground">
+                    Loading categories...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={2} className="text-center py-6 text-muted-foreground">
                     No categories found
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((cat) => (
-                  <TableRow key={cat.id}>
-                    <TableCell>{cat.name}</TableCell>
-
+                filtered.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell>{category.name}</TableCell>
                     <TableCell className="text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -104,23 +174,11 @@ export default function MedicineCategoryManager() {
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditing(cat);
-                              setOpen(true);
-                            }}
-                          >
+                          <DropdownMenuItem onClick={() => { setEditing(category); setOpen(true); }}>
                             Edit
                           </DropdownMenuItem>
-
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() =>
-                              setCategories((prev) => prev.filter((c) => c.id !== cat.id))
-                            }
-                          >
+                          <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(category.id)}>
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -134,16 +192,29 @@ export default function MedicineCategoryManager() {
         </div>
       </CardContent>
 
-      {/* Modal */}
       <MedicineCategoryModal
         open={open}
-        onOpenChange={(o) => {
-          setOpen(o);
-          if (!o) setEditing(null);
-        }}
+        onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}
         category={editing ?? undefined}
         onSave={handleSave}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the medicine category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { getVitals, createVital, updateVital, deleteVital } from "@/lib/actions/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,8 +25,19 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { MoreVertical } from "lucide-react";
 import { VitalModal } from "./vitalModel";
+import { toast } from "sonner";
 
 export type Vital = {
   id: string;
@@ -35,19 +47,35 @@ export type Vital = {
   unit: string;
 };
 
-const INITIAL_VITALS: Vital[] = [
-  { id: "v1", name: "Weight", from: "0", to: "150", unit: "Kg" },
-  { id: "v2", name: "Height", from: "1", to: "200", unit: "cm" },
-  { id: "v3", name: "Pulse", from: "70", to: "100", unit: "bpm" },
-  { id: "v4", name: "BP", from: "90/60", to: "140/90", unit: "mmHg" },
-  { id: "v5", name: "Temperature", from: "95.8", to: "99.3", unit: "°F" },
-];
-
 export default function VitalsManager() {
-  const [vitals, setVitals] = useState<Vital[]>(INITIAL_VITALS);
+  const [vitals, setVitals] = useState<Vital[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vital | null>(null);
   const [filter, setFilter] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vitalToDelete, setVitalToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchVitals();
+  }, []);
+
+  const fetchVitals = async () => {
+    try {
+      setLoading(true);
+      const result = await getVitals();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setVitals(result.data?.map(v => ({ ...v, unit: v.vitalsUnit || "" })) || []);
+    } catch (error) {
+      console.error("Error fetching vitals:", error);
+      toast.error("Failed to load vitals");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return vitals;
@@ -61,14 +89,68 @@ export default function VitalsManager() {
     );
   }, [filter, vitals]);
 
-  const handleSave = (item: Vital) => {
-    setVitals((prev) => {
-      const exists = prev.some((v) => v.id === item.id);
-      return exists
-        ? prev.map((v) => (v.id === item.id ? item : v))
-        : [...prev, item];
-    });
-    setEditing(null);
+  const handleSave = async (item: Vital) => {
+    try {
+      const exists = vitals.some((v) => v.id === item.id);
+
+      let result;
+      if (exists) {
+        // Update existing vital
+        result = await updateVital(item.id, {
+          name: item.name,
+          unit: item.unit,
+          from: item.from,
+          to: item.to,
+        });
+      } else {
+        // Create new vital 
+        result = await createVital({
+          name: item.name,
+          unit: item.unit,
+          from: item.from,
+          to: item.to,
+        });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(exists ? "Vital updated successfully" : "Vital added successfully");
+      fetchVitals();
+      setEditing(null);
+    } catch (error) {
+      console.error("Error saving vital:", error);
+      toast.error("Failed to save vital");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setVitalToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!vitalToDelete) return;
+
+    try {
+      const result = await deleteVital(vitalToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setVitals((prev) => prev.filter((v) => v.id !== vitalToDelete));
+      toast.success("Vital deleted successfully");
+    } catch (error) {
+      console.error("Error deleting vital:", error);
+      toast.error("Failed to delete vital");
+    } finally {
+      setDeleteDialogOpen(false);
+      setVitalToDelete(null);
+    }
   };
 
   return (
@@ -107,7 +189,16 @@ export default function VitalsManager() {
             </TableHeader>
 
             <TableBody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-7 text-muted-foreground"
+                  >
+                    Loading vitals...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -143,9 +234,7 @@ export default function VitalsManager() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-red-600"
-                            onClick={() =>
-                              setVitals((p) => p.filter((a) => a.id !== v.id))
-                            }
+                            onClick={() => handleDeleteClick(v.id)}
                           >
                             Delete
                           </DropdownMenuItem>
@@ -170,6 +259,24 @@ export default function VitalsManager() {
         vital={editing ?? undefined}
         onSave={handleSave}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the vital sign.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
