@@ -136,18 +136,18 @@ export default function PrescriptionPage() {
 
     // Header
     doc.setFontSize(18);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text(hospitalName, 14, 20);
 
     doc.setFontSize(10);
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.text(`Address: ${hospitalAddress}`, 14, 27);
     doc.text(`Phone: ${hospitalPhone}`, 14, 32);
     doc.text(`Email: ${hospitalEmail}`, 14, 37);
 
     // Title
     doc.setFontSize(14);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text(`${activeTab.toUpperCase()} Prescriptions`, 14, 45);
 
     // Table rows
@@ -184,7 +184,7 @@ export default function PrescriptionPage() {
 
     // Total
     doc.setFontSize(12);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text(`Total Records: ${filteredData.length}`, 14, finalY + 10);
 
     if (type === "download") doc.save(`prescriptions_${activeTab}.pdf`);

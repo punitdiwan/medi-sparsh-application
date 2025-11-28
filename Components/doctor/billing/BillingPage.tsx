@@ -42,6 +42,7 @@ type Transaction = {
   doctorExperience: string | null;
   doctorSpecialization: Array<{ name: string }> | null;
 };
+type AccessorColumn<T> = ColumnDef<T> & { accessorKey: keyof T };
 
 export default function BillingPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -102,17 +103,17 @@ export default function BillingPage() {
 
   // Header
   doc.setFontSize(18);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text(hospitalName, 14, 20);
 
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(`Address: ${hospitalAddress}`, 14, 27);
   doc.text(`Phone: ${hospitalPhone}`, 14, 32);
   doc.text(`Email: ${hospitalEmail}`, 14, 37);
 
   doc.setFontSize(14);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text(`${activeTab.toUpperCase()} Transactions`, 14, 45);
 
   const tableColumn = ["Txn ID", "Patient", "Amount", "Status", "Date"];
@@ -156,7 +157,7 @@ export default function BillingPage() {
   });
 
   doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text(`Total Transactions: ${totalCount}`, 14, finalY + 10);
   doc.text(`Total Amount: ${totalAmount}`, 14, finalY + 15);
 
@@ -166,20 +167,20 @@ export default function BillingPage() {
 
 
 
-  const baseColumns: ColumnDef<Transaction>[] = [
-    { accessorKey: "transactionId", header: "Transaction ID", cell: ({ row }) => getShortId(row.original.transactionId) },
-    { accessorKey: "patientName", header: "Patient Name" },
-    { accessorKey: "amount", header: "Amount (₹)", cell: ({ row }) => `₹${row.original.amount}` },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => row.original.status?.toUpperCase() },
-    { accessorKey: "paymentMethod", header: "Payment" },
-  ];
+  const baseColumns: AccessorColumn<Transaction>[] = [
+  { accessorKey: "transactionId", header: "Transaction ID", cell: ({ row }) => getShortId(row.original.transactionId) },
+  { accessorKey: "patientName", header: "Patient Name" },
+  { accessorKey: "amount", header: "Amount (₹)", cell: ({ row }) => `₹${row.original.amount}` },
+  { accessorKey: "status", header: "Status", cell: ({ row }) => row.original.status?.toUpperCase() },
+  { accessorKey: "paymentMethod", header: "Payment" },
+];
 
-  const optionalColumns: ColumnDef<Transaction>[] = [
-    { accessorKey: "patientPhone", header: "Phone" },
-    { accessorKey: "patientGender", header: "Gender" },
-    { accessorKey: "appointmentDate", header: "Appointment Date" },
-    { accessorKey: "appointmentTime", header: "Appointment Time" },
-  ];
+  const optionalColumns: AccessorColumn<Transaction>[] = [
+  { accessorKey: "patientPhone", header: "Phone" },
+  { accessorKey: "patientGender", header: "Gender" },
+  { accessorKey: "appointmentDate", header: "Appointment Date" },
+  { accessorKey: "appointmentTime", header: "Appointment Time" },
+];
 
   const actionsColumn: ColumnDef<Transaction> = {
     id: "actions",
@@ -202,7 +203,12 @@ export default function BillingPage() {
     },
   };
 
-  const columns = [...baseColumns, ...optionalColumns.filter(c => visibleFields.includes(c.accessorKey!)), actionsColumn];
+  const columns = [
+  ...baseColumns,
+  ...optionalColumns.filter(c => visibleFields.includes(c.accessorKey as string)),
+  actionsColumn
+];
+
 
   return (
     <div className={`p-6 min-h-screen w-full mx-auto bg-background text-foreground transition-all duration-200 ${state==="collapsed"?"w-[calc(100vw-100px)]":"w-[calc(100vw-60px)] md:w-[calc(100vw-280px)]"}`}>
