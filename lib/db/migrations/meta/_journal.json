@@ -127,6 +127,20 @@
       "when": 1764249281778,
       "tag": "0019_lame_guardsmen",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1764311079636,
+      "tag": "0020_elite_wendigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1764311563301,
+      "tag": "0021_lyrical_changeling",
+      "breakpoints": true
     }
   ]
 }
