@@ -13,10 +13,10 @@ const useUUIDv7 = process.env.UUID_V7_NATIVE_SUPPORT
 export const verificationInAuth = auth.table("verification", {
 	id: text().primaryKey().notNull(),
 	identifier: text().notNull(),
-	value: text().notNull(),
-	expiresAt: timestamp({ mode: 'string' }).notNull(),
-	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	value: jsonb("value").notNull(),
+	expiresAt: timestamp("expiresAt", { mode: "date" }).notNull(),
+	createdAt: timestamp("createdAt", { mode: "date" }).notNull(),
+	updatedAt: timestamp("updatedAt", { mode: "date" }).notNull(),
 });
 
 export const specializations = pgTable("specializations", {
