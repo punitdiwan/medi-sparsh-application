@@ -91,9 +91,10 @@ export function SignInForm({ Hospitaldata }: any) {
   const signInWithGoogle = async () => {
     try {
       setIsLoading(true);
-      await authClient.signIn.social({
+      const response = await authClient.signIn.social({
         provider: "google",
       });
+      console.log("Google sign-in response:", response);
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast.error(error.message || "Failed to sign in with Google");
