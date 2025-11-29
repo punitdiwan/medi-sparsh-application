@@ -23,12 +23,13 @@ export async function GET(request: NextRequest) {
     try {
         // First, let BetterAuth handle the OAuth callback
         // This will create/update the user and session
+        console.log("From Request", request);
         const authResponse = await auth.handler(request);
-        console.log("authResponse", authResponse);
+        console.log("From Auth Response", authResponse);
 
         // Get the current hospital context from subdomain
         const hospital = await getCurrentHospital();
-        console.log("hospital", hospital);
+        console.log("From Hospital", hospital);
 
         if (!hospital) {
             return NextResponse.redirect(
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
 
         const userId = sessionData.user.id;
         const activeOrganizationId = sessionData.session.activeOrganizationId;
+        console.log("From Session Data", sessionData);
         console.log("userId", userId);
         console.log("activeOrganizationId", activeOrganizationId);
 
