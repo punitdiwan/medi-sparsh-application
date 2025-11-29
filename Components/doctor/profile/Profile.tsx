@@ -71,6 +71,8 @@ export default function DoctorProfile() {
     const { user } = useAuth();
     // console.log("user data for doctors profile",user);
     const hospital = user?.hospital;
+    const canEditClinic = user?.memberRole === "owner";
+
     // Form state
     const [formData, setFormData] = useState({
         name: "",
@@ -277,13 +279,14 @@ export default function DoctorProfile() {
                                 <Label className="mb-2">Clinic Name</Label>
                                 <Input placeholder="Heart Care Center"
                                     value={hospital?.name ?? ""}
-                                    disabled />
+                                    disabled={!canEditClinic}
+                                />
                             </div>
                             <div>
                                 <Label className="mb-2">Clinic Email</Label>
                                 <Input placeholder="heartcare@example.com"
                                     value={hospital?.metadata?.email ?? ""}
-                                    disabled
+                                    disabled={!canEditClinic}
                                 />
                             </div>
 
@@ -291,7 +294,7 @@ export default function DoctorProfile() {
                                 <Label className="mb-2">Clinic Contact</Label>
                                 <Input placeholder="+91 9876543210"
                                     value={hospital?.metadata?.phone ?? ""}
-                                    disabled />
+                                    disabled={!canEditClinic} />
                             </div>
 
                             <div>
@@ -302,12 +305,14 @@ export default function DoctorProfile() {
                                 <Label className="mb-2">Clinic Address</Label>
                                 <Input placeholder="123, MG Road, Pune"
                                     value={hospital?.metadata?.address ?? ""}
-                                    disabled
+                                    disabled={!canEditClinic}
                                 />
                             </div>
-                            <div className=" text-right mt-2">
-                                <Button variant="outline">Save Changes</Button>
-                            </div>
+                            {canEditClinic && (
+                                <Button variant="outline">
+                                    Save Changes
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         //  DOCTOR SECTION

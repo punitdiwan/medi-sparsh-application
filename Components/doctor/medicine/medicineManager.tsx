@@ -21,6 +21,7 @@ import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
 import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
+import MedicineExcelModal from "./medicineExcelUploadModel";
 
 export default function MedicineManager() {
   const [search, setSearch] = useState("");
@@ -34,7 +35,7 @@ export default function MedicineManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [open, setOpen] = useState(false);
   // Fetch medicines and related data on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -143,7 +144,7 @@ export default function MedicineManager() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
+          <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
               setEditing(undefined);
@@ -152,6 +153,12 @@ export default function MedicineManager() {
           >
             Add Medicine
           </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setOpen(true)}>Upload Medicine Excel
+          </Button>
+            <MedicineExcelModal open={open} setOpen={setOpen} />
+          </div>
         </div>
 
         {/* Table */}
