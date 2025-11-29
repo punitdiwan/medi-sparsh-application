@@ -21,6 +21,8 @@ import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
 import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
+import MedicineExcelModal from "./medicineExcelUploadModel";
+import { Loader2 } from "lucide-react";
 
 export default function MedicineManager() {
   const [search, setSearch] = useState("");
@@ -34,6 +36,8 @@ export default function MedicineManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch medicines and related data on mount
   useEffect(() => {
@@ -127,6 +131,24 @@ export default function MedicineManager() {
     return units.find((u) => u.id === unitId)?.name || "-";
   };
 
+  const refreshMedicines = async () => {
+  try {
+    setRefreshing(true);
+    const medicinesRes = await getMedicines();
+
+    if (medicinesRes.data) {
+      setData(medicinesRes.data);
+      toast.success("Medicines updated");
+    } else {
+      toast.error("Failed to refresh medicines");
+    }
+  } catch (error) {
+    toast.error("Error refreshing medicines");
+  } finally {
+    setRefreshing(false);
+  }
+};
+
   return (
     <Card className="w-full p-4 shadow-sm">
       <CardHeader>
@@ -136,14 +158,14 @@ export default function MedicineManager() {
 
       <CardContent className="space-y-6">
         {/* Search + Add */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <Input
             placeholder="Search Medicine..."
             className="max-w-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
+          <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
               setEditing(undefined);
@@ -152,6 +174,27 @@ export default function MedicineManager() {
           >
             Add Medicine
           </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setOpen(true)}>Upload Medicine Excel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={refreshMedicines}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Refreshing...
+              </span>
+            ) : (
+              "Refresh"
+            )}
+          </Button>
+
+            <MedicineExcelModal open={open} setOpen={setOpen} />
+          </div>
         </div>
 
         {/* Table */}

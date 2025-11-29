@@ -68,9 +68,29 @@ export default function DoctorProfile() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+
     const { user } = useAuth();
     // console.log("user data for doctors profile",user);
     const hospital = user?.hospital;
+    const canEditClinic = user?.memberRole === "owner";
+    const [clinicForm, setClinicForm] = useState({
+        name: hospital?.name ?? "",
+        email: hospital?.metadata?.email ?? "",
+        phone: hospital?.metadata?.phone ?? "",
+        address: hospital?.metadata?.address ?? "",
+    });
+
+    useEffect(() => {
+        if (profileData?.staff) {
+            setClinicForm({
+                name: hospital?.name ?? "",
+                email: hospital?.metadata?.email ?? "",
+                phone: hospital?.metadata?.phone ?? "",
+                address: hospital?.metadata?.address ?? "",
+            });
+        }
+    }, [profileData]);
+
     // Form state
     const [formData, setFormData] = useState({
         name: "",
@@ -199,6 +219,51 @@ export default function DoctorProfile() {
             setSaving(false);
         }
     };
+    const handleSaveClinic = async () => {
+        if (!canEditClinic) {
+            toast.error("Only organization owners can update clinic details");
+            return;
+        }
+
+        try {
+            setSaving(true);
+
+            const clinicData = {
+                name: clinicForm.name,
+                email: clinicForm.email,
+                phone: clinicForm.phone,
+                address: clinicForm.address,
+            };
+
+            const response = await fetch("/api/clinic", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(clinicData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success("Clinic details updated successfully");
+
+                // Refresh user/hospital data
+                const refreshResponse = await fetch("/api/profile");
+                const refreshResult = await refreshResponse.json();
+                if (refreshResult.success) {
+                    setProfileData(refreshResult.data);
+                }
+            } else {
+                toast.error(result.error || "Failed to update clinic details");
+            }
+        } catch (error) {
+            console.error("Error saving clinic details:", error);
+            toast.error("Failed to save clinic details");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     if (loading) {
         return <div className="p-8 text-center">Loading profile...</div>;
@@ -275,39 +340,52 @@ export default function DoctorProfile() {
                         <div className="grid grid-cols-1 gap-4">
                             <div>
                                 <Label className="mb-2">Clinic Name</Label>
-                                <Input placeholder="Heart Care Center"
-                                    value={hospital?.name ?? ""}
-                                    disabled />
+                                <Input
+                                    value={clinicForm.name}
+                                    onChange={(e) => setClinicForm(prev => ({ ...prev, name: e.target.value }))}
+                                    readOnly={!canEditClinic}
+                                    disabled={!canEditClinic}
+                                />
                             </div>
                             <div>
                                 <Label className="mb-2">Clinic Email</Label>
-                                <Input placeholder="heartcare@example.com"
-                                    value={hospital?.metadata?.email ?? ""}
-                                    disabled
+                                <Input
+                                    value={clinicForm.email}
+                                    onChange={(e) => setClinicForm(prev => ({ ...prev, email: e.target.value }))}
+                                    readOnly={!canEditClinic}
+                                    disabled={!canEditClinic}
                                 />
                             </div>
 
                             <div>
                                 <Label className="mb-2">Clinic Contact</Label>
-                                <Input placeholder="+91 9876543210"
-                                    value={hospital?.metadata?.phone ?? ""}
-                                    disabled />
-                            </div>
-
-                            <div>
-                                <Label className="mb-2">Working Hours</Label>
-                                <Input placeholder="Mon–Sat, 10:00 AM – 6:00 PM" />
-                            </div>
-                            <div className="">
-                                <Label className="mb-2">Clinic Address</Label>
-                                <Input placeholder="123, MG Road, Pune"
-                                    value={hospital?.metadata?.address ?? ""}
-                                    disabled
+                                <Input
+                                    value={clinicForm.phone}
+                                    onChange={(e) => setClinicForm(prev => ({ ...prev, phone: e.target.value }))}
+                                    readOnly={!canEditClinic}
+                                    disabled={!canEditClinic}
                                 />
                             </div>
-                            <div className=" text-right mt-2">
-                                <Button variant="outline">Save Changes</Button>
+
+                            {/* <div>
+                                <Label className="mb-2">Working Hours</Label>
+                                <Input placeholder="Mon–Sat, 10:00 AM – 6:00 PM" />
+                            </div> */}
+                            <div className="">
+                                <Label className="mb-2">Clinic Address</Label>
+                                <Input
+                                    value={clinicForm.address}
+                                    onChange={(e) => setClinicForm(prev => ({ ...prev, address: e.target.value }))}
+                                    readOnly={!canEditClinic}
+                                    disabled={!canEditClinic}
+                                />
                             </div>
+                            {canEditClinic && (
+                                <Button variant="outline" onClick={handleSaveClinic} disabled={saving}>
+                                    {saving ? "Saving..." : "Save Changes"}
+                                </Button>
+                            )}
+
                         </div>
                     ) : (
                         //  DOCTOR SECTION
