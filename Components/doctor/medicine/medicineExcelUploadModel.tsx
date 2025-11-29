@@ -5,17 +5,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function MedicineExcelModal({ open, setOpen }: any) {
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
   const downloadTemplate = async () => {
     try {
+      setDownloadLoading(true);
+
       const res = await fetch("/api/medicines/template");
 
       if (!res.ok) {
         toast.error("Failed to download template");
+        setDownloadLoading(false);
         return;
       }
 
@@ -27,6 +32,8 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
     } catch (err) {
       toast.error("Something went wrong");
     }
+
+    setDownloadLoading(false);
   };
 
   const uploadFile = async () => {
@@ -35,7 +42,7 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
       return;
     }
 
-    setLoading(true);
+    setUploadLoading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -58,13 +65,16 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
       toast.error("Upload error");
     }
 
-    setLoading(false);
+    setUploadLoading(false);
   };
+
+  const isAnyLoading = uploadLoading || downloadLoading;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md"
-        onInteractOutside={(e) => e.preventDefault()}  
+      <DialogContent
+        className="max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -73,22 +83,49 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
 
         <div className="space-y-4 py-4">
 
+          {/* File Upload */}
           <div>
             <p className="text-sm font-medium mb-1">Select Excel File</p>
-            <Input type="file" accept=".xlsx,.xls" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <Input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              disabled={isAnyLoading}
+            />
           </div>
 
+          {/* Download Template */}
           <div className="flex justify-between items-center pt-2">
             <p className="text-sm text-muted-foreground">Need format?</p>
-            <Button variant="outline" onClick={downloadTemplate}>
-              Download Template
+
+            <Button
+              variant="outline"
+              onClick={downloadTemplate}
+              disabled={downloadLoading || uploadLoading}
+            >
+              {downloadLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing...
+                </>
+              ) : (
+                "Download Template"
+              )}
             </Button>
           </div>
         </div>
 
         <DialogFooter>
-          <Button onClick={uploadFile} disabled={loading}>
-            {loading ? "Uploading..." : "Upload"}
+          <Button
+            onClick={uploadFile}
+            disabled={uploadLoading || downloadLoading}
+          >
+            {uploadLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...
+              </>
+            ) : (
+              "Upload"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

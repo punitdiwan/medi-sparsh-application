@@ -226,6 +226,9 @@ useEffect(() => {
           <p className="text-sm text-muted-foreground">
             Manage and view patients 
           </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Total Patients: <span className="font-medium">({patients.length})</span>
+          </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <FieldSelectorDropdown
