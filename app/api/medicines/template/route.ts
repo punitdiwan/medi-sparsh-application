@@ -8,8 +8,12 @@ import { getActiveOrganization } from "@/lib/getActiveOrganization";
 export async function GET() {
   const org = await getActiveOrganization();
     if (!org) {
-        return { error: "Unauthorized" };
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
+
   const hospitalId = org.id;
 
   const categories = await db
