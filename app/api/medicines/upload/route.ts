@@ -23,12 +23,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Convert file to Uint8Array (correct type for ExcelJS)
+    // Convert file to Buffer (correct type for ExcelJS in Node.js)
     const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+    const buffer = Buffer.from(new Uint8Array(arrayBuffer));
 
     const workbook = new ExcelJS.Workbook();
-    // await workbook.xlsx.load(uint8Array);
+    await workbook.xlsx.load(buffer as any);
 
     const sheet = workbook.worksheets[0]; // Get the first worksheet
 

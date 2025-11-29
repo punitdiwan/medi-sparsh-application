@@ -67,7 +67,7 @@ export default function DoctorProfile() {
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    
+
 
     const { user } = useAuth();
     // console.log("user data for doctors profile",user);
@@ -220,16 +220,19 @@ export default function DoctorProfile() {
         }
     };
     const handleSaveClinic = async () => {
-        if (!canEditClinic) return;
+        if (!canEditClinic) {
+            toast.error("Only organization owners can update clinic details");
+            return;
+        }
 
         try {
             setSaving(true);
 
             const clinicData = {
-                name: hospital?.name ?? "",
-                email: hospital?.metadata?.email ?? "",
-                phone: hospital?.metadata?.phone ?? "",
-                address: hospital?.metadata?.address ?? "",
+                name: clinicForm.name,
+                email: clinicForm.email,
+                phone: clinicForm.phone,
+                address: clinicForm.address,
             };
 
             const response = await fetch("/api/clinic", {
