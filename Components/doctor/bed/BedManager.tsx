@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import BedModal from "./bedModel";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type Bed = {
   id: string;
@@ -180,108 +182,121 @@ export default function BedManager() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center gap-4">
-        <Input
-          placeholder="Search beds..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
+    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <div>
+              <CardTitle className="text-2xl font-bold text-foreground">Hospital Bed Manager</CardTitle>
+                <CardDescription className="text-muted-foreground mt-1">
+                  Add, edit, remove and organize beds across groups and floors.
+                </CardDescription>
+            </div>
+          </CardHeader>
+          <Separator />
+      <CardContent>
+        <div className="p-4 space-y-4">
+          <div className="flex justify-between items-center gap-4">
+            <Input
+              placeholder="Search beds..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
 
-        <div className="flex items-center gap-2">
-          <Switch
-            id="deleted"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="deleted">Show deleted</Label>
-        </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="deleted">Show deleted</Label>
+            </div>
 
-        <BedModal onSave={handleSave} />
-      </div>
+            <BedModal onSave={handleSave} />
+          </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Bed Type</TableHead>
-            <TableHead>Bed Group</TableHead>
-            <TableHead>Floor</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                Loading beds...
-              </TableCell>
-            </TableRow>
-          ) : paginatedBeds.length > 0 ? (
-            paginatedBeds.map((b) => (
-              <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
-                <TableCell>{b.name}</TableCell>
-                <TableCell>{b.bedTypeName || "-"}</TableCell>
-                <TableCell>{b.bedGroupName || "-"}</TableCell>
-                <TableCell>{b.floorName || "-"}</TableCell>
-
-                <TableCell className="text-right space-x-2">
-                  {!b.isDeleted && <BedModal initialData={b} onSave={handleSave} />}
-
-                  <ConfirmDialog
-                    trigger={
-                      <Button size="sm" variant="destructive">
-                        {b.isDeleted ? "Permanently Delete" : "Delete"}
-                      </Button>
-                    }
-                    title={b.isDeleted ? "Permanently Delete Bed?" : "Delete Bed?"}
-                    description={
-                      b.isDeleted
-                        ? "This bed is already deleted. Click confirm to permanently delete it."
-                        : "Are you sure you want to delete this bed?"
-                    }
-                    actionLabel={b.isDeleted ? "Permanently Delete" : "Delete"}
-                    cancelLabel="Cancel"
-                    onConfirm={() => performDelete(b.id, b.isDeleted)}
-                  />
-                </TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Bed Type</TableHead>
+                <TableHead>Bed Group</TableHead>
+                <TableHead>Floor</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                No beds found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
 
-      {totalPages > 1 && (
-        <div className="flex justify-end space-x-2 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          >
-            Prev
-          </Button>
-          <span className="flex items-center px-2">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          >
-            Next
-          </Button>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    Loading beds...
+                  </TableCell>
+                </TableRow>
+              ) : paginatedBeds.length > 0 ? (
+                paginatedBeds.map((b) => (
+                  <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
+                    <TableCell>{b.name}</TableCell>
+                    <TableCell>{b.bedTypeName || "-"}</TableCell>
+                    <TableCell>{b.bedGroupName || "-"}</TableCell>
+                    <TableCell>{b.floorName || "-"}</TableCell>
+
+                    <TableCell className="text-right space-x-2">
+                      {!b.isDeleted && <BedModal initialData={b} onSave={handleSave} />}
+
+                      <ConfirmDialog
+                        trigger={
+                          <Button size="sm" variant="destructive">
+                            {b.isDeleted ? "Permanently Delete" : "Delete"}
+                          </Button>
+                        }
+                        title={b.isDeleted ? "Permanently Delete Bed?" : "Delete Bed?"}
+                        description={
+                          b.isDeleted
+                            ? "This bed is already deleted. Click confirm to permanently delete it."
+                            : "Are you sure you want to delete this bed?"
+                        }
+                        actionLabel={b.isDeleted ? "Permanently Delete" : "Delete"}
+                        cancelLabel="Cancel"
+                        onConfirm={() => performDelete(b.id, b.isDeleted)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No beds found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="flex justify-end space-x-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </Button>
+              <span className="flex items-center px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

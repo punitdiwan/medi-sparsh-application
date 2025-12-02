@@ -14,6 +14,8 @@ import {
 import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import SlotModal from "./slotModal";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const WEEK_DAYS = [
   "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
@@ -259,152 +261,165 @@ export default function SlotManagerPage() {
   const selectedShift = shifts.find(s => s.id === shiftId);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-12 gap-4 items-end">
-        <div className="col-span-4">
-          <Label>Doctor *</Label>
-          <Select value={doctorId} onValueChange={setDoctorId}>
-            <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
-            <SelectContent>
-              {doctors.map((d) => (
-                <SelectItem key={d.doctorId} value={d.doctorId}>{d.doctorName}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader>
+        <div>
+          <CardTitle className="text-2xl font-bold text-foreground">Doctor Slots Management</CardTitle>
+            <CardDescription className="text-muted-foreground mt-1">
+              Assign slots to doctors.
+            </CardDescription>
         </div>
-
-        <div className="col-span-4">
-          <Label>Shift *</Label>
-          <Select value={shiftId} onValueChange={setShiftId}>
-            <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
-            <SelectContent>
-              {filteredShifts.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name} ({s.startTime} - {s.endTime})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="col-span-2">
-          <Button className="w-full" onClick={handleSearch}>Search</Button>
-        </div>
-
-        <div className="col-span-2">
-          <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
-        </div>
-      </div>
-
-      <div className="p-4 border rounded-xl shadow-sm">
-        <h3 className="font-semibold mb-3">Consultation Details</h3>
-
-        <div className="grid grid-cols-4 gap-4">
-          <div className="flex flex-col gap-1">
-            <Label>Duration (mins)</Label>
-            <Input type="number" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label>Charge Category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-              <SelectContent>
-                {chargeCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label>Charge</Label>
-            <Select value={chargeId} disabled={!categoryId} onValueChange={setChargeId}>
-              <SelectTrigger><SelectValue placeholder="Select charge" /></SelectTrigger>
-              <SelectContent>
-                {charges
-                  .filter(c => c.chargeCategoryId === categoryId)
-                  .map((x) => (
-                    <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
+      </CardHeader>
+      <Separator />
+      <CardContent>
+        <div className="p-4 space-y-6">
+          <div className="grid grid-cols-12 gap-4 items-end">
+            <div className="col-span-4">
+              <Label>Doctor *</Label>
+              <Select value={doctorId} onValueChange={setDoctorId}>
+                <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
+                <SelectContent>
+                  {doctors.map((d) => (
+                    <SelectItem key={d.doctorId} value={d.doctorId}>{d.doctorName}</SelectItem>
                   ))}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-4">
+              <Label>Shift *</Label>
+              <Select value={shiftId} onValueChange={setShiftId}>
+                <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
+                <SelectContent>
+                  {filteredShifts.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name} ({s.startTime} - {s.endTime})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2">
+              <Button className="w-full" onClick={handleSearch}>Search</Button>
+            </div>
+
+            <div className="col-span-2">
+              <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <Label>Amount</Label>
-            <Input value={amount} readOnly />
-          </div>
-        </div>
-      </div>
+          <div className="p-4 border rounded-xl shadow-sm">
+            <h3 className="font-semibold mb-3">Consultation Details</h3>
 
-      {showWeekPanel && (
-        <div className="border rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted/50">
-                {WEEK_DAYS.map((day) => (
-                  <th key={day} className="p-3 text-left font-semibold border-r last:border-r-0">
-                    {day}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {WEEK_DAYS.map((day) => (
-                  <td key={day} className="p-2 align-top border-r last:border-r-0 min-w-[150px]">
-                    <div className="space-y-2">
-                      {slotsByDay[day].length === 0 ? (
-                        <p className="text-muted-foreground text-xs text-center py-4">No slots</p>
-                      ) : (
-                        slotsByDay[day].map((s) => (
-                          <div key={s.id} className="group relative">
-                            <div className="flex justify-between items-start p-2 border rounded-md hover:bg-muted/50 transition-colors">
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm truncate">{s.text}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {s.durationMins} mins
+            <div className="grid grid-cols-4 gap-4">
+              <div className="flex flex-col gap-1">
+                <Label>Duration (mins)</Label>
+                <Input type="number" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label>Charge Category</Label>
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                  <SelectContent>
+                    {chargeCategories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label>Charge</Label>
+                <Select value={chargeId} disabled={!categoryId} onValueChange={setChargeId}>
+                  <SelectTrigger><SelectValue placeholder="Select charge" /></SelectTrigger>
+                  <SelectContent>
+                    {charges
+                      .filter(c => c.chargeCategoryId === categoryId)
+                      .map((x) => (
+                        <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label>Amount</Label>
+                <Input value={amount} readOnly />
+              </div>
+            </div>
+          </div>
+
+          {showWeekPanel && (
+            <div className="border rounded-xl shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-muted/50">
+                    {WEEK_DAYS.map((day) => (
+                      <th key={day} className="p-3 text-left font-semibold border-r last:border-r-0">
+                        {day}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {WEEK_DAYS.map((day) => (
+                      <td key={day} className="p-2 align-top border-r last:border-r-0 min-w-[150px]">
+                        <div className="space-y-2">
+                          {slotsByDay[day].length === 0 ? (
+                            <p className="text-muted-foreground text-xs text-center py-4">No slots</p>
+                          ) : (
+                            slotsByDay[day].map((s) => (
+                              <div key={s.id} className="group relative">
+                                <div className="flex justify-between items-start p-2 border rounded-md hover:bg-muted/50 transition-colors">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-sm truncate">{s.text}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {s.durationMins} mins
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <MdEdit
+                                      className="text-blue-600 cursor-pointer h-4 w-4"
+                                      onClick={() => handleEdit(day, s)}
+                                      title="Edit slot"
+                                    />
+                                    <MdDelete
+                                      className="text-red-600 cursor-pointer h-4 w-4"
+                                      onClick={() => handleDelete(day, s.id)}
+                                      title="Delete slot"
+                                    />
+                                  </div>
+                                </div>
+                                {/* Tooltip for amount */}
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Amount: ₹{s.amount}
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                 </div>
                               </div>
-                              <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MdEdit
-                                  className="text-blue-600 cursor-pointer h-4 w-4"
-                                  onClick={() => handleEdit(day, s)}
-                                  title="Edit slot"
-                                />
-                                <MdDelete
-                                  className="text-red-600 cursor-pointer h-4 w-4"
-                                  onClick={() => handleDelete(day, s.id)}
-                                  title="Delete slot"
-                                />
-                              </div>
-                            </div>
-                            {/* Tooltip for amount */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                              Amount: ₹{s.amount}
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+                            ))
+                          )}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      <SlotModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveSlot}
-        initialData={modalInitialData}
-        shiftRange={selectedShift}
-        selectedDay={selectedDay}
-        durationMins={durationMins}
-        chargeId={chargeId}
-      />
-    </div>
+          <SlotModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveSlot}
+            initialData={modalInitialData}
+            shiftRange={selectedShift}
+            selectedDay={selectedDay}
+            durationMins={durationMins}
+            chargeId={chargeId}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

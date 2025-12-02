@@ -122,6 +122,13 @@ h(0.556 0 0);
   }
 }
 
+.bg-custom-gradient {
+  @apply bg-gradient-to-br from-white via-indigo-50 to-purple-100
+         dark:from-gray-900 dark:via-gray-800 dark:to-black
+         border border-purple-800 dark:border-indigo-200
+         transition-all;
+}
+
 /* 🌍 Global: hide scrollbar everywhere */
 *::-webkit-scrollbar {
   display: none;

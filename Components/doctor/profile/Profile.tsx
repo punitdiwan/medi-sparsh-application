@@ -304,8 +304,8 @@ export default function DoctorProfile() {
     return (
         <div className="p-8 flex flex-col lg:flex-row justify-between gap-6  min-h-screen">
             {/* Left: Avatar + Actions */}
-            <Card className="lg:w-1/3 flex flex-col items-center  p-6 gap-4 shadow-md">
-                <Avatar className="w-20 h-20 border-2 border-gray-200">
+            <Card className="lg:w-1/3 flex flex-col items-center  p-6 gap-4 shadow-md bg-custom-gradient">
+                <Avatar className="w-20 h-20 border-2 border-gray-200 ">
                     <AvatarImage src={hospital?.logo ?? "/images/hospital-placeholder.png"} />
                     <AvatarFallback>DR</AvatarFallback>
                 </Avatar>
@@ -327,14 +327,14 @@ export default function DoctorProfile() {
 
                 <Button
                     onClick={() => setShowClinicDetails((prev) => !prev)}
-                    variant="secondary"
-                    className="w-full"
+                    variant="default"
+                    className="w-full "
                 >
                     {showClinicDetails ? "View Doctor Profile" : "View Clinic Details"}
                 </Button>
                 <Button
                     onClick={() => setShowPasswordModal(true)}
-                    variant="default"
+                    variant="outline"
                     className="w-full"
                 >
                     Change Password
@@ -343,7 +343,7 @@ export default function DoctorProfile() {
             </Card>
 
             {/* Right: Profile / Clinic Info */}
-            <Card className="lg:w-2/3 p-6 shadow-md">
+            <Card className="lg:w-2/3 p-6 shadow-md bg-custom-gradient">
                 <CardHeader>
                     <CardTitle className="text-xl font-semibold border-b pb-2">
                         {showClinicDetails ? "Clinic Details" : "Doctor Profile"}
