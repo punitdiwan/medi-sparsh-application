@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Eye, EyeOff } from "lucide-react";
+import { Controller } from "react-hook-form";
 
 // Zod schema
 const passwordSchema = z
@@ -35,18 +36,38 @@ export default function ChangePasswordForm({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit?: (values: PasswordForm) => Promise<void> | void;
+  onSubmit?: (values: PasswordForm) => Promise<boolean> | boolean;
   loading?: boolean;
 }) {
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isDirty },
-    reset,
-  } = useForm<PasswordForm>({
-    resolver: zodResolver(passwordSchema),
-    mode: "onBlur",
+  register,
+  handleSubmit,
+  formState: { errors, isSubmitting },
+  reset,
+  clearErrors,
+  control,
+} = useForm<PasswordForm>({
+  resolver: zodResolver(passwordSchema),
+  mode: "onChange",
+  defaultValues: {
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  },
+});
+
+  const [form, setForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
+
+  const handleChange = (e:any) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -56,11 +77,23 @@ export default function ChangePasswordForm({
 
   const submitting = isSubmitting || externalLoading;
 
-  async function submit(values: PasswordForm) {
+  async function submit(form: PasswordForm) {
     try {
-      if (onSubmit) await onSubmit(values);
+      if (!onSubmit) return false;
+
+    const result = await onSubmit(form);
+    if (result === true) {
       reset();
-      onClose();
+      clearErrors();
+      setForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      return true;
+    }
+
+    return false;
     } catch (e) {
       console.error(e);
     }
@@ -77,11 +110,21 @@ export default function ChangePasswordForm({
         <div>
           <Label htmlFor="currentPassword">Current password</Label>
           <div className="relative mt-1">
-            <Input
-              id="currentPassword"
-              type={showCurrent ? "text" : "password"}
-              {...register("currentPassword")}
+            <Controller
+              control={control}
+              name="currentPassword"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type={showCurrent ? "text" : "password"}
+                  onChange={(e) => {
+                    field.onChange(e);     
+                    handleChange(e);       
+                  }}
+                />
+              )}
             />
+
             <button
               type="button"
               onClick={() => setShowCurrent((s) => !s)}
@@ -101,11 +144,20 @@ export default function ChangePasswordForm({
         <div>
           <Label htmlFor="newPassword">New password</Label>
           <div className="relative mt-1">
-            <Input
-              id="newPassword"
-              type={showNew ? "text" : "password"}
-              {...register("newPassword")}
-              placeholder="At least 8 chars, uppercase, symbol..."
+            <Controller
+              control={control}
+              name="newPassword"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type={showNew ? "text" : "password"}
+                  placeholder="At least 8 chars, uppercase, symbol..."
+                  onChange={(e) => {
+                    field.onChange(e);   
+                    handleChange(e);     
+                  }}
+                />
+              )}
             />
             <button
               type="button"
@@ -126,10 +178,19 @@ export default function ChangePasswordForm({
         <div>
           <Label htmlFor="confirmPassword">Confirm new password</Label>
           <div className="relative mt-1">
-            <Input
-              id="confirmPassword"
-              type={showConfirm ? "text" : "password"}
-              {...register("confirmPassword")}
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type={showConfirm ? "text" : "password"}
+                  onChange={(e) => {
+                    field.onChange(e);  
+                    handleChange(e);     
+                  }}
+                />
+              )}
             />
             <button
               type="button"
@@ -155,9 +216,17 @@ export default function ChangePasswordForm({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => reset()}
+            onClick={() =>{
+              setForm({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+              });
+              reset();      
+              clearErrors();}
+            }
             className="ml-2"
-            disabled={!isDirty || submitting}
+            disabled={submitting}
           >
             Reset
           </Button>

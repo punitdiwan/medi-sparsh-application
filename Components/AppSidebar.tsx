@@ -62,7 +62,6 @@ const items: SidebarItem[] = [
     icon: Settings,
     children: [
       { title: 'Members', url: '/doctor/employees' },
-      { title: 'Profile', url: '/doctor/settings/profile' },
       { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
       { title: 'Bed', url: '/doctor/settings/Bed'},
       { title: 'Shift Management', url: '/doctor/settings/appointment'},

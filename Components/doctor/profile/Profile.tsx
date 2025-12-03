@@ -540,16 +540,18 @@ export default function DoctorProfile() {
                                     newPassword: values.newPassword,
                                 });
 
-                                if (res) {
+                                if (res?.data != null) {
                                     toast.success("Password changed successfully!");
                                     setShowPasswordModal(false);
+                                    return true;
                                 } else {
-                                    toast.error(res || "Failed to change password");
+                                    toast.error(res?.error?.message || "Failed to change password");
+                                    return false;
                                 }
-
                             } catch (err: any) {
                                 toast.error(err.message || "Something went wrong");
                                 console.error(err);
+                                return false;
                             }
                         }}
 
