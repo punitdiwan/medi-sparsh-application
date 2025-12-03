@@ -183,7 +183,7 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <Card className="shadow-lg border rounded-xl">
+      <Card className="shadow-lg border rounded-xl bg-custom-gradient">
         
         <CardHeader className="flex flex-col items-center gap-4">
           
