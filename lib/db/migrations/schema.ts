@@ -69,7 +69,7 @@ export const organizationInAuth = auth.table("organization", {
 	name: text().notNull(),
 	slug: text().notNull(),
 	logo: text(),
-	createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp({ mode:'date'}).defaultNow().notNull(),
 	metadata: text(),
 }, (table) => [
 	unique("organization_slug_unique").on(table.slug)
