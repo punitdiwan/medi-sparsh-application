@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
           id: currentUser.id,
           email: currentUser.email,
           name: currentUser.name,
+          image: currentUser.image,
         },
       },
     });
