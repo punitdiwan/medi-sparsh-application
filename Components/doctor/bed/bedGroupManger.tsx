@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { BedGroupModal } from "./bedGroupModel";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type BedGroup = {
   id: string;
@@ -179,99 +181,112 @@ export default function BedGroupManager() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Top bar: Search + Switch + Add */}
-      <div className="flex justify-between items-center gap-4">
-        <Input
-          placeholder="Search bed group..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        
-        <div className="flex items-center gap-2">
-          <Switch
-            id="show-deleted"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="show-deleted" className="cursor-pointer">
-            Show Deleted Only
-          </Label>
-        </div>
-        
-        <BedGroupModal onSave={handleSave} />
-      </div>
+    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <div>
+              <CardTitle className="text-2xl font-bold text-foreground">Bed Group Management</CardTitle>
+                <CardDescription className="text-muted-foreground mt-1">
+                  Add, update, delete and organize all hospital bed groups.
+                </CardDescription>
+            </div>
+          </CardHeader>
+          <Separator />
+      <CardContent>
+        <div className="p-4 space-y-4">
+          {/* Top bar: Search + Switch + Add */}
+          <div className="flex justify-between items-center gap-4">
+            <Input
+              placeholder="Search bed group..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="show-deleted" className="cursor-pointer">
+                Show Deleted Only
+              </Label>
+            </div>
+            
+            <BedGroupModal onSave={handleSave} />
+          </div>
 
-      {/* Bed Group Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Floor</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground">
-                Loading bed groups...
-              </TableCell>
-            </TableRow>
-          ) : paginatedGroups.length > 0 ? (
-            paginatedGroups.map((b) => (
-              <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
-                <TableCell>{b.name}</TableCell>
-                <TableCell>{b.floorName || "-"}</TableCell>
-                <TableCell>{b.description || "-"}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  {!b.isDeleted && <BedGroupModal bedGroup={b} onSave={handleSave} />}
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => handleDelete(b.id, b.isDeleted)}
-                  >
-                    {b.isDeleted ? "Permanently Delete" : "Delete"}
-                  </Button>
-                </TableCell>
+          {/* Bed Group Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Floor</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground">
-                No bed groups found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    Loading bed groups...
+                  </TableCell>
+                </TableRow>
+              ) : paginatedGroups.length > 0 ? (
+                paginatedGroups.map((b) => (
+                  <TableRow key={b.id} className={b.isDeleted ? "opacity-60" : ""}>
+                    <TableCell>{b.name}</TableCell>
+                    <TableCell>{b.floorName || "-"}</TableCell>
+                    <TableCell>{b.description || "-"}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      {!b.isDeleted && <BedGroupModal bedGroup={b} onSave={handleSave} />}
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleDelete(b.id, b.isDeleted)}
+                      >
+                        {b.isDeleted ? "Permanently Delete" : "Delete"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No bed groups found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end space-x-2 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          >
-            Prev
-          </Button>
-          <span className="flex items-center px-2">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          >
-            Next
-          </Button>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-end space-x-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </Button>
+              <span className="flex items-center px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -101,9 +101,7 @@ export default function ChangePasswordForm({
 
   return (
     <div className="relative p-5 rounded-lg shadow-xl 
-      bg-gradient-to-br from-white via-indigo-50 to-purple-100 
-      dark:from-gray-900 dark:via-gray-800 dark:to-black
-      border border-purple-800  dark:border-indigo-200 transition-all">
+      bg-custom-gradient">
 
       <h2 className="text-lg font-semibold mb-4">Change Password</h2>
 

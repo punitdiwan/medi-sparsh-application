@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FloorModal } from "./floorModel";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type Floor = {
   id: string;
@@ -170,95 +172,108 @@ export default function FloorManager() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Top bar: Search + Switch + Add */}
-      <div className="flex justify-between items-center gap-4">
-        <Input
-          placeholder="Search floor..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        
-        <div className="flex items-center gap-2">
-          <Switch
-            id="show-deleted"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="show-deleted" className="cursor-pointer">
-            Show Deleted Only
-          </Label>
-        </div>
-        
-        <FloorModal onSave={handleSave} />
-      </div>
+    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <div>
+              <CardTitle className="text-2xl font-bold text-foreground">Floor Management</CardTitle>
+                <CardDescription className="text-muted-foreground mt-1">
+                  Add, update, delete and organize hospital floors.
+                </CardDescription>
+            </div>
+          </CardHeader>
+          <Separator />
+      <CardContent>
+        <div className="p-4 space-y-4">
+          {/* Top bar: Search + Switch + Add */}
+          <div className="flex justify-between items-center gap-4">
+            <Input
+              placeholder="Search floor..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="show-deleted" className="cursor-pointer">
+                Show Deleted Only
+              </Label>
+            </div>
+            
+            <FloorModal onSave={handleSave} />
+          </div>
 
-      {/* Floor Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
-                Loading floors...
-              </TableCell>
-            </TableRow>
-          ) : paginatedFloors.length > 0 ? (
-            paginatedFloors.map((floor) => (
-              <TableRow key={floor.id} className={floor.isDeleted ? "opacity-60" : ""}>
-                <TableCell>{floor.name}</TableCell>
-                <TableCell>{floor.description || "-"}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  {!floor.isDeleted && <FloorModal floor={floor} onSave={handleSave} />}
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => handleDelete(floor.id, floor.isDeleted)}
-                  >
-                    {floor.isDeleted ? "Permanently Delete" : "Delete"}
-                  </Button>
-                </TableCell>
+          {/* Floor Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
-                No floors found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    Loading floors...
+                  </TableCell>
+                </TableRow>
+              ) : paginatedFloors.length > 0 ? (
+                paginatedFloors.map((floor) => (
+                  <TableRow key={floor.id} className={floor.isDeleted ? "opacity-60" : ""}>
+                    <TableCell>{floor.name}</TableCell>
+                    <TableCell>{floor.description || "-"}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      {!floor.isDeleted && <FloorModal floor={floor} onSave={handleSave} />}
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleDelete(floor.id, floor.isDeleted)}
+                      >
+                        {floor.isDeleted ? "Permanently Delete" : "Delete"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No floors found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end space-x-2 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          >
-            Prev
-          </Button>
-          <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          >
-            Next
-          </Button>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-end space-x-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </Button>
+              <span className="flex items-center px-2">Page {currentPage} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

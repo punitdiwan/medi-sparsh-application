@@ -1,9 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { updateUserProfile } from "@/lib/actions/updateUserProfile";
 
 // ------- TYPES -------
 interface HospitalMetadata {
@@ -37,11 +40,150 @@ interface AdminProfileProps {
 }
 
 const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
-  const { userData, hospital } = data;
+  const { userData, hospital, memberRole } = data;
+  const [isEditingClinic, setIsEditingClinic] = useState(false);
+  const [isEditingOwner, setIsEditingOwner] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [clinicFormData, setClinicFormData] = useState({
+    name: hospital?.name ?? "",
+    email: hospital?.metadata?.email ?? "",
+    phone: hospital?.metadata?.phone ?? "",
+    address: hospital?.metadata?.address ?? "",
+  });
+  const [ownerFormData, setOwnerFormData] = useState({
+    name: userData?.name ?? "",
+    email: userData?.email ?? "",
+  });
+
+  // Update form data when hospital or user data changes
+  useEffect(() => {
+    setClinicFormData({
+      name: hospital?.name ?? "",
+      email: hospital?.metadata?.email ?? "",
+      phone: hospital?.metadata?.phone ?? "",
+      address: hospital?.metadata?.address ?? "",
+    });
+    setOwnerFormData({
+      name: userData?.name ?? "",
+      email: userData?.email ?? "",
+    });
+  }, [hospital, userData]);
+
+  const handleClinicInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setClinicFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleOwnerInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setOwnerFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleClinicCancel = () => {
+    // Reset form to original values
+    setClinicFormData({
+      name: hospital?.name ?? "",
+      email: hospital?.metadata?.email ?? "",
+      phone: hospital?.metadata?.phone ?? "",
+      address: hospital?.metadata?.address ?? "",
+    });
+    setIsEditingClinic(false);
+  };
+
+  const handleOwnerCancel = () => {
+    // Reset form to original values
+    setOwnerFormData({
+      name: userData?.name ?? "",
+      email: userData?.email ?? "",
+    });
+    setIsEditingOwner(false);
+  };
+
+  const handleClinicSave = async () => {
+    try {
+      setIsSaving(true);
+
+      // Validate required fields
+      if (!clinicFormData.name.trim()) {
+        toast.error("Hospital name is required");
+        return;
+      }
+
+      const clinicData = {
+        name: clinicFormData.name,
+        email: clinicFormData.email,
+        phone: clinicFormData.phone,
+        address: clinicFormData.address,
+      };
+
+      const response = await fetch("/api/clinic", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(clinicData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Hospital details updated successfully");
+        setIsEditingClinic(false);
+      } else {
+        toast.error(result.error || "Failed to update hospital details");
+      }
+    } catch (error) {
+      console.error("Error saving hospital details:", error);
+      toast.error("Failed to save hospital details");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleOwnerSave = async () => {
+    try {
+      setIsSaving(true);
+
+      // Validate required fields
+      if (!ownerFormData.name.trim()) {
+        toast.error("Owner name is required");
+        return;
+      }
+      if (!ownerFormData.email.trim()) {
+        toast.error("Owner email is required");
+        return;
+      }
+
+      const result = await updateUserProfile({
+        name: ownerFormData.name,
+        email: ownerFormData.email,
+      });
+
+      if (result.success) {
+        toast.success("Owner information updated successfully");
+        setIsEditingOwner(false);
+      } else {
+        toast.error(result.error || "Failed to update owner information");
+      }
+    } catch (error) {
+      console.error("Error saving owner information:", error);
+      toast.error("Failed to save owner information");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const canEdit = memberRole === "owner";
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <Card className="shadow-lg border rounded-xl">
+      <Card className="shadow-lg border rounded-xl bg-custom-gradient">
         
         <CardHeader className="flex flex-col items-center gap-4">
           
@@ -67,65 +209,154 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
           
           {/* Hospital Info */}
           <div>
-            <h2 className="font-semibold text-lg mb-3">Hospital Information</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-lg">Hospital Information</h2>
+              {canEdit && !isEditingClinic && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingClinic(true)}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
               <div className="flex flex-col gap-1">
                 <Label>Hospital Name</Label>
-                <Input className="bg-background text-foreground" value={hospital.name ?? ""} readOnly />
+                <Input
+                  name="name"
+                  className="bg-background text-foreground"
+                  value={clinicFormData.name}
+                  readOnly={!isEditingClinic}
+                  onChange={handleClinicInputChange}
+                  disabled={!isEditingClinic}
+                />
               </div>
 
               <div className="flex flex-col gap-1">
                 <Label>Email</Label>
-                <Input className="bg-background text-foreground" value={hospital?.metadata?.email ?? ""} readOnly />
+                <Input
+                  name="email"
+                  className="bg-background text-foreground"
+                  value={clinicFormData.email}
+                  readOnly={!isEditingClinic}
+                  onChange={handleClinicInputChange}
+                  disabled={!isEditingClinic}
+                  type="email"
+                />
               </div>
 
               <div className="flex flex-col gap-1">
                 <Label>Contact Number</Label>
-                <Input className="bg-background text-foreground" value={hospital?.metadata?.phone ?? ""} readOnly />
+                <Input
+                  name="phone"
+                  className="bg-background text-foreground"
+                  value={clinicFormData.phone}
+                  readOnly={!isEditingClinic}
+                  onChange={handleClinicInputChange}
+                  disabled={!isEditingClinic}
+                />
               </div>
 
               <div className="flex flex-col gap-1 md:col-span-2">
                 <Label>Address</Label>
-                <Input className="bg-background text-foreground" value={hospital?.metadata?.address ?? ""} readOnly />
+                <Input
+                  name="address"
+                  className="bg-background text-foreground"
+                  value={clinicFormData.address}
+                  readOnly={!isEditingClinic}
+                  onChange={handleClinicInputChange}
+                  disabled={!isEditingClinic}
+                />
               </div>
 
             </div>
+
+            {/* Edit Action Buttons */}
+            {isEditingClinic && (
+              <div className="flex gap-3 justify-end mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleClinicCancel}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleClinicSave}
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Owner Info */}
           <div>
-            <h2 className="font-semibold text-lg mb-3">Owner Information</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-lg">Owner Information</h2>
+              {canEdit && !isEditingOwner && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingOwner(true)}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
 
             <div className="flex items-center gap-6 mb-5">
-              
-              {/* {userData.image ? (
-                <img
-                  src={userData.image}
-                  alt="Owner"
-                  className="w-20 h-20 rounded-full object-cover shadow"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shadow">
-                  No Image
-                </div>
-              )} */}
-
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
 
                 <div className="flex flex-col gap-1">
                   <Label>Owner Name</Label>
-                  <Input value={userData.name ?? ""} disabled />
+                  <Input
+                    name="name"
+                    value={ownerFormData.name}
+                    onChange={handleOwnerInputChange}
+                    disabled={!isEditingOwner}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <Label>Owner Email</Label>
-                  <Input value={userData.email ?? ""} disabled />
+                  <Input
+                    name="email"
+                    type="email"
+                    value={ownerFormData.email}
+                    onChange={handleOwnerInputChange}
+                    disabled={!isEditingOwner}
+                  />
                 </div>
 
               </div>
             </div>
+
+            {/* Edit Action Buttons */}
+            {isEditingOwner && (
+              <div className="flex gap-3 justify-end mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleOwnerCancel}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleOwnerSave}
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            )}
           </div>
 
         </CardContent>

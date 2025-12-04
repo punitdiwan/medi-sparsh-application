@@ -106,9 +106,8 @@ export default function DoctorShiftManagerPage() {
   const totalPages = Math.ceil(filteredDoctors.length / rowsPerPage);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
       <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-4">
+        <CardHeader>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">Doctor Shift Management</CardTitle>
             <CardDescription className="text-muted-foreground mt-1">
@@ -219,6 +218,5 @@ export default function DoctorShiftManagerPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }

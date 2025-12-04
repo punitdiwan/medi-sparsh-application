@@ -164,7 +164,7 @@ function PrescriptionForm() {
   // 🟢 Render form
   return (
     <div className="min-h-screen flex justify-center items-center px-4 py-6">
-      <Card className="w-full max-w-5xl shadow-lg border border-border/50">
+      <Card className="w-full shadow-lg border border-border/50">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
             {isEditMode ? "Edit Prescription" : "New Prescription"}
