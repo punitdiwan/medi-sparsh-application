@@ -22,11 +22,25 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { FaBed } from "react-icons/fa6";
+import { FaBed, FaUserDoctor, FaUser } from "react-icons/fa6";
+import { FaCrown } from "react-icons/fa6";
 export default function Header() {
   const router = useRouter();
-  const {logout}= useAuth();
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const roleLabel =
+    user?.memberRole === "owner" ? "Admin" : user?.memberRole || "My Profile";
+
+  const roleIcon =
+    user?.memberRole === "owner" ? (
+      <FaCrown className="inline mr-1" />
+    ) : user?.memberRole === "doctor" ? (
+      <FaUserDoctor className="inline mr-1" />
+    ) : (
+      <FaUser className="inline mr-1" />
+    );
+
   const handleLogout = async () => {
     try {
       await authClient.signOut();
@@ -39,80 +53,80 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 bg-background z-[999] flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-      <div className="flex items-center gap-2 px-4">
+    <header className="sticky top-0 bg-background z-[999] flex h-16 shrink-0 items-center justify-between gap-2 px-4">
+      <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
       </div>
 
-      <div className="flex items-center gap-2 px-4">
-        <div className="hidden md:flex md:items-center">
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center">
           <KbdInputGroup />
           <div className="px-4 cursor-pointer">
             <FaBed />
           </div>
-          
         </div>
 
         <ModeToggle />
 
-        <div>
-          <DropdownMenu open={open} onOpenChange={setOpen}>
-            <DropdownMenuTrigger>
-              <Image
-                src={ProfileImg}
-                alt="Profile"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>My profile</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+          <DropdownMenuTrigger>
+            <Image
+              src={ProfileImg}
+              alt="Profile"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+          </DropdownMenuTrigger>
 
-              {/* Normal items close dropdown on click */}
-              <DropdownMenuItem>
-                <div onClick={() => setOpen(false)}>
-                  <Link
-                    href="/doctor/settings/profile"
-                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                  >
-                    Profile
-                  </Link>
-                </div>
-              </DropdownMenuItem>
+          <DropdownMenuContent 
+  side="top" 
+  align="end" 
+  className="mt-2 w-40"
+>
+  <DropdownMenuLabel className="capitalize flex items-center justify-center ">
+    {roleIcon}
+    {roleLabel}
+  </DropdownMenuLabel>
 
-              <DropdownMenuItem>
-                <div onClick={() => setOpen(false)}>
-                  <Link
-                    href="/doctor/todolist"
-                    className="block p-2 items-center text-gray-700 dark:text-gray-300"
-                  >
-                    Todo list
-                  </Link>
-                </div>
-              </DropdownMenuItem>
+  <DropdownMenuSeparator />
 
-              {/* asChild item stays open because we do NOT call setOpen(false) */}
-              <DropdownMenuItem asChild>
-                <ConfirmDialog
-                  trigger={
-                    <Button className="w-full text-left font-light p-2 items-center rounded-md text-white dark:text-black hover:bg-white/80 hover:text-white transition-colors cursor-pointer">
-                      Logout
-                    </Button>
-                  }
-                  title="Are you sure you want to logout?"
-                  description="You’ll be signed out of your account and redirected to the login page."
-                  actionLabel="Logout"
-                  cancelLabel="Cancel"
-                  onConfirm={handleLogout}
-                  onCancel={() => console.log("Logout cancelled")}
-                />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+  <DropdownMenuItem className="w-full justify-center text-center" onClick={() => setOpen(false)}>
+    <Link
+      href="/doctor/settings/profile"
+      className="w-full block p-2 text-gray-700 dark:text-gray-300"
+    >
+      Profile
+    </Link>
+  </DropdownMenuItem>
+
+  <DropdownMenuItem className="w-full justify-center text-center" onClick={() => setOpen(false)}>
+    <Link
+      href="/doctor/todolist"
+      className="w-full block p-2 text-gray-700 dark:text-gray-300"
+    >
+      Todo list
+    </Link>
+  </DropdownMenuItem>
+
+  <DropdownMenuItem asChild className="w-full justify-center text-center">
+    <ConfirmDialog
+      trigger={
+        <Button className="w-full text-center font-light p-2 mt-1 rounded-md">
+          Logout
+        </Button>
+      }
+      title="Are you sure you want to logout?"
+      description="You’ll be signed out and redirected to login."
+      actionLabel="Logout"
+      cancelLabel="Cancel"
+      onConfirm={handleLogout}
+    />
+  </DropdownMenuItem>
+</DropdownMenuContent>
+
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -78,6 +78,8 @@ export default function DoctorProfile() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     const { user } = useAuth();
+    const roleLabel =
+    user?.memberRole === "owner" ? "Doctor" : user?.memberRole || "Dcotor";
     // console.log("user data for doctors profile",user);
     const hospital = user?.hospital;
     const canEditClinic = user?.memberRole === "owner";
@@ -278,7 +280,7 @@ export default function DoctorProfile() {
     }
     if (!user) return <div>Loading...</div>;
 
-    if (!profileData || !profileData.doctor) {
+    if ((user?.memberRole === "owner" || user?.memberRole === "admin")&&(!profileData || !profileData.doctor)) {
         const userData: UserData = {
             id: user?.userData?.id ?? "",
             name: user?.userData?.name ?? "",
@@ -343,11 +345,18 @@ export default function DoctorProfile() {
             </Card>
 
             {/* Right: Profile / Clinic Info */}
-            <Card className="lg:w-2/3 p-6 shadow-md bg-custom-gradient">
+            <Card className="lg:w-2/3 p-6 shadow-md bg-custom-gradient relative">
                 <CardHeader>
-                    <CardTitle className="text-xl font-semibold border-b pb-2">
-                        {showClinicDetails ? "Clinic Details" : "Doctor Profile"}
-                    </CardTitle>
+                    {user?.memberRole === "owner" && (
+                        <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs px-3 py-1 rounded-bl-lg rounded-tr-xl shadow-md">
+                            ADMIN
+                        </div>
+                    )}
+                <CardHeader>
+                <CardTitle className="text-xl font-semibold border-b pb-2 capitalize">
+                    {showClinicDetails ? "Clinic Details" : `${roleLabel} Profile`}
+                </CardTitle>
+                </CardHeader>
                 </CardHeader>
 
                 <CardContent className="mt-4 space-y-4">
@@ -417,7 +426,7 @@ export default function DoctorProfile() {
                             <div>
                                 <Label className="mb-2">Email</Label>
                                 <Input
-                                    value={profileData.user.email}
+                                    value={profileData?.user?.email}
                                     disabled
                                     placeholder="jane.doe@example.com"
                                 />
@@ -465,7 +474,7 @@ export default function DoctorProfile() {
                                     placeholder="Cardiology"
                                 />
                             </div>
-                            {profileData.doctor && (
+                            {profileData?.doctor && (
                                 <>
                                     <div>
                                         <Label className="mb-2">Specialization</Label>
