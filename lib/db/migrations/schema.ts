@@ -4,13 +4,13 @@ import {
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
-export const auth = pgSchema("auth");
+// export const auth = pgSchema("auth");
 
 const useUUIDv7 = process.env.UUID_V7_NATIVE_SUPPORT
 	? sql`uuidv7()`
 	: sql`uuid_generate_v7()`;
 
-export const verificationInAuth = auth.table("verification", {
+export const verificationInAuth = pgTable("verification", {
 	id: text().primaryKey().notNull(),
 	identifier: text().notNull(),
 	value: jsonb("value").notNull(),
@@ -28,7 +28,7 @@ export const specializations = pgTable("specializations", {
 	unique("specializations_name_unique").on(table.name),
 ]);
 
-export const userInAuth = auth.table("user", {
+export const userInAuth = pgTable("user", {
 	id: text().primaryKey().notNull(),
 	name: text().notNull(),
 	email: text().notNull(),
@@ -41,7 +41,7 @@ export const userInAuth = auth.table("user", {
 
 ]);
 
-export const accountInAuth = auth.table("account", {
+export const accountInAuth = pgTable("account", {
 	id: text().primaryKey().notNull(),
 	accountId: text().notNull(),
 	providerId: text().notNull(),
@@ -64,7 +64,7 @@ export const accountInAuth = auth.table("account", {
 
 ]);
 
-export const organizationInAuth = auth.table("organization", {
+export const organizationInAuth = pgTable("organization", {
 	id: text().primaryKey().notNull(),
 	name: text().notNull(),
 	slug: text().notNull(),
@@ -76,7 +76,7 @@ export const organizationInAuth = auth.table("organization", {
 
 ]);
 
-export const invitationInAuth = auth.table("invitation", {
+export const invitationInAuth = pgTable("invitation", {
 	id: text().primaryKey().notNull(),
 	organizationId: text().notNull(),
 	email: text().notNull(),
@@ -103,7 +103,7 @@ export const invitationInAuth = auth.table("invitation", {
 	}).onDelete("cascade")
 ]);
 
-export const memberInAuth = auth.table("member", {
+export const memberInAuth = pgTable("member", {
 	id: text().primaryKey().notNull(),
 	organizationId: text().notNull(),
 	userId: text().notNull(),
@@ -122,12 +122,12 @@ export const memberInAuth = auth.table("member", {
 	}).onDelete("cascade")
 ]);
 
-export const sessionInAuth = auth.table("session", {
+export const sessionInAuth = pgTable("session", {
 	id: text().primaryKey().notNull(),
-	expiresAt: text().notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
 	token: text().notNull(),
-	createdAt: text().notNull(),
-	updatedAt: text().notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
 	ipAddress: text(),
 	userAgent: text(),
 	userId: text().notNull(),
@@ -441,7 +441,7 @@ export const chargeTypes = pgTable("charge_types", {
 });
 
 // Teams Table
-export const teamInAuth = auth.table("team", {
+export const teamInAuth = pgTable("team", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	organizationId: text("organization_id")
@@ -452,7 +452,7 @@ export const teamInAuth = auth.table("team", {
 });
 
 // Team Member Table
-export const teamMemberInAuth = auth.table("team_member", {
+export const teamMemberInAuth = pgTable("team_member", {
 	id: text("id").primaryKey(),
 	teamId: text("team_id")
 		.notNull()

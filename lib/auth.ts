@@ -8,14 +8,7 @@ import { eq } from "drizzle-orm";
 
 const url = "https://abc.medisparsh.com";
 export const auth = betterAuth({
-  socialProviders: {
-    google: {
-      // prompt: "select_account",
-      // accessType: "offline", 
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
+  
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -36,18 +29,15 @@ export const auth = betterAuth({
     session: {
       create: {
         before: async (session, context) => {
+          console.log("Creating session for user:", session);
           const organizationId = await getOrganisation(session.userId);
-          const teamId = await getTeam(session.userId);
-          return {
-            data: {
+
+          const sessionData = {data: {
               ...session,
-              expiresAt: session.expiresAt instanceof Date ? session.expiresAt.toISOString() : session.expiresAt,
-              createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : session.createdAt,
-              updatedAt: session.updatedAt instanceof Date ? session.updatedAt.toISOString() : session.updatedAt,
               activeOrganizationId: organizationId,
-              activeTeamId: teamId?.team?.id
-            } as any,
-          }
+            } as any,};
+            console.log("Session Data:", sessionData);
+            return sessionData;
         }
       }
     }
@@ -56,23 +46,24 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: false
   },
-
-  trustedOrigins: [url, "http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
-  //baseURL: url,
-  basePath: "/api/auth",
-  advanced: {
-    useSecureCookies: process.env.NODE_ENV === "production",
-    cookiePrefix: "medisparsh",
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
   },
-  plugins: [organization(
-    {
-      teams: {
-        enabled: true,
-        maximumTeams: 10, // Optional: limit teams per organization
-        allowRemovingAllTeams: false, // Optional: prevent removing the last team
-      }
-    }
-  )]
+  // trustedOrigins: [url, "http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
+  //baseURL: url,
+  // basePath: "/api/auth",
+  // advanced: {
+  //   useSecureCookies: process.env.NODE_ENV === "production",
+  //   cookiePrefix: "medisparsh",
+  // },
+  rateLimit: {
+      window: 60, // time window in seconds
+      max: 10,
+   },
+  plugins: [organization()]
 });
 
 const getTeam = async (userId: string) => {
