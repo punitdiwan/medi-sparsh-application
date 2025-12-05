@@ -15,6 +15,7 @@ import {
 import { Command, Eye, EyeOff, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import GoogleLoginPage from "@/components/googleLogin";
 
 
 
@@ -94,6 +95,8 @@ export function SignInForm({ Hospitaldata }: any) {
       setIsLoading(true);
       const response = await authClient.signIn.social({
         provider: "google",
+        // disableRedirect: true,
+        callbackURL: `${window.location.origin}/doctor`,
       });
       console.log("Google sign-in response:", response);
     } catch (error: any) {
@@ -181,11 +184,12 @@ export function SignInForm({ Hospitaldata }: any) {
           </CardContent>
 
           <CardFooter className="flex-col gap-2" >
-            <Button type="button" variant="outline"
+            {/* <Button type="button" variant="outline"
               className="relative w-full cursor-pointer"
               onClick={signInWithGoogle}>
               Login with Google
-            </Button>
+            </Button> */}
+            <GoogleLoginPage />
 
             {/* <p className="text-sm mt-2">
               Don't have an account?{" "}

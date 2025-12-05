@@ -15,6 +15,7 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
+
   },
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -36,6 +37,7 @@ export const auth = betterAuth({
     session: {
       create: {
         before: async (session, context) => {
+          console.log("Creating session for user:", session);
           const organizationId = await getOrganisation(session.userId);
           const teamId = await getTeam(session.userId);
           return {
@@ -54,12 +56,18 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    autoSignIn: false
+    autoSignIn: true
+  },
+    account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['google']
+    }
   },
 
   trustedOrigins: [url, "http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
   //baseURL: url,
-  basePath: "/api/auth",
+  // basePath: "/api/auth",
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
     cookiePrefix: "medisparsh",
