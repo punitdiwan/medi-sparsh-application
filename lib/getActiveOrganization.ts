@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 export async function getActiveOrganization() {
     const cookieStore = await cookies();
     const token =
-      cookieStore.get("medisparsh.session_token") ??
+      cookieStore.get("better-auth.session_token") ??
       cookieStore.get("__Secure-medisparsh.session_token");
 
     if (!token) {

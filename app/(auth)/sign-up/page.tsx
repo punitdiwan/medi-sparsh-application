@@ -1,11 +1,10 @@
-import React from 'react'
-import SignUpForm from '@/Components/forms/SignUpForm'
-function page() {
-  return (
-    <div>
-      <SignUpForm />
-    </div>
-  )
-}
 
-export default page
+import SignUpSection from '@/components/sign-up-section'
+
+export default function SignUp() {
+   return (
+      <>
+         <SignUpSection />
+      </>
+   )
+}

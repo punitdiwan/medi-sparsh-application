@@ -94,6 +94,7 @@ export function SignInForm({ Hospitaldata }: any) {
       setIsLoading(true);
       const response = await authClient.signIn.social({
         provider: "google",
+        callbackURL: `/doctor`,
       });
       console.log("Google sign-in response:", response);
     } catch (error: any) {

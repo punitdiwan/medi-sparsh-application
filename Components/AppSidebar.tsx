@@ -38,6 +38,7 @@ import {
 
 import { useSession } from "@/lib/auth-client";
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type SidebarChildItem = {
   title: string;
   url: string;
@@ -97,16 +98,40 @@ export function AppSidebar() {
       <Sidebar collapsible="icon" className="bg-background border-r">
         <SidebarContent>
           <SidebarGroup>
-            {!isCollapsed && (
-              <>
-                <SidebarGroupLabel className="text-foreground font-semibold text-xl">
-                  {user?.hospital?.name || "Clinic Name"}
-                </SidebarGroupLabel>
-                <SidebarGroupLabel className="mb-2 text-muted-foreground">
-                  Dr.{user?.userData?.name}
-                </SidebarGroupLabel>
-              </>
-            )}
+            <div
+              className={`flex items-center gap-3 py-4 border-b mb-4 transition-all ${
+                isCollapsed ? "justify-center" : "px-3"
+              }`}
+            >
+              {/* Avatar / Logo */}
+              <Avatar className={`${isCollapsed ? "size-8" : "size-10"}`}>
+                <AvatarImage
+                  src={user?.hospital?.profileImage || ""}
+                  alt="Clinic Logo"
+                />
+                <AvatarFallback className="bg-muted text-xs">
+                  {user?.hospital?.name
+                    ?.split(" ")
+                    .map((word: string) => word[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "CN"}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Clinic Name + Doctor Name — only if expanded */}
+              {!isCollapsed && (
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-base text-foreground truncate">
+                    {user?.hospital?.name || "Clinic Name"}
+                  </span>
+
+                  <span className="text-muted-foreground text-sm truncate">
+                    Dr. {user?.userData?.name}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <SidebarGroupContent>
               <SidebarMenu>

@@ -1,12 +1,14 @@
 import type { NextConfig } from "next";
 
-const nextConfig = {
-    reactCompiler: true,
-    experimental: {
-    turbopackFileSystemCacheForDev: true,
-  },
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      }
+    ]
+  }
 };
-
-
 
 export default nextConfig;

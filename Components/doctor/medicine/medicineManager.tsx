@@ -83,7 +83,7 @@ export default function MedicineManager() {
   const handleSave = (med: Medicine) => {
     if (editing) {
       setData((prev) => prev.map((x) => (x.id === med.id ? med : x)));
-      toast.success("Medicine Updated");
+      // toast.success("Medicine Updated");
     } else {
       setData((prev) => [...prev, med]);
       toast.success("Medicine Added");
