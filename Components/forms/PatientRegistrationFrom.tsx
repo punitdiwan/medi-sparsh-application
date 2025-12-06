@@ -85,25 +85,22 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
   const [loadingValidationSetting, setLoadingValidationSetting] = React.useState(true);
 
   const { user } = useAuth();
-  console.log("user", user);
   const [formDataToSubmit, setFormDataToSubmit] =
     React.useState<FormData | null>(null);
 
-  // Fetch phone validation setting on component mount
   React.useEffect(() => {
     const fetchSetting = async () => {
       try {
         const response = await fetch("/api/settings/phone-validation");
         const data = await response.json();
         if (data.success) {
-          console.log("Validation data",data);
           const setting = data.data.find((item: any) => item.key === "phone_validation");
           const isEnabled = setting.value === "true";
           setPhoneValidationEnabled(isEnabled);
         }
       } catch (error) {
         console.error("Error fetching phone validation setting:", error);
-        // Default to false if error
+
         setPhoneValidationEnabled(false);
       } finally {
         setLoadingValidationSetting(false);

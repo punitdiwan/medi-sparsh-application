@@ -1,50 +1,48 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_KR } from 'next/font/google';
 import "./globals.css";
-import { ThemeProvider } from "@/Components/theme-provider/theme-provider"
+import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/Components/theme-provider/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const notoSansKR = Noto_Sans_KR({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-noto-sans-kr',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'medisparsh',
-  description: 'Basic dashboard for EMR'
+  title: "Medisparsh",
+  description: "Basic dashboard for EMR",
+  icons: {
+    icon: '/logo.png'
+  }
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) 
-
-{
-  
-
+}>) {
   return (
-   <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${notoSansKR.variable}`} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={` antialiased`}
       >
-        <Toaster />
-         <ThemeProvider
+        <NextTopLoader showSpinner={false} height={6} color="#000000" />
+        <Toaster richColors position="top-right" />
+        <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          >
-          
+        >
+          <main className="min-h-screen">
             {children}
-          </ThemeProvider>
-
-        
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

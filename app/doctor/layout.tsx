@@ -1,5 +1,5 @@
 import { AppSidebar } from "@/Components/AppSidebar";
-import Navbar from "@/Components/Navbar";
+import Navbar from "@/Components/docNavbar";
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { redirect } from "next/navigation";
 import { validateServerSession } from "@/lib/validateSession";
@@ -34,7 +34,7 @@ export default async function DashboardLayout({
     hospital,
     memberRole: memberRole,
   };
-
+  // const userData = null;
   return (
     <AuthProvider initialUser={userData}>
       <SidebarProvider>

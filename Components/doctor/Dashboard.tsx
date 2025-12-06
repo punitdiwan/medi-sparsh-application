@@ -136,8 +136,13 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
-        <AreaGraph data={dashboardData?.monthlyTrends || []} />
-        <PieGraph data={dashboardData?.statusDistribution || []} />
+        <div className="w-full aspect-[4/3]">
+          <AreaGraph data={dashboardData?.monthlyTrends || []} />
+        </div>
+        <div className="w-full aspect-[4/3]">
+          <PieGraph data={dashboardData?.statusDistribution || []} />
+        </div>
+
       </div>
     </div>
   );

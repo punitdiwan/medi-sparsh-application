@@ -38,6 +38,7 @@ import {
 
 import { useSession } from "@/lib/auth-client";
 import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type SidebarChildItem = {
   title: string;
   url: string;
@@ -93,20 +94,44 @@ export function AppSidebar() {
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
+    <TooltipProvider delayDuration={200} skipDelayDuration={500}>
       <Sidebar collapsible="icon" className="bg-background border-r">
         <SidebarContent>
           <SidebarGroup>
-            {!isCollapsed && (
-              <>
-                <SidebarGroupLabel className="text-foreground font-semibold text-xl">
-                  {user?.hospital?.name || "Clinic Name"}
-                </SidebarGroupLabel>
-                <SidebarGroupLabel className="mb-2 text-muted-foreground">
-                  Dr.{user?.userData?.name}
-                </SidebarGroupLabel>
-              </>
-            )}
+            <div
+              className={`flex items-center gap-3 py-4 border-b mb-4 transition-all ${
+                isCollapsed ? "justify-center" : "px-3"
+              }`}
+            >
+              {/* Avatar / Logo */}
+              <Avatar className={`${isCollapsed ? "size-8" : "size-10"}`}>
+                <AvatarImage
+                  src={user?.hospital?.profileImage || ""}
+                  alt="Clinic Logo"
+                />
+                <AvatarFallback className="bg-muted text-xs">
+                  {user?.hospital?.name
+                    ?.split(" ")
+                    .map((word: string) => word[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "CN"}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Clinic Name + Doctor Name — only if expanded */}
+              {!isCollapsed && (
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-base text-foreground truncate">
+                    {user?.hospital?.name || "Clinic Name"}
+                  </span>
+
+                  <span className="text-muted-foreground text-sm truncate">
+                    Dr. {user?.userData?.name}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <SidebarGroupContent>
               <SidebarMenu>
@@ -127,6 +152,7 @@ export function AppSidebar() {
                       {hasChildren ? (
                         <>
                           {/* Tooltip for collapsible menu */}
+                          {isCollapsed ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -167,12 +193,49 @@ export function AppSidebar() {
                                   ))}
                               </button>
                             </TooltipTrigger>
-                            {isCollapsed && (
                               <TooltipContent side="right" className="text-sm">
                                 {item.title}
                               </TooltipContent>
-                            )}
-                          </Tooltip>
+                            </Tooltip>
+                          ) : (
+                            <button
+                              onClick={() => { toggleMenu(item.title) }}
+
+                              className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                                ${isCollapsed
+                                  ? 'justify-center'
+                                  : 'justify-between gap-2'
+                                }
+                                ${isActive
+                                  ? 'bg-muted text-foreground font-semibold'
+                                  : 'hover:bg-muted text-muted-foreground'
+                                }`}
+                            >
+                              <div
+                                className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
+                                  }`}
+                              >
+                                <item.icon
+                                  className={`w-5 h-5 ${isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground'
+                                    }`}
+                                />
+                                {!isCollapsed && (
+                                  <span className="truncate font-semibold">
+                                    {item.title}
+                                  </span>
+                                )}
+                              </div>
+
+                              {!isCollapsed &&
+                                (isOpen ? (
+                                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                ))}
+                            </button>
+                          )}
 
                           {!isCollapsed && isOpen && (
                             <div className="ml-6 mt-1 space-y-1">
@@ -202,6 +265,7 @@ export function AppSidebar() {
                         </>
                       ) : (
                         // Regular menu items
+                        isCollapsed ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <SidebarMenuButton asChild>
@@ -228,12 +292,35 @@ export function AppSidebar() {
                               </Link>
                             </SidebarMenuButton>
                           </TooltipTrigger>
-                          {isCollapsed && (
                             <TooltipContent side="right" className="text-sm">
                               {item.title}
                             </TooltipContent>
-                          )}
-                        </Tooltip>
+                          </Tooltip>
+                        ) : (
+                          <SidebarMenuButton asChild>
+                            <Link
+                              href={item.url!}
+                              className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                                ${isCollapsed ? 'justify-center' : 'gap-2'}
+                                ${isActive
+                                  ? 'bg-muted text-foreground font-semibold'
+                                  : 'text-muted-foreground hover:bg-muted'
+                                }`}
+                            >
+                              <item.icon
+                                className={`w-5 h-5 ${isActive
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground'
+                                  }`}
+                              />
+                              {!isCollapsed && (
+                                <span className="truncate font-semibold">
+                                  {item.title}
+                                </span>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        )
                       )}
                     </SidebarMenuItem>
                   );

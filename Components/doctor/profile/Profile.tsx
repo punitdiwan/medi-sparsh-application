@@ -58,6 +58,7 @@ interface ProfileData {
         id: string;
         email: string;
         name: string;
+        image?: string | null;
     };
 }
 type UserData = {
@@ -70,7 +71,7 @@ type UserData = {
 
 export default function DoctorProfile() {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [avatarUrl, setAvatarUrl] = useState("/images/placeholder.jpg");
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [showClinicDetails, setShowClinicDetails] = useState(false);
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -78,9 +79,21 @@ export default function DoctorProfile() {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     const { user } = useAuth();
+    const roleLabel =
+    user?.memberRole === "owner" ? "Doctor" : user?.memberRole || "Dcotor";
     // console.log("user data for doctors profile",user);
     const hospital = user?.hospital;
     const canEditClinic = user?.memberRole === "owner";
+    
+    // Initialize avatar from user image or placeholder
+    useEffect(() => {
+        if (profileData?.user?.image) {
+            setAvatarUrl(profileData.user.image);
+        } else if (user?.userData?.image) {
+            setAvatarUrl(user.userData.image);
+        }
+    }, [profileData, user]);
+
     const [clinicForm, setClinicForm] = useState({
         name: hospital?.name ?? "",
         email: hospital?.metadata?.email ?? "",
@@ -111,6 +124,7 @@ export default function DoctorProfile() {
         experience: "",
         consultationFee: "",
         specialization: "",
+        image: "",
     });
 
     const { data: session } = useSession();
@@ -137,6 +151,7 @@ export default function DoctorProfile() {
                 if (result.success && result.data) {
                     setProfileData(result.data);
                     // Populate form data
+                    console.log("Profile data fetched:", result.data);
                     const { staff, doctor, user } = result.data;
                     setFormData({
                         name: user?.name ?? "",
@@ -148,6 +163,7 @@ export default function DoctorProfile() {
                         qualification: doctor?.qualification ?? "",
                         experience: doctor?.experience ?? "",
                         consultationFee: doctor?.consultationFee ?? "",
+                        image: user?.image ?? "",
                         specialization:
                             Array.isArray(doctor?.specialization) &&
                                 doctor.specialization.length > 0 &&
@@ -278,7 +294,7 @@ export default function DoctorProfile() {
     }
     if (!user) return <div>Loading...</div>;
 
-    if (!profileData || !profileData.doctor) {
+    if ((user?.memberRole === "owner" || user?.memberRole === "admin")&&(!profileData || !profileData.doctor)) {
         const userData: UserData = {
             id: user?.userData?.id ?? "",
             name: user?.userData?.name ?? "",
@@ -305,10 +321,20 @@ export default function DoctorProfile() {
         <div className="p-8 flex flex-col lg:flex-row justify-between gap-6  min-h-screen">
             {/* Left: Avatar + Actions */}
             <Card className="lg:w-1/3 flex flex-col items-center  p-6 gap-4 shadow-md bg-custom-gradient">
-                <Avatar className="w-20 h-20 border-2 border-gray-200 ">
-                    <AvatarImage src={hospital?.logo ?? "/images/hospital-placeholder.png"} />
-                    <AvatarFallback>DR</AvatarFallback>
+                <Avatar className="w-20 h-20 border-2 border-gray-200">
+                    <AvatarImage
+                        src={
+                        showClinicDetails
+                            ? hospital?.logo ?? "" // Clinic photo, fallback handled below
+                            : avatarUrl ?? "" // Doctor photo from user image
+                        }
+                    />
+                    <AvatarFallback>
+                        {showClinicDetails ? "HI" : "DR"} {/* Clinic / Doctor initials */}
+                    </AvatarFallback>
                 </Avatar>
+
+
 
                 <input
                     type="file"
@@ -322,7 +348,10 @@ export default function DoctorProfile() {
                     variant="outline"
                     className="w-full"
                 >
-                    Upload Profile Photo
+                    {showClinicDetails
+                        ? hospital?.logo ? "Change Clinic Logo" : "Upload Clinic Logo"
+                        : avatarUrl ? "Change Profile Photo" : "Upload Profile Photo"
+                    }
                 </Button>
 
                 <Button
@@ -343,11 +372,18 @@ export default function DoctorProfile() {
             </Card>
 
             {/* Right: Profile / Clinic Info */}
-            <Card className="lg:w-2/3 p-6 shadow-md bg-custom-gradient">
+            <Card className="lg:w-2/3 p-6 shadow-md bg-custom-gradient relative">
                 <CardHeader>
-                    <CardTitle className="text-xl font-semibold border-b pb-2">
-                        {showClinicDetails ? "Clinic Details" : "Doctor Profile"}
-                    </CardTitle>
+                    {user?.memberRole === "owner" && (
+                        <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs px-3 py-1 rounded-bl-lg rounded-tr-xl shadow-md">
+                            ADMIN
+                        </div>
+                    )}
+                <CardHeader>
+                <CardTitle className="text-xl font-semibold border-b pb-2 capitalize">
+                    {showClinicDetails ? "Clinic Details" : `${roleLabel} Profile`}
+                </CardTitle>
+                </CardHeader>
                 </CardHeader>
 
                 <CardContent className="mt-4 space-y-4">
@@ -417,7 +453,7 @@ export default function DoctorProfile() {
                             <div>
                                 <Label className="mb-2">Email</Label>
                                 <Input
-                                    value={profileData.user.email}
+                                    value={profileData?.user?.email}
                                     disabled
                                     placeholder="jane.doe@example.com"
                                 />
@@ -465,7 +501,7 @@ export default function DoctorProfile() {
                                     placeholder="Cardiology"
                                 />
                             </div>
-                            {profileData.doctor && (
+                            {profileData?.doctor && (
                                 <>
                                     <div>
                                         <Label className="mb-2">Specialization</Label>

@@ -1,174 +1,68 @@
-# 🏥 MediSparsh - Multi-Tenant Hospital Management System
+# Better Auth Starter 🚀
 
-A comprehensive, multi-tenant hospital management system built with modern technologies.
-
-## 🚀 Tech Stack
-
-- **Frontend**: Next.js 16 with React 19
-- **UI Components**: shadcn/ui with Radix UI
-- **Styling**: Tailwind CSS 4
-- **Backend**: Drizzle ORM with PostgreSQL
-- **Authentication**: Better Auth with shared schema
-- **Multi-Tenancy**: Domain-based tenant isolation
-- **Type Safety**: TypeScript throughout
+Better Auth Starter is a Next.js 15 boilerplate with built-in authentication using **BetterAuth**. It supports **Google Login** and **BetterAuth credentials**, providing a solid foundation for any Next.js project requiring authentication.
 
 ## ✨ Features
 
-### Multi-Tenant Architecture
-- 🏢 **Domain-based isolation**: Each hospital operates on its own domain
-- 🔐 **Shared authentication**: Single auth schema for all hospitals
-- 👥 **Cross-hospital users**: Patients can belong to multiple hospitals
-- 🎭 **Role-based access**: Different roles per hospital (patient, doctor, staff, admin)
+- 🔐 **Authentication with BetterAuth**
+- 🔑 **Google OAuth Login**
+- 🎨 **Modern UI with Tailwind CSS & ShadCN**
+- 🗄️ **Database integration with Prisma & PostgreSQL**
+- ⚡ **Optimized with Next.js 15 App Router**
 
-### Core Functionality
-- 📋 **Patient Management**: Registration, profiles, medical history
-- 📅 **Appointment Scheduling**: Book, manage, and track appointments
-- 💊 **Prescription System**: Digital prescriptions linked to appointments
-- 👨‍⚕️ **Doctor Management**: Profiles, specializations, availability
-- 🏥 **Staff Management**: Receptionists, admins, and other staff
-- 📊 **Medical History**: Comprehensive patient medical records
+## 🛠️ Tech Stack
 
-## 📚 Documentation
+- **Framework:** Next.js 15
+- **Auth Provider:** BetterAuth (Credentials & Google Login)
+- **Database:** PostgreSQL with Prisma ORM
+- **Styling:** Tailwind CSS, ShadCN
 
-- **[Quick Start Guide](./QUICKSTART.md)** - Get up and running in 5 minutes
-- **[Complete Setup Guide](./SETUP.md)** - Detailed setup and configuration
-- **[API Documentation](./API.md)** - API endpoints and usage examples
+## 🚀 Getting Started
 
-## 🏁 Quick Start
-
-### Prerequisites
-- Node.js 18+ or Bun
-- PostgreSQL 14+
-- Database created
-
-### Installation
+### 1️⃣ Install Dependencies
 
 ```bash
-# Install dependencies
 bun install
-
-# Configure environment
-cp env.template .env
-# Edit .env with your database credentials
-
-# Setup database
-bun run db:push
-
-# Seed initial data
-bun run db:seed
-
-# Start development server
-bun run dev
 ```
 
-Visit `http://localhost:3000` 🎉
 
-## 📁 Project Structure
+### 2️⃣ Set Up Environment Variables
+Create a .env file and add the necessary credentials:
 
-```
-medi-sparsh-app/
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   │   ├── auth/         # Better Auth endpoints
-│   │   ├── patients/     # Patient management
-│   │   ├── appointments/ # Appointment management
-│   │   └── prescriptions/# Prescription management
-│   ├── doctor/           # Doctor dashboard
-│   └── receptionist/     # Receptionist dashboard
-├── lib/
-│   ├── db/               # Database layer
-│   │   ├── schema/       # Drizzle schemas
-│   │   ├── queries.ts    # Database queries
-│   │   └── types.ts      # TypeScript types
-│   ├── auth.ts           # Better Auth configuration
-│   ├── auth-client.ts    # Client-side auth
-│   └── tenant.ts         # Multi-tenant utilities
-├── components/           # React components
-├── middleware.ts         # Tenant resolution middleware
-└── drizzle.config.ts     # Drizzle configuration
+```bash
+# Secret key for BetterAuth (Use a strong, random secret)
+BETTER_AUTH_SECRET=<your_better_auth_secret>
+
+# The base URL of your application (Update this for production)
+BETTER_AUTH_URL=http://localhost:3000  # Change this to your production domain in deployment
+
+# PostgreSQL Database Connection URL (Use environment variables in production)
+DATABASE_URL="postgresql://<username>:<password>@<host>/<database_name>?sslmode=require"
+
+# Google OAuth Credentials (Required for social login)
+GOOGLE_CLIENT_ID=<your_google_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_client_secret>
 ```
 
-## 🗄️ Database Schema
 
-### Auth Schema (Shared)
-- `auth.user` - User accounts
-- `auth.session` - Active sessions
-- `auth.account` - Authentication providers
-- `auth.verification` - Verification tokens
+### 3️⃣ Run Database Migrations
 
-### Public Schema (Multi-Tenant)
-- `hospitals` - Hospital registry
-- `user_hospitals` - User-hospital mappings
-- `patients` - Patient records
-- `staff` - Staff members
-- `doctors` - Doctor profiles
-- `appointments` - Appointment records
-- `prescriptions` - Prescription records
-- `medical_history` - Patient medical history
-- `specializations` - Medical specializations
-
-## 🛠️ Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start development server |
-| `bun run build` | Build for production |
-| `bun run start` | Start production server |
-| `bun run db:generate` | Generate migrations |
-| `bun run db:push` | Push schema to database |
-| `bun run db:migrate` | Run migrations |
-| `bun run db:studio` | Open Drizzle Studio |
-| `bun run db:seed` | Seed initial data |
-
-## 🔑 Key Concepts
-
-### Multi-Tenancy
-Each hospital has a unique domain (e.g., `hospital1.medisparsh.com`). The middleware automatically identifies the tenant from the request domain.
-
-```typescript
-import { getCurrentHospital } from "@/lib/tenant";
-
-const hospital = await getCurrentHospital();
-console.log(hospital.name); // Current hospital
+```bash
+bunx prisma migrate dev
 ```
 
-### Authentication
-Better Auth provides shared authentication across all hospitals with a separate `auth` schema.
 
-```typescript
-import { getCurrentUser } from "@/lib/utils/auth-helpers";
+### 4️⃣ Start the Development Server
 
-const user = await getCurrentUser();
+```bash
+bun dev
 ```
 
-### Database Queries
-Use pre-built query functions for common operations:
+The app will be available at http://localhost:3000.
 
-```typescript
-import { getPatientsByHospital } from "@/lib/db/queries";
+## 🔗 Live Demo
+Check out the live version: [Auth Starter](https://better-auth-livid.vercel.app/)
 
-const patients = await getPatientsByHospital(hospitalId);
-```
 
-## 🎯 Next Steps
+# Built by Aayush Ghimire
 
-1. ✅ Backend setup complete
-2. ⏳ Create authentication UI pages
-3. ⏳ Build role-based dashboards
-4. ⏳ Implement appointment booking flow
-5. ⏳ Create prescription management UI
-6. ⏳ Add medical history interface
-
-## 🤝 Contributing
-
-This is a private project. For questions or issues, please contact the development team.
-
-## 📄 License
-
-Private - All Rights Reserved
-
-## 🆘 Support
-
-- Check [SETUP.md](./SETUP.md) for detailed setup instructions
-- Review [API.md](./API.md) for API documentation
-- See [QUICKSTART.md](./QUICKSTART.md) for quick setup guide
