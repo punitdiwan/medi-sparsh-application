@@ -10,8 +10,10 @@ export default function AppointmentLayout({ children }: { children: React.ReactN
   const tabs = [
     { name: "Medicine", href: "/doctor/settings/medicineRecord" },
     { name: "Medicine Category", href: "/doctor/settings/medicineRecord/medicinCategory" },
+    { name: "Supplier", href: "/doctor/settings/medicineRecord/supplierManager" },
     { name: "Company", href: "/doctor/settings/medicineRecord/medicineCompany" },
     { name: "Unit", href: "/doctor/settings/medicineRecord/medicineUnit" },
+    { name: "Medicine Group", href: "/doctor/settings/medicineRecord/medicineGroup" },
   ];
 
   // Determine the active tab based on the current pathname
@@ -20,7 +22,7 @@ export default function AppointmentLayout({ children }: { children: React.ReactN
   return (
     <div className="p-6 space-y-6">
       <Tabs value={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="w-full mb-4">
           {tabs.map((tab) => (
             <TabsTrigger key={tab.href} value={tab.href} asChild>
               <Link href={tab.href}>{tab.name}</Link>
