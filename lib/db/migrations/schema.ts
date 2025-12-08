@@ -69,7 +69,7 @@ export const organizationInAuth = pgTable("organization", {
 	name: text().notNull(),
 	slug: text().notNull(),
 	logo: text(),
-	createdAt: timestamp({ mode:'date'}).defaultNow().notNull(),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
 	metadata: text(),
 }, (table) => [
 	unique("organization_slug_unique").on(table.slug)
@@ -84,7 +84,7 @@ export const invitationInAuth = pgTable("invitation", {
 	teamId: text("team_id"),
 	status: text().default('pending').notNull(),
 	expiresAt: timestamp({ mode: 'string' }).notNull(),
-	createdAt: timestamp({ mode:'date'}).defaultNow().notNull(),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
 	inviterId: text().notNull(),
 }, (table) => [
 	foreignKey({
@@ -650,6 +650,18 @@ export const medicines = pgTable("medicines", {
 		.references(() => medicineUnits.id, { onDelete: "cascade" }),
 	notes: text("notes"),
 	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Roles Table
+export const roles = pgTable("roles", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	name: text("name").notNull(),
+	description: text("description"),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
