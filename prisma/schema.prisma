@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,38 +8,38 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  emailVerified Boolean
+  id            String        @id @default(uuid())
+  name          String
+  email         String        @unique(map: "user_email_unique")
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime      @default(now()) @db.Timestamp(6)
   accounts      Account[]
-
-  members     Member[]
-  invitations Invitation[]
+  invitations   Invitation[]
+  members       Member[]
+  sessions      Session[]
+  team_member   team_member[]
 
   @@map("user")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id                   String        @id
+  expiresAt            DateTime      @db.Timestamptz(6)
+  token                String        @unique(map: "session_token_unique")
+  createdAt            DateTime      @db.Timestamptz(6)
+  updatedAt            DateTime      @db.Timestamptz(6)
+  ipAddress            String?
+  userAgent            String?
+  userId               String
   activeOrganizationId String?
+  active_team_id       String?
+  organization         Organization? @relation(fields: [activeOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "session_activeOrganizationId_organization_id_fk")
+  team                 team?         @relation(fields: [active_team_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "session_activeTeamId_team_id_fk")
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userId_user_id_fk")
 
-  @@unique([token])
   @@map("session")
-  @@index([userId])
 }
 
 model Account {
@@ -48,74 +47,552 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
+  accessTokenExpiresAt  DateTime? @db.Timestamp(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamp(6)
   scope                 String?
   password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  createdAt             DateTime  @db.Timestamp(6)
+  updatedAt             DateTime  @db.Timestamp(6)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userId_user_id_fk")
 
   @@map("account")
-  @@index([userId])
 }
 
 model Verification {
-  id         String    @id
+  id         String   @id
   identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  value      Json
+  expiresAt  DateTime @db.Timestamp(6)
+  createdAt  DateTime @db.Timestamp(6)
+  updatedAt  DateTime @db.Timestamp(6)
 
   @@map("verification")
-  @@index([identifier])
 }
 
 model Organization {
-  id          String       @id
-  name        String
-  slug        String
-  logo        String?
-  createdAt   DateTime
-  metadata    String?
-  members     Member[]
-  invitations Invitation[]
+  id                     String                   @id
+  name                   String
+  slug                   String                   @unique(map: "organization_slug_unique")
+  logo                   String?
+  createdAt              DateTime                 @default(now()) @db.Timestamp(6)
+  metadata               String?
+  appointment_priorities appointment_priorities[]
+  appointments           appointments[]
+  bed_groups             bed_groups[]
+  beds                   beds[]
+  beds_types             beds_types[]
+  charge_categories      charge_categories[]
+  charge_types           charge_types[]
+  charges                charges[]
+  doctor_shifts          doctor_shifts[]
+  doctor_slots           doctor_slots[]
+  doctors                doctors[]
+  floors                 floors[]
+  invitations            Invitation[]
+  medicine_categories    medicine_categories[]
+  medicine_companies     medicine_companies[]
+  medicine_groups        medicine_groups[]
+  medicine_suppliers     medicine_suppliers[]
+  medicine_units         medicine_units[]
+  medicines              medicines[]
+  members                Member[]
+  modules                modules[]
+  patients               patients[]
+  prescriptions          prescriptions[]
+  roles                  roles[]
+  services               services[]
+  session                Session[]
+  shifts                 shifts[]
+  staff                  staff[]
+  tax_categories         tax_categories[]
+  team                   team[]
+  transactions           transactions[]
+  vitals                 vitals[]
 
-  @@unique([slug])
   @@map("organization")
 }
 
 model Member {
   id             String       @id
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role           String       @default("member")
-  createdAt      DateTime
+  role           String       @default("admin")
+  createdAt      DateTime     @db.Timestamp(6)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "member_organizationId_organization_id_fk")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "member_userId_user_id_fk")
 
-  @@index([organizationId])
-  @@index([userId])
   @@map("member")
 }
 
 model Invitation {
   id             String       @id
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   email          String
   role           String?
   status         String       @default("pending")
-  expiresAt      DateTime
-  createdAt      DateTime     @default(now())
+  expiresAt      DateTime     @db.Timestamp(6)
   inviterId      String
-  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  team_id        String?
+  createdAt      DateTime     @default(now()) @db.Timestamp(6)
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invitation_inviterId_user_id_fk")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invitation_organizationId_organization_id_fk")
+  team           team?        @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "invitation_teamId_team_id_fk")
 
-  @@index([organizationId])
-  @@index([email])
   @@map("invitation")
+}
+
+model appointment_priorities {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  priority     String
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointment_priorities_hospital_id_organization_id_fk")
+}
+
+model appointments {
+  id                      String          @id @default(dbgenerated("uuidv7()"))
+  hospital_id             String
+  patient_id              String
+  doctor_user_id          String
+  appointment_date        DateTime        @db.Date
+  appointment_time        String
+  status                  String          @default("scheduled")
+  reason                  String?
+  notes                   String?
+  is_follow_up            Boolean?        @default(false)
+  previous_appointment_id String?
+  scheduled_by            String?
+  created_at              DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime        @default(now()) @db.Timestamptz(6)
+  services                Json?
+  organization            Organization    @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_hospital_id_organization_id_fk")
+  patients                patients        @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_patient_id_patients_id_fk")
+  prescriptions           prescriptions[]
+  transactions            transactions[]
+}
+
+model bed_groups {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  description  String?
+  floor_id     String
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  floors       floors       @relation(fields: [floor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bed_groups_floor_id_floors_id_fk")
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bed_groups_hospital_id_organization_id_fk")
+  beds         beds[]
+}
+
+model beds {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  bed_type_id  String
+  bed_group_id String
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  bed_groups   bed_groups   @relation(fields: [bed_group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "beds_bed_group_id_bed_groups_id_fk")
+  beds_types   beds_types   @relation(fields: [bed_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "beds_bed_type_id_beds_types_id_fk")
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "beds_hospital_id_organization_id_fk")
+}
+
+model beds_types {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  description  String?
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  beds         beds[]
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "beds_types_hospital_id_organization_id_fk")
+}
+
+model charge_categories {
+  id             String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id    String
+  name           String
+  description    String?
+  charge_type_id String
+  is_deleted     Boolean?     @default(false)
+  created_at     DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime     @default(now()) @db.Timestamptz(6)
+  charge_types   charge_types @relation(fields: [charge_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charge_categories_charge_type_id_charge_types_id_fk")
+  organization   Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charge_categories_hospital_id_organization_id_fk")
+  charges        charges[]
+}
+
+model charge_types {
+  id                String              @id @default(dbgenerated("uuidv7()"))
+  name              String
+  hospital_id       String
+  modules           Json
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  is_deleted        Boolean?            @default(false)
+  charge_categories charge_categories[]
+  organization      Organization        @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charge_types_hospital_id_organization_id_fk")
+  charges           charges[]
+}
+
+model charges {
+  id                 String            @id @default(dbgenerated("uuidv7()"))
+  hospital_id        String
+  name               String
+  description        String?
+  charge_category_id String
+  charge_type_id     String
+  unit_id            String
+  tax_category_id    String
+  amount             Decimal           @db.Decimal
+  is_deleted         Boolean?          @default(false)
+  created_at         DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime          @default(now()) @db.Timestamptz(6)
+  charge_categories  charge_categories @relation(fields: [charge_category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charges_charge_category_id_charge_categories_id_fk")
+  charge_types       charge_types      @relation(fields: [charge_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charges_charge_type_id_charge_types_id_fk")
+  organization       Organization      @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charges_hospital_id_organization_id_fk")
+  tax_categories     tax_categories    @relation(fields: [tax_category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charges_tax_category_id_tax_categories_id_fk")
+  units              units             @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "charges_unit_id_units_id_fk")
+  doctor_slots       doctor_slots[]
+}
+
+model doctor_shifts {
+  id             String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id    String
+  doctor_user_id String
+  shift_id       String
+  created_at     DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime     @default(now()) @db.Timestamptz(6)
+  doctors        doctors      @relation(fields: [doctor_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_shifts_doctor_user_id_doctors_id_fk")
+  organization   Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_shifts_hospital_id_organization_id_fk")
+  shifts         shifts       @relation(fields: [shift_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_shifts_shift_id_shifts_id_fk")
+
+  @@unique([doctor_user_id, shift_id], map: "doctor_shift_unique")
+}
+
+model doctor_slots {
+  id            String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id   String
+  doctor_id     String
+  shift_id      String
+  day           String
+  time_from     String
+  time_to       String
+  duration_mins Int
+  charge_id     String
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime     @default(now()) @db.Timestamptz(6)
+  charges       charges      @relation(fields: [charge_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_slots_charge_id_charges_id_fk")
+  doctors       doctors      @relation(fields: [doctor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_slots_doctor_id_doctors_id_fk")
+  organization  Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_slots_hospital_id_organization_id_fk")
+  shifts        shifts       @relation(fields: [shift_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctor_slots_shift_id_shifts_id_fk")
+}
+
+model doctors {
+  id               String          @id @default(dbgenerated("uuidv7()"))
+  staff_id         String
+  hospital_id      String
+  specialization   Json
+  qualification    String
+  experience       String
+  consultation_fee String
+  availability     String?
+  is_deleted       Boolean?        @default(false)
+  created_at       DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime        @default(now()) @db.Timestamptz(6)
+  doctor_shifts    doctor_shifts[]
+  doctor_slots     doctor_slots[]
+  organization     Organization    @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctors_hospital_id_organization_id_fk")
+  staff            staff           @relation(fields: [staff_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctors_staff_id_staff_id_fk")
+}
+
+model floors {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  description  String?
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  bed_groups   bed_groups[]
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "floors_hospital_id_organization_id_fk")
+}
+
+model medicine_categories {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicine_categories_hospital_id_organization_id_fk")
+  medicines    medicines[]
+}
+
+model medicine_companies {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicine_companies_hospital_id_organization_id_fk")
+  medicines    medicines[]
+}
+
+model medicine_groups {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicine_groups_hospital_id_organization_id_fk")
+  medicines    medicines[]
+}
+
+model medicine_suppliers {
+  id                    String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id           String
+  supplier_name         String
+  contact_number        String
+  address               String
+  contact_person        String
+  contact_person_number String
+  drug_license_number   String
+  created_at            DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime     @default(now()) @db.Timestamptz(6)
+  organization          Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicine_suppliers_hospital_id_organization_id_fk")
+}
+
+model medicine_units {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicine_units_hospital_id_organization_id_fk")
+  medicines    medicines[]
+}
+
+model medicines {
+  id                  String              @id @default(dbgenerated("uuidv7()"))
+  hospital_id         String
+  name                String
+  category_id         String
+  company_name        String
+  unit_id             String
+  notes               String?
+  is_deleted          Boolean?            @default(false)
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime            @default(now()) @db.Timestamptz(6)
+  group_id            String
+  medicine_categories medicine_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicines_category_id_medicine_categories_id_fk")
+  medicine_companies  medicine_companies  @relation(fields: [company_name], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicines_company_name_medicine_companies_id_fk")
+  medicine_groups     medicine_groups     @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicines_group_id_medicine_groups_id_fk")
+  organization        Organization        @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicines_hospital_id_organization_id_fk")
+  medicine_units      medicine_units      @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medicines_unit_id_medicine_units_id_fk")
+}
+
+model modules {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  name         String
+  hospital_id  String
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "modules_hospital_id_organization_id_fk")
+}
+
+model patients {
+  id                 String          @id @default(dbgenerated("uuidv7()"))
+  user_id            String?
+  hospital_id        String
+  name               String
+  gender             String
+  dob                DateTime?       @db.Date
+  email              String?
+  is_email_verified  Boolean?        @default(false)
+  mobile_number      String
+  is_mobile_verified Boolean?        @default(false)
+  address            String?
+  city               String?
+  state              String?
+  area_or_pin        String?
+  blood_group        String?
+  referred_by_dr     String?
+  scheduled_by       String?
+  is_deleted         Boolean?        @default(false)
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
+  appointments       appointments[]
+  organization       Organization    @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patients_hospital_id_organization_id_fk")
+  prescriptions      prescriptions[]
+  transactions       transactions[]
+}
+
+model prescriptions {
+  id                 String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id        String
+  appointment_id     String
+  patient_id         String
+  doctor_user_id     String
+  diagnosis          String
+  symptoms           String?
+  medicines          Json
+  lab_tests          Json?
+  follow_up_required Boolean?     @default(false)
+  follow_up_date     DateTime?    @db.Date
+  follow_up_notes    String?
+  additional_notes   String?
+  created_at         DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime     @default(now()) @db.Timestamptz(6)
+  vitals             Json?
+  appointments       appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "prescriptions_appointment_id_appointments_id_fk")
+  organization       Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "prescriptions_hospital_id_organization_id_fk")
+  patients           patients     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "prescriptions_patient_id_patients_id_fk")
+}
+
+model roles {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  name         String
+  description  String?
+  hospital_id  String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "roles_hospital_id_organization_id_fk")
+}
+
+model services {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  amount       Decimal      @db.Decimal
+  description  String?
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "services_hospital_id_organization_id_fk")
+}
+
+model settings {
+  organization_id String   @db.VarChar(256)
+  key             String   @db.VarChar(256)
+  value           String   @db.VarChar(256)
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+
+  @@id([organization_id, key], map: "settings_key_unique")
+}
+
+model shifts {
+  id            String          @id @default(dbgenerated("uuidv7()"))
+  hospital_id   String
+  name          String
+  start_time    String
+  end_time      String
+  is_deleted    Boolean?        @default(false)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  doctor_shifts doctor_shifts[]
+  doctor_slots  doctor_slots[]
+  organization  Organization    @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "shifts_hospital_id_organization_id_fk")
+}
+
+model specializations {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique(map: "specializations_name_unique")
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model staff {
+  id            String       @id @default(dbgenerated("uuidv7()"))
+  user_id       String
+  hospital_id   String
+  mobile_number String?
+  gender        String
+  dob           DateTime?    @db.Date
+  department    String?
+  joining_date  DateTime?    @db.Date
+  address       String?
+  created_by    String?
+  is_deleted    Boolean?     @default(false)
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime     @default(now()) @db.Timestamptz(6)
+  doctors       doctors[]
+  organization  Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "staff_hospital_id_organization_id_fk")
+}
+
+model tax_categories {
+  id           String       @id @default(dbgenerated("uuidv7()"))
+  name         String
+  hospital_id  String
+  percent      Decimal      @db.Decimal
+  is_deleted   Boolean?     @default(false)
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  charges      charges[]
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tax_categories_hospital_id_organization_id_fk")
+}
+
+model team {
+  id              String        @id
+  name            String
+  organization_id String
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  invitation      Invitation[]
+  session         Session[]
+  organization    Organization  @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "team_organization_id_organization_id_fk")
+  team_member     team_member[]
+}
+
+model team_member {
+  id         String    @id
+  team_id    String
+  user_id    String
+  created_at DateTime? @db.Timestamp(6)
+  team       team      @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "team_member_team_id_team_id_fk")
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "team_member_user_id_user_id_fk")
+}
+
+model transactions {
+  id               String       @id @default(dbgenerated("uuidv7()"))
+  hospital_id      String
+  patient_id       String
+  appointment_id   String
+  amount           Int          @default(autoincrement())
+  status           String
+  payment_method   String
+  transaction_date DateTime     @default(now()) @db.Timestamptz(6)
+  notes            String?
+  created_at       DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime     @default(now()) @db.Timestamptz(6)
+  appointments     appointments @relation(fields: [appointment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_appointment_id_appointments_id_fk")
+  organization     Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_hospital_id_organization_id_fk")
+  patients         patients     @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_patient_id_patients_id_fk")
+}
+
+model units {
+  id      String    @id @default(dbgenerated("uuidv7()"))
+  name    String
+  charges charges[]
+}
+
+model vitals {
+  id           String       @id(map: "vital_signs_pkey") @default(dbgenerated("uuidv7()"))
+  hospital_id  String
+  name         String
+  vitals_unit  String
+  from         String
+  to           String
+  created_at   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @default(now()) @db.Timestamptz(6)
+  organization Organization @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vitals_hospital_id_organization_id_fk")
 }

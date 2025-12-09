@@ -4,7 +4,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
-export const auth = pgSchema("auth");
+// export const auth = pgSchema("auth");
 
 const useUUIDv7 = process.env.UUID_V7_NATIVE_SUPPORT
 	? sql`uuidv7()`
@@ -125,10 +125,10 @@ export const memberInAuth = pgTable("member", {
 
 export const sessionInAuth = pgTable("session", {
 	id: text().primaryKey().notNull(),
-	expiresAt: text().notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
 	token: text().notNull(),
-	createdAt: text().notNull(),
-	updatedAt: text().notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
 	ipAddress: text(),
 	userAgent: text(),
 	userId: text().notNull(),
@@ -631,7 +631,16 @@ export const medicineCategories = pgTable("medicine_categories", {
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
-
+// Medicine Groups Table
+export const medicineGroups = pgTable("medicine_groups", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // Medicine Table
 export const medicines = pgTable("medicines", {
@@ -645,11 +654,29 @@ export const medicines = pgTable("medicines", {
 		.references(() => medicineCategories.id, { onDelete: "cascade" }),
 	companyName: text("company_name").notNull()
 		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
+	medicineGroupId: text("medicine_group_id")
+		.notNull()
+		.references(() => medicineGroups.id, { onDelete: "cascade" }),
 	unitId: text("unit_id")
 		.notNull()
 		.references(() => medicineUnits.id, { onDelete: "cascade" }),
 	notes: text("notes"),
 	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Medicine Suppliers Table
+export const medicineSuppliers = pgTable("medicine_suppliers", {
+	id: text("id").default(useUUIDv7).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organizationInAuth.id, { onDelete: "cascade" }),
+	supplierName: text("supplier_name").notNull(),
+	contactPersonName: text("contact_person"),
+	contactPersonNumber: text("contact_person_number"),
+	drugLicenseNumber: text("drug_license_number"),
+	address: text("address"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
