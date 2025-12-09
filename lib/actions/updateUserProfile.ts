@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { userInAuth } from "@/lib/db/migrations/schema";
+import { user } from "@/lib/db/migrations/schema";
 import { eq } from "drizzle-orm";
 
 interface UpdateUserProfileInput {
@@ -91,8 +91,8 @@ export async function updateUserProfile(
       if (emailStr) {
         const existingUser = await db
           .select()
-          .from(userInAuth)
-          .where(eq(userInAuth.email, emailStr))
+          .from(user)
+          .where(eq(user.email, emailStr))
           .limit(1);
 
         if (existingUser.length > 0 && existingUser[0].id !== userId) {
@@ -115,13 +115,13 @@ export async function updateUserProfile(
 
     // Update user in database
     const updated = await db
-      .update(userInAuth)
+      .update(user)
       .set(updateData)
-      .where(eq(userInAuth.id, userId))
+      .where(eq(user.id, userId))
       .returning({
-        id: userInAuth.id,
-        name: userInAuth.name,
-        email: userInAuth.email,
+        id: user.id,
+        name: user.name,
+        email: user.email,
       });
 
     if (!updated || updated.length === 0) {

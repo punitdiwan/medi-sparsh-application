@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { db } from "./db";
-import { organizationInAuth as organization, memberInAuth as member } from "./db/migrations/schema";
+import { organization, member } from "./db/migrations/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "./logger";
 /**

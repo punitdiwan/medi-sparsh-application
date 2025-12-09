@@ -5,13 +5,12 @@ import {
   doctors,
   appointments,
   prescriptions,
-  organizationInAuth as organization,
-  userInAuth as user,
-  memberInAuth as member,
+  organization,
+  user,
+  member,
   specializations,
   services,
   transactions,
-  organizationInAuth,
   floors,
   bedsTypes,
   bedGroups,
@@ -512,7 +511,7 @@ export async function createTransaction(data: {
     .values({
       hospitalId: data.hospitalId,
       patientId: data.patientId,
-      appointmentsId: data.appointmentsId,
+      appointmentId: data.appointmentsId,
       amount: data.amount,
       status: data.status,
       paymentMethod: data.paymentMethod,
@@ -529,7 +528,7 @@ export async function getTransactionsByHospital(hospitalId: string) {
       transactionId: transactions.id,
       hospitalId: transactions.hospitalId,
       patientId: transactions.patientId,
-      appointmentId: transactions.appointmentsId,
+      appointmentId: transactions.appointmentId,
       amount: transactions.amount,
       status: transactions.status,
       paymentMethod: transactions.paymentMethod,
@@ -540,9 +539,9 @@ export async function getTransactionsByHospital(hospitalId: string) {
       appointmentStatus: appointments.status,
       appointmentDate: appointments.appointmentDate,
       appointmentTime: appointments.appointmentTime,
-      orgName: organizationInAuth.name,
-      orgLogo: organizationInAuth.logo,
-      orgMetaData: organizationInAuth.metadata,
+      orgName: organization.name,
+      orgLogo: organization.logo,
+      orgMetaData: organization.metadata,
       doctorName: user.name,
       doctorQualification: doctors.qualification,
       doctorExperience: doctors.experience,
@@ -550,11 +549,11 @@ export async function getTransactionsByHospital(hospitalId: string) {
     })
     .from(transactions)
     .leftJoin(patients, eq(patients.id, transactions.patientId))
-    .leftJoin(appointments, eq(appointments.id, transactions.appointmentsId))
+    .leftJoin(appointments, eq(appointments.id, transactions.appointmentId))
     .leftJoin(staff, eq(staff.userId, appointments.doctorUserId))
     .leftJoin(doctors, eq(doctors.staffId, staff.id))
     .leftJoin(user, eq(user.id, staff.userId))
-    .leftJoin(organizationInAuth, eq(organizationInAuth.id, transactions.hospitalId))
+    .leftJoin(organization, eq(organization.id, transactions.hospitalId))
     .where(eq(transactions.hospitalId, hospitalId))
     .orderBy(sql`${transactions.createdAt} DESC`);
 
