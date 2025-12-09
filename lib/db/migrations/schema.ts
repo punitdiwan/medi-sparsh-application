@@ -454,10 +454,10 @@ export const account = pgTable("account", {
 
 export const session = pgTable("session", {
 	id: text().primaryKey().notNull(),
-	expiresAt: timestamp({ withTimezone: true, mode: 'date' }).notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
 	token: text().notNull(),
-	createdAt: timestamp({ withTimezone: true, mode: 'date' }).notNull(),
-	updatedAt: timestamp({ withTimezone: true, mode: 'date' }).notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
 	ipAddress: text(),
 	userAgent: text(),
 	userId: text().notNull(),

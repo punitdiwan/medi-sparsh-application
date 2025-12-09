@@ -10,11 +10,11 @@ export default async function HomeLayout({
 }: Readonly<{
    children: React.ReactNode;
 }>) {
-   const session = await auth.api.getSession({
-      headers: await headers()
-   });
-   const user = session?.user ?? null;
-
+   // const session = await auth.api.getSession({
+   //    headers: await headers()
+   // });
+   // const user = session?.user ?? null;
+   const user = null; // Temporarily disable auth context
    return (
       <UserProvider user={user}>
          <div className="relative">

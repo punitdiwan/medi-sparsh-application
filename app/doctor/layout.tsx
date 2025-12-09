@@ -21,20 +21,20 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
 
-  const sessionData = await validateServerSession();
-  if (!sessionData) redirect("/sign-in");
-  const hospital = await getCurrentHospital();
-  if(sessionData?.session?.activeOrganizationId !== hospital?.hospitalId){
-    redirect("/sign-in")
-  }
-  const memberRole = await getUserRole(sessionData?.user?.id, hospital.hospitalId);
+  // const sessionData = await validateServerSession();
+  // if (!sessionData) redirect("/sign-in");
+  // const hospital = await getCurrentHospital();
+  // if(sessionData?.session?.activeOrganizationId !== hospital?.hospitalId){
+  //   redirect("/sign-in")
+  // }
+  // const memberRole = await getUserRole(sessionData?.user?.id, hospital.hospitalId);
 
-  const userData = {
-    userData: sessionData?.user,
-    hospital,
-    memberRole: memberRole,
-  };
-  // const userData = null;
+  // const userData = {
+  //   userData: sessionData?.user,
+  //   hospital,
+  //   memberRole: memberRole,
+  // };
+  const userData = null;
   return (
     <AuthProvider initialUser={userData}>
       <SidebarProvider>

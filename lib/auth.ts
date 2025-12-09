@@ -2,12 +2,19 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
 import { organization } from "better-auth/plugins"
-
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "./db";
+import * as schema from "./db/migrations/schema";
+import { eq } from "drizzle-orm";
 
 const url = "https://abc.medisparsh.com";
 export const auth = betterAuth({
-   database: prismaAdapter(prisma, {
-      provider: "postgresql"
+   database: drizzleAdapter(db, {
+        provider: "pg",
+        schema: {
+            dialect: "pg",
+            ...schema,
+        },
    }),
    databaseHooks: {
       session: {
@@ -21,8 +28,8 @@ export const auth = betterAuth({
                      expiresAt: session.expiresAt instanceof Date ? session.expiresAt.toISOString() : session.expiresAt,
                      createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : session.createdAt,
                      updatedAt: session.updatedAt instanceof Date ? session.updatedAt.toISOString() : session.updatedAt,
-                     activeOrganizationId: organizationId?.organization?.id,
-                     organization: organizationId
+                     activeOrganizationId: organizationId,
+                     // organization: organizationId
                      //activeTeamId: teamId?.team?.id
                   }
                } as any;
@@ -52,20 +59,31 @@ export const auth = betterAuth({
    ]
 })
 
+// const getOrganisation = async (userId: string) => {
+//    const result = await prisma.member.findFirst({
+//       where: {
+//          userId: userId
+//       },
+//       include: {
+//          organization: true
+//       }
+//    });
+
+
+//    if (result) {
+//       return result;
+//    }
+
+//    return null;
+// }
 const getOrganisation = async (userId: string) => {
-   const result = await prisma.member.findFirst({
-      where: {
-         userId: userId
-      },
-      include: {
-         organization: true
-      }
-   });
+    const result = await db.select().from(schema.member).where(eq(schema.member.userId, userId)).limit(1);
 
+    console.log("Data from Result of getOrganisation", result);
 
-   if (result) {
-      return result;
-   }
+    if (result.length > 0) {
+        return result[0].organizationId;
+    }
 
-   return null;
+    return null;
 }
