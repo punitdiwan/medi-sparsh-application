@@ -273,8 +273,6 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
         onCancel();
       }
 
-      // Refresh the page to show new employee
-      router.refresh();
     } catch (error: any) {
       console.error("Error adding employee:", error);
       handleSupabaseError(error, "Failed to add employee:");
