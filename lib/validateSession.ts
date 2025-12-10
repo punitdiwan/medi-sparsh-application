@@ -6,13 +6,13 @@ export async function validateServerSession() {
     const cookieStore = await cookies();
     const token =
       cookieStore.get("better-auth.session_token")?.value ||
-      cookieStore.get("__Secure-session_token")?.value;
+      cookieStore.get("__Secure-better-auth.session_token")?.value;
 
     if (!token) return null;
 
     const cookieHeader =
-      cookieStore.get("__Secure-session_token")
-        ? `__Secure-session_token=${token}`
+      cookieStore.get("__Secure-better-auth.session_token")
+        ? `__Secure-better-auth.session_token=${token}`
         : `better-auth.session_token=${token}`;
         
     // Validate the session

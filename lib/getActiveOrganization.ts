@@ -6,7 +6,7 @@ export async function getActiveOrganization() {
     const cookieStore = await cookies();
     const token =
       cookieStore.get("better-auth.session_token") ??
-      cookieStore.get("__Secure-medisparsh.session_token");
+      cookieStore.get("__Secure-better-auth.session_token");
 
     if (!token) {
         console.log("No session cookie found");
