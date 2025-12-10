@@ -44,7 +44,7 @@ export interface Supplier {
   contactPerson: string;
   contactPersonNumber: string;
   drugLicenseNumber: string;
-  isDeleted?: boolean;
+  isDeleted?: boolean | null;
   createdAt?: Date;
 }
 
