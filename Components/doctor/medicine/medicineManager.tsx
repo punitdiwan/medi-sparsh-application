@@ -19,6 +19,7 @@ import { getMedicines, deleteMedicine } from "@/lib/actions/medicines";
 import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
+import { getMedicineGroups } from "@/lib/actions/medicineGroups";
 import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
 import MedicineExcelModal from "./medicineExcelUploadModel";
 import { Loader2 } from "lucide-react";
@@ -32,11 +33,7 @@ export default function MedicineManager() {
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
   const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
-  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([
-    { id: "g1", name: "Group A" },
-    { id: "g2", name: "Group B" },
-    { id: "g3", name: "Group C" },
-  ]);
+  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -47,23 +44,21 @@ export default function MedicineManager() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [medicinesRes, categoriesRes, companiesRes, unitsRes] = await Promise.all([
+        const [medicinesRes, categoriesRes, companiesRes, unitsRes, groupsRes] = await Promise.all([
           getMedicines(),
           getMedicineCategories(),
           getMedicineCompanies(),
           getMedicineUnits(),
+          getMedicineGroups(),
         ]);
 
         if (medicinesRes.data) {
-          const medicinesWithGroup = (medicinesRes.data as any[]).map((m) => ({
-            ...m,
-            groupId: m.groupId || "g1", // default group
-          }));
-          setData(medicinesWithGroup);
+          setData(medicinesRes.data as Medicine[]);
         }
         if (categoriesRes.data) setCategories(categoriesRes.data);
         if (companiesRes.data) setCompanies(companiesRes.data);
         if (unitsRes.data) setUnits(unitsRes.data);
+        if (groupsRes.data) setGroups(groupsRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load medicines");
@@ -125,11 +120,7 @@ export default function MedicineManager() {
       setRefreshing(true);
       const medicinesRes = await getMedicines();
       if (medicinesRes.data) {
-        const medicinesWithGroup = (medicinesRes.data as any[]).map((m) => ({
-          ...m,
-          groupId: m.groupId || "g1",
-        }));
-        setData(medicinesWithGroup);
+        setData(medicinesRes.data as Medicine[]);
         toast.success("Medicines updated");
       }
     } catch {

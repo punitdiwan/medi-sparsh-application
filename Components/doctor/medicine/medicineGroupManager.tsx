@@ -1,143 +1,234 @@
 "use client";
 
-import { useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import MedicineGroupModal from "./medicineGroupModel";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+
+import MedicineGroupModal, { MedicineGroup } from "./medicineGroupModel";
+import { getMedicineGroups, createMedicineGroup, updateMedicineGroup, deleteMedicineGroup } from "@/lib/actions/medicineGroups";
 
 export default function MedicineGroupManager() {
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"add" | "edit">("add");
-  const [editValue, setEditValue] = useState("");
+  const [groups, setGroups] = useState<MedicineGroup[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<MedicineGroup | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
 
-  // SAMPLE DATA (replace with API data later)
-  const [groups, setGroups] = useState([
-    "Antibiotics",
-    "Painkillers",
-    "Antiseptics",
-    "Vitamins",
-  ]);
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
-  // Open Add Modal
-  const handleAdd = () => {
-    setMode("add");
-    setEditValue("");
-    setOpen(true);
-  };
-
-  // Open Edit Modal
-  const handleEdit = (name: string) => {
-    setMode("edit");
-    setEditValue(name);
-    setOpen(true);
-  };
-
-  // Save Data (Add / Edit)
-  const handleSubmit = (value: string) => {
-    if (mode === "add") {
-      setGroups((prev) => [...prev, value]);
-    } else {
-      setGroups((prev) =>
-        prev.map((g) => (g === editValue ? value : g))
-      );
+  const fetchGroups = async () => {
+    try {
+      setLoading(true);
+      const result = await getMedicineGroups();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setGroups(result.data || []);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      toast.error("Failed to load medicine groups");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Delete Row
-  const handleDelete = (name: string) => {
-    setGroups((prev) => prev.filter((g) => g !== name));
+  const filtered = useMemo(() => {
+    if (!search.trim()) return groups;
+    const q = search.toLowerCase();
+    return groups.filter((g) => g.name.toLowerCase().includes(q));
+  }, [search, groups]);
+
+  const handleSave = async (item: MedicineGroup) => {
+    try {
+      const exists = groups.some((g) => g.id === item.id);
+
+      let result;
+      if (exists) {
+        result = await updateMedicineGroup(item.id, { name: item.name });
+      } else {
+        result = await createMedicineGroup({ name: item.name });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(exists ? "Group updated" : "Group added");
+      fetchGroups();
+      setEditing(null);
+    } catch (error) {
+      console.error("Error saving group:", error);
+      toast.error("Failed to save medicine group");
+    }
   };
 
-  // Filter groups
-  const filteredGroups = groups.filter((g) =>
-    g.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleDeleteClick = (id: string) => {
+    setGroupToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!groupToDelete) return;
+
+    try {
+      const result = await deleteMedicineGroup(groupToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setGroups((prev) => prev.filter((g) => g.id !== groupToDelete));
+      toast.success("Group deleted");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast.error("Failed to delete medicine group");
+    } finally {
+      setDeleteDialogOpen(false);
+      setGroupToDelete(null);
+    }
+  };
 
   return (
-    <Card className="w-full mt-4">
-        <CardHeader>
-                <CardTitle>Medicine Group Manager</CardTitle>
-                <CardDescription>Manage medicine groups here.</CardDescription>
-              </CardHeader>
-        <CardContent className="p-4 space-y-4">
+    <Card className="p-4 shadow-sm">
+      <CardHeader>
+        <CardTitle>Medicine Groups</CardTitle>
+        <CardDescription>Manage all medicine groups.</CardDescription>
+      </CardHeader>
 
-        {/* Top Row */}
-        <div className="flex justify-between items-center gap-4 flex-wrap">
+      <CardContent className="space-y-5">
+        <div className="flex justify-between items-center flex-wrap gap-3">
           <Input
             placeholder="Search group..."
-            className="max-w-xs"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="max-w-xs"
           />
-
-          <Button onClick={handleAdd}>
-            + Add Medicine Group
-          </Button>
+          <Button onClick={() => setOpen(true)}>Add Medicine Group</Button>
         </div>
 
-        {/* Table */}
-        <div className="overflow-auto border rounded-md">
-            <table className="w-full text-sm">
-                <thead>
-                <tr>
-                    <th className="text-left p-3 border-b">S.No</th>
-                    <th className="text-left p-3 border-b">Group Name</th>
-                    <th className="text-right p-3 border-b">Actions</th>
-                </tr>
-                </thead>
+        <div className="border rounded-xl overflow-hidden bg-card">
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow>
+                <TableHead>Group Name</TableHead>
+                <TableHead className="w-[120px]">Usage</TableHead>
+                <TableHead className="w-[60px] text-center">Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
-                <tbody>
-                {filteredGroups.map((name, idx) => (
-                    <tr key={idx} className="border-b">
-                    <td className="p-3">{idx + 1}</td>
-                    <td className="p-3">{name}</td>
-
-                    {/* RIGHT ALIGNED ACTIONS */}
-                    <td className="p-3">
-                        <div className="flex justify-end gap-2">
-                        <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => handleEdit(name)}
-                        >
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                    Loading groups...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                    No groups found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((group) => (
+                  <TableRow key={group.id}>
+                    <TableCell>{group.name}</TableCell>
+                    <TableCell>
+                      {group.isUsed ? (
+                        <span className="text-sm text-muted-foreground">
+                          {group.usageCount} medicine(s)
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Not used</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditing(group); setOpen(true); }}>
                             Edit
-                        </Button>
-
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(name)}
-                        >
-                            Delete
-                        </Button>
-                        </div>
-                    </td>
-                    </tr>
-                ))}
-
-                {filteredGroups.length === 0 && (
-                    <tr>
-                    <td colSpan={3} className="p-4 text-center text-gray-500">
-                        No groups found
-                    </td>
-                    </tr>
-                )}
-                </tbody>
-            </table>
-            </div>
-
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteClick(group.id)}
+                            disabled={group.isUsed}
+                          >
+                            {group.isUsed ? "Delete (In Use)" : "Delete"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
 
-      {/* Modal */}
       <MedicineGroupModal
         open={open}
-        onClose={() => setOpen(false)}
-        mode={mode}
-        defaultValue={editValue}
-        onSubmit={handleSubmit}
+        onClose={() => { setOpen(false); setEditing(null); }}
+        group={editing ?? undefined}
+        onSave={handleSave}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the medicine group.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

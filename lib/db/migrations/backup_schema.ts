@@ -1,181 +1,56 @@
-import { relations, sql } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, foreignKey, text, timestamp, unique, boolean, jsonb, numeric, serial, date, integer, primaryKey, varchar } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 
-const useUUIDv4 = sql`uuid_generate_v4()`;
+// export const auth = pgSchema("auth");
 
-export const user = pgTable("user", {
-	id: text("id").primaryKey(),
-	name: text("name").notNull(),
-	email: text("email").notNull().unique(),
-	emailVerified: boolean("email_verified").default(false).notNull(),
-	image: text("image"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at")
-		.defaultNow()
-		.$onUpdate(() => /* @__PURE__ */ new Date())
-		.notNull(),
-});
+const useUUIDv7 = process.env.UUID_V7_NATIVE_SUPPORT
+	? sql`uuidv7()`
+	: sql`uuid_generate_v7()`;
 
-export const session = pgTable(
-	"session",
-	{
-		id: text("id").primaryKey(),
-		expiresAt: timestamp("expires_at").notNull(),
-		token: text("token").notNull().unique(),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at")
-			.$onUpdate(() => /* @__PURE__ */ new Date())
-			.notNull(),
-		ipAddress: text("ip_address"),
-		userAgent: text("user_agent"),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
-		activeOrganizationId: text("active_organization_id"),
-	},
-	(table) => [index("session_userId_idx").on(table.userId)],
-);
-
-export const account = pgTable(
-	"account",
-	{
-		id: text("id").primaryKey(),
-		accountId: text("account_id").notNull(),
-		providerId: text("provider_id").notNull(),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
-		accessToken: text("access_token"),
-		refreshToken: text("refresh_token"),
-		idToken: text("id_token"),
-		accessTokenExpiresAt: timestamp("access_token_expires_at"),
-		refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-		scope: text("scope"),
-		password: text("password"),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at")
-			.$onUpdate(() => /* @__PURE__ */ new Date())
-			.notNull(),
-	},
-	(table) => [index("account_userId_idx").on(table.userId)],
-);
-
-export const verification = pgTable(
-	"verification",
-	{
-		id: text("id").primaryKey(),
-		identifier: text("identifier").notNull(),
-		value: text("value").notNull(),
-		expiresAt: timestamp("expires_at").notNull(),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at")
-			.defaultNow()
-			.$onUpdate(() => /* @__PURE__ */ new Date())
-			.notNull(),
-	},
-	(table) => [index("verification_identifier_idx").on(table.identifier)],
-);
+export const member = pgTable("member", {
+	id: text().primaryKey().notNull(),
+	organizationId: text().notNull(),
+	userId: text().notNull(),
+	role: text().default('admin').notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "member_organizationId_organization_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "member_userId_user_id_fk"
+	}).onDelete("cascade"),
+]);
 
 export const organization = pgTable("organization", {
-	id: text("id").primaryKey(),
-	name: text("name").notNull(),
-	slug: text("slug").notNull().unique(),
-	logo: text("logo"),
-	createdAt: timestamp("created_at").notNull(),
-	metadata: text("metadata"),
-});
+	id: text().primaryKey().notNull(),
+	name: text().notNull(),
+	slug: text().notNull(),
+	logo: text(),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
+	metadata: text(),
+}, (table) => [
+	unique("organization_slug_unique").on(table.slug),
+]);
 
-export const member = pgTable(
-	"member",
-	{
-		id: text("id").primaryKey(),
-		organizationId: text("organization_id")
-			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
-		role: text("role").default("member").notNull(),
-		createdAt: timestamp("created_at").notNull(),
-	},
-	(table) => [
-		index("member_organizationId_idx").on(table.organizationId),
-		index("member_userId_idx").on(table.userId),
-	],
-);
-
-export const invitation = pgTable(
-	"invitation",
-	{
-		id: text("id").primaryKey(),
-		organizationId: text("organization_id")
-			.notNull()
-			.references(() => organization.id, { onDelete: "cascade" }),
-		email: text("email").notNull(),
-		role: text("role"),
-		status: text("status").default("pending").notNull(),
-		expiresAt: timestamp("expires_at").notNull(),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		inviterId: text("inviter_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
-	},
-	(table) => [
-		index("invitation_organizationId_idx").on(table.organizationId),
-		index("invitation_email_idx").on(table.email),
-	],
-);
-
-export const userRelations = relations(user, ({ many }) => ({
-	sessions: many(session),
-	accounts: many(account),
-	members: many(member),
-	invitations: many(invitation),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-	user: one(user, {
-		fields: [session.userId],
-		references: [user.id],
-	}),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-	user: one(user, {
-		fields: [account.userId],
-		references: [user.id],
-	}),
-}));
-
-export const organizationRelations = relations(organization, ({ many }) => ({
-	members: many(member),
-	invitations: many(invitation),
-}));
-
-export const memberRelations = relations(member, ({ one }) => ({
-	organization: one(organization, {
-		fields: [member.organizationId],
-		references: [organization.id],
-	}),
-	user: one(user, {
-		fields: [member.userId],
-		references: [user.id],
-	}),
-}));
-
-export const invitationRelations = relations(invitation, ({ one }) => ({
-	organization: one(organization, {
-		fields: [invitation.organizationId],
-		references: [organization.id],
-	}),
-	user: one(user, {
-		fields: [invitation.inviterId],
-		references: [user.id],
-	}),
-}));
+export const user = pgTable("user", {
+	id: text().primaryKey().notNull(),
+	name: text().notNull(),
+	email: text().notNull(),
+	emailVerified: boolean().default(false).notNull(),
+	image: text(),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
+}, (table) => [
+	unique("user_email_unique").on(table.email),
+]);
 
 export const bedGroups = pgTable("bed_groups", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	description: text(),
@@ -197,7 +72,7 @@ export const bedGroups = pgTable("bed_groups", {
 ]);
 
 export const floors = pgTable("floors", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	description: text(),
@@ -213,7 +88,7 @@ export const floors = pgTable("floors", {
 ]);
 
 export const beds = pgTable("beds", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	bedTypeId: text("bed_type_id").notNull(),
@@ -240,7 +115,7 @@ export const beds = pgTable("beds", {
 ]);
 
 export const bedsTypes = pgTable("beds_types", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	description: text(),
@@ -256,7 +131,7 @@ export const bedsTypes = pgTable("beds_types", {
 ]);
 
 export const chargeTypes = pgTable("charge_types", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	modules: jsonb().notNull(),
@@ -272,7 +147,7 @@ export const chargeTypes = pgTable("charge_types", {
 ]);
 
 export const chargeCategories = pgTable("charge_categories", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	description: text(),
@@ -294,7 +169,7 @@ export const chargeCategories = pgTable("charge_categories", {
 ]);
 
 export const charges = pgTable("charges", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	description: text(),
@@ -335,12 +210,12 @@ export const charges = pgTable("charges", {
 ]);
 
 export const units = pgTable("units", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	name: text().notNull(),
 });
 
 export const taxCategories = pgTable("tax_categories", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	percent: numeric().notNull(),
@@ -356,7 +231,7 @@ export const taxCategories = pgTable("tax_categories", {
 ]);
 
 export const medicineCategories = pgTable("medicine_categories", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -370,7 +245,7 @@ export const medicineCategories = pgTable("medicine_categories", {
 ]);
 
 export const modules = pgTable("modules", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	isDeleted: boolean("is_deleted").default(false),
@@ -385,7 +260,7 @@ export const modules = pgTable("modules", {
 ]);
 
 export const appointmentPriorities = pgTable("appointment_priorities", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	priority: text().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
@@ -400,7 +275,7 @@ export const appointmentPriorities = pgTable("appointment_priorities", {
 ]);
 
 export const shifts = pgTable("shifts", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	startTime: text("start_time").notNull(),
@@ -426,7 +301,7 @@ export const specializations = pgTable("specializations", {
 ]);
 
 export const doctorShifts = pgTable("doctor_shifts", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	doctorUserId: text("doctor_user_id").notNull(),
 	shiftId: text("shift_id").notNull(),
@@ -452,7 +327,7 @@ export const doctorShifts = pgTable("doctor_shifts", {
 ]);
 
 export const patients = pgTable("patients", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	userId: text("user_id"),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
@@ -481,7 +356,7 @@ export const patients = pgTable("patients", {
 ]);
 
 export const staff = pgTable("staff", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	userId: text("user_id").notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	mobileNumber: text("mobile_number"),
@@ -503,7 +378,7 @@ export const staff = pgTable("staff", {
 ]);
 
 export const doctors = pgTable("doctors", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	staffId: text("staff_id").notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	specialization: jsonb().notNull(),
@@ -527,9 +402,88 @@ export const doctors = pgTable("doctors", {
 	}).onDelete("cascade"),
 ]);
 
+export const invitation = pgTable("invitation", {
+	id: text().primaryKey().notNull(),
+	organizationId: text().notNull(),
+	email: text().notNull(),
+	role: text(),
+	status: text().default('pending').notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
+	inviterId: text().notNull(),
+	teamId: text("team_id"),
+	createdAt: timestamp({ mode: 'date' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.teamId],
+		foreignColumns: [team.id],
+		name: "invitation_teamId_team_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.inviterId],
+		foreignColumns: [user.id],
+		name: "invitation_inviterId_user_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "invitation_organizationId_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const account = pgTable("account", {
+	id: text().primaryKey().notNull(),
+	accountId: text().notNull(),
+	providerId: text().notNull(),
+	userId: text().notNull(),
+	accessToken: text(),
+	refreshToken: text(),
+	idToken: text(),
+	accessTokenExpiresAt: timestamp({ mode: 'date' }),
+	refreshTokenExpiresAt: timestamp({ mode: 'date' }),
+	scope: text(),
+	password: text(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "account_userId_user_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const session = pgTable("session", {
+	id: text().primaryKey().notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
+	token: text().notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
+	ipAddress: text(),
+	userAgent: text(),
+	userId: text().notNull(),
+	activeOrganizationId: text(),
+	//activeTeamId: text("active_team_id"),
+}, (table) => [
+	// foreignKey({
+	// 	columns: [table.activeTeamId],
+	// 	foreignColumns: [team.id],
+	// 	name: "session_activeTeamId_team_id_fk"
+	// }),
+	foreignKey({
+		columns: [table.activeOrganizationId],
+		foreignColumns: [organization.id],
+		name: "session_activeOrganizationId_organization_id_fk"
+	}),
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "session_userId_user_id_fk"
+	}).onDelete("cascade"),
+	unique("session_token_unique").on(table.token),
+]);
 
 export const prescriptions = pgTable("prescriptions", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	appointmentId: text("appointment_id").notNull(),
 	patientId: text("patient_id").notNull(),
@@ -564,7 +518,7 @@ export const prescriptions = pgTable("prescriptions", {
 ]);
 
 export const appointments = pgTable("appointments", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	patientId: text("patient_id").notNull(),
 	doctorUserId: text("doctor_user_id").notNull(),
@@ -593,7 +547,7 @@ export const appointments = pgTable("appointments", {
 ]);
 
 export const doctorSlots = pgTable("doctor_slots", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	doctorId: text("doctor_id").notNull(),
 	shiftId: text("shift_id").notNull(),
@@ -626,42 +580,9 @@ export const doctorSlots = pgTable("doctor_slots", {
 		name: "doctor_slots_hospital_id_organization_id_fk"
 	}).onDelete("cascade"),
 ]);
-export const medicineGroups = pgTable("medicine_groups", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	hospitalId: text("hospital_id").notNull(),
-	name: text().notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-		columns: [table.hospitalId],
-		foreignColumns: [organization.id],
-		name: "medicine_groups_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
-]);
-
-export const medicineSuppliers = pgTable("medicine_suppliers", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	hospitalId: text("hospital_id").notNull(),
-	supplierName: text("supplier_name").notNull(),
-	contactNumber: text("contact_number").notNull(),
-	address: text().notNull(),
-	contactPerson: text("contact_person").notNull(),
-	contactPersonNumber: text("contact_person_number").notNull(),
-	drugLicenseNumber: text("drug_license_number").notNull(),
-	isDeleted: boolean("is_deleted").default(false),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-		columns: [table.hospitalId],
-		foreignColumns: [organization.id],
-		name: "medicine_suppliers_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
-]);
 
 export const medicines = pgTable("medicines", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	categoryId: text("category_id").notNull(),
@@ -733,7 +654,7 @@ export const teamMember = pgTable("team_member", {
 ]);
 
 export const vitals = pgTable("vitals", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	vitalsUnit: text("vitals_unit").notNull(),
@@ -750,7 +671,7 @@ export const vitals = pgTable("vitals", {
 ]);
 
 export const medicineUnits = pgTable("medicine_units", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -764,7 +685,7 @@ export const medicineUnits = pgTable("medicine_units", {
 ]);
 
 export const medicineCompanies = pgTable("medicine_companies", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -778,7 +699,7 @@ export const medicineCompanies = pgTable("medicine_companies", {
 ]);
 
 export const roles = pgTable("roles", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	name: text().notNull(),
 	description: text(),
 	hospitalId: text("hospital_id").notNull(),
@@ -793,7 +714,7 @@ export const roles = pgTable("roles", {
 ]);
 
 export const services = pgTable("services", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	name: text().notNull(),
 	amount: numeric().notNull(),
@@ -810,7 +731,7 @@ export const services = pgTable("services", {
 ]);
 
 export const transactions = pgTable("transactions", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
+	id: text().default(useUUIDv7).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
 	patientId: text("patient_id").notNull(),
 	appointmentId: text("appointment_id").notNull(),
@@ -839,12 +760,54 @@ export const transactions = pgTable("transactions", {
 	}).onDelete("cascade"),
 ]);
 
+export const medicineGroups = pgTable("medicine_groups", {
+	id: text().default(useUUIDv7).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	name: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_groups_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const medicineSuppliers = pgTable("medicine_suppliers", {
+	id: text().default(useUUIDv7).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	supplierName: text("supplier_name").notNull(),
+	contactNumber: text("contact_number").notNull(),
+	address: text().notNull(),
+	contactPerson: text("contact_person").notNull(),
+	contactPersonNumber: text("contact_person_number").notNull(),
+	drugLicenseNumber: text("drug_license_number").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_suppliers_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const verification = pgTable("verification", {
+	id: text().primaryKey().notNull(),
+	identifier: text().notNull(),
+	value: jsonb().notNull(),
+	expiresAt: timestamp({ mode: 'date' }).notNull(),
+	createdAt: timestamp({ mode: 'date' }).notNull(),
+	updatedAt: timestamp({ mode: 'date' }).notNull(),
+});
+
 export const settings = pgTable("settings", {
 	organizationId: varchar("organization_id", { length: 256 }).notNull(),
 	key: varchar({ length: 256 }).notNull(),
 	value: varchar({ length: 256 }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	primaryKey({ columns: [table.key, table.organizationId], name: "settings_key_unique" }),
 ]);

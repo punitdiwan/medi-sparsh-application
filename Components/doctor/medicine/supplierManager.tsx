@@ -1,187 +1,321 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Card,
   CardHeader,
   CardTitle,
+  CardDescription,
   CardContent,
-  CardDescription
 } from "@/components/ui/card";
-
 import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell
-} from "@/components/ui/table";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Plus } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash } from "lucide-react";
-
-import AddSupplierModal, {
-  SupplierFormData
-} from "@/components/model/AddSupplierModal";
+import AddSupplierModal, { Supplier } from "@/components/model/AddSupplierModal";
+import { getMedicineSuppliers, createMedicineSupplier, updateMedicineSupplier, deleteMedicineSupplier, restoreMedicineSupplier } from "@/lib/actions/medicineSuppliers";
 
 export default function SupplierManager() {
-  const [openModal, setOpenModal] = useState(false);
-  const [editingSupplier, setEditingSupplier] =
-    useState<SupplierFormData | null>(null);
-
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Supplier | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
 
-  const [suppliers, setSuppliers] = useState<SupplierFormData[]>([
-    {
-      supplierName: "HealthCare Distributors",
-      supplierContact: "9876543210",
-      contactPersonName: "Ramesh Kumar",
-      contactPersonPhone: "9876501234",
-      drugLicenseNumber: "DL-456789",
-      address: "Delhi, India"
+  useEffect(() => {
+    fetchSuppliers();
+  }, [showDeleted]);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const result = await getMedicineSuppliers(showDeleted);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setSuppliers(result.data || []);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      toast.error("Failed to load suppliers");
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  // ADD OR UPDATE SUPPLIER
-  const handleSubmitSupplier = (data: SupplierFormData) => {
-    if (editingSupplier) {
-      setSuppliers((prev) =>
-        prev.map((s) =>
-          s.supplierName === editingSupplier.supplierName ? data : s
-        )
-      );
-      setEditingSupplier(null);
-    } else {
-      setSuppliers([...suppliers, data]);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return suppliers;
+    const q = search.toLowerCase();
+    return suppliers.filter((s) =>
+      s.supplierName.toLowerCase().includes(q) ||
+      s.contactNumber.toLowerCase().includes(q) ||
+      s.contactPerson.toLowerCase().includes(q) ||
+      s.drugLicenseNumber.toLowerCase().includes(q) ||
+      s.address.toLowerCase().includes(q)
+    );
+  }, [search, suppliers]);
+
+  const handleSave = async (item: Supplier) => {
+    try {
+      const exists = suppliers.some((s) => s.id === item.id);
+
+      let result;
+      if (exists) {
+        result = await updateMedicineSupplier(item.id, {
+          supplierName: item.supplierName,
+          contactNumber: item.contactNumber,
+          address: item.address,
+          contactPerson: item.contactPerson,
+          contactPersonNumber: item.contactPersonNumber,
+          drugLicenseNumber: item.drugLicenseNumber,
+        });
+      } else {
+        result = await createMedicineSupplier({
+          supplierName: item.supplierName,
+          contactNumber: item.contactNumber,
+          address: item.address,
+          contactPerson: item.contactPerson,
+          contactPersonNumber: item.contactPersonNumber,
+          drugLicenseNumber: item.drugLicenseNumber,
+        });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(exists ? "Supplier updated" : "Supplier added");
+      fetchSuppliers();
+      setEditing(null);
+    } catch (error) {
+      console.error("Error saving supplier:", error);
+      toast.error("Failed to save supplier");
     }
   };
 
-  // EDIT
-  const handleEdit = (supplier: SupplierFormData) => {
-    setEditingSupplier(supplier);
-    setOpenModal(true);
+  const handleDeleteClick = (id: string) => {
+    setSupplierToDelete(id);
+    setDeleteDialogOpen(true);
   };
 
-  // DELETE
-  const handleDelete = (supplier: SupplierFormData) => {
-    setSuppliers((prev) =>
-      prev.filter((s) => s.supplierName !== supplier.supplierName)
-    );
+  const handleDeleteConfirm = async () => {
+    if (!supplierToDelete) return;
+
+    try {
+      const result = await deleteMedicineSupplier(supplierToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Supplier deleted");
+      fetchSuppliers();
+    } catch (error) {
+      console.error("Error deleting supplier:", error);
+      toast.error("Failed to delete supplier");
+    } finally {
+      setDeleteDialogOpen(false);
+      setSupplierToDelete(null);
+    }
   };
 
-  // FILTER SUPPLIERS
-  const filteredSuppliers = suppliers.filter((s) => {
-    const text = search.toLowerCase();
-    return (
-      s.supplierName.toLowerCase().includes(text) ||
-      s.supplierContact.toLowerCase().includes(text) ||
-      s.contactPersonName.toLowerCase().includes(text) ||
-      s.drugLicenseNumber.toLowerCase().includes(text) ||
-      s.address.toLowerCase().includes(text)
-    );
-  });
+  const handleRestore = async (id: string) => {
+    try {
+      const result = await restoreMedicineSupplier(id);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Supplier restored");
+      fetchSuppliers();
+    } catch (error) {
+      console.error("Error restoring supplier:", error);
+      toast.error("Failed to restore supplier");
+    }
+  };
 
   return (
-    <>
-      <Card className="w-full p-4 shadow-sm">
-        <CardHeader >
-            <CardTitle>Supplier Manager</CardTitle>
-            <CardDescription>Manage Supplier here.</CardDescription>
-        </CardHeader>
+    <Card className="w-full p-4 shadow-sm">
+      <CardHeader>
+        <CardTitle>Supplier Manager</CardTitle>
+        <CardDescription>Manage medicine suppliers here.</CardDescription>
+      </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Top Bar */}
-          <div className="flex flex-wrap justify-between items-center gap-2">
-            <Input
-              placeholder="Search Supplier..."
-              className="max-w-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      <CardContent className="space-y-6">
+        {/* Top Bar */}
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <Input
+            placeholder="Search Supplier..."
+            className="max-w-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <div className="flex items-center gap-4">
+            {/* Status Filter Switch */}
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="show-deleted" className="cursor-pointer">
+                Show Deleted
+              </Label>
+            </div>
 
             <Button
               className="flex gap-2"
               onClick={() => {
-                setEditingSupplier(null);
-                setOpenModal(true);
+                setEditing(null);
+                setOpen(true);
               }}
             >
               <Plus size={16} /> Add Supplier
             </Button>
           </div>
+        </div>
 
-          {/* TABLE */}
-          <div className="border rounded-xl overflow-hidden">
-            <Table>
-              <TableHeader>
+        {/* TABLE */}
+        <div className="border rounded-xl overflow-hidden bg-card">
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow>
+                <TableHead>Supplier Name</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Contact Person</TableHead>
+                <TableHead>Person Phone</TableHead>
+                <TableHead>License No.</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[60px] text-center">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableHead>Supplier Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Contact Person</TableHead>
-                  <TableHead>Person Phone</TableHead>
-                  <TableHead>License No.</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                    Loading suppliers...
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {filteredSuppliers.map((s, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{s.supplierName}</TableCell>
-                    <TableCell>{s.supplierContact}</TableCell>
-                    <TableCell>{s.contactPersonName}</TableCell>
-                    <TableCell>{s.contactPersonPhone}</TableCell>
-                    <TableCell>{s.drugLicenseNumber}</TableCell>
-                    <TableCell>{s.address}</TableCell>
-
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                    No suppliers found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((supplier) => (
+                  <TableRow key={supplier.id} className={supplier.isDeleted ? "opacity-60" : ""}>
+                    <TableCell>{supplier.supplierName}</TableCell>
+                    <TableCell>{supplier.contactNumber}</TableCell>
+                    <TableCell>{supplier.contactPerson}</TableCell>
+                    <TableCell>{supplier.contactPersonNumber}</TableCell>
+                    <TableCell>{supplier.drugLicenseNumber}</TableCell>
+                    <TableCell>{supplier.address}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(s)}
-                        >
-                          <Pencil size={14} /> Edit
-                        </Button>
-
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(s)}
-                        >
-                          <Trash size={14} /> Delete
-                        </Button>
-                      </div>
+                      {supplier.isDeleted ? (
+                        <Badge variant="destructive">Deleted</Badge>
+                      ) : (
+                        <Badge variant="default">Active</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {!supplier.isDeleted && (
+                            <>
+                              <DropdownMenuItem onClick={() => { setEditing(supplier); setOpen(true); }}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDeleteClick(supplier.id)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {supplier.isDeleted && (
+                            <DropdownMenuItem
+                              className="text-green-600"
+                              onClick={() => handleRestore(supplier.id)}
+                            >
+                              Restore
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
-
-                {filteredSuppliers.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-6 text-muted-foreground"
-                    >
-                      No suppliers found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
 
       {/* MODAL */}
       <AddSupplierModal
-        open={openModal}
-        setOpen={setOpenModal}
-        onSubmit={handleSubmitSupplier}
-        initialData={editingSupplier}
+        open={open}
+        setOpen={(o) => { setOpen(o); if (!o) setEditing(null); }}
+        supplier={editing ?? undefined}
+        onSave={handleSave}
       />
-    </>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the supplier as deleted. You can restore it later using the "Show Deleted" filter.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
 }

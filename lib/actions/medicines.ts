@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/index";
-import { medicines, medicineCategories, medicineCompanies, medicineUnits } from "@/db/schema";
+import { medicines, medicineCategories, medicineCompanies, medicineUnits, medicineGroups } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
@@ -39,6 +39,7 @@ export async function getMedicines() {
         categoryId: medicines.categoryId,
         companyName: medicines.companyName,
         unitId: medicines.unitId,
+        groupId: medicines.groupId,
         notes: medicines.notes,
         createdAt: medicines.createdAt,
         updatedAt: medicines.updatedAt,
@@ -92,8 +93,8 @@ export async function createMedicine(input: MedicineCreateInput) {
     // Validate input
     const validatedData = medicineCreateSchema.parse(input);
 
-    // Verify that category, company, and unit belong to the same organization
-    const [category, company, unit] = await Promise.all([
+    // Verify that category, company, unit, and group belong to the same organization
+    const [category, company, unit, group] = await Promise.all([
       db
         .select()
         .from(medicineCategories)
@@ -124,6 +125,16 @@ export async function createMedicine(input: MedicineCreateInput) {
           )
         )
         .limit(1),
+      db
+        .select()
+        .from(medicineGroups)
+        .where(
+          and(
+            eq(medicineGroups.id, validatedData.groupId),
+            eq(medicineGroups.hospitalId, org.id)
+          )
+        )
+        .limit(1),
     ]);
 
     if (!category[0]) {
@@ -135,19 +146,22 @@ export async function createMedicine(input: MedicineCreateInput) {
     if (!unit[0]) {
       return { error: "Invalid unit selected" };
     }
+    if (!group[0]) {
+      return { error: "Invalid group selected" };
+    }
 
     const [newMedicine] = await db
-    .insert(medicines)
-    .values({
-      hospitalId: org.id,
-      name: validatedData.name,
-      categoryId: validatedData.categoryId,
-      companyName: validatedData.companyName,
-      unitId: validatedData.unitId,
-      notes: validatedData.notes ?? null, // nullable-safe
-      groupId: validatedData.groupId || "g1", // fallback to default group if not provided
-    })
-    .returning();
+      .insert(medicines)
+      .values({
+        hospitalId: org.id,
+        name: validatedData.name,
+        categoryId: validatedData.categoryId,
+        companyName: validatedData.companyName,
+        unitId: validatedData.unitId,
+        notes: validatedData.notes ?? null,
+        groupId: validatedData.groupId,
+      })
+      .returning();
 
 
 
@@ -174,8 +188,8 @@ export async function updateMedicine(input: MedicineUpdateInput) {
     // Validate input
     const validatedData = medicineUpdateSchema.parse(input);
 
-    // Verify that category, company, and unit belong to the same organization
-    const [category, company, unit] = await Promise.all([
+    // Verify that category, company, unit, and group belong to the same organization
+    const [category, company, unit, group] = await Promise.all([
       db
         .select()
         .from(medicineCategories)
@@ -206,6 +220,16 @@ export async function updateMedicine(input: MedicineUpdateInput) {
           )
         )
         .limit(1),
+      db
+        .select()
+        .from(medicineGroups)
+        .where(
+          and(
+            eq(medicineGroups.id, validatedData.groupId),
+            eq(medicineGroups.hospitalId, org.id)
+          )
+        )
+        .limit(1),
     ]);
 
     if (!category[0]) {
@@ -217,6 +241,9 @@ export async function updateMedicine(input: MedicineUpdateInput) {
     if (!unit[0]) {
       return { error: "Invalid unit selected" };
     }
+    if (!group[0]) {
+      return { error: "Invalid group selected" };
+    }
 
     const [updatedMedicine] = await db
       .update(medicines)
@@ -225,6 +252,7 @@ export async function updateMedicine(input: MedicineUpdateInput) {
         categoryId: validatedData.categoryId,
         companyName: validatedData.companyName,
         unitId: validatedData.unitId,
+        groupId: validatedData.groupId,
         notes: validatedData.notes || null,
         updatedAt: new Date(),
       })
