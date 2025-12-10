@@ -1,10 +1,10 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { vitals } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { vitals } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { getActiveOrganization } from "@/lib/getActiveOrganization";
 import { revalidatePath } from "next/cache";
+import { getActiveOrganization } from "../getActiveOrganization";
 
 export async function getVitals() {
     try {

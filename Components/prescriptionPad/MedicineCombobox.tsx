@@ -160,6 +160,7 @@ export default function MedicineCombobox({
                 categoryId: newMedicineForm.categoryId,
                 companyName: newMedicineForm.companyName,
                 unitId: newMedicineForm.unitId,
+                groupId: 'g1', 
                 notes: newMedicineForm.notes || null,
             });
 

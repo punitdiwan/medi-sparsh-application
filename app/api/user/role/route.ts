@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/lib/db/queries";
+import { getUserRole } from "@/db/queries";
 
 // GET /api/user/role - Get current user's role
 export async function GET(request: NextRequest) {

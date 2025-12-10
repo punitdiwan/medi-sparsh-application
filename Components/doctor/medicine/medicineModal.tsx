@@ -1,4 +1,3 @@
-// MedicineModal.tsx
 "use client";
 
 import {
@@ -29,6 +28,7 @@ export type Medicine = {
   categoryId: string;
   companyName: string;
   unitId: string;
+  groupId: string;
   notes: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -42,6 +42,7 @@ type Props = {
   categories: Array<{ id: string; name: string }>;
   companies: Array<{ id: string; name: string }>;
   units: Array<{ id: string; name: string }>;
+  groups: Array<{ id: string; name: string }>; // Add this
 };
 
 export function MedicineModal({
@@ -52,6 +53,7 @@ export function MedicineModal({
   categories,
   companies,
   units,
+  groups,
 }: Props) {
   const [form, setForm] = useState<Medicine>({
     id: "",
@@ -59,6 +61,7 @@ export function MedicineModal({
     categoryId: "",
     companyName: "",
     unitId: "",
+    groupId: "",
     notes: null,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -73,63 +76,36 @@ export function MedicineModal({
         categoryId: "",
         companyName: "",
         unitId: "",
+        groupId: "",
         notes: null,
       });
     }
   }, [medicine, open]);
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) {
-      toast.error("Medicine name is required");
-      return;
-    }
-    if (!form.categoryId) {
-      toast.error("Category is required");
-      return;
-    }
-    if (!form.companyName) {
-      toast.error("Company is required");
-      return;
-    }
-    if (!form.unitId) {
-      toast.error("Unit is required");
-      return;
-    }
+    if (!form.name.trim()) return toast.error("Medicine name is required");
+    if (!form.categoryId) return toast.error("Category is required");
+    if (!form.companyName) return toast.error("Company is required");
+    if (!form.unitId) return toast.error("Unit is required");
+    if (!form.groupId) return toast.error("Group is required");
 
     try {
       setIsLoading(true);
 
       if (medicine) {
-        // Update existing medicine
-        const result = await updateMedicine({
-          id: form.id,
-          name: form.name,
-          categoryId: form.categoryId,
-          companyName: form.companyName,
-          unitId: form.unitId,
-          notes: form.notes,
-        });
+        const result = await updateMedicine(form);
 
-        if (result.error) {
-          toast.error(result.error);
-        } else {
+        if (result.error) toast.error(result.error);
+        else {
           toast.success("Medicine updated successfully");
           onSave(result.data as Medicine);
           onOpenChange(false);
         }
       } else {
-        // Create new medicine
-        const result = await createMedicine({
-          name: form.name,
-          categoryId: form.categoryId,
-          companyName: form.companyName,
-          unitId: form.unitId,
-          notes: form.notes,
-        });
+        const result = await createMedicine(form);
 
-        if (result.error) {
-          toast.error(result.error);
-        } else {
+        if (result.error) toast.error(result.error);
+        else {
           toast.success("Medicine created successfully");
           onSave(result.data as Medicine);
           onOpenChange(false);
@@ -147,11 +123,9 @@ export function MedicineModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {medicine ? "Edit Medicine" : "Add Medicine"}
-          </DialogTitle>
+          <DialogTitle>{medicine ? "Edit Medicine" : "Add Medicine"}</DialogTitle>
           <DialogDescription>
-            Manage medicine details including category, company & unit.
+            Manage medicine details including category, company, unit & group.
           </DialogDescription>
         </DialogHeader>
 
@@ -160,9 +134,7 @@ export function MedicineModal({
             <Input
               placeholder="Medicine Name"
               value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="flex-1"
               disabled={isLoading}
             />
@@ -185,6 +157,24 @@ export function MedicineModal({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Group */}
+          <Select
+            value={form.groupId}
+            onValueChange={(v) => setForm({ ...form, groupId: v })}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Group" />
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <div className="flex gap-2">
             {/* Company */}
@@ -224,7 +214,7 @@ export function MedicineModal({
             </Select>
           </div>
 
-          {/* Note */}
+          {/* Notes */}
           <Textarea
             placeholder="Note (optional)"
             value={form.notes || ""}
@@ -234,10 +224,7 @@ export function MedicineModal({
         </div>
 
         <DialogFooter className="mt-4">
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
+          <Button onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? "Saving..." : medicine ? "Update" : "Save"}
           </Button>
         </DialogFooter>

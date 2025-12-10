@@ -1,4 +1,4 @@
-import { getModulesByHospital } from "@/lib/db/queries";
+import { getModulesByHospital } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { NextRequest, NextResponse } from "next/server";
 

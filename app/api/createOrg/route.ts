@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/db/index";
 import { auth } from "@/lib/auth";
 import {
-  userInAuth,
-  organizationInAuth,
-  memberInAuth
-} from "@/lib/db/migrations/schema";
+  user,
+  organization,
+  member
+} from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 interface CreateOrgRequest {
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
 
         const existingUser = await tx
           .select()
-          .from(userInAuth)
-          .where(eq(userInAuth.email, body.email))
+          .from(user)
+          .where(eq(user.email, body.email))
           .limit(1);
 
         if (existingUser.length > 0) {
@@ -137,8 +137,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
 
         const existingOrg = await tx
           .select()
-          .from(organizationInAuth)
-          .where(eq(organizationInAuth.slug, body.orgSlug))
+          .from(organization)
+          .where(eq(organization.slug, body.orgSlug))
           .limit(1);
 
         if (existingOrg.length > 0) {
@@ -254,9 +254,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const organizations = await db
       .select()
-      .from(organizationInAuth)
-      .innerJoin(memberInAuth, eq(organizationInAuth.id, memberInAuth.organizationId))
-      .innerJoin(userInAuth, eq(memberInAuth.userId, userInAuth.id));
+      .from(organization)
+      .innerJoin(member, eq(organization.id, member.organizationId))
+      .innerJoin(user, eq(member.userId, user.id));
       
     if (!organizations || organizations.length === 0) {
       return NextResponse.json(

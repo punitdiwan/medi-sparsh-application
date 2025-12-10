@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { appointmentPriorities } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { appointmentPriorities } from "@/drizzle/schema";
 import { auth } from "@/lib/auth"; // Assuming auth helper exists, need to verify
 import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";

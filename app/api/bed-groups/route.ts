@@ -1,4 +1,4 @@
-import { getBedGroupsByHospital, getDeletedBedGroupsByHospital, createBedGroup } from "@/lib/db/queries";
+import { getBedGroupsByHospital, getDeletedBedGroupsByHospital, createBedGroup } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { NextRequest, NextResponse } from "next/server";
 

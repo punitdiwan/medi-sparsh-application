@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { settings } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { settings } from "@/db/schema";
 import { eq ,and} from "drizzle-orm";
 import { getCurrentHospital } from "@/lib/tenant";
 

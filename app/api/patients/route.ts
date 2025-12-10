@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { getPatientsByHospital, createPatient } from "@/lib/db/queries";
+import { getPatientsByHospital, createPatient } from "@/db/queries";
 
 // GET /api/patients - Get all patients for the current hospital with optional search
 export async function GET(request: NextRequest) {

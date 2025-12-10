@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { doctors, shifts, doctorShifts, staff, userInAuth } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { doctors, shifts, doctorShifts, staff, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { user, session: sessionData } = session;
+        const { session: sessionData } = session;
         const hospitalId = sessionData.activeOrganizationId;
 
         if (!hospitalId) {
@@ -27,11 +27,10 @@ export async function GET(req: NextRequest) {
         const doctorsList = await db
             .select({
                 doctorId: doctors.id,
-                name: userInAuth.name,
             })
             .from(doctors)
             .innerJoin(staff, eq(doctors.staffId, staff.id))
-            .innerJoin(userInAuth, eq(staff.userId, userInAuth.id))
+            .innerJoin(user, eq(staff.userId, user.id))
             .where(and(eq(doctors.hospitalId, hospitalId), eq(doctors.isDeleted, false)));
 
         // 2. Fetch all active shifts for the hospital
@@ -61,7 +60,7 @@ export async function GET(req: NextRequest) {
 
             return {
                 doctorId: doc.doctorId,
-                doctorName: doc.name,
+                doctorName: doctorsList.find((d) => d.doctorId === doc.doctorId)?.doctorId,
                 shifts: shiftsMap,
             };
         });

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { getUserRole } from "@/lib/db/queries";
+import { getUserRole } from "@/db/queries";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
-import { db } from "@/lib/db";
-import { organizationInAuth } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { organization } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 // GET /api/clinic - Get current organization/clinic details
@@ -128,12 +128,12 @@ export async function PUT(request: NextRequest) {
 
         // Update organization in database
         const updated = await db
-            .update(organizationInAuth)
+            .update(organization)
             .set({
                 name,
                 metadata: JSON.stringify(updatedMetadata),
             })
-            .where(eq(organizationInAuth.id, org.id))
+            .where(eq(organization.id, org.id))
             .returning();
 
         if (!updated || updated.length === 0) {

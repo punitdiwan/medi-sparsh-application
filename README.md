@@ -1,68 +1,36 @@
-# Better Auth Starter 🚀
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Better Auth Starter is a Next.js 15 boilerplate with built-in authentication using **BetterAuth**. It supports **Google Login** and **BetterAuth credentials**, providing a solid foundation for any Next.js project requiring authentication.
+## Getting Started
 
-## ✨ Features
-
-- 🔐 **Authentication with BetterAuth**
-- 🔑 **Google OAuth Login**
-- 🎨 **Modern UI with Tailwind CSS & ShadCN**
-- 🗄️ **Database integration with Prisma & PostgreSQL**
-- ⚡ **Optimized with Next.js 15 App Router**
-
-## 🛠️ Tech Stack
-
-- **Framework:** Next.js 15
-- **Auth Provider:** BetterAuth (Credentials & Google Login)
-- **Database:** PostgreSQL with Prisma ORM
-- **Styling:** Tailwind CSS, ShadCN
-
-## 🚀 Getting Started
-
-### 1️⃣ Install Dependencies
+First, run the development server:
 
 ```bash
-bun install
-```
-
-
-### 2️⃣ Set Up Environment Variables
-Create a .env file and add the necessary credentials:
-
-```bash
-# Secret key for BetterAuth (Use a strong, random secret)
-BETTER_AUTH_SECRET=<your_better_auth_secret>
-
-# The base URL of your application (Update this for production)
-BETTER_AUTH_URL=http://localhost:3000  # Change this to your production domain in deployment
-
-# PostgreSQL Database Connection URL (Use environment variables in production)
-DATABASE_URL="postgresql://<username>:<password>@<host>/<database_name>?sslmode=require"
-
-# Google OAuth Credentials (Required for social login)
-GOOGLE_CLIENT_ID=<your_google_client_id>
-GOOGLE_CLIENT_SECRET=<your_google_client_secret>
-```
-
-
-### 3️⃣ Run Database Migrations
-
-```bash
-bunx prisma migrate dev
-```
-
-
-### 4️⃣ Start the Development Server
-
-```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
 bun dev
 ```
 
-The app will be available at http://localhost:3000.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## 🔗 Live Demo
-Check out the live version: [Auth Starter](https://better-auth-livid.vercel.app/)
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-# Built by Aayush Ghimire
+## Learn More
 
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

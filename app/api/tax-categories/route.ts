@@ -1,4 +1,4 @@
-import { getTaxCategoriesByHospital, getDeletedTaxCategoriesByHospital, createTaxCategory } from "@/lib/db/queries";
+import { getTaxCategoriesByHospital, getDeletedTaxCategoriesByHospital, createTaxCategory } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { NextRequest, NextResponse } from "next/server";
 

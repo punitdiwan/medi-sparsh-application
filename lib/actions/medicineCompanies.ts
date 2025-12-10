@@ -1,9 +1,9 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { medicineCompanies } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { medicineCompanies } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { getActiveOrganization } from "@/lib/getActiveOrganization";
+import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 
 export async function getMedicineCompanies() {

@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 import { AuthProvider } from "@/context/AuthContext";
 
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/lib/db/queries";
+import { getUserRole } from "@/db/queries";
 
 
 export const metadata: Metadata = {

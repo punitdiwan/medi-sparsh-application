@@ -1,6 +1,5 @@
 
 import { SignInForm } from "@/Components/forms/SignInForm";
-import SignInSection from "@/components/sign-in-section"
 import { getCurrentHospital } from "@/lib/tenant";
 import { validateServerSession } from "@/lib/validateSession";
 import { redirect } from "next/navigation";

@@ -1,14 +1,11 @@
-import { defineConfig } from "drizzle-kit";
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: "./lib/db/migrations/schema.ts",
-  out: "./lib/db/migrations",
-  dialect: "postgresql",
+  out: './drizzle',
+  schema: './db/schema.ts',
+  dialect: 'postgresql',
   dbCredentials: {
-      url: process.env.DATABASE_URL!,
-    //url: "postgres://peppermint:peppermint@localhost:5432/medi"
+    url: process.env.DATABASE_URL!,
   },
-  schemaFilter: ["auth", "public"],
-  
-    
 });

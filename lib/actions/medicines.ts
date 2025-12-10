@@ -1,9 +1,9 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { medicines, medicineCategories, medicineCompanies, medicineUnits } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { medicines, medicineCategories, medicineCompanies, medicineUnits } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { getActiveOrganization } from "@/lib/getActiveOrganization";
+import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -14,6 +14,7 @@ const medicineCreateSchema = z.object({
   companyName: z.string().min(1, "Company is required"),
   unitId: z.string().min(1, "Unit is required"),
   notes: z.string().optional().nullable(),
+  groupId: z.string().min(1, "Group is required"),
 });
 
 const medicineUpdateSchema = medicineCreateSchema.extend({
@@ -136,16 +137,19 @@ export async function createMedicine(input: MedicineCreateInput) {
     }
 
     const [newMedicine] = await db
-      .insert(medicines)
-      .values({
-        hospitalId: org.id,
-        name: validatedData.name,
-        categoryId: validatedData.categoryId,
-        companyName: validatedData.companyName,
-        unitId: validatedData.unitId,
-        notes: validatedData.notes || null,
-      })
-      .returning();
+    .insert(medicines)
+    .values({
+      hospitalId: org.id,
+      name: validatedData.name,
+      categoryId: validatedData.categoryId,
+      companyName: validatedData.companyName,
+      unitId: validatedData.unitId,
+      notes: validatedData.notes ?? null, // nullable-safe
+      groupId: validatedData.groupId || "g1", // fallback to default group if not provided
+    })
+    .returning();
+
+
 
     revalidatePath("/doctor/settings/medicineRecord");
     return { data: newMedicine };

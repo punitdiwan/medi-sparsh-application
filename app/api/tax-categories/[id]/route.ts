@@ -4,7 +4,7 @@ import {
     permanentlyDeleteTaxCategory,
     restoreTaxCategory,
     getChargeCountByTaxCategory
-} from "@/lib/db/queries";
+} from "@/db/queries";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(

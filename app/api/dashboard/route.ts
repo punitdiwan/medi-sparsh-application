@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/lib/db/queries";
-import { db } from "@/lib/db";
-import { appointments, patients,  user } from "@/lib/db/migrations/schema";
+import { getUserRole } from "@/db/queries";
+import { db } from "@/db/index";
+import { appointments, patients,  user } from "@/drizzle/schema";
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
 import { cookies } from "next/headers";
 

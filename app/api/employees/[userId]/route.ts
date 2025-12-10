@@ -9,7 +9,7 @@ import {
   getStaffByUserId,
   getDoctorByStaffId,
   getStaffByIdWithDetails,
-} from "@/lib/db/queries";
+} from "@/db/queries";
 
 // GET /api/employees/[userId] - Get a specific employee (userId is actually staffId)
 export async function GET(
@@ -87,7 +87,7 @@ export async function PUT(
         });
       } else {
         // Create doctor record if it doesn't exist
-        const { createDoctor } = await import("@/lib/db/queries");
+        const { createDoctor } = await import("@/db/queries");
         doctorRecord = await createDoctor({
           staffId: staffId,
           hospitalId: hospital.hospitalId,
