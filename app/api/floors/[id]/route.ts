@@ -1,4 +1,4 @@
-import { updateFloor, deleteFloor, permanentlyDeleteFloor, getUserRole, getBedGroupCountByFloor } from "@/lib/db/queries";
+import { updateFloor, deleteFloor, permanentlyDeleteFloor, getUserRole, getBedGroupCountByFloor } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";

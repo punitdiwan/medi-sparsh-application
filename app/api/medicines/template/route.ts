@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { db } from "@/lib/db";
+import { db } from "@/db/index";
 import { eq } from "drizzle-orm";
-import { medicineCategories, medicineCompanies, medicineUnits } from "@/lib/db/migrations/schema";
+import { medicineCategories, medicineCompanies, medicineUnits, medicineGroups } from "@/db/schema";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 
 export async function GET() {
   const org = await getActiveOrganization();
-    if (!org) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+  if (!org) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const hospitalId = org.id;
 
@@ -20,17 +17,23 @@ export async function GET() {
     .select()
     .from(medicineCategories)
     .where(eq(medicineCategories.hospitalId, hospitalId));
+
   const companies = await db
     .select()
     .from(medicineCompanies)
     .where(eq(medicineCompanies.hospitalId, hospitalId));
+
   const units = await db
     .select()
     .from(medicineUnits)
     .where(eq(medicineUnits.hospitalId, hospitalId));
 
-  const workbook = new ExcelJS.Workbook();
+  const groups = await db
+    .select()
+    .from(medicineGroups)
+    .where(eq(medicineGroups.hospitalId, hospitalId));
 
+  const workbook = new ExcelJS.Workbook();
   const mainSheet = workbook.addWorksheet("Medicines");
 
   mainSheet.addRow([
@@ -38,6 +41,7 @@ export async function GET() {
     "category_name",
     "company_name",
     "unit_name",
+    "group_name",   
     "notes",
   ]);
 
@@ -57,6 +61,10 @@ export async function GET() {
   unitSheet.addRow(["name"]);
   units.forEach((u) => unitSheet.addRow([u.name]));
 
+  const groupSheet = workbook.addWorksheet("Groups");
+  groupSheet.addRow(["name"]);
+  groups.forEach((g) => groupSheet.addRow([g.name]));
+
   for (let row = 2; row <= 500; row++) {
     mainSheet.getCell(`B${row}`).dataValidation = {
       type: "list",
@@ -75,6 +83,12 @@ export async function GET() {
       allowBlank: false,
       formulae: [`Units!$A$2:$A$${units.length + 1}`],
     };
+
+    mainSheet.getCell(`E${row}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: [`Groups!$A$2:$A$${groups.length + 1}`],
+    };
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -82,8 +96,7 @@ export async function GET() {
   return new NextResponse(buffer, {
     status: 200,
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": 'attachment; filename="medicines_template.xlsx"',
     },
   });

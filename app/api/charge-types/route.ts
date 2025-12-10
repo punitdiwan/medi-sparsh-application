@@ -1,4 +1,4 @@
-import { getChargeTypesByHospital, createChargeType } from "@/lib/db/queries";
+import { getChargeTypesByHospital, createChargeType } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { NextRequest, NextResponse } from "next/server";
 

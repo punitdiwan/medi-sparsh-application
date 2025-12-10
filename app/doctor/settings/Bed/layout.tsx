@@ -10,9 +10,10 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
   const tabs = [
     { name: "Bed", href: "/doctor/settings/Bed" },
     { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus" },
-    { name: "Floor", href: "/doctor/settings/Bed/Floor" },
-    { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
     { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup" },
+    { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
+    { name: "Floor", href: "/doctor/settings/Bed/Floor" },
+
   ];
 
   // Determine active tab

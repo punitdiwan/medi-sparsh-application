@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { createPrescription, updateAppointmentStatus, getPrescriptionsByHospital } from "@/lib/db/queries";
-import { prescriptions } from "@/lib/db/migrations/schema";
-import { db } from "@/lib/db";
+import { createPrescription, updateAppointmentStatus, getPrescriptionsByHospital } from "@/db/queries";
+import { prescriptions } from "@/drizzle/schema";
+import { db } from "@/db/index";
 import { and, eq } from "drizzle-orm";
 
 // GET /api/prescriptions - Get all prescriptions for the current hospital

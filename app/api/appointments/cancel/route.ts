@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { updateAppointmentStatus } from "@/lib/db/queries";
+import { updateAppointmentStatus } from "@/db/queries";
 
 // POST /api/appointments/cancel - Cancel an appointment
 export async function POST(request: NextRequest) {

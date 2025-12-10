@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { transactions, patients, appointments } from "@/lib/db/migrations/schema";
+import { db } from "@/db/index";
+import { transactions, patients, appointments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -23,7 +23,7 @@ export async function GET(
         transactionId: transactions.id,
         hospitalId: transactions.hospitalId,
         patientId: transactions.patientId,
-        appointmentId: transactions.appointmentsId,
+        appointmentId: transactions.appointmentId,
         amount: transactions.amount,
         status: transactions.status,
         paymentMethod: transactions.paymentMethod,
@@ -37,7 +37,7 @@ export async function GET(
       })
       .from(transactions)
       .leftJoin(patients, eq(patients.id, transactions.patientId))
-      .leftJoin(appointments, eq(appointments.id, transactions.appointmentsId))
+      .leftJoin(appointments, eq(appointments.id, transactions.appointmentId))
       .where(eq(transactions.id, id));
 
     if (!result || result.length === 0) {

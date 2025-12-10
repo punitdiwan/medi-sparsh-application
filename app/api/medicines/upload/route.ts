@@ -1,13 +1,14 @@
 // app/api/medicines/upload/route.ts
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { db } from "@/lib/db";
+import { db } from "@/db/index";
 import { createMedicine } from "@/lib/actions/medicines";
 import {
   medicineCategories,
   medicineCompanies,
   medicineUnits,
-} from "@/lib/db/migrations/schema";
+  medicineGroups
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 
@@ -37,7 +38,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [categories, companies, units] = await Promise.all([
+    // Fetch dropdown data from DB
+    const [categories, companies, units, groups] = await Promise.all([
       db
         .select()
         .from(medicineCategories)
@@ -50,6 +52,10 @@ export async function POST(req: Request) {
         .select()
         .from(medicineUnits)
         .where(eq(medicineUnits.hospitalId, org.id)),
+      db
+        .select()
+        .from(medicineGroups)
+        .where(eq(medicineGroups.hospitalId, org.id)),
     ]);
 
     const errors: { row: number; error: string }[] = [];
@@ -62,13 +68,14 @@ export async function POST(req: Request) {
       const categoryName = row.getCell(2).value?.toString().trim();
       const companyName = row.getCell(3).value?.toString().trim();
       const unitName = row.getCell(4).value?.toString().trim();
-      const notes = row.getCell(5).value?.toString() || null;
+      const groupName = row.getCell(5).value?.toString().trim();
+      const notes = row.getCell(6).value?.toString() || null;
 
-      if (!medicineName && !categoryName && !companyName && !unitName) {
+      if (!medicineName && !categoryName && !companyName && !unitName && !groupName) {
         continue; // Skip empty rows
       }
 
-      if (!medicineName || !categoryName || !companyName || !unitName) {
+      if (!medicineName || !categoryName || !companyName || !unitName || !groupName) {
         errors.push({ row: rowNumber, error: "Missing required fields" });
         continue;
       }
@@ -76,11 +83,12 @@ export async function POST(req: Request) {
       const category = categories.find((c) => c.name === categoryName);
       const company = companies.find((c) => c.name === companyName);
       const unit = units.find((u) => u.name === unitName);
+      const group = groups.find((g) => g.name === groupName);
 
-      if (!category || !company || !unit) {
+      if (!category || !company || !unit || !group) {
         errors.push({
           row: rowNumber,
-          error: "Invalid category / company / unit name",
+          error: "Invalid category / company / unit / group name",
         });
         continue;
       }
@@ -90,6 +98,7 @@ export async function POST(req: Request) {
         categoryId: category.id,
         companyName: company.id,
         unitId: unit.id,
+        groupId: group.id,
         notes,
       });
 

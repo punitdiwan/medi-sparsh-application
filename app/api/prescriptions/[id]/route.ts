@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { getPrescriptionById } from "@/lib/db/queries";
-import { db } from "@/lib/db";
-import { prescriptions, patients, userInAuth as user, appointments, organizationInAuth, doctors, staff } from "@/lib/db/migrations/schema";
+import { getPrescriptionById } from "@/db/queries";
+import { db } from "@/db/index";
+import { prescriptions, patients, user, appointments, organization, doctors, staff } from "@/drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 // GET /api/prescriptions/[id] - Get a specific prescription
@@ -22,7 +22,7 @@ export async function GET(
       .innerJoin(patients, eq(prescriptions.patientId, patients.id))
       .innerJoin(user, eq(prescriptions.doctorUserId, user.id))
       .innerJoin(appointments, eq(prescriptions.appointmentId, appointments.id))
-      .innerJoin(organizationInAuth, eq(prescriptions.hospitalId, organizationInAuth.id)) 
+      .innerJoin(organization, eq(prescriptions.hospitalId, organization.id)) 
       .where(
         and(
           eq(prescriptions.id, id),

@@ -1,4 +1,3 @@
-// MedicineManager.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -20,6 +19,7 @@ import { getMedicines, deleteMedicine } from "@/lib/actions/medicines";
 import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
+import { getMedicineGroups } from "@/lib/actions/medicineGroups";
 import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
 import MedicineExcelModal from "./medicineExcelUploadModel";
 import { Loader2 } from "lucide-react";
@@ -33,36 +33,32 @@ export default function MedicineManager() {
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
   const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
+  const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch medicines and related data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [medicinesRes, categoriesRes, companiesRes, unitsRes] = await Promise.all([
+        const [medicinesRes, categoriesRes, companiesRes, unitsRes, groupsRes] = await Promise.all([
           getMedicines(),
           getMedicineCategories(),
           getMedicineCompanies(),
           getMedicineUnits(),
+          getMedicineGroups(),
         ]);
 
         if (medicinesRes.data) {
           setData(medicinesRes.data as Medicine[]);
         }
-        if (categoriesRes.data) {
-          setCategories(categoriesRes.data);
-        }
-        if (companiesRes.data) {
-          setCompanies(companiesRes.data);
-        }
-        if (unitsRes.data) {
-          setUnits(unitsRes.data);
-        }
+        if (categoriesRes.data) setCategories(categoriesRes.data);
+        if (companiesRes.data) setCompanies(companiesRes.data);
+        if (unitsRes.data) setUnits(unitsRes.data);
+        if (groupsRes.data) setGroups(groupsRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load medicines");
@@ -74,18 +70,16 @@ export default function MedicineManager() {
     fetchData();
   }, []);
 
-  const filtered = useMemo(() => {
-    return data.filter((m) =>
-      m.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search, data]);
+  const filtered = useMemo(() => data.filter((m) =>
+    m.name.toLowerCase().includes(search.toLowerCase())
+  ), [search, data]);
 
   const handleSave = (med: Medicine) => {
     if (editing) {
-      setData((prev) => prev.map((x) => (x.id === med.id ? med : x)));
-      // toast.success("Medicine Updated");
+      setData(prev => prev.map(x => x.id === med.id ? med : x));
+      toast.success("Medicine Updated");
     } else {
-      setData((prev) => [...prev, med]);
+      setData(prev => [...prev, med]);
       toast.success("Medicine Added");
     }
     setEditing(undefined);
@@ -98,15 +92,12 @@ export default function MedicineManager() {
 
   const handleConfirmDelete = async () => {
     if (!medicineToDelete) return;
-
     try {
       setIsDeleting(true);
       const result = await deleteMedicine(medicineToDelete.id);
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        setData((prev) => prev.filter((x) => x.id !== medicineToDelete.id));
+      if (result.error) toast.error(result.error);
+      else {
+        setData(prev => prev.filter(x => x.id !== medicineToDelete.id));
         toast.success("Medicine deleted successfully");
       }
     } catch (error) {
@@ -119,35 +110,25 @@ export default function MedicineManager() {
     }
   };
 
-  const getCategoryName = (categoryId: string) => {
-    return categories.find((c) => c.id === categoryId)?.name || "-";
-  };
-
-  const getCompanyName = (companyId: string) => {
-    return companies.find((c) => c.id === companyId)?.name || "-";
-  };
-
-  const getUnitName = (unitId: string) => {
-    return units.find((u) => u.id === unitId)?.name || "-";
-  };
+  const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || "-";
+  const getCompanyName = (id: string) => companies.find(c => c.id === id)?.name || "-";
+  const getUnitName = (id: string) => units.find(u => u.id === id)?.name || "-";
+  const getGroupName = (id: string) => groups.find(g => g.id === id)?.name || "-";
 
   const refreshMedicines = async () => {
-  try {
-    setRefreshing(true);
-    const medicinesRes = await getMedicines();
-
-    if (medicinesRes.data) {
-      setData(medicinesRes.data);
-      toast.success("Medicines updated");
-    } else {
-      toast.error("Failed to refresh medicines");
+    try {
+      setRefreshing(true);
+      const medicinesRes = await getMedicines();
+      if (medicinesRes.data) {
+        setData(medicinesRes.data as Medicine[]);
+        toast.success("Medicines updated");
+      }
+    } catch {
+      toast.error("Error refreshing medicines");
+    } finally {
+      setRefreshing(false);
     }
-  } catch (error) {
-    toast.error("Error refreshing medicines");
-  } finally {
-    setRefreshing(false);
-  }
-};
+  };
 
   return (
     <Card className="w-full p-4 shadow-sm">
@@ -157,47 +138,18 @@ export default function MedicineManager() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Search + Add */}
         <div className="flex flex-wrap justify-between items-center gap-2">
-          <Input
-            placeholder="Search Medicine..."
-            className="max-w-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <Input placeholder="Search Medicine..." className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} />
           <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => {
-              setEditing(undefined);
-              setOpenModal(true);
-            }}
-          >
-            Add Medicine
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setOpen(true)}>Upload Medicine Excel
-          </Button>
-          <Button
-            variant="outline"
-            onClick={refreshMedicines}
-            disabled={refreshing}
-          >
-            {refreshing ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Refreshing...
-              </span>
-            ) : (
-              "Refresh"
-            )}
-          </Button>
-
+            <Button onClick={() => { setEditing(undefined); setOpenModal(true); }}>Add Medicine</Button>
+            <Button variant="outline" onClick={() => setOpen(true)}>Upload Medicine Excel</Button>
+            <Button variant="outline" onClick={refreshMedicines} disabled={refreshing}>
+              {refreshing ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Refreshing...</span> : "Refresh"}
+            </Button>
             <MedicineExcelModal open={open} setOpen={setOpen} />
           </div>
         </div>
 
-        {/* Table */}
         <div className="border rounded-xl overflow-hidden">
           <Table>
             <TableHeader>
@@ -207,6 +159,7 @@ export default function MedicineManager() {
                 <TableHead>Category</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead>Unit</TableHead>
+                <TableHead>Group</TableHead>
                 <TableHead>Note</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -215,54 +168,35 @@ export default function MedicineManager() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-6 text-center">
-                    Loading medicines...
+                  <TableCell colSpan={8} className="py-6 text-center">Loading medicines...</TableCell>
+                </TableRow>
+              ) : filtered.length > 0 ? filtered.map((item, idx) => (
+                <TableRow key={item.id}>
+                  <TableCell>{idx + 1}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{getCategoryName(item.categoryId)}</TableCell>
+                  <TableCell>{getCompanyName(item.companyName)}</TableCell>
+                  <TableCell>{getUnitName(item.unitId)}</TableCell>
+                  <TableCell>{getGroupName(item.groupId)}</TableCell>
+                  <TableCell>{item.notes || "-"}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="ghost" size="icon" onClick={() => { setEditing(item); setOpenModal(true); }}>
+                      <MdEdit size={18} />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(item)}>
+                      <MdDelete size={18} className="text-red-500" />
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ) : filtered.length > 0 ? (
-                filtered.map((item, idx) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{getCategoryName(item.categoryId)}</TableCell>
-                    <TableCell>{getCompanyName(item.companyName)}</TableCell>
-                    <TableCell>{getUnitName(item.unitId)}</TableCell>
-                    <TableCell>{item.notes || "-"}</TableCell>
- 
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditing(item);
-                          setOpenModal(true);
-                        }}
-                      >
-                        <MdEdit size={18} />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(item)}
-                      >
-                        <MdDelete size={18} className="text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
+              )) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-6 text-center">
-                    No medicines found
-                  </TableCell>
+                  <TableCell colSpan={8} className="py-6 text-center">No medicines found</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
 
-        {/* Modal */}
         <MedicineModal
           open={openModal}
           onOpenChange={setOpenModal}
@@ -270,10 +204,10 @@ export default function MedicineManager() {
           categories={categories}
           companies={companies}
           units={units}
+          groups={groups}
           onSave={handleSave}
         />
 
-        {/* Delete Confirmation Dialog */}
         <DeleteConfirmationDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}

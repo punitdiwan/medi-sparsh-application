@@ -5,7 +5,7 @@ import {
   getPatientById,
   updatePatient,
   deletePatient,
-} from "@/lib/db/queries";
+} from "@/db/queries";
 
 // GET /api/patients/[patientId] - Get a specific patient
 export async function GET(

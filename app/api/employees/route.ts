@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import {
   getStaffWithDoctorDetails,
-} from "@/lib/db/queries";
+} from "@/db/queries";
 import { auth } from "@/lib/auth";
 
 // GET /api/employees - Get all employees (staff) for the current hospital
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Create staff and doctor records in a transaction
     // This ensures atomicity for database operations
-    const { createEmployeeTransaction } = await import("@/lib/db/queries");
+    const { createEmployeeTransaction } = await import("@/db/queries");
 
     const result = await createEmployeeTransaction({
       staffData: {
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     if (createdUserId) {
       try {
         console.log(`Rolling back: Deleting user ${createdUserId} from auth.user`);
-        const { deleteAuthUser } = await import("@/lib/db/queries");
+        const { deleteAuthUser } = await import("@/db/queries");
         await deleteAuthUser(createdUserId);
         console.log("Rollback successful: User deleted from auth");
       } catch (rollbackError) {

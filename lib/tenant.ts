@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
-import { db } from "./db";
-import { organizationInAuth as organization, memberInAuth as member } from "./db/migrations/schema";
 import { eq, and } from "drizzle-orm";
-import { logger } from "./logger";
+import { db } from "@/db/index";
+import { logger } from "@/lib/logger";
+import { organization,member } from "@/drizzle/schema";
+
 /**
  * Get the current organization/hospital based on the request subdomain or slug
  * This supports multi-tenant architecture where each hospital is an organization

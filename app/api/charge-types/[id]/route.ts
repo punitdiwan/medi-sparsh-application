@@ -1,4 +1,4 @@
-import { updateChargeType, deleteChargeType } from "@/lib/db/queries";
+import { updateChargeType, deleteChargeType } from "@/db/queries";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(

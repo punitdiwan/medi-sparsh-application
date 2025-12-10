@@ -1,4 +1,4 @@
-import { getUnits, createUnit } from "@/lib/db/queries";
+import { getUnits, createUnit } from "@/db/queries";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {

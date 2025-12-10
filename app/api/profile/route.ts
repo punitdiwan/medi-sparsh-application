@@ -6,7 +6,11 @@ import {
   getDoctorByStaffId,
   updateStaff,
   updateDoctor,
-} from "@/lib/db/queries";
+} from "@/db/queries";
+import { selectAllAppliedValues } from "recharts/types/state/selectors/axisSelectors";
+import { db } from "@/db";
+import { member } from "@/drizzle/schema";
+import { eq } from "drizzle-orm";
 
 // GET /api/profile - Get current user's profile
 export async function GET(request: NextRequest) {
@@ -24,6 +28,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const [memberRole] = await db
+      .select()
+      .from(member)
+      .where(eq(member.userId, currentUser.id))
+      .limit(1);
+
+    if(memberRole?.role === 'owner') {
+      return NextResponse.json(
+        {
+          success: true,
+          data:{user: {
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.name,
+            image: currentUser.image,
+            role: memberRole?.role,
+          },}
+        }, { status: 200 }
+      );
+
+    }
     // Get staff record for current user
     const staffRecord = await getStaffByUserId(currentUser.id, hospital.hospitalId);
 
@@ -70,7 +95,9 @@ export async function PUT(request: NextRequest) {
     const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
     const body = await request.json();
-
+    console.log("Received profile update body:", body);
+    console.log("Current User:", currentUser);
+    console.log("Hospital:", hospital);
     if (!currentUser?.id) {
       return NextResponse.json(
         {

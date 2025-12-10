@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
-import { createTransaction, getTransactionsByHospital } from "@/lib/db/queries";
+import { createTransaction, getTransactionsByHospital } from "@/db/queries";
 
 export async function GET() {
     try {

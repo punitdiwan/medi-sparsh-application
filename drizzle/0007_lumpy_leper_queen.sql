@@ -1,0 +1,1 @@
+ALTER TABLE "medicine_suppliers" ADD COLUMN "is_deleted" boolean DEFAULT false;

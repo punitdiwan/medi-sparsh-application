@@ -1,4 +1,4 @@
-import { updateBedGroup, deleteBedGroup, permanentlyDeleteBedGroup, getUserRole } from "@/lib/db/queries";
+import { updateBedGroup, deleteBedGroup, permanentlyDeleteBedGroup, getUserRole } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";

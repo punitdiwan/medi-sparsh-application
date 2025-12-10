@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllSpecializations } from "@/lib/db/queries";
+import { getAllSpecializations } from "@/db/queries";
 
 // GET /api/specializations - Get all specializations
 export async function GET(request: NextRequest) {
