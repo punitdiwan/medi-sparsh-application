@@ -6,29 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+export interface MedicineGroup {
+  id: string;
+  name: string;
+  createdAt?: Date;
+  usageCount?: number;
+  isUsed?: boolean;
+}
+
 export default function MedicineGroupModal({
   open,
   onClose,
-  mode = "add", // "add" or "edit"
-  defaultValue = "",
-  onSubmit,
+  group,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
-  mode?: "add" | "edit";
-  defaultValue?: string;
-  onSubmit: (value: string) => void;
+  group?: MedicineGroup;
+  onSave: (group: MedicineGroup) => void;
 }) {
   const [groupName, setGroupName] = useState("");
 
   // Load existing value when editing
   useEffect(() => {
-    setGroupName(defaultValue);
-  }, [defaultValue, open]);
+    setGroupName(group?.name || "");
+  }, [group, open]);
 
   const handleSave = () => {
     if (!groupName.trim()) return;
-    onSubmit(groupName);
+
+    onSave({
+      id: group?.id || "",
+      name: groupName,
+    });
     onClose();
   };
 
@@ -37,7 +47,7 @@ export default function MedicineGroupModal({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {mode === "add" ? "Add Medicine Group" : "Edit Medicine Group"}
+            {group ? "Edit Medicine Group" : "Add Medicine Group"}
           </DialogTitle>
         </DialogHeader>
 
@@ -56,7 +66,7 @@ export default function MedicineGroupModal({
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            {mode === "add" ? "Add" : "Update"}
+            {group ? "Update" : "Add"}
           </Button>
         </DialogFooter>
       </DialogContent>

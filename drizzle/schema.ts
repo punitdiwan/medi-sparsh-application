@@ -21,10 +21,10 @@ export const appointmentPriorities = pgTable("appointment_priorities", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "appointment_priorities_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "appointment_priorities_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const verification = pgTable("verification", {
@@ -67,10 +67,10 @@ export const account = pgTable("account", {
 }, (table) => [
 	index("account_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [user.id],
-			name: "account_user_id_user_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "account_user_id_user_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const session = pgTable("session", {
@@ -86,10 +86,10 @@ export const session = pgTable("session", {
 }, (table) => [
 	index("session_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [user.id],
-			name: "session_user_id_user_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "session_user_id_user_id_fk"
+	}).onDelete("cascade"),
 	unique("session_token_unique").on(table.token),
 ]);
 
@@ -107,15 +107,15 @@ export const doctors = pgTable("doctors", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "doctors_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "doctors_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.staffId],
-			foreignColumns: [staff.id],
-			name: "doctors_staff_id_staff_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.staffId],
+		foreignColumns: [staff.id],
+		name: "doctors_staff_id_staff_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const doctorShifts = pgTable("doctor_shifts", {
@@ -127,20 +127,20 @@ export const doctorShifts = pgTable("doctor_shifts", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.doctorUserId],
-			foreignColumns: [doctors.id],
-			name: "doctor_shifts_doctor_user_id_doctors_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.doctorUserId],
+		foreignColumns: [doctors.id],
+		name: "doctor_shifts_doctor_user_id_doctors_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "doctor_shifts_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "doctor_shifts_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.shiftId],
-			foreignColumns: [shifts.id],
-			name: "doctor_shifts_shift_id_shifts_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.shiftId],
+		foreignColumns: [shifts.id],
+		name: "doctor_shifts_shift_id_shifts_id_fk"
+	}).onDelete("cascade"),
 	unique("doctor_shift_unique").on(table.doctorUserId, table.shiftId),
 ]);
 
@@ -155,10 +155,10 @@ export const shifts = pgTable("shifts", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "shifts_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "shifts_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const staff = pgTable("staff", {
@@ -177,10 +177,10 @@ export const staff = pgTable("staff", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "staff_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "staff_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const organization = pgTable("organization", {
@@ -207,15 +207,15 @@ export const invitation = pgTable("invitation", {
 	index("invitation_email_idx").using("btree", table.email.asc().nullsLast().op("text_ops")),
 	index("invitation_organizationId_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.inviterId],
-			foreignColumns: [user.id],
-			name: "invitation_inviter_id_user_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.inviterId],
+		foreignColumns: [user.id],
+		name: "invitation_inviter_id_user_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "invitation_organization_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "invitation_organization_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const member = pgTable("member", {
@@ -228,15 +228,15 @@ export const member = pgTable("member", {
 	index("member_organizationId_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
 	index("member_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "member_organization_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "member_organization_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [user.id],
-			name: "member_user_id_user_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "member_user_id_user_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicineCategories = pgTable("medicine_categories", {
@@ -247,10 +247,10 @@ export const medicineCategories = pgTable("medicine_categories", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicine_categories_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_categories_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const modules = pgTable("modules", {
@@ -262,10 +262,10 @@ export const modules = pgTable("modules", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "modules_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "modules_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const patients = pgTable("patients", {
@@ -291,10 +291,10 @@ export const patients = pgTable("patients", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "patients_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "patients_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const appointments = pgTable("appointments", {
@@ -315,15 +315,15 @@ export const appointments = pgTable("appointments", {
 	services: jsonb(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "appointments_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "appointments_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.patientId],
-			foreignColumns: [patients.id],
-			name: "appointments_patient_id_patients_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.patientId],
+		foreignColumns: [patients.id],
+		name: "appointments_patient_id_patients_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const doctorSlots = pgTable("doctor_slots", {
@@ -340,25 +340,25 @@ export const doctorSlots = pgTable("doctor_slots", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.chargeId],
-			foreignColumns: [charges.id],
-			name: "doctor_slots_charge_id_charges_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.chargeId],
+		foreignColumns: [charges.id],
+		name: "doctor_slots_charge_id_charges_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.doctorId],
-			foreignColumns: [doctors.id],
-			name: "doctor_slots_doctor_id_doctors_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.doctorId],
+		foreignColumns: [doctors.id],
+		name: "doctor_slots_doctor_id_doctors_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "doctor_slots_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "doctor_slots_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.shiftId],
-			foreignColumns: [shifts.id],
-			name: "doctor_slots_shift_id_shifts_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.shiftId],
+		foreignColumns: [shifts.id],
+		name: "doctor_slots_shift_id_shifts_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const prescriptions = pgTable("prescriptions", {
@@ -380,20 +380,20 @@ export const prescriptions = pgTable("prescriptions", {
 	vitals: jsonb(),
 }, (table) => [
 	foreignKey({
-			columns: [table.appointmentId],
-			foreignColumns: [appointments.id],
-			name: "prescriptions_appointment_id_appointments_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.appointmentId],
+		foreignColumns: [appointments.id],
+		name: "prescriptions_appointment_id_appointments_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "prescriptions_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "prescriptions_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.patientId],
-			foreignColumns: [patients.id],
-			name: "prescriptions_patient_id_patients_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.patientId],
+		foreignColumns: [patients.id],
+		name: "prescriptions_patient_id_patients_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const floors = pgTable("floors", {
@@ -406,10 +406,10 @@ export const floors = pgTable("floors", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "floors_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "floors_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const bedGroups = pgTable("bed_groups", {
@@ -423,15 +423,15 @@ export const bedGroups = pgTable("bed_groups", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.floorId],
-			foreignColumns: [floors.id],
-			name: "bed_groups_floor_id_floors_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.floorId],
+		foreignColumns: [floors.id],
+		name: "bed_groups_floor_id_floors_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "bed_groups_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "bed_groups_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const bedsTypes = pgTable("beds_types", {
@@ -444,10 +444,10 @@ export const bedsTypes = pgTable("beds_types", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "beds_types_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "beds_types_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const beds = pgTable("beds", {
@@ -461,20 +461,20 @@ export const beds = pgTable("beds", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.bedGroupId],
-			foreignColumns: [bedGroups.id],
-			name: "beds_bed_group_id_bed_groups_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.bedGroupId],
+		foreignColumns: [bedGroups.id],
+		name: "beds_bed_group_id_bed_groups_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.bedTypeId],
-			foreignColumns: [bedsTypes.id],
-			name: "beds_bed_type_id_beds_types_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.bedTypeId],
+		foreignColumns: [bedsTypes.id],
+		name: "beds_bed_type_id_beds_types_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "beds_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "beds_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const chargeTypes = pgTable("charge_types", {
@@ -487,10 +487,10 @@ export const chargeTypes = pgTable("charge_types", {
 	isDeleted: boolean("is_deleted").default(false),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "charge_types_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "charge_types_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const chargeCategories = pgTable("charge_categories", {
@@ -504,15 +504,15 @@ export const chargeCategories = pgTable("charge_categories", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.chargeTypeId],
-			foreignColumns: [chargeTypes.id],
-			name: "charge_categories_charge_type_id_charge_types_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.chargeTypeId],
+		foreignColumns: [chargeTypes.id],
+		name: "charge_categories_charge_type_id_charge_types_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "charge_categories_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "charge_categories_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const charges = pgTable("charges", {
@@ -530,30 +530,30 @@ export const charges = pgTable("charges", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.chargeCategoryId],
-			foreignColumns: [chargeCategories.id],
-			name: "charges_charge_category_id_charge_categories_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.chargeCategoryId],
+		foreignColumns: [chargeCategories.id],
+		name: "charges_charge_category_id_charge_categories_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.chargeTypeId],
-			foreignColumns: [chargeTypes.id],
-			name: "charges_charge_type_id_charge_types_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.chargeTypeId],
+		foreignColumns: [chargeTypes.id],
+		name: "charges_charge_type_id_charge_types_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "charges_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "charges_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.taxCategoryId],
-			foreignColumns: [taxCategories.id],
-			name: "charges_tax_category_id_tax_categories_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.taxCategoryId],
+		foreignColumns: [taxCategories.id],
+		name: "charges_tax_category_id_tax_categories_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.unitId],
-			foreignColumns: [units.id],
-			name: "charges_unit_id_units_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.unitId],
+		foreignColumns: [units.id],
+		name: "charges_unit_id_units_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const units = pgTable("units", {
@@ -571,10 +571,10 @@ export const taxCategories = pgTable("tax_categories", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "tax_categories_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "tax_categories_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicineCompanies = pgTable("medicine_companies", {
@@ -585,10 +585,10 @@ export const medicineCompanies = pgTable("medicine_companies", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicine_companies_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_companies_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicineGroups = pgTable("medicine_groups", {
@@ -599,10 +599,10 @@ export const medicineGroups = pgTable("medicine_groups", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicine_groups_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_groups_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicineSuppliers = pgTable("medicine_suppliers", {
@@ -614,14 +614,15 @@ export const medicineSuppliers = pgTable("medicine_suppliers", {
 	contactPerson: text("contact_person").notNull(),
 	contactPersonNumber: text("contact_person_number").notNull(),
 	drugLicenseNumber: text("drug_license_number").notNull(),
+	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicine_suppliers_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_suppliers_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicineUnits = pgTable("medicine_units", {
@@ -632,10 +633,10 @@ export const medicineUnits = pgTable("medicine_units", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicine_units_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_units_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const medicines = pgTable("medicines", {
@@ -652,30 +653,30 @@ export const medicines = pgTable("medicines", {
 	groupId: text("group_id").notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.categoryId],
-			foreignColumns: [medicineCategories.id],
-			name: "medicines_category_id_medicine_categories_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.categoryId],
+		foreignColumns: [medicineCategories.id],
+		name: "medicines_category_id_medicine_categories_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.companyName],
-			foreignColumns: [medicineCompanies.id],
-			name: "medicines_company_name_medicine_companies_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.companyName],
+		foreignColumns: [medicineCompanies.id],
+		name: "medicines_company_name_medicine_companies_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.groupId],
-			foreignColumns: [medicineGroups.id],
-			name: "medicines_group_id_medicine_groups_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.groupId],
+		foreignColumns: [medicineGroups.id],
+		name: "medicines_group_id_medicine_groups_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "medicines_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicines_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.unitId],
-			foreignColumns: [medicineUnits.id],
-			name: "medicines_unit_id_medicine_units_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.unitId],
+		foreignColumns: [medicineUnits.id],
+		name: "medicines_unit_id_medicine_units_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const roles = pgTable("roles", {
@@ -687,10 +688,10 @@ export const roles = pgTable("roles", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "roles_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "roles_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const services = pgTable("services", {
@@ -704,10 +705,10 @@ export const services = pgTable("services", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "services_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "services_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const team = pgTable("team", {
@@ -718,10 +719,10 @@ export const team = pgTable("team", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "team_organization_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "team_organization_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const teamMember = pgTable("team_member", {
@@ -731,15 +732,15 @@ export const teamMember = pgTable("team_member", {
 	createdAt: timestamp("created_at", { mode: 'string' }),
 }, (table) => [
 	foreignKey({
-			columns: [table.teamId],
-			foreignColumns: [team.id],
-			name: "team_member_team_id_team_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.teamId],
+		foreignColumns: [team.id],
+		name: "team_member_team_id_team_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [user.id],
-			name: "team_member_user_id_user_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.userId],
+		foreignColumns: [user.id],
+		name: "team_member_user_id_user_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const transactions = pgTable("transactions", {
@@ -756,20 +757,20 @@ export const transactions = pgTable("transactions", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.appointmentId],
-			foreignColumns: [appointments.id],
-			name: "transactions_appointment_id_appointments_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.appointmentId],
+		foreignColumns: [appointments.id],
+		name: "transactions_appointment_id_appointments_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "transactions_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "transactions_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.patientId],
-			foreignColumns: [patients.id],
-			name: "transactions_patient_id_patients_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.patientId],
+		foreignColumns: [patients.id],
+		name: "transactions_patient_id_patients_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const vitals = pgTable("vitals", {
@@ -783,10 +784,10 @@ export const vitals = pgTable("vitals", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
-			columns: [table.hospitalId],
-			foreignColumns: [organization.id],
-			name: "vitals_hospital_id_organization_id_fk"
-		}).onDelete("cascade"),
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "vitals_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
 ]);
 
 export const settings = pgTable("settings", {
@@ -796,5 +797,5 @@ export const settings = pgTable("settings", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	primaryKey({ columns: [table.organizationId, table.key], name: "settings_key_unique"}),
+	primaryKey({ columns: [table.organizationId, table.key], name: "settings_key_unique" }),
 ]);
