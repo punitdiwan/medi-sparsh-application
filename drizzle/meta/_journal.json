@@ -64,6 +64,13 @@
       "when": 1765434315764,
       "tag": "0008_simple_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765443362345,
+      "tag": "0009_complex_cerise",
+      "breakpoints": true
     }
   ]
 }
