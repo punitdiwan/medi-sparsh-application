@@ -73,6 +73,7 @@ const items: SidebarItem[] = [
       { title: 'Stats', url: '/doctor/settings/stats' },
       { title: 'Payments History', url: '/doctor/billing' },
       { title: 'App Settings', url: '/doctor/settings/config' },
+      { title: 'Roles', url: '/doctor/settings/roles' },
     ],
   },
 ];

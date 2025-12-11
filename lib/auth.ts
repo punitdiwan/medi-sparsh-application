@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/drizzle/schema";
 import { organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
+import {ac} from "./permissions";
 
 
 export const auth = betterAuth({
@@ -51,7 +52,12 @@ export const auth = betterAuth({
     },
     trustedOrigins: ["http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
     plugins: [
-        organization(),
+        organization({
+            ac, // Must be defined in order for dynamic access control to work
+            dynamicAccessControl: {
+                enabled: true,
+            },
+        }),
         nextCookies()
     ]
 });

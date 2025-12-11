@@ -799,3 +799,24 @@ export const settings = pgTable("settings", {
 }, (table) => [
 	primaryKey({ columns: [table.organizationId, table.key], name: "settings_key_unique" }),
 ]);
+
+
+export const organizationRole = pgTable(
+  "organization_role",
+  {
+	id: text("id").primaryKey(),
+	organizationId: text("organization_id")
+	  .notNull()
+	  .references(() => organization.id, { onDelete: "cascade" }),
+	role: text("role").notNull(),
+	permission: text("permission").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").$onUpdate(
+	  () => /* @__PURE__ */ new Date(),
+	),
+  },
+  (table) => [
+	index("organizationRole_organizationId_idx").on(table.organizationId),
+	index("organizationRole_role_idx").on(table.role),
+  ],
+);
