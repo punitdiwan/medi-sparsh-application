@@ -17,6 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import BackButton from "@/Components/BackButton";
+import { toast } from "sonner";
+import { getSuppliers, getCategories, getMedicinesByCategory, createPharmacyPurchase } from "@/lib/actions/pharmacyPurchase";
+import { useRouter } from "next/navigation";
 
 type Supplier = { id: string; name: string };
 type Category = { id: string; name: string };
@@ -29,19 +32,17 @@ type PurchaseItem = {
   batchNo: string;
   expiry: string;
   mrp: number;
-  batchAmount: number;
-  salePrice: number;
-  packingQty: number;
   quantity: number;
   purchasePrice: number;
-  taxPercent: number;
   amount: number;
 };
 
 export default function PurchaseMedicineModelPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [medicineOptions, setMedicineOptions] = useState<Record<string, Medicine[]>>({});
 
   const [selectedSupplier, setSelectedSupplier] = useState<string>("");
   const [billNo, setBillNo] = useState("");
@@ -50,76 +51,81 @@ export default function PurchaseMedicineModelPage() {
   const [nextItemId, setNextItemId] = useState(1);
 
   const [discount, setDiscount] = useState<number>(0);
+  const [taxPercent, setTaxPercent] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<string>("Cash");
   const [paymentNote, setPaymentNote] = useState<string>("");
 
   useEffect(() => {
-    setSuppliers([
-      { id: "s1", name: "HealthCare Suppliers" },
-      { id: "s2", name: "MediPharma" },
-    ]);
-    setCategories([
-      { id: "c1", name: "Tablet" },
-      { id: "c2", name: "Syrup" },
-    ]);
+    const initData = async () => {
+      const [suppliersRes, categoriesRes] = await Promise.all([
+        getSuppliers(),
+        getCategories(),
+      ]);
+
+      if (suppliersRes.error) toast.error(suppliersRes.error);
+      else if (suppliersRes.data) setSuppliers(suppliersRes.data);
+
+      if (categoriesRes.error) toast.error(categoriesRes.error);
+      else if (categoriesRes.data) setCategories(categoriesRes.data);
+    };
+
+    initData();
   }, []);
 
-  const handleCategoryChange = (itemId: number, categoryId: string) => {
+  const handleCategoryChange = async (itemId: number, categoryId: string) => {
     setPurchaseItems((prev) =>
       prev.map((p) => (p.id === itemId ? { ...p, categoryId, medicineId: "" } : p))
     );
 
-    if (categoryId === "c1")
-      setMedicines([{ id: "m1", name: "Paracetamol"}]);
-    else setMedicines([{ id: "m2", name: "Cough Syrup" }]);
+    if (!medicineOptions[categoryId]) {
+      const res = await getMedicinesByCategory(categoryId);
+      if (res.error) {
+        toast.error(res.error);
+      } else if (res.data) {
+        setMedicineOptions((prev) => ({ ...prev, [categoryId]: res.data! }));
+      }
+    }
   };
 
   const handleMedicineChange = (itemId: number, medicineId: string) => {
-    const med = medicines.find((m) => m.id === medicineId);
-
     setPurchaseItems((prev) =>
       prev.map((p) =>
         p.id === itemId
           ? {
-              ...p,
-              medicineId,
-            }
+            ...p,
+            medicineId,
+          }
           : p
       )
     );
   };
 
   const handleInputChange = (
-  itemId: number,
-  field: keyof PurchaseItem,
-  value: number | string
-) => {
-  setPurchaseItems((prev) =>
-    prev.map((p) => {
-      if (p.id !== itemId) return p;
+    itemId: number,
+    field: keyof PurchaseItem,
+    value: number | string
+  ) => {
+    setPurchaseItems((prev) =>
+      prev.map((p) => {
+        if (p.id !== itemId) return p;
 
-      const numeric = ["mrp", "batchAmount", "salePrice", "packingQty", "quantity", "purchasePrice", "taxPercent"];
+        const numeric = ["mrp", "quantity", "purchasePrice"];
 
-      const updated: PurchaseItem = {
-        ...p,
-        [field]: numeric.includes(field) ? Number(value) || 0 : value,
-      };
+        const updated: PurchaseItem = {
+          ...p,
+          [field]: numeric.includes(field) ? Number(value) || 0 : value,
+        };
 
 
-      const qty = Number(updated.quantity) || 0;
-      const price = Number(updated.purchasePrice) || 0;
-      const taxPercent = Number(updated.taxPercent) || 0;
+        const qty = Number(updated.quantity) || 0;
+        const price = Number(updated.purchasePrice) || 0;
 
-      const amountBeforeTax = qty * price;
+        updated.amount = qty * price;
 
-      const taxAmount = (amountBeforeTax * taxPercent) / 100;
-
-      updated.amount = amountBeforeTax + taxAmount;
-
-      return updated;
-    })
-  );
-};
+        return updated;
+      })
+    );
+  };
 
 
   const addNewItem = () => {
@@ -132,12 +138,8 @@ export default function PurchaseMedicineModelPage() {
         batchNo: "",
         expiry: "",
         mrp: 0,
-        batchAmount: 0,
-        salePrice: 0,
-        packingQty: 0,
         quantity: 0,
         purchasePrice: 0,
-        taxPercent: 0,
         amount: 0,
       },
     ]);
@@ -156,39 +158,43 @@ export default function PurchaseMedicineModelPage() {
 
   const afterDiscount = totalAmount - discountAmount;
 
-  const avgTaxPercent =
-    purchaseItems.reduce((sum, p) => sum + Number(p.taxPercent || 0), 0) /
-    (purchaseItems.length || 1);
-
-  const taxAmount = (afterDiscount * avgTaxPercent) / 100;
+  const taxAmount = (afterDiscount * taxPercent) / 100;
 
   const netAmount = afterDiscount + taxAmount;
 
-  const handleSavePurchase = () => {
-  const payload = {
-    supplierId: selectedSupplier,
-    billNo,
-    items: purchaseItems,
-    summary: {
-      totalAmount,
-      discountPercent: discount,
-      discountAmount,
-      taxAmount,
-      netAmount,
-    },
-    payment: {
-      mode: paymentMode,
-      note: paymentNote,
-      paidAmount: netAmount,
-    },
-  };
+  const handleSavePurchase = async () => {
+    if (!selectedSupplier || !billNo || purchaseItems.length === 0) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-  console.log("PURCHASE DATA:", payload);
-};
+    setLoading(true);
+    const payload = {
+      supplierId: selectedSupplier,
+      billNo,
+      items: purchaseItems,
+      summary: {
+        totalAmount,
+        discountPercent: discount,
+        taxPercent,
+        netAmount,
+      },
+    };
+
+    const res = await createPharmacyPurchase(payload);
+
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Purchase saved successfully");
+      router.push("/doctor/pharmacy/purchase"); // Redirect to list page
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="p-6 space-y-6">
-        <BackButton/>
+      <BackButton />
       <h1 className="text-3xl font-bold">Purchase Medicine</h1>
 
       <Card>
@@ -225,190 +231,136 @@ export default function PurchaseMedicineModelPage() {
             </div>
           </div>
 
-         {purchaseItems.map((item) => (
+          {purchaseItems.map((item) => (
             <Card key={item.id} className="p-4 mb-4">
-                <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
 
                 {/* CATEGORY */}
                 <div className="w-auto flex flex-col gap-2">
-                    <Label>Category</Label>
-                    <Select
+                  <Label>Category</Label>
+                  <Select
                     value={item.categoryId}
                     onValueChange={(v) => handleCategoryChange(item.id, v)}
-                    >
+                  >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select Category" />
+                      <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
                     <SelectContent>
-                        {categories.map((c) => (
+                      {categories.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                            {c.name}
+                          {c.name}
                         </SelectItem>
-                        ))}
+                      ))}
                     </SelectContent>
-                    </Select>
+                  </Select>
                 </div>
 
                 {/* MEDICINE */}
                 <div className="w-auto flex flex-col gap-2">
-                    <Label>Medicine</Label>
-                    <Select
+                  <Label>Medicine</Label>
+                  <Select
                     value={item.medicineId}
                     onValueChange={(v) => handleMedicineChange(item.id, v)}
-                    >
+                    disabled={!item.categoryId}
+                  >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select Medicine" />
+                      <SelectValue placeholder="Select Medicine" />
                     </SelectTrigger>
                     <SelectContent>
-                        {medicines.map((m) => (
+                      {(medicineOptions[item.categoryId] || []).map((m) => (
                         <SelectItem key={m.id} value={m.id}>
-                            {m.name}
+                          {m.name}
                         </SelectItem>
-                        ))}
+                      ))}
                     </SelectContent>
-                    </Select>
+                  </Select>
                 </div>
 
                 {/* BATCH NO */}
                 <div className="w-[120px] flex flex-col gap-2">
-                    <Label>Batch No</Label>
-                    <Input
+                  <Label>Batch No</Label>
+                  <Input
                     value={item.batchNo}
                     onChange={(e) =>
-                        handleInputChange(item.id, "batchNo", e.target.value)
+                      handleInputChange(item.id, "batchNo", e.target.value)
                     }
-                    />
+                  />
                 </div>
 
                 {/* EXPIRY */}
                 <div className="w-auto flex flex-col gap-2">
-                    <Label>Expiry</Label>
-                    <Input
+                  <Label>Expiry</Label>
+                  <Input
                     type="date"
                     value={item.expiry}
                     onChange={(e) =>
-                        handleInputChange(item.id, "expiry", e.target.value)
+                      handleInputChange(item.id, "expiry", e.target.value)
                     }
-                    />
+                  />
                 </div>
 
                 <div className="w-[120px] flex flex-col gap-2">
-                    <Label>MRP</Label>
-                    <Input
+                  <Label>MRP</Label>
+                  <Input
                     type="number"
                     value={item.mrp}
                     onChange={(e) =>
-                        handleInputChange(item.id, "mrp", parseFloat(e.target.value) || 0)
+                      handleInputChange(item.id, "mrp", parseFloat(e.target.value) || 0)
                     }
-                    />
+                  />
                 </div>
 
-                <div className="w-[120px] flex flex-col gap-2">
-                    <Label>Batch Amount</Label>
-                    <Input
-                    type="number"
-                    value={item.batchAmount}
-                    onChange={(e) =>
-                        handleInputChange(
-                        item.id,
-                        "batchAmount",
-                        parseFloat(e.target.value) || 0
-                        )
-                    }
-                    />
-                </div>
 
-                <div className="w-[120px] flex flex-col gap-2">
-                    <Label>Sale Price</Label>
-                    <Input
-                    type="number"
-                    value={item.salePrice}
-                    onChange={(e) =>
-                        handleInputChange(
-                        item.id,
-                        "salePrice",
-                        parseFloat(e.target.value) || 0
-                        )
-                    }
-                    />
-                </div>
+
+
 
                 <div className="w-[100px] flex flex-col gap-2">
-                    <Label>Packing Qty</Label>
-                    <Input
-                    type="number"
-                    value={item.packingQty}
-                    onChange={(e) =>
-                        handleInputChange(
-                        item.id,
-                        "packingQty",
-                        parseFloat(e.target.value) || 0
-                        )
-                    }
-                    />
-                </div>
-
-                <div className="w-[100px] flex flex-col gap-2">
-                    <Label>Qty</Label>
-                    <Input
+                  <Label>Qty</Label>
+                  <Input
                     type="number"
                     value={item.quantity}
                     onChange={(e) =>
-                        handleInputChange(
+                      handleInputChange(
                         item.id,
                         "quantity",
                         parseFloat(e.target.value) || 0
-                        )
+                      )
                     }
-                    />
+                  />
                 </div>
 
                 <div className="w-[120px] flex flex-col gap-2">
-                    <Label>Purchase Price</Label>
-                    <Input
+                  <Label>Purchase Price</Label>
+                  <Input
                     type="number"
                     value={item.purchasePrice}
                     onChange={(e) =>
-                        handleInputChange(
+                      handleInputChange(
                         item.id,
                         "purchasePrice",
                         parseFloat(e.target.value) || 0
-                        )
+                      )
                     }
-                    />
+                  />
                 </div>
 
-                {/* TAX % */}
-                <div className="w-[100px] flex flex-col gap-2">
-                    <Label>Tax %</Label>
-                    <Input
-                    type="number"
-                    value={item.taxPercent}
-                    onChange={(e) =>
-                        handleInputChange(
-                        item.id,
-                        "taxPercent",
-                        parseFloat(e.target.value) || 0
-                        )
-                    }
-                    />
-                </div>
+
 
                 {/* AMOUNT */}
                 <div className="w-[150px] flex flex-col gap-2">
-                    <Label>Amount</Label>
-                    <Input value={item.amount} readOnly />
+                  <Label>Amount</Label>
+                  <Input value={item.amount} readOnly />
                 </div>
 
                 {/* REMOVE BUTTON */}
                 <div className="flex items-end">
-                    <Button variant="destructive" onClick={() => removeItem(item.id)}>
+                  <Button variant="destructive" onClick={() => removeItem(item.id)}>
                     Remove
-                    </Button>
+                  </Button>
                 </div>
-                </div>
+              </div>
             </Card>
-            ))}
+          ))}
 
 
 
@@ -421,23 +373,34 @@ export default function PurchaseMedicineModelPage() {
               <Input value={totalAmount.toFixed(2)} readOnly />
             </div>
             <div className="flex flex-wrap gap-4">
-                <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <Label>Discount %</Label>
                 <Input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                  type="number"
+                  value={discount}
+                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                 />
-                </div>
-                <div className="flex flex-col gap-2">
+              </div>
+              <div className="flex flex-col gap-2">
                 <Label>Discount Amount</Label>
                 <Input value={discountAmount.toFixed(2)} readOnly />
-                </div>
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label>Tax Amount</Label>
-              <Input value={taxAmount.toFixed(2)} readOnly />
+            <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col gap-2">
+                <Label>Tax %</Label>
+                <Input
+                  type="number"
+                  value={taxPercent}
+                  onChange={(e) => setTaxPercent(parseFloat(e.target.value) || 0)}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Tax Amount</Label>
+                <Input value={taxAmount.toFixed(2)} readOnly />
+              </div>
             </div>
+
             <div className="md:col-span-2">
               <Label>Net Amount</Label>
               <Input value={netAmount.toFixed(2)} readOnly />
@@ -474,9 +437,11 @@ export default function PurchaseMedicineModelPage() {
             </div>
           </div>
 
-          <Button className="mt-4 w-auto" onClick={handleSavePurchase}>Save Purchase</Button>
+          <Button className="mt-4 w-auto" onClick={handleSavePurchase} disabled={loading}>
+            {loading ? "Saving..." : "Save Purchase"}
+          </Button>
         </CardContent>
       </Card>
-    </div>
+    </div >
   );
 }

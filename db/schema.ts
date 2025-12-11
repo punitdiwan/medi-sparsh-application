@@ -903,21 +903,7 @@ export const pharmacyMedicines = pgTable("pharmacy_medicines", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-// Pharma Batch table
-export const pharmacyBatch = pgTable("pharmacy_batch", {
-	id: text("id").default(useUUIDv4).primaryKey(),
-	hospitalId: text("hospital_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	medicineId: text("medicine_id")
-		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
-	batchNumber: text("batch_number").notNull(),
-	costPrice: numeric("cost_price").notNull(),
-	sellingPrice: numeric("selling_price").notNull(),
-	expiryDate: timestamp("expiry_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-});
+
 
 // medicine stock table
 export const pharmacyStock = pgTable("pharmacy_stock", {
@@ -940,25 +926,36 @@ export const pharmacyPurchase = pgTable("pharmacy_purchase", {
 	hospitalId: text("hospital_id")
 		.notNull()
 		.references(() => organization.id, { onDelete: "cascade" }),
-	medicineId: text("medicine_id")
-		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
-	batchId: text("batch_id")
-		.notNull()
-		.references(() => pharmacyBatch.id, { onDelete: "cascade" }),
-	quantity: numeric("quantity").notNull(),
 	supplierId: text("supplier_id")
 		.notNull()
 		.references(() => medicineSuppliers.id, { onDelete: "cascade" }),
-	medicineCategoryId: text("medicine_category_id")
-		.notNull()
-		.references(() => medicineCategories.id, { onDelete: "cascade" }),
-	medicineCompanyId: text("medicine_company_id")
-		.notNull()
-		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
 	billNumber: text("bill_number").notNull(),
+	discount: numeric("discount"),
+	gstPercent: numeric("gst_percent"),
 	purchaseDate: timestamp("purchase_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	purchaseAmount: numeric("purchase_amount").notNull(),
+});
+
+// purchase item table
+export const pharmacyPurchaseItem = pgTable("pharmacy_purchase_item", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	purchaseId: text("purchase_id")
+		.notNull()
+		.references(() => pharmacyPurchase.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchNumber: text("batch_number").notNull(),
+	quantity: numeric("quantity").notNull(),
+	costPrice: numeric("cost_price").notNull(),
+	mrp: numeric("mrp").notNull(),
+	amount: numeric("amount").notNull(),  // qty * cost - discount
+	expiryDate: date("expiry_date").notNull(), // stored per batch
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
 // Medicine sales Table
@@ -987,9 +984,6 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	billId: text("bill_id")
 		.notNull()
 		.references(() => pharmacySales.id, { onDelete: "cascade" }),
-	batchId: text("batch_id")
-		.notNull()
-		.references(() => pharmacyBatch.id, { onDelete: "cascade" }),
 	medicineId: text("medicine_id")
 		.notNull()
 		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),

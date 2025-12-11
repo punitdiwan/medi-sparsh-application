@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   Calendar,
@@ -37,6 +37,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
 import { useSession } from "@/lib/auth-client";
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -57,7 +63,15 @@ const items: SidebarItem[] = [
   { title: 'Patients', url: '/doctor/patient', icon: User },
   { title: 'Appointment', url: '/doctor/appointment', icon: Calendar },
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen },
-  { title: 'Pharmacy', url: '/doctor/pharmacy', icon: BriefcaseMedical },
+  {
+    title: 'Pharmacy',
+    icon: BriefcaseMedical,
+    children: [
+      { title: 'Billing', url: '/doctor/pharmacy' },
+      { title: 'Medicines', url: '/doctor/pharmacy/medicine' },
+      { title: 'Stock', url: '/doctor/pharmacy/purchase' },
+    ],
+  },
   { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus },
   { title: 'Services', url: '/doctor/services', icon: ServerCog },
   {
@@ -65,11 +79,11 @@ const items: SidebarItem[] = [
     icon: Settings,
     children: [
       { title: 'Members', url: '/doctor/employees' },
-      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges'},
-      { title: 'Bed', url: '/doctor/settings/Bed'},
-      { title: 'Shift Management', url: '/doctor/settings/appointment'},
-      { title: 'Vital',url:'/doctor/settings/vital'},
-      { title: 'Medicine Record',url : '/doctor/settings/medicineRecord'},
+      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges' },
+      { title: 'Bed', url: '/doctor/settings/Bed' },
+      { title: 'Shift Management', url: '/doctor/settings/appointment' },
+      { title: 'Vital', url: '/doctor/settings/vital' },
+      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord' },
       { title: 'Stats', url: '/doctor/settings/stats' },
       { title: 'Payments History', url: '/doctor/billing' },
       { title: 'App Settings', url: '/doctor/settings/config' },
@@ -84,13 +98,21 @@ export function AppSidebar() {
   const isCollapsed = state === 'collapsed';
   const { user } = useAuth();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
+  const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
   const [staffData, setStaffData] = useState<any>();
+
+  // Close all popovers when route changes
+  useEffect(() => {
+    setOpenPopovers({});
+  }, [pathname]);
+
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) => ({
       ...prev,
       [title]: !prev[title],
     }));
   };
+
   const closeSidebar = () => {
     const collapseBtn = document.querySelector('[data-sidebar="trigger"]');
     if (collapseBtn) (collapseBtn as HTMLElement).click();
@@ -102,9 +124,8 @@ export function AppSidebar() {
         <SidebarContent>
           <SidebarGroup>
             <div
-              className={`flex items-center gap-3 py-4 border-b mb-4 transition-all ${
-                isCollapsed ? "justify-center" : "px-3"
-              }`}
+              className={`flex items-center gap-3 py-4 border-b mb-4 transition-all ${isCollapsed ? "justify-center" : "px-3"
+                }`}
             >
               {/* Avatar / Logo */}
               <Avatar className={`${isCollapsed ? "size-8" : "size-10"}`}>
@@ -154,52 +175,88 @@ export function AppSidebar() {
                     <SidebarMenuItem key={item.title}>
                       {hasChildren ? (
                         <>
-                          {/* Tooltip for collapsible menu */}
+                          {/* Popover for collapsible menu when collapsed */}
                           {isCollapsed ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => { toggleMenu(item.title) }}
-
-                                className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                            <Popover
+                              open={openPopovers[item.title] || false}
+                              onOpenChange={(open) => {
+                                setOpenPopovers((prev) => ({
+                                  ...prev,
+                                  [item.title]: open,
+                                }));
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <button
+                                  className={`flex items-center p-3 rounded-md w-full transition-all duration-150
                                   ${isCollapsed
-                                    ? 'justify-center'
-                                    : 'justify-between gap-2'
-                                  }
+                                      ? 'justify-center'
+                                      : 'justify-between gap-2'
+                                    }
                                   ${isActive
-                                    ? 'bg-muted text-foreground font-semibold'
-                                    : 'hover:bg-muted text-muted-foreground'
-                                  }`}
-                              >
-                                <div
-                                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
+                                      ? 'bg-muted text-foreground font-semibold'
+                                      : 'hover:bg-muted text-muted-foreground'
                                     }`}
                                 >
-                                  <item.icon
-                                    className={`w-5 h-5 ${isActive
-                                      ? 'text-foreground'
-                                      : 'text-muted-foreground'
+                                  <div
+                                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
                                       }`}
-                                  />
-                                  {!isCollapsed && (
-                                    <span className="truncate font-semibold">
-                                      {item.title}
-                                    </span>
-                                  )}
-                                </div>
+                                  >
+                                    <item.icon
+                                      className={`w-5 h-5 ${isActive
+                                        ? 'text-foreground'
+                                        : 'text-muted-foreground'
+                                        }`}
+                                    />
+                                    {!isCollapsed && (
+                                      <span className="truncate font-semibold">
+                                        {item.title}
+                                      </span>
+                                    )}
+                                  </div>
 
-                                {!isCollapsed &&
-                                  (isOpen ? (
-                                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                  ))}
-                              </button>
-                            </TooltipTrigger>
-                              <TooltipContent side="right" className="text-sm">
-                                {item.title}
-                              </TooltipContent>
-                            </Tooltip>
+                                  {!isCollapsed &&
+                                    (isOpen ? (
+                                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                    ))}
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                side="right"
+                                align="start"
+                                className="w-48 p-2"
+                                onMouseLeave={() => {
+                                  setOpenPopovers((prev) => ({
+                                    ...prev,
+                                    [item.title]: false,
+                                  }));
+                                }}
+                              >
+                                <div className="space-y-1">
+                                  <div className="px-2 py-1.5 text-sm font-semibold text-foreground">
+                                    {item.title}
+                                  </div>
+                                  {item.children!.map((subItem) => {
+                                    const isSubActive = pathname === subItem.url;
+                                    return (
+                                      <Link
+                                        key={subItem.title}
+                                        href={subItem.url}
+                                        className={`block px-2 py-1.5 rounded-md text-sm transition-colors
+                                          ${isSubActive
+                                            ? 'bg-muted text-foreground font-medium'
+                                            : 'text-muted-foreground hover:bg-muted'
+                                          }`}
+                                      >
+                                        {subItem.title}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           ) : (
                             <button
                               onClick={() => { toggleMenu(item.title) }}
@@ -249,7 +306,7 @@ export function AppSidebar() {
                                     key={subItem.title}
                                     href={subItem.url}
                                     onClick={() => {
-                                      if (item.title === "Settings" && subItem.title === "Bed"||"hospitalCharges") {
+                                      if (item.title === "Settings" && subItem.title === "Bed" || "hospitalCharges") {
                                         closeSidebar();
                                       }
                                     }}
@@ -269,32 +326,32 @@ export function AppSidebar() {
                       ) : (
                         // Regular menu items
                         isCollapsed ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <SidebarMenuButton asChild>
-                              <Link
-                                href={item.url!}
-                                className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <SidebarMenuButton asChild>
+                                <Link
+                                  href={item.url!}
+                                  className={`flex items-center p-3 rounded-md w-full transition-all duration-150
                                   ${isCollapsed ? 'justify-center' : 'gap-2'}
                                   ${isActive
-                                    ? 'bg-muted text-foreground font-semibold'
-                                    : 'text-muted-foreground hover:bg-muted'
-                                  }`}
-                              >
-                                <item.icon
-                                  className={`w-5 h-5 ${isActive
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground'
+                                      ? 'bg-muted text-foreground font-semibold'
+                                      : 'text-muted-foreground hover:bg-muted'
                                     }`}
-                                />
-                                {!isCollapsed && (
-                                  <span className="truncate font-semibold">
-                                    {item.title}
-                                  </span>
-                                )}
-                              </Link>
-                            </SidebarMenuButton>
-                          </TooltipTrigger>
+                                >
+                                  <item.icon
+                                    className={`w-5 h-5 ${isActive
+                                      ? 'text-foreground'
+                                      : 'text-muted-foreground'
+                                      }`}
+                                  />
+                                  {!isCollapsed && (
+                                    <span className="truncate font-semibold">
+                                      {item.title}
+                                    </span>
+                                  )}
+                                </Link>
+                              </SidebarMenuButton>
+                            </TooltipTrigger>
                             <TooltipContent side="right" className="text-sm">
                               {item.title}
                             </TooltipContent>
