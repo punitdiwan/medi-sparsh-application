@@ -3,28 +3,29 @@
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Plus, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import BackButton from "@/Components/BackButton";
+import { getPurchases, getPurchaseDetails } from "@/lib/actions/pharmacyPurchase";
+import PurchaseDetailsModal from "./PurchaseDetailsModal";
+import { toast } from "sonner";
+import { format } from "date-fns";
 
 type Purchase = {
   id: string;
-  purchaseNo: string;
-  purchaseDate: string;
-  billNo: string;
-  supplierName: string;
-  total: number;
-  discount: number;
-  tax: number;
-  netAmount: number;
+  billNumber: string;
+  supplierName: string | null;
+  purchaseDate: Date;
+  totalAmount: string;
 };
 
 export default function MedicinePurchaseListPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // NEW DATE FILTERS
   const [fromDate, setFromDate] = useState("");
@@ -33,40 +34,23 @@ export default function MedicinePurchaseListPage() {
   const route = useRouter();
 
   useEffect(() => {
-    const sample: Purchase[] = [
-      {
-        id: "1",
-        purchaseNo: "P001",
-        purchaseDate: "2025-01-05",
-        billNo: "B001",
-        supplierName: "HealthCare Suppliers",
-        total: 1000,
-        discount: 50,
-        tax: 30,
-        netAmount: 980,
-      },
-      {
-        id: "2",
-        purchaseNo: "P002",
-        purchaseDate: "2025-01-10",
-        billNo: "B002",
-        supplierName: "MediPharma",
-        total: 1500,
-        discount: 100,
-        tax: 75,
-        netAmount: 1475,
-      },
-    ];
-    setPurchases(sample);
+    const fetchPurchases = async () => {
+      const res = await getPurchases();
+      if (res.error) {
+        toast.error(res.error);
+      } else if (res.data) {
+        setPurchases(res.data);
+      }
+    };
+    fetchPurchases();
   }, []);
 
   // FILTER LOGIC (search + date)
   const filtered = useMemo(() => {
     return purchases.filter((p) => {
       const matchesSearch = search
-        ? p.purchaseNo.toLowerCase().includes(search.toLowerCase()) ||
-          p.billNo.toLowerCase().includes(search.toLowerCase()) ||
-          p.supplierName.toLowerCase().includes(search.toLowerCase())
+        ? p.billNumber.toLowerCase().includes(search.toLowerCase()) ||
+        (p.supplierName && p.supplierName.toLowerCase().includes(search.toLowerCase()))
         : true;
 
       const purchaseDate = new Date(p.purchaseDate);
@@ -85,18 +69,14 @@ export default function MedicinePurchaseListPage() {
       header: "S.No",
       cell: ({ row }) => row.index + 1,
     },
-    { accessorKey: "purchaseNo", header: "Pharmacy Purchase No." },
     {
       accessorKey: "purchaseDate",
       header: "Purchase Date",
-      cell: ({ row }) => new Date(row.original.purchaseDate).toLocaleDateString(),
+      cell: ({ row }) => format(new Date(row.original.purchaseDate), "dd MMM yyyy"),
     },
-    { accessorKey: "billNo", header: "Bill No" },
-    { accessorKey: "supplierName", header: "Supplier Name" },
-    { accessorKey: "total", header: "Total" },
-    { accessorKey: "discount", header: "Discount" },
-    { accessorKey: "tax", header: "Tax" },
-    { accessorKey: "netAmount", header: "Net Amount" },
+    { accessorKey: "billNumber", header: "Bill No" },
+    { accessorKey: "supplierName", header: "Supplier Name", cell: ({ row }) => row.original.supplierName || "-" },
+    { accessorKey: "totalAmount", header: "Total Amount" },
 
     {
       id: "actions",
@@ -111,65 +91,77 @@ export default function MedicinePurchaseListPage() {
     },
   ];
 
-  const handleView = (purchase: Purchase) => {
-    console.log("View Purchase:", purchase);
+  const handleView = async (purchase: Purchase) => {
+    const res = await getPurchaseDetails(purchase.id);
+    if (res.error) {
+      toast.error(res.error);
+    } else if (res.data) {
+      setSelectedPurchase(res.data);
+      setIsModalOpen(true);
+    }
   };
 
   return (
     <div className="p-6">
-        <BackButton/>
+      <BackButton />
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-bold">Medicine Purchase List</h1>
       </div>
 
 
-    <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-    <Input
-        placeholder="Search Purchase / Bill / Supplier"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-    />
-    </div>
-
-    {/* DATE FILTER ROW (2nd line) */}
-    <div className="flex flex-wrap items-center gap-4 mb-6">
-
-    {/* FROM DATE */}
-    <div className="flex flex-col">
-        <label className="text-sm font-medium">From</label>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <Input
-        type="date"
-        value={fromDate}
-        onChange={(e) => setFromDate(e.target.value)}
-        className="w-[180px]"
+          placeholder="Search Bill / Supplier"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
         />
-    </div>
+      </div>
 
-    {/* TO DATE */}
-    <div className="flex flex-col">
-        <label className="text-sm font-medium">To</label>
-        <Input
-        type="date"
-        value={toDate}
-        onChange={(e) => setToDate(e.target.value)}
-        className="w-[180px]"
-        />
-    </div>
+      {/* DATE FILTER ROW (2nd line) */}
+      <div className="flex flex-wrap items-center gap-4 mb-6">
 
-    {/* BUTTON — RIGHT SIDE */}
-    <div className="ml-auto">
-        <Button
-        variant="default"
-        onClick={() => route.push("/doctor/pharmacy/purchase/medicine")}
-        >
-        <Plus size={16} /> Purchase Medicine
-        </Button>
-    </div>
-    </div>
+        {/* FROM DATE */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">From</label>
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="w-[180px]"
+          />
+        </div>
+
+        {/* TO DATE */}
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">To</label>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="w-[180px]"
+          />
+        </div>
+
+        {/* BUTTON — RIGHT SIDE */}
+        <div className="ml-auto">
+          <Button
+            variant="default"
+            onClick={() => route.push("/doctor/pharmacy/purchase/medicine")}
+          >
+            <Plus size={16} /> Purchase Medicine
+          </Button>
+        </div>
+      </div>
 
 
       <Table data={filtered} columns={columns} />
+
+      <PurchaseDetailsModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        purchase={selectedPurchase}
+      />
     </div>
   );
 }
