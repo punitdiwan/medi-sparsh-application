@@ -18,8 +18,8 @@ export const appointmentPriorities = pgTable("appointment_priorities", {
 	hospitalId: text("hospital_id").notNull(),
 	priority: text().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
 		columns: [table.hospitalId],
