@@ -1,3 +1,4 @@
+import { batched } from "better-auth/react";
 import { relations, sql } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey } from "drizzle-orm/pg-core";
 
@@ -667,12 +668,12 @@ export const medicines = pgTable("medicines", {
 	name: text().notNull(),
 	categoryId: text("category_id").notNull(),
 	companyName: text("company_name").notNull(),
+	groupId: text("group_id").notNull(),
 	unitId: text("unit_id").notNull(),
 	notes: text(),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	groupId: text("group_id").notNull(),
 }, (table) => [
 	foreignKey({
 		columns: [table.groupId],
@@ -882,3 +883,118 @@ export const organizationRoleRelations = relations(
 		}),
 	}),
 );
+
+// pharmacy medicines
+export const pharmacyMedicines = pgTable("pharmacy_medicines", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	name: text().notNull(),
+	categoryId: text("category_id").notNull()
+		.references(() => medicineCategories.id, { onDelete: "cascade" }),
+	companyId: text("company_id").notNull()
+		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
+	groupId: text("group_id").notNull()
+		.references(() => medicineGroups.id, { onDelete: "cascade" }),
+	unitId: text("unit_id").notNull()
+		.references(() => medicineUnits.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Pharma Batch table
+export const pharmacyBatch = pgTable("pharmacy_batch", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchNumber: text("batch_number").notNull(),
+	costPrice: numeric("cost_price").notNull(),
+	sellingPrice: numeric("selling_price").notNull(),
+	expiryDate: timestamp("expiry_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// medicine stock table
+export const pharmacyStock = pgTable("pharmacy_stock", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	quantity: numeric("quantity").notNull(),
+	lowStockAlert: integer("low_stock_alert").notNull().default(10),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// medicine purchase table
+export const pharmacyPurchase = pgTable("pharmacy_purchase", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchId: text("batch_id")
+		.notNull()
+		.references(() => pharmacyBatch.id, { onDelete: "cascade" }),
+	quantity: numeric("quantity").notNull(),
+	supplierId: text("supplier_id")
+		.notNull()
+		.references(() => medicineSuppliers.id, { onDelete: "cascade" }),
+	medicineCategoryId: text("medicine_category_id")
+		.notNull()
+		.references(() => medicineCategories.id, { onDelete: "cascade" }),
+	medicineCompanyId: text("medicine_company_id")
+		.notNull()
+		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
+	billNumber: text("bill_number").notNull(),
+	purchaseDate: timestamp("purchase_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	purchaseAmount: numeric("purchase_amount").notNull(),
+});
+
+// Medicine sales Table
+export const pharmacySales = pgTable("pharmacy_sales", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	billNumber: text("bill_number").notNull(),
+	customerName: text("customer_name").notNull(),
+	customerPhone: text("customer_phone").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	discount: numeric("discount").notNull().default(0),
+	taxAmount: numeric("tax_amount").notNull().default(0),
+	netAmount: numeric("net_amount").notNull(),
+	paymentMode: text("payment_mode").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// sales items Table
+export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	billId: text("bill_id")
+		.notNull()
+		.references(() => pharmacySales.id, { onDelete: "cascade" }),
+	batchId: text("batch_id")
+		.notNull()
+		.references(() => pharmacyBatch.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	quantity: numeric("quantity").notNull(),
+	unitPrice: numeric("unit_price").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
