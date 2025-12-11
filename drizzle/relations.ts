@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineSuppliers, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals } from "./schema";
+import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineSuppliers, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals, organizationRole } from "./schema";
 
 export const appointmentPrioritiesRelations = relations(appointmentPriorities, ({one}) => ({
 	organization: one(organization, {
@@ -40,6 +40,7 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	teams: many(team),
 	transactions: many(transactions),
 	vitals: many(vitals),
+	organizationRoles: many(organizationRole),
 }));
 
 export const accountRelations = relations(account, ({one}) => ({
@@ -411,3 +412,13 @@ export const vitalsRelations = relations(vitals, ({one}) => ({
 		references: [organization.id]
 	}),
 }));
+
+export const organizationRoleRelations = relations(
+  organizationRole,
+  ({ one }) => ({
+	organization: one(organization, {
+	  fields: [organizationRole.organizationId],
+	  references: [organization.id],
+	}),
+  }),
+);

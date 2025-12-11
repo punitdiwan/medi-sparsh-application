@@ -57,6 +57,13 @@
       "when": 1765370247063,
       "tag": "0007_lumpy_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765434315764,
+      "tag": "0008_simple_vindicator",
+      "breakpoints": true
     }
   ]
 }
