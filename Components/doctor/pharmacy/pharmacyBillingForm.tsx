@@ -328,41 +328,38 @@ export default function PharmacyBillingForm() {
             <Card className="p-4">
               <h2 className="text-lg font-semibold mb-2">Added Medicines</h2>
 
-              <div className="overflow-x-auto max-h-[500px] scrollbar-show">
-                <Table className="min-w-[800px] ">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Expiry</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Available</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead className="sticky right-0 bg-gray-900 z-20 px-2">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {medicines.map((med) => (
-                      <TableRow key={med.id}>
-                        <TableCell>{med.medicineCategory}</TableCell>
-                        <TableCell>{med.medicineName}</TableCell>
-                        <TableCell>{med.expiryDate}</TableCell>
-                        <TableCell>{med.quantity}</TableCell>
-                        <TableCell>{med.availableQuantity}</TableCell>
-                        <TableCell>{med.amount}</TableCell>
-                        <TableCell className="sticky right-0 bg-gray-900 flex gap-2 z-20 px-2">
-                          <Button size="sm" variant="outline" onClick={() => {console.log("Edit medicie",med),setEditMedicine(med)}}>
-                            Edit
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDeleteMedicine(med.id)}>
-                            Delete
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <div className="overflow-x-auto max-h-[500px]  rounded scrollbar-show">
+  <Table className="min-w-[800px]">
+    <TableHeader>
+      <TableRow>
+        <TableHead>Category</TableHead>
+        <TableHead>Name</TableHead>
+        <TableHead>Expiry</TableHead>
+        <TableHead>Qty</TableHead>
+        <TableHead>Available</TableHead>
+        <TableHead>Amount</TableHead>
+        <TableHead>Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {medicines.map((med) => (
+        <TableRow key={med.id}>
+          <TableCell>{med.medicineCategory}</TableCell>
+          <TableCell>{med.medicineName}</TableCell>
+          <TableCell>{med.expiryDate}</TableCell>
+          <TableCell>{med.quantity}</TableCell>
+          <TableCell>{med.availableQuantity}</TableCell>
+          <TableCell>{med.amount}</TableCell>
+          <TableCell className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setEditMedicine(med)}>Edit</Button>
+            <Button size="sm" variant="destructive" onClick={() => handleDeleteMedicine(med.id)}>Delete</Button>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
+
             </Card>
           )}
         </div>
