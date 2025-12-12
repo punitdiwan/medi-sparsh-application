@@ -156,7 +156,7 @@ export default function PharmacyBillPage() {
         />
 
         <div className="flex gap-3">
-          <Button variant="default"><Plus size={16} /> Generate Bill</Button>
+          <Button variant="default" onClick={()=>route.push("/doctor/pharmacy/genrateBill")}><Plus size={16} /> Generate Bill</Button>
 
           <FieldSelectorDropdown
             columns={allColumns as TypedColumn<Bill>[]}
