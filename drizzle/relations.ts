@@ -1,14 +1,14 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineSuppliers, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals } from "./schema";
+import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals, medicineSuppliers, organizationRole, pharmacyMedicines, pharmacyPurchase, pharmacySales, pharmacySalesItems, pharmacyStock } from "./schema";
 
-export const appointmentPrioritiesRelations = relations(appointmentPriorities, ({one}) => ({
+export const appointmentPrioritiesRelations = relations(appointmentPriorities, ({ one }) => ({
 	organization: one(organization, {
 		fields: [appointmentPriorities.hospitalId],
 		references: [organization.id]
 	}),
 }));
 
-export const organizationRelations = relations(organization, ({many}) => ({
+export const organizationRelations = relations(organization, ({ many }) => ({
 	appointmentPriorities: many(appointmentPriorities),
 	doctors: many(doctors),
 	doctorShifts: many(doctorShifts),
@@ -32,7 +32,6 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	taxCategories: many(taxCategories),
 	medicineCompanies: many(medicineCompanies),
 	medicineGroups: many(medicineGroups),
-	medicineSuppliers: many(medicineSuppliers),
 	medicineUnits: many(medicineUnits),
 	medicines: many(medicines),
 	roles: many(roles),
@@ -40,16 +39,23 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	teams: many(team),
 	transactions: many(transactions),
 	vitals: many(vitals),
+	medicineSuppliers: many(medicineSuppliers),
+	organizationRoles: many(organizationRole),
+	pharmacyMedicines: many(pharmacyMedicines),
+	pharmacyPurchases: many(pharmacyPurchase),
+	pharmacySales: many(pharmacySales),
+	pharmacySalesItems: many(pharmacySalesItems),
+	pharmacyStocks: many(pharmacyStock),
 }));
 
-export const accountRelations = relations(account, ({one}) => ({
+export const accountRelations = relations(account, ({ one }) => ({
 	user: one(user, {
 		fields: [account.userId],
 		references: [user.id]
 	}),
 }));
 
-export const userRelations = relations(user, ({many}) => ({
+export const userRelations = relations(user, ({ many }) => ({
 	accounts: many(account),
 	sessions: many(session),
 	invitations: many(invitation),
@@ -57,14 +63,14 @@ export const userRelations = relations(user, ({many}) => ({
 	teamMembers: many(teamMember),
 }));
 
-export const sessionRelations = relations(session, ({one}) => ({
+export const sessionRelations = relations(session, ({ one }) => ({
 	user: one(user, {
 		fields: [session.userId],
 		references: [user.id]
 	}),
 }));
 
-export const doctorsRelations = relations(doctors, ({one, many}) => ({
+export const doctorsRelations = relations(doctors, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [doctors.hospitalId],
 		references: [organization.id]
@@ -77,7 +83,7 @@ export const doctorsRelations = relations(doctors, ({one, many}) => ({
 	doctorSlots: many(doctorSlots),
 }));
 
-export const staffRelations = relations(staff, ({one, many}) => ({
+export const staffRelations = relations(staff, ({ one, many }) => ({
 	doctors: many(doctors),
 	organization: one(organization, {
 		fields: [staff.hospitalId],
@@ -85,7 +91,7 @@ export const staffRelations = relations(staff, ({one, many}) => ({
 	}),
 }));
 
-export const doctorShiftsRelations = relations(doctorShifts, ({one}) => ({
+export const doctorShiftsRelations = relations(doctorShifts, ({ one }) => ({
 	doctor: one(doctors, {
 		fields: [doctorShifts.doctorUserId],
 		references: [doctors.id]
@@ -100,7 +106,7 @@ export const doctorShiftsRelations = relations(doctorShifts, ({one}) => ({
 	}),
 }));
 
-export const shiftsRelations = relations(shifts, ({one, many}) => ({
+export const shiftsRelations = relations(shifts, ({ one, many }) => ({
 	doctorShifts: many(doctorShifts),
 	organization: one(organization, {
 		fields: [shifts.hospitalId],
@@ -109,7 +115,7 @@ export const shiftsRelations = relations(shifts, ({one, many}) => ({
 	doctorSlots: many(doctorSlots),
 }));
 
-export const invitationRelations = relations(invitation, ({one}) => ({
+export const invitationRelations = relations(invitation, ({ one }) => ({
 	user: one(user, {
 		fields: [invitation.inviterId],
 		references: [user.id]
@@ -120,7 +126,7 @@ export const invitationRelations = relations(invitation, ({one}) => ({
 	}),
 }));
 
-export const memberRelations = relations(member, ({one}) => ({
+export const memberRelations = relations(member, ({ one }) => ({
 	organization: one(organization, {
 		fields: [member.organizationId],
 		references: [organization.id]
@@ -131,22 +137,24 @@ export const memberRelations = relations(member, ({one}) => ({
 	}),
 }));
 
-export const medicineCategoriesRelations = relations(medicineCategories, ({one, many}) => ({
+export const medicineCategoriesRelations = relations(medicineCategories, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [medicineCategories.hospitalId],
 		references: [organization.id]
 	}),
 	medicines: many(medicines),
+	pharmacyMedicines: many(pharmacyMedicines),
+	pharmacyPurchases: many(pharmacyPurchase),
 }));
 
-export const modulesRelations = relations(modules, ({one}) => ({
+export const modulesRelations = relations(modules, ({ one }) => ({
 	organization: one(organization, {
 		fields: [modules.hospitalId],
 		references: [organization.id]
 	}),
 }));
 
-export const patientsRelations = relations(patients, ({one, many}) => ({
+export const patientsRelations = relations(patients, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [patients.hospitalId],
 		references: [organization.id]
@@ -156,7 +164,7 @@ export const patientsRelations = relations(patients, ({one, many}) => ({
 	transactions: many(transactions),
 }));
 
-export const appointmentsRelations = relations(appointments, ({one, many}) => ({
+export const appointmentsRelations = relations(appointments, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [appointments.hospitalId],
 		references: [organization.id]
@@ -169,7 +177,7 @@ export const appointmentsRelations = relations(appointments, ({one, many}) => ({
 	transactions: many(transactions),
 }));
 
-export const doctorSlotsRelations = relations(doctorSlots, ({one}) => ({
+export const doctorSlotsRelations = relations(doctorSlots, ({ one }) => ({
 	charge: one(charges, {
 		fields: [doctorSlots.chargeId],
 		references: [charges.id]
@@ -188,7 +196,7 @@ export const doctorSlotsRelations = relations(doctorSlots, ({one}) => ({
 	}),
 }));
 
-export const chargesRelations = relations(charges, ({one, many}) => ({
+export const chargesRelations = relations(charges, ({ one, many }) => ({
 	doctorSlots: many(doctorSlots),
 	chargeCategory: one(chargeCategories, {
 		fields: [charges.chargeCategoryId],
@@ -212,7 +220,7 @@ export const chargesRelations = relations(charges, ({one, many}) => ({
 	}),
 }));
 
-export const prescriptionsRelations = relations(prescriptions, ({one}) => ({
+export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
 	appointment: one(appointments, {
 		fields: [prescriptions.appointmentId],
 		references: [appointments.id]
@@ -227,7 +235,7 @@ export const prescriptionsRelations = relations(prescriptions, ({one}) => ({
 	}),
 }));
 
-export const floorsRelations = relations(floors, ({one, many}) => ({
+export const floorsRelations = relations(floors, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [floors.hospitalId],
 		references: [organization.id]
@@ -235,7 +243,7 @@ export const floorsRelations = relations(floors, ({one, many}) => ({
 	bedGroups: many(bedGroups),
 }));
 
-export const bedGroupsRelations = relations(bedGroups, ({one, many}) => ({
+export const bedGroupsRelations = relations(bedGroups, ({ one, many }) => ({
 	floor: one(floors, {
 		fields: [bedGroups.floorId],
 		references: [floors.id]
@@ -247,7 +255,7 @@ export const bedGroupsRelations = relations(bedGroups, ({one, many}) => ({
 	beds: many(beds),
 }));
 
-export const bedsTypesRelations = relations(bedsTypes, ({one, many}) => ({
+export const bedsTypesRelations = relations(bedsTypes, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [bedsTypes.hospitalId],
 		references: [organization.id]
@@ -255,7 +263,7 @@ export const bedsTypesRelations = relations(bedsTypes, ({one, many}) => ({
 	beds: many(beds),
 }));
 
-export const bedsRelations = relations(beds, ({one}) => ({
+export const bedsRelations = relations(beds, ({ one }) => ({
 	bedGroup: one(bedGroups, {
 		fields: [beds.bedGroupId],
 		references: [bedGroups.id]
@@ -270,7 +278,7 @@ export const bedsRelations = relations(beds, ({one}) => ({
 	}),
 }));
 
-export const chargeTypesRelations = relations(chargeTypes, ({one, many}) => ({
+export const chargeTypesRelations = relations(chargeTypes, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [chargeTypes.hospitalId],
 		references: [organization.id]
@@ -279,7 +287,7 @@ export const chargeTypesRelations = relations(chargeTypes, ({one, many}) => ({
 	charges: many(charges),
 }));
 
-export const chargeCategoriesRelations = relations(chargeCategories, ({one, many}) => ({
+export const chargeCategoriesRelations = relations(chargeCategories, ({ one, many }) => ({
 	chargeType: one(chargeTypes, {
 		fields: [chargeCategories.chargeTypeId],
 		references: [chargeTypes.id]
@@ -291,7 +299,7 @@ export const chargeCategoriesRelations = relations(chargeCategories, ({one, many
 	charges: many(charges),
 }));
 
-export const taxCategoriesRelations = relations(taxCategories, ({one, many}) => ({
+export const taxCategoriesRelations = relations(taxCategories, ({ one, many }) => ({
 	charges: many(charges),
 	organization: one(organization, {
 		fields: [taxCategories.hospitalId],
@@ -299,42 +307,39 @@ export const taxCategoriesRelations = relations(taxCategories, ({one, many}) => 
 	}),
 }));
 
-export const unitsRelations = relations(units, ({many}) => ({
+export const unitsRelations = relations(units, ({ many }) => ({
 	charges: many(charges),
 }));
 
-export const medicineCompaniesRelations = relations(medicineCompanies, ({one, many}) => ({
+export const medicineCompaniesRelations = relations(medicineCompanies, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [medicineCompanies.hospitalId],
 		references: [organization.id]
 	}),
 	medicines: many(medicines),
+	pharmacyMedicines: many(pharmacyMedicines),
+	pharmacyPurchases: many(pharmacyPurchase),
 }));
 
-export const medicineGroupsRelations = relations(medicineGroups, ({one, many}) => ({
+export const medicineGroupsRelations = relations(medicineGroups, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [medicineGroups.hospitalId],
 		references: [organization.id]
 	}),
 	medicines: many(medicines),
+	pharmacyMedicines: many(pharmacyMedicines),
 }));
 
-export const medicineSuppliersRelations = relations(medicineSuppliers, ({one}) => ({
-	organization: one(organization, {
-		fields: [medicineSuppliers.hospitalId],
-		references: [organization.id]
-	}),
-}));
-
-export const medicineUnitsRelations = relations(medicineUnits, ({one, many}) => ({
+export const medicineUnitsRelations = relations(medicineUnits, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [medicineUnits.hospitalId],
 		references: [organization.id]
 	}),
 	medicines: many(medicines),
+	pharmacyMedicines: many(pharmacyMedicines),
 }));
 
-export const medicinesRelations = relations(medicines, ({one}) => ({
+export const medicinesRelations = relations(medicines, ({ one }) => ({
 	medicineCategory: one(medicineCategories, {
 		fields: [medicines.categoryId],
 		references: [medicineCategories.id]
@@ -357,21 +362,21 @@ export const medicinesRelations = relations(medicines, ({one}) => ({
 	}),
 }));
 
-export const rolesRelations = relations(roles, ({one}) => ({
+export const rolesRelations = relations(roles, ({ one }) => ({
 	organization: one(organization, {
 		fields: [roles.hospitalId],
 		references: [organization.id]
 	}),
 }));
 
-export const servicesRelations = relations(services, ({one}) => ({
+export const servicesRelations = relations(services, ({ one }) => ({
 	organization: one(organization, {
 		fields: [services.hospitalId],
 		references: [organization.id]
 	}),
 }));
 
-export const teamRelations = relations(team, ({one, many}) => ({
+export const teamRelations = relations(team, ({ one, many }) => ({
 	organization: one(organization, {
 		fields: [team.organizationId],
 		references: [organization.id]
@@ -379,7 +384,7 @@ export const teamRelations = relations(team, ({one, many}) => ({
 	teamMembers: many(teamMember),
 }));
 
-export const teamMemberRelations = relations(teamMember, ({one}) => ({
+export const teamMemberRelations = relations(teamMember, ({ one }) => ({
 	team: one(team, {
 		fields: [teamMember.teamId],
 		references: [team.id]
@@ -390,7 +395,7 @@ export const teamMemberRelations = relations(teamMember, ({one}) => ({
 	}),
 }));
 
-export const transactionsRelations = relations(transactions, ({one}) => ({
+export const transactionsRelations = relations(transactions, ({ one }) => ({
 	appointment: one(appointments, {
 		fields: [transactions.appointmentId],
 		references: [appointments.id]
@@ -405,9 +410,97 @@ export const transactionsRelations = relations(transactions, ({one}) => ({
 	}),
 }));
 
-export const vitalsRelations = relations(vitals, ({one}) => ({
+export const vitalsRelations = relations(vitals, ({ one }) => ({
 	organization: one(organization, {
 		fields: [vitals.hospitalId],
 		references: [organization.id]
+	}),
+}));
+
+export const medicineSuppliersRelations = relations(medicineSuppliers, ({ one, many }) => ({
+	organization: one(organization, {
+		fields: [medicineSuppliers.hospitalId],
+		references: [organization.id]
+	}),
+	pharmacyPurchases: many(pharmacyPurchase),
+}));
+
+export const organizationRoleRelations = relations(organizationRole, ({ one }) => ({
+	organization: one(organization, {
+		fields: [organizationRole.organizationId],
+		references: [organization.id]
+	}),
+}));
+
+
+
+export const pharmacyMedicinesRelations = relations(pharmacyMedicines, ({ one, many }) => ({
+	medicineCategory: one(medicineCategories, {
+		fields: [pharmacyMedicines.categoryId],
+		references: [medicineCategories.id]
+	}),
+	medicineCompany: one(medicineCompanies, {
+		fields: [pharmacyMedicines.companyId],
+		references: [medicineCompanies.id]
+	}),
+	medicineGroup: one(medicineGroups, {
+		fields: [pharmacyMedicines.groupId],
+		references: [medicineGroups.id]
+	}),
+	organization: one(organization, {
+		fields: [pharmacyMedicines.hospitalId],
+		references: [organization.id]
+	}),
+	medicineUnit: one(medicineUnits, {
+		fields: [pharmacyMedicines.unitId],
+		references: [medicineUnits.id]
+	}),
+	pharmacyPurchases: many(pharmacyPurchase),
+	pharmacySalesItems: many(pharmacySalesItems),
+	pharmacyStocks: many(pharmacyStock),
+}));
+
+export const pharmacyPurchaseRelations = relations(pharmacyPurchase, ({ one }) => ({
+	organization: one(organization, {
+		fields: [pharmacyPurchase.hospitalId],
+		references: [organization.id]
+	}),
+	medicineSupplier: one(medicineSuppliers, {
+		fields: [pharmacyPurchase.supplierId],
+		references: [medicineSuppliers.id]
+	}),
+}));
+
+export const pharmacySalesRelations = relations(pharmacySales, ({ one, many }) => ({
+	organization: one(organization, {
+		fields: [pharmacySales.hospitalId],
+		references: [organization.id]
+	}),
+	pharmacySalesItems: many(pharmacySalesItems),
+}));
+
+export const pharmacySalesItemsRelations = relations(pharmacySalesItems, ({ one }) => ({
+	pharmacySale: one(pharmacySales, {
+		fields: [pharmacySalesItems.billId],
+		references: [pharmacySales.id]
+	}),
+	organization: one(organization, {
+		fields: [pharmacySalesItems.hospitalId],
+		references: [organization.id]
+	}),
+	pharmacyMedicine: one(pharmacyMedicines, {
+		fields: [pharmacySalesItems.medicineId],
+		references: [pharmacyMedicines.id]
+	}),
+}));
+
+export const pharmacyStockRelations = relations(pharmacyStock, ({ one }) => ({
+	organization: one(organization, {
+		fields: [pharmacyStock.hospitalId],
+		references: [organization.id]
+	}),
+	pharmacyMedicine: one(pharmacyMedicines, {
+		fields: [pharmacyStock.medicineId],
+		references: [pharmacyMedicines.id]
 	}),
 }));

@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm"
 
 const useUUIDv4 = sql`uuid_generate_v4()`;
 
+
 export const specializations = pgTable("specializations", {
 	id: serial().primaryKey().notNull(),
 	name: text().notNull(),
@@ -605,26 +606,6 @@ export const medicineGroups = pgTable("medicine_groups", {
 	}).onDelete("cascade"),
 ]);
 
-export const medicineSuppliers = pgTable("medicine_suppliers", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	hospitalId: text("hospital_id").notNull(),
-	supplierName: text("supplier_name").notNull(),
-	contactNumber: text("contact_number").notNull(),
-	address: text().notNull(),
-	contactPerson: text("contact_person").notNull(),
-	contactPersonNumber: text("contact_person_number").notNull(),
-	drugLicenseNumber: text("drug_license_number").notNull(),
-	isDeleted: boolean("is_deleted").default(false),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-		columns: [table.hospitalId],
-		foreignColumns: [organization.id],
-		name: "medicine_suppliers_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
-]);
-
 export const medicineUnits = pgTable("medicine_units", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
@@ -787,6 +768,188 @@ export const vitals = pgTable("vitals", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "vitals_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const medicineSuppliers = pgTable("medicine_suppliers", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	supplierName: text("supplier_name").notNull(),
+	contactNumber: text("contact_number").notNull(),
+	address: text().notNull(),
+	contactPerson: text("contact_person").notNull(),
+	contactPersonNumber: text("contact_person_number").notNull(),
+	drugLicenseNumber: text("drug_license_number").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+}, (table) => [
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "medicine_suppliers_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const organizationRole = pgTable("organization_role", {
+	id: text().primaryKey().notNull(),
+	organizationId: text("organization_id").notNull(),
+	role: text().notNull(),
+	permission: text().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }),
+}, (table) => [
+	index("organizationRole_organizationId_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
+	index("organizationRole_role_idx").using("btree", table.role.asc().nullsLast().op("text_ops")),
+	foreignKey({
+		columns: [table.organizationId],
+		foreignColumns: [organization.id],
+		name: "organization_role_organization_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+
+export const pharmacyMedicines = pgTable("pharmacy_medicines", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	name: text().notNull(),
+	categoryId: text("category_id").notNull(),
+	companyId: text("company_id").notNull(),
+	groupId: text("group_id").notNull(),
+	unitId: text("unit_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.categoryId],
+		foreignColumns: [medicineCategories.id],
+		name: "pharmacy_medicines_category_id_medicine_categories_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.companyId],
+		foreignColumns: [medicineCompanies.id],
+		name: "pharmacy_medicines_company_id_medicine_companies_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.groupId],
+		foreignColumns: [medicineGroups.id],
+		name: "pharmacy_medicines_group_id_medicine_groups_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "pharmacy_medicines_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.unitId],
+		foreignColumns: [medicineUnits.id],
+		name: "pharmacy_medicines_unit_id_medicine_units_id_fk"
+	}).onDelete("cascade"),
+]);
+
+// medicine purchase table
+export const pharmacyPurchase = pgTable("pharmacy_purchase", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	supplierId: text("supplier_id")
+		.notNull()
+		.references(() => medicineSuppliers.id, { onDelete: "cascade" }),
+	billNumber: text("bill_number").notNull(),
+	discount: numeric("discount"),
+	gstPercent: numeric("gst_percent"),
+	purchaseDate: timestamp("purchase_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	purchaseAmount: numeric("purchase_amount").notNull(),
+});
+
+// purchase item table
+export const pharmacyPurchaseItem = pgTable("pharmacy_purchase_item", {
+	id: text("id").default(useUUIDv4).primaryKey(),
+	hospitalId: text("hospital_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	purchaseId: text("purchase_id")
+		.notNull()
+		.references(() => pharmacyPurchase.id, { onDelete: "cascade" }),
+	medicineId: text("medicine_id")
+		.notNull()
+		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchNumber: text("batch_number").notNull(),
+	quantity: numeric("quantity").notNull(),
+	costPrice: numeric("cost_price").notNull(),
+	mrp: numeric("mrp").notNull(),
+	amount: numeric("amount").notNull(),  // qty * cost - discount
+	expiryDate: date("expiry_date").notNull(), // stored per batch
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+export const pharmacySales = pgTable("pharmacy_sales", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	billNumber: text("bill_number").notNull(),
+	customerName: text("customer_name").notNull(),
+	customerPhone: text("customer_phone").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	discount: numeric().default('0').notNull(),
+	taxAmount: numeric("tax_amount").default('0').notNull(),
+	netAmount: numeric("net_amount").notNull(),
+	paymentMode: text("payment_mode").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "pharmacy_sales_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	billId: text("bill_id").notNull(),
+	medicineId: text("medicine_id").notNull(),
+	quantity: numeric().notNull(),
+	unitPrice: numeric("unit_price").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.billId],
+		foreignColumns: [pharmacySales.id],
+		name: "pharmacy_sales_items_bill_id_pharmacy_sales_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "pharmacy_sales_items_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.medicineId],
+		foreignColumns: [pharmacyMedicines.id],
+		name: "pharmacy_sales_items_medicine_id_pharmacy_medicines_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const pharmacyStock = pgTable("pharmacy_stock", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	medicineId: text("medicine_id").notNull(),
+	quantity: numeric().notNull(),
+	lowStockAlert: integer("low_stock_alert").default(10).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "pharmacy_stock_hospital_id_organization_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.medicineId],
+		foreignColumns: [pharmacyMedicines.id],
+		name: "pharmacy_stock_medicine_id_pharmacy_medicines_id_fk"
 	}).onDelete("cascade"),
 ]);
 
