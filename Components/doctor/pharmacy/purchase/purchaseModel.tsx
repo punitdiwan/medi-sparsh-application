@@ -20,7 +20,7 @@ import BackButton from "@/Components/BackButton";
 import { toast } from "sonner";
 import { getSuppliers, getCategories, getMedicinesByCategory, createPharmacyPurchase } from "@/lib/actions/pharmacyPurchase";
 import { useRouter } from "next/navigation";
-
+import { MdDelete } from "react-icons/md";
 type Supplier = { id: string; name: string };
 type Category = { id: string; name: string };
 type Medicine = { id: string; name: string; };
@@ -193,7 +193,7 @@ export default function PurchaseMedicineModelPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 mt-6">
       <BackButton />
       <h1 className="text-3xl font-bold">Purchase Medicine</h1>
 
@@ -355,7 +355,7 @@ export default function PurchaseMedicineModelPage() {
                 {/* REMOVE BUTTON */}
                 <div className="flex items-end">
                   <Button variant="destructive" onClick={() => removeItem(item.id)}>
-                    Remove
+                    <MdDelete/>
                   </Button>
                 </div>
               </div>

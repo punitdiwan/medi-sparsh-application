@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         const doctorsList = await db
             .select({
                 doctorId: doctors.id,
+                name:user.name,
             })
             .from(doctors)
             .innerJoin(staff, eq(doctors.staffId, staff.id))
@@ -49,7 +50,6 @@ export async function GET(req: NextRequest) {
         // We want to return:
         // - doctors: { id, name, shifts: { [shiftId]: boolean } }[]
         // - shifts: { id, name, startTime, endTime }[]
-
         const doctorsWithShifts = doctorsList.map((doc) => {
             const docAssignments = assignments.filter((a) => a.doctorUserId === doc.doctorId);
             const shiftsMap: Record<string, boolean> = {};
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
 
             return {
                 doctorId: doc.doctorId,
-                doctorName: doctorsList.find((d) => d.doctorId === doc.doctorId)?.doctorId,
+                doctorName: doc.name,
                 shifts: shiftsMap,
             };
         });

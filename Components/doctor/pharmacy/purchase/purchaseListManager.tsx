@@ -7,12 +7,11 @@ import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Plus, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import BackButton from "@/Components/BackButton";
 import { getPurchases, getPurchaseDetails } from "@/lib/actions/pharmacyPurchase";
 import PurchaseDetailsModal from "./PurchaseDetailsModal";
 import { toast } from "sonner";
 import { format } from "date-fns";
-
+import { PiMagnifyingGlassDuotone } from "react-icons/pi";
 type Purchase = {
   id: string;
   billNumber: string;
@@ -102,8 +101,7 @@ export default function MedicinePurchaseListPage() {
   };
 
   return (
-    <div className="p-6">
-      <BackButton />
+    <div className="p-6 mt-4">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-bold">Medicine Purchase List</h1>
       </div>
@@ -122,7 +120,7 @@ export default function MedicinePurchaseListPage() {
       <div className="flex flex-wrap items-center gap-4 mb-6">
 
         {/* FROM DATE */}
-        <div className="flex flex-col">
+        <div className="flex items-center gap-2">
           <label className="text-sm font-medium">From</label>
           <Input
             type="date"
@@ -133,7 +131,7 @@ export default function MedicinePurchaseListPage() {
         </div>
 
         {/* TO DATE */}
-        <div className="flex flex-col">
+        <div className="flex items-center gap-2">
           <label className="text-sm font-medium">To</label>
           <Input
             type="date"
@@ -142,9 +140,19 @@ export default function MedicinePurchaseListPage() {
             className="w-[180px]"
           />
         </div>
-
+        <Button
+              variant="outline"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+              }}
+            >
+              Clear Dates
+        </Button>
+        
         {/* BUTTON — RIGHT SIDE */}
         <div className="ml-auto">
+          
           <Button
             variant="default"
             onClick={() => route.push("/doctor/pharmacy/purchase/medicine")}
@@ -155,7 +163,15 @@ export default function MedicinePurchaseListPage() {
       </div>
 
 
-      <Table data={filtered} columns={columns} />
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+          <span className="text-4xl"><PiMagnifyingGlassDuotone/></span>
+          <p className="text-lg font-medium">No purchases found</p>
+          <p className="text-sm mt-1">Try adjusting your filters or search</p>
+        </div>
+      ) : (
+        <Table data={filtered} columns={columns} />
+      )}
 
       <PurchaseDetailsModal
         open={isModalOpen}

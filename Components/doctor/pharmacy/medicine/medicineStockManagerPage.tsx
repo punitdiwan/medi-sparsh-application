@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import BackButton from "@/Components/BackButton";
 import { Plus } from "lucide-react";
 import { PiUploadBold } from "react-icons/pi";
 import { toast } from "sonner";
@@ -16,7 +15,7 @@ import {
   getPharmacyMedicineDropdowns,
 } from "@/lib/actions/pharmacyMedicines";
 import { PharmacyMedicineModal, PharmacyMedicine } from "./PharmacyMedicineModal";
-
+import { PiMagnifyingGlassDuotone } from "react-icons/pi";
 type MedicineDisplay = {
   id: string;
   name: string;
@@ -81,16 +80,23 @@ export default function MedicineStockManagerPage() {
     fetchData();
   }, []);
 
-  // Filter
   const filtered = useMemo(() => {
-    return medicines.filter((m) =>
-      search
-        ? m.name.toLowerCase().includes(search.toLowerCase()) ||
-        (m.categoryName && m.categoryName.toLowerCase().includes(search.toLowerCase())) ||
-        (m.companyName && m.companyName.toLowerCase().includes(search.toLowerCase()))
-        : true
+  const query = search.toLowerCase().trim();
+
+  if (!query) return medicines;
+
+  return medicines.filter((m) => {
+    return (
+      (m.name && m.name.toLowerCase().includes(query)) ||
+      (m.categoryName && m.categoryName.toLowerCase().includes(query)) ||
+      (m.companyName && m.companyName.toLowerCase().includes(query)) ||
+      (m.unitName && m.unitName.toLowerCase().includes(query)) ||
+      (m.groupName && m.groupName.toLowerCase().includes(query)) ||
+      m.id.toLowerCase().includes(query) // if ID should be searchable
     );
-  }, [search, medicines]);
+  });
+}, [search, medicines]);
+
 
   // Columns
   const columns: ColumnDef<MedicineDisplay>[] = [
@@ -104,25 +110,16 @@ export default function MedicineStockManagerPage() {
     { accessorKey: "groupName", header: "Group" },
     { accessorKey: "unitName", header: "Unit" },
 
-    // 🔥 ACTIONS ALWAYS LAST
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleEdit(row.original)}
-          >
+          <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)}>
             Edit
           </Button>
 
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => handleDelete(row.original)}
-          >
+          <Button size="sm" variant="destructive" onClick={() => handleDelete(row.original)}>
             Delete
           </Button>
         </div>
@@ -165,37 +162,49 @@ export default function MedicineStockManagerPage() {
 
   return (
     <div className="p-6">
-      <BackButton />
       {/* TITLE SECTION WITH BUTTONS */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-bold">Medicine Stock Manager</h1>
       </div>
 
-      {/* Search + Buttons Row */}
+      {/* Search + Buttons */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <Input
-          placeholder="Search Medicine..."
+          placeholder="Search medicine, category, company, unit, group..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-auto"
         />
 
         <div className="flex gap-3">
+          
+          <Button variant="default" onClick={handleAdd}>
+            <Plus size={16} /> Add Medicine
+          </Button>
           <Button variant="outline">
             <PiUploadBold size={16} /> Import Medicine
-          </Button>
-          <Button variant="outline" onClick={handleAdd}>
-            <Plus size={16} /> Add Medicine
           </Button>
         </div>
       </div>
 
-      {/* TABLE */}
-      {isLoading ? (
+      {isLoading && filtered.length==0 ? (
         <div className="text-center py-4">Loading...</div>
+      ) : filtered.length === 0 ? (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 
+          border border-border rounded-xl bg-card/60 backdrop-blur-sm">
+          <span className="text-4xl"><PiMagnifyingGlassDuotone /></span>
+          <h3 className="text-lg font-semibold text-foreground">
+            Nothing Found
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            No medicines match your search.
+          </p>
+        </div>
+
       ) : (
         <Table data={filtered} columns={columns} />
       )}
+
 
       <PharmacyMedicineModal
         open={isModalOpen}
