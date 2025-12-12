@@ -193,7 +193,7 @@ export default function PurchaseMedicineModelPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 mt-6">
       <BackButton />
       <h1 className="text-3xl font-bold">Purchase Medicine</h1>
 

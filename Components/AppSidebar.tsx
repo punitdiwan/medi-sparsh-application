@@ -117,7 +117,14 @@ export function AppSidebar() {
     const collapseBtn = document.querySelector('[data-sidebar="trigger"]');
     if (collapseBtn) (collapseBtn as HTMLElement).click();
   };
-
+  // Recursive check for active item (works for nested submenus)
+  const isItemActive = (item: SidebarItem | SidebarChildItem): boolean => {
+    if (item.url && pathname.startsWith(item.url)) return true;
+    if ('children' in item && item.children) {
+      return item.children.some((child) => isItemActive(child));
+    }
+    return false;
+  };
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={500}>
       <Sidebar collapsible="icon" className="bg-background border-r">
@@ -161,15 +168,9 @@ export function AppSidebar() {
               <SidebarMenu>
                 {items.map((item) => {
                   const hasChildren = item.children?.length ?? 0 > 0;
+                  const isActive = isItemActive(item);
+                  const isOpen = openMenus[item.title] || isItemActive(item);
 
-                  const isActive =
-                    pathname === item.url ||
-                    item.children?.some((child) => pathname === child.url);
-
-                  const isOpen =
-                    openMenus[item.title] ||
-                    item.children?.some((child) => pathname === child.url) ||
-                    false;
 
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -305,11 +306,6 @@ export function AppSidebar() {
                                   <Link
                                     key={subItem.title}
                                     href={subItem.url}
-                                    onClick={() => {
-                                      if (item.title === "Settings" && subItem.title === "Bed" || "hospitalCharges") {
-                                        closeSidebar();
-                                      }
-                                    }}
                                     className={`block px-4 py-2 rounded-md text-sm transition-colors
                                       ${isSubActive
                                         ? 'bg-muted text-foreground font-medium'
