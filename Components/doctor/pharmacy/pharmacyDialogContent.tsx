@@ -33,6 +33,7 @@ export type Medicine = {
 export default function MedicineDialog({
   onSave,
   editMedicine,
+  setEditMedicine, // add this from parent
   categories,
   medicines,
 }: any) {
@@ -40,34 +41,26 @@ export default function MedicineDialog({
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedMedicineId, setSelectedMedicineId] = useState("");
-
   const [expiry, setExpiry] = useState("");
   const [availableQuantity, setAvailableQuantity] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
-
   const [quantity, setQuantity] = useState(0);
   const [amount, setAmount] = useState(0);
 
-  // Update amount when quantity changes
+  // Update amount whenever quantity or price changes
   useEffect(() => {
     setAmount(quantity * sellingPrice);
   }, [quantity, sellingPrice]);
 
-  // Filter medicines by selected category
-  const filteredMedicines = medicines.filter(
-    (med: any) => med.categoryId === selectedCategory
-  );
-
-  // Load selected medicine details
+  // Load medicine details when selectedMedicineId changes
   useEffect(() => {
     if (!selectedMedicineId) return;
-
     const med = medicines.find((m: any) => m.id === selectedMedicineId);
     if (med) {
       setExpiry(med.expiry);
       setAvailableQuantity(med.availableQuantity);
       setSellingPrice(med.sellingPrice);
-      setQuantity(1); // default quantity to 1 when selected
+      setQuantity(1);
     }
   }, [selectedMedicineId]);
 
@@ -76,18 +69,16 @@ export default function MedicineDialog({
     if (editMedicine) {
       setSelectedCategory(editMedicine.categoryId);
       setSelectedMedicineId(editMedicine.medicineId);
-
       setExpiry(editMedicine.expiryDate);
       setQuantity(editMedicine.quantity);
       setAvailableQuantity(editMedicine.availableQuantity);
       setSellingPrice(editMedicine.sellingPrice);
       setAmount(editMedicine.amount);
-
       setOpen(true);
     }
   }, [editMedicine]);
 
-  // Reset all fields
+  // Reset all form fields
   const resetForm = () => {
     setSelectedCategory("");
     setSelectedMedicineId("");
@@ -97,6 +88,13 @@ export default function MedicineDialog({
     setQuantity(0);
     setAmount(0);
   };
+
+    const handleAddClick = () => {
+        resetForm();
+        setEditMedicine(null); // now this works
+        setOpen(true);
+    };
+
 
   const handleSubmit = () => {
     onSave({
@@ -109,20 +107,19 @@ export default function MedicineDialog({
       sellingPrice,
       amount,
     });
-
     setOpen(false);
-
-    // Reset form if adding new medicine (not editing)
-    if (!editMedicine) resetForm();
+    resetForm();
   };
+
+  const filteredMedicines = medicines.filter(
+    (med: any) => med.categoryId === selectedCategory
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!editMedicine && (
-        <DialogTrigger asChild>
-          <Button>Add Medicine</Button>
-        </DialogTrigger>
-      )}
+      <DialogTrigger asChild>
+        <Button onClick={handleAddClick}>Add Medicine</Button>
+      </DialogTrigger>
 
       <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
         <DialogHeader>
@@ -131,9 +128,7 @@ export default function MedicineDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Form */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-          {/* Category */}
           <div className="flex flex-col gap-1">
             <Label>Medicine Category</Label>
             <Select
@@ -161,7 +156,6 @@ export default function MedicineDialog({
             </Select>
           </div>
 
-          {/* Medicine */}
           <div className="flex flex-col gap-1">
             <Label>Medicine Name</Label>
             <Select
@@ -187,25 +181,21 @@ export default function MedicineDialog({
             </Select>
           </div>
 
-          {/* Expiry */}
           <div className="flex flex-col gap-1">
             <Label>Expiry Date</Label>
             <Input value={expiry} readOnly />
           </div>
 
-          {/* Available Quantity */}
           <div className="flex flex-col gap-1">
             <Label>Available Quantity</Label>
             <Input value={availableQuantity} readOnly />
           </div>
 
-          {/* Selling Price */}
           <div className="flex flex-col gap-1">
             <Label>Selling Price</Label>
             <Input value={sellingPrice} readOnly />
           </div>
 
-          {/* Quantity */}
           <div className="flex flex-col gap-1">
             <Label>Quantity</Label>
             <Input
@@ -217,7 +207,6 @@ export default function MedicineDialog({
             />
           </div>
 
-          {/* Amount */}
           <div className="flex flex-col gap-1">
             <Label>Amount</Label>
             <Input value={amount} readOnly />

@@ -69,9 +69,6 @@ export default function PharmacyBillingForm() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [editMedicine, setEditMedicine] = useState<Medicine | null>(null);
 
-  // -----------------------------
-  // Billing calculations
-  // -----------------------------
   const recalcBilling = (
     total: number,
     discPerc: number,
@@ -140,9 +137,6 @@ export default function PharmacyBillingForm() {
     });
   };
 
-  // -----------------------------
-  // Discount / Tax handlers
-  // -----------------------------
   const handleDiscountChange = (value: number, type: "amount" | "percentage") => {
     let discAmt = discountAmount;
     let discPerc = discountPercentage;
@@ -171,9 +165,6 @@ export default function PharmacyBillingForm() {
     setNetAmount(net);
   };
 
-  // -----------------------------
-  // Submit handler
-  // -----------------------------
   const handleSubmit = () => {
     const billingData = {
       customerName,
@@ -192,7 +183,6 @@ export default function PharmacyBillingForm() {
     console.log("Billing Data:", billingData);
     alert("Billing saved! Check console for data.");
 
-    // Reset customer and billing info for next entry
     setCustomerName("");
     setCustomerPhone("");
     setNote("");
@@ -209,11 +199,11 @@ export default function PharmacyBillingForm() {
 
   return (
     <div className="p-6 space-y-6 w-full mx-auto mt-4">
-      <BackButton/>
+      <BackButton />
       <h1 className="text-2xl font-bold">Customer Billing</h1>
 
       {/* Customer Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="flex flex-col gap-2">
           <Label>Customer Name</Label>
           <Input
@@ -232,145 +222,152 @@ export default function PharmacyBillingForm() {
         </div>
       </div>
 
-      {/* Add / Edit Medicine Modal */}
       <div className="flex justify-end">
         <MedicineDialog
           onSave={handleSaveMedicine}
           editMedicine={editMedicine}
+          setEditMedicine={setEditMedicine} // <-- add this
           categories={categories}
           medicines={allMedicines}
         />
       </div>
+      <div className="flex gap-4 w-full">
+        <div className="w-[35%]">
+          <Card className="p-4">
+            <h2 className="text-lg font-semibold mb-2">Billing Information</h2>
 
-      {/* Medicines Table */}
-      {medicines.length > 0 && (
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-2">Added Medicines</h2>
+            <div className="max-w-sm flex flex-col gap-2 mb-2">
+              <Label>Total Amount</Label>
+              <Input type="number" value={totalAmount} readOnly />
+            </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Batch</TableHead>
-                  <TableHead>Expiry</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Available</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {medicines.map((med) => (
-                  <TableRow key={med.id}>
-                    <TableCell>{med.medicineCategory}</TableCell>
-                    <TableCell>{med.medicineName}</TableCell>
-                    <TableCell>{med.expiryDate}</TableCell>
-                    <TableCell>{med.quantity}</TableCell>
-                    <TableCell>{med.availableQuantity}</TableCell>
-                    <TableCell>{med.amount}</TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setEditMedicine(med)}>
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDeleteMedicine(med.id)}>
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
-      )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Discount Percentage</Label>
+                <Input
+                  type="number"
+                  value={discountPercentage}
+                  onChange={(e) => handleDiscountChange(Number(e.target.value), "percentage")}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Discount Amount</Label>
+                <Input
+                  type="number"
+                  value={discountAmount}
+                  onChange={(e) => handleDiscountChange(Number(e.target.value), "amount")}
+                  className="w-full"
+                />
+              </div>
+            </div>
 
-      {/* Billing Information */}
-      <Card className="p-4">
-        <h2 className="text-lg font-semibold mb-2">Billing Information</h2>
+            {/* Tax */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Tax Percentage</Label>
+                <Input
+                  type="number"
+                  value={taxPercentage}
+                  onChange={(e) => handleTaxChange(Number(e.target.value), "percentage")}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Tax Amount</Label>
+                <Input
+                  type="number"
+                  value={taxAmount}
+                  onChange={(e) => handleTaxChange(Number(e.target.value), "amount")}
+                  className="w-full"
+                />
+              </div>
+            </div>
 
-        {/* Total */}
-        <div className="max-w-sm flex flex-col gap-2 mb-2">
-          <Label>Total Amount</Label>
-          <Input type="number" value={totalAmount} readOnly />
+
+            {/* Net Amount & Payment */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Net Amount</Label>
+                <Input type="number" value={netAmount} readOnly className="w-full" />
+              </div>
+
+              <div className="flex flex-col gap-1 w-full">
+                <Label>Payment Mode</Label>
+                <Select value={paymentMode} onValueChange={setPaymentMode}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+
+            {/* Notes */}
+            <div className="max-w-lg flex flex-col gap-2 mt-2">
+              <Label>Note</Label>
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add notes if any" />
+            </div>
+
+            {/* Submit */}
+            <div className="flex justify-end mt-6">
+              <Button type="button" size="lg" onClick={handleSubmit}>
+                Save Billing
+              </Button>
+            </div>
+          </Card>
         </div>
 
-        {/* Discount */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <div className="flex flex-col gap-1">
-            <Label>Discount Percentage</Label>
-            <Input
-              type="number"
-              value={discountPercentage}
-              onChange={(e) => handleDiscountChange(Number(e.target.value), "percentage")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label>Discount Amount</Label>
-            <Input
-              type="number"
-              value={discountAmount}
-              onChange={(e) => handleDiscountChange(Number(e.target.value), "amount")}
-            />
-          </div>
-        </div>
+        <div className="w-[65%]">
+          {medicines.length > 0 && (
+            <Card className="p-4">
+              <h2 className="text-lg font-semibold mb-2">Added Medicines</h2>
 
-        {/* Tax */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <div className="flex flex-col gap-1">
-            <Label>Tax Percentage</Label>
-            <Input
-              type="number"
-              value={taxPercentage}
-              onChange={(e) => handleTaxChange(Number(e.target.value), "percentage")}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label>Tax Amount</Label>
-            <Input
-              type="number"
-              value={taxAmount}
-              onChange={(e) => handleTaxChange(Number(e.target.value), "amount")}
-            />
-          </div>
+              <div className="overflow-x-auto max-h-[500px] scrollbar-show">
+                <Table className="min-w-[800px] ">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Expiry</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Available</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead className="sticky right-0 bg-gray-900 z-20 px-2">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {medicines.map((med) => (
+                      <TableRow key={med.id}>
+                        <TableCell>{med.medicineCategory}</TableCell>
+                        <TableCell>{med.medicineName}</TableCell>
+                        <TableCell>{med.expiryDate}</TableCell>
+                        <TableCell>{med.quantity}</TableCell>
+                        <TableCell>{med.availableQuantity}</TableCell>
+                        <TableCell>{med.amount}</TableCell>
+                        <TableCell className="sticky right-0 bg-gray-900 flex gap-2 z-20 px-2">
+                          <Button size="sm" variant="outline" onClick={() => {console.log("Edit medicie",med),setEditMedicine(med)}}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteMedicine(med.id)}>
+                            Delete
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          )}
         </div>
+      </div>
 
-        {/* Net Amount & Payment */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-1 mt-2">
-          <div className="flex flex-col gap-1">
-            <Label>Net Amount</Label>
-            <Input type="number" value={netAmount} readOnly />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label>Payment Mode</Label>
-            <Select value={paymentMode} onValueChange={setPaymentMode}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="upi">UPI</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Notes */}
-        <div className="max-w-lg flex flex-col gap-2 mt-2">
-          <Label>Note</Label>
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add notes if any" />
-        </div>
-
-        {/* Submit */}
-        <div className="flex justify-end mt-6">
-          <Button type="button" size="lg" onClick={handleSubmit}>
-            Save Billing
-          </Button>
-        </div>
-      </Card>
     </div>
   );
 }
