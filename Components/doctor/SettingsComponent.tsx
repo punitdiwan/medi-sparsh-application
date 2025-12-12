@@ -28,11 +28,11 @@ const SETTINGS_META: Record<
       "Require new patients to verify their phone number using OTP during registration.",
     group: "Patient Registration",
   },
-  organization_mode_check: {
-    label: "Organization Mode",
-    description: "Select whether your organization is a Clinic or Hospital.",
-    group: "Organization",
-  },
+  // organization_mode_check: {
+  //   label: "Organization Mode",
+  //   description: "Select whether your organization is a Clinic or Hospital.",
+  //   group: "Organization",
+  // },
 
 
 };
@@ -216,9 +216,9 @@ export default function SettingsComponent() {
     (k) => SETTINGS_META[k]?.group === "Patient Registration"
   );
 
-  const organizationKeys = Object.keys(settings).filter(
-    (k) => SETTINGS_META[k]?.group === "Organization"
-  );
+  // const organizationKeys = Object.keys(settings).filter(
+  //   (k) => SETTINGS_META[k]?.group === "Organization"
+  // );
 
 
   return (
@@ -264,7 +264,7 @@ export default function SettingsComponent() {
                 </Card>
               )}
 
-              {organizationKeys.length > 0 && (
+              {/* {organizationKeys.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Organization</CardTitle>
@@ -275,7 +275,7 @@ export default function SettingsComponent() {
                     ))}
                   </CardContent>
                 </Card>
-              )}
+              )} */}
             </>
           )}
         </div>
