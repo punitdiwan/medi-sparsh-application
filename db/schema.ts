@@ -992,6 +992,7 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	medicineId: text("medicine_id")
 		.notNull()
 		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchNumber: text("batch_number"),
 	quantity: numeric("quantity").notNull(),
 	unitPrice: numeric("unit_price").notNull(),
 	totalAmount: numeric("total_amount").notNull(),

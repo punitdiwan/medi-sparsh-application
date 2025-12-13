@@ -911,6 +911,7 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	hospitalId: text("hospital_id").notNull(),
 	billId: text("bill_id").notNull(),
 	medicineId: text("medicine_id").notNull(),
+	batchNumber: text("batch_number"),
 	quantity: numeric().notNull(),
 	unitPrice: numeric("unit_price").notNull(),
 	totalAmount: numeric("total_amount").notNull(),

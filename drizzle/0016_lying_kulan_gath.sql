@@ -1,0 +1,1 @@
+ALTER TABLE "pharmacy_sales_items" ADD COLUMN "batch_number" text NULL;

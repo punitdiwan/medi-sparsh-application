@@ -88,8 +88,7 @@ export default function PharmacyBillPage() {
   );
 
   const handlePrint = (bill: Bill) => {
-    console.log("Print Bill:", bill);
-
+    window.open(`/doctor/pharmacy/print/${bill.id}`, "_blank");
   };
 
   const allColumns: ColumnDef<Bill>[] = [

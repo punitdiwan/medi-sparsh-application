@@ -54,6 +54,7 @@ export async function createPharmacySale(data: {
                         hospitalId: org.id,
                         billId: sale.id,
                         medicineId: item.id,
+                        batchNumber: item.batchNumber,
                         quantity: item.quantity.toString(),
                         unitPrice: item.sellingPrice.toString(),
                         totalAmount: item.amount.toString(),
@@ -100,5 +101,66 @@ export async function getPharmacySales() {
     } catch (error) {
         console.error("Error fetching pharmacy sales:", error);
         return { error: "Failed to fetch sales" };
+    }
+}
+
+export async function getPharmacyBillDetails(billId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const [bill] = await db
+            .select()
+            .from(pharmacySales)
+            .where(and(eq(pharmacySales.id, billId), eq(pharmacySales.hospitalId, org.id)));
+
+        if (!bill) {
+            return { error: "Bill not found" };
+        }
+
+        const items = await db
+            .select()
+            .from(pharmacySalesItems)
+            .where(and(eq(pharmacySalesItems.billId, billId), eq(pharmacySalesItems.hospitalId, org.id)));
+
+        // If relation doesn't exist or we need batch details (expiry) from stock/purchase history
+        // For now, let's assume we just need what's in sales items + medicine name.
+        // But wait, user wants Expiry Date. Sales items don't have expiry date.
+        // We need to fetch expiry date from pharmacyStock based on batchNumber and medicineId.
+
+        const itemsWithDetails = await Promise.all(items.map(async (item) => {
+            const [stock] = await db
+                .select()
+                .from(pharmacyStock)
+                .where(
+                    and(
+                        eq(pharmacyStock.hospitalId, org.id),
+                        eq(pharmacyStock.medicineId, item.medicineId),
+                        eq(pharmacyStock.batchNumber, item.batchNumber || "")
+                    )
+                );
+
+            // We also need medicine name. If relation 'medicine' works, we have it.
+            // Let's check relations.ts or schema.ts for relations.
+            // Assuming we might need to fetch medicine manually if relation is not set up in db.query
+
+            const [medicine] = await db
+                .select()
+                .from(pharmacyMedicines)
+                .where(eq(pharmacyMedicines.id, item.medicineId));
+
+            return {
+                ...item,
+                medicineName: medicine?.name || "Unknown",
+                expiryDate: stock?.expiryDate || "N/A",
+            };
+        }));
+
+        return { data: { bill, items: itemsWithDetails } };
+    } catch (error) {
+        console.error("Error fetching bill details:", error);
+        return { error: "Failed to fetch bill details" };
     }
 }
