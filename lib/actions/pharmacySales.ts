@@ -5,6 +5,7 @@ import { pharmacySales, pharmacySalesItems, pharmacyMedicines, pharmacyStock } f
 import { getActiveOrganization } from "../getActiveOrganization";
 import { eq, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getPharmacySalesByHospital } from "@/db/queries/pharmacySales";
 
 export async function createPharmacySale(data: {
     customerName: string;
@@ -84,5 +85,20 @@ export async function createPharmacySale(data: {
     } catch (error) {
         console.error("Error creating pharmacy sale:", error);
         return { error: "Failed to create sale" };
+    }
+}
+
+export async function getPharmacySales() {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await getPharmacySalesByHospital(org.id);
+        return { data };
+    } catch (error) {
+        console.error("Error fetching pharmacy sales:", error);
+        return { error: "Failed to fetch sales" };
     }
 }
