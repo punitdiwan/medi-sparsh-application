@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals, medicineSuppliers, organizationRole, pharmacyMedicines, pharmacyPurchase, pharmacySales, pharmacySalesItems, pharmacyStock } from "./schema";
+import { organization, appointmentPriorities, user, account, session, doctors, staff, doctorShifts, shifts, invitation, member, medicineCategories, modules, patients, appointments, charges, doctorSlots, prescriptions, floors, bedGroups, bedsTypes, beds, chargeTypes, chargeCategories, taxCategories, units, medicineCompanies, medicineGroups, medicineUnits, medicines, roles, services, team, teamMember, transactions, vitals, medicineSuppliers, organizationRole, pharmacyMedicines, pharmacyPurchase, pharmacySales, pharmacySalesItems /*, pharmacyStock*/ } from "./schema";
 
 export const appointmentPrioritiesRelations = relations(appointmentPriorities, ({ one }) => ({
 	organization: one(organization, {
@@ -45,7 +45,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
 	pharmacyPurchases: many(pharmacyPurchase),
 	pharmacySales: many(pharmacySales),
 	pharmacySalesItems: many(pharmacySalesItems),
-	pharmacyStocks: many(pharmacyStock),
+	// pharmacyStocks: many(pharmacyStock),
 }));
 
 export const accountRelations = relations(account, ({ one }) => ({
@@ -457,7 +457,7 @@ export const pharmacyMedicinesRelations = relations(pharmacyMedicines, ({ one, m
 	}),
 	pharmacyPurchases: many(pharmacyPurchase),
 	pharmacySalesItems: many(pharmacySalesItems),
-	pharmacyStocks: many(pharmacyStock),
+	// pharmacyStocks: many(pharmacyStock),
 }));
 
 export const pharmacyPurchaseRelations = relations(pharmacyPurchase, ({ one }) => ({
@@ -494,6 +494,7 @@ export const pharmacySalesItemsRelations = relations(pharmacySalesItems, ({ one 
 	}),
 }));
 
+/*
 export const pharmacyStockRelations = relations(pharmacyStock, ({ one }) => ({
 	organization: one(organization, {
 		fields: [pharmacyStock.hospitalId],
@@ -504,3 +505,4 @@ export const pharmacyStockRelations = relations(pharmacyStock, ({ one }) => ({
 		references: [pharmacyMedicines.id]
 	}),
 }));
+*/

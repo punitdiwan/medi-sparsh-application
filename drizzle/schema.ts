@@ -817,6 +817,8 @@ export const pharmacyMedicines = pgTable("pharmacy_medicines", {
 	companyId: text("company_id").notNull(),
 	groupId: text("group_id").notNull(),
 	unitId: text("unit_id").notNull(),
+	quantity: numeric("quantity").default('0').notNull(),
+	lowStockAlert: integer("low_stock_alert").notNull().default(10),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
@@ -932,26 +934,7 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	}).onDelete("cascade"),
 ]);
 
-export const pharmacyStock = pgTable("pharmacy_stock", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	hospitalId: text("hospital_id").notNull(),
-	medicineId: text("medicine_id").notNull(),
-	quantity: numeric().notNull(),
-	lowStockAlert: integer("low_stock_alert").default(10).notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-		columns: [table.hospitalId],
-		foreignColumns: [organization.id],
-		name: "pharmacy_stock_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
-	foreignKey({
-		columns: [table.medicineId],
-		foreignColumns: [pharmacyMedicines.id],
-		name: "pharmacy_stock_medicine_id_pharmacy_medicines_id_fk"
-	}).onDelete("cascade"),
-]);
+
 
 export const settings = pgTable("settings", {
 	organizationId: varchar("organization_id", { length: 256 }).notNull(),

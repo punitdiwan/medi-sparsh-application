@@ -899,22 +899,7 @@ export const pharmacyMedicines = pgTable("pharmacy_medicines", {
 		.references(() => medicineGroups.id, { onDelete: "cascade" }),
 	unitId: text("unit_id").notNull()
 		.references(() => medicineUnits.id, { onDelete: "cascade" }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-});
-
-
-
-// medicine stock table
-export const pharmacyStock = pgTable("pharmacy_stock", {
-	id: text("id").default(useUUIDv4).primaryKey(),
-	hospitalId: text("hospital_id")
-		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
-	medicineId: text("medicine_id")
-		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
-	quantity: numeric("quantity").notNull(),
+	quantity: numeric("quantity").default("0").notNull(),
 	lowStockAlert: integer("low_stock_alert").notNull().default(10),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),

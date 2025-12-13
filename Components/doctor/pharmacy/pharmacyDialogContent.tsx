@@ -22,11 +22,15 @@ import {
 
 export type Medicine = {
   id: string;
-  medicineCategory: string;
-  medicineName: string;
+  medicineId: string;
+  categoryId: string;
+  medicineCategory?: string;
+  medicineName?: string;
   expiryDate: string;
   quantity: number;
   availableQuantity: number;
+  unitPrice?: number;
+  sellingPrice: number;
   amount: number;
 };
 
@@ -89,11 +93,11 @@ export default function MedicineDialog({
     setAmount(0);
   };
 
-    const handleAddClick = () => {
-        resetForm();
-        setEditMedicine(null); // now this works
-        setOpen(true);
-    };
+  const handleAddClick = () => {
+    resetForm();
+    setEditMedicine(null); // now this works
+    setOpen(true);
+  };
 
 
   const handleSubmit = () => {
@@ -101,10 +105,13 @@ export default function MedicineDialog({
       id: editMedicine ? editMedicine.id : crypto.randomUUID(),
       categoryId: selectedCategory,
       medicineId: selectedMedicineId,
+      medicineCategory: categories.find((c: any) => c.id === selectedCategory)?.name,
+      medicineName: medicines.find((m: any) => m.id === selectedMedicineId)?.name,
       expiryDate: expiry,
       quantity,
       availableQuantity,
       sellingPrice,
+      unitPrice: sellingPrice,
       amount,
     });
     setOpen(false);

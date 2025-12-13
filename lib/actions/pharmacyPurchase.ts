@@ -8,7 +8,8 @@ import {
 import { getPharmacyPurchasesByHospital, getPharmacyPurchaseDetailsById } from "@/db/queries/pharmacyPurchase";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { db } from "@/db";
-import { pharmacyPurchase, pharmacyPurchaseItem } from "@/drizzle/schema";
+import { pharmacyPurchase, pharmacyPurchaseItem, pharmacyMedicines } from "@/drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function getSuppliers() {
     try {
@@ -112,6 +113,17 @@ export async function createPharmacyPurchase(data: {
                         expiryDate: item.expiry, // Assuming YYYY-MM-DD string from input
                     }))
                 );
+
+                // 3. Update Medicine Stock
+                for (const item of items) {
+                    await tx
+                        .update(pharmacyMedicines)
+                        .set({
+                            quantity: sql`${pharmacyMedicines.quantity} + ${item.quantity}`,
+                            updatedAt: new Date().toISOString(),
+                        })
+                        .where(eq(pharmacyMedicines.id, item.medicineId));
+                }
             }
         });
 
