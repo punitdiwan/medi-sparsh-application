@@ -1,0 +1,1 @@
+ALTER TABLE "pharmacy_purchase_item" ADD COLUMN "selling_price" numeric DEFAULT 0 NOT NULL;

@@ -59,6 +59,8 @@ export async function createPharmacySale(data: {
                 );
 
                 // 3. Update Medicine Stock
+                // TODO: Implement stock deduction from pharmacyStock (requires batch selection or FIFO)
+                /*
                 for (const item of data.medicines) {
                     await tx
                         .update(pharmacyMedicines)
@@ -68,6 +70,7 @@ export async function createPharmacySale(data: {
                         })
                         .where(eq(pharmacyMedicines.id, item.id));
                 }
+                */
             }
         });
 

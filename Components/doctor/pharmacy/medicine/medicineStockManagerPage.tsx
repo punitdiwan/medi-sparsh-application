@@ -27,7 +27,7 @@ type MedicineDisplay = {
   companyId: string;
   unitId: string;
   groupId: string;
-  quantity: string;
+
 };
 
 export default function MedicineStockManagerPage() {
@@ -110,7 +110,6 @@ export default function MedicineStockManagerPage() {
     { accessorKey: "companyName", header: "Company" },
     { accessorKey: "groupName", header: "Group" },
     { accessorKey: "unitName", header: "Unit" },
-    { accessorKey: "quantity", header: "Quantity" },
 
     {
       id: "actions",

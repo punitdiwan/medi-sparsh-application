@@ -29,7 +29,6 @@ export async function getPharmacyMedicinesByHospital(hospitalId: string) {
             groupName: medicineGroups.name,
             unitId: pharmacyMedicines.unitId,
             unitName: medicineUnits.name,
-            quantity: pharmacyMedicines.quantity,
             hospitalId: pharmacyMedicines.hospitalId,
             createdAt: pharmacyMedicines.createdAt,
             updatedAt: pharmacyMedicines.updatedAt,

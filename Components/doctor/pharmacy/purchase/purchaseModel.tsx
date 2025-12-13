@@ -32,7 +32,7 @@ type PurchaseItem = {
   batchNo: string;
   expiry: string;
   mrp: number;
-  salePrice: number; 
+  salePrice: number;
   quantity: number;
   purchasePrice: number;
   amount: number;
@@ -56,7 +56,7 @@ export default function PurchaseMedicineModelPage() {
   const [paymentMode, setPaymentMode] = useState<string>("Cash");
   const [paymentNote, setPaymentNote] = useState<string>("");
 
-  
+
   useEffect(() => {
     const initData = async () => {
       const [suppliersRes, categoriesRes] = await Promise.all([
@@ -111,7 +111,7 @@ export default function PurchaseMedicineModelPage() {
       prev.map((p) => {
         if (p.id !== itemId) return p;
 
-        const numeric = ["mrp", "quantity", "purchasePrice","salePrice"];
+        const numeric = ["mrp", "quantity", "purchasePrice", "salePrice"];
 
         const updated: PurchaseItem = {
           ...p,
@@ -183,7 +183,7 @@ export default function PurchaseMedicineModelPage() {
         netAmount,
       },
     };
-
+    console.log(payload);
     const res = await createPharmacyPurchase(payload);
 
     if (res.error) {
@@ -351,7 +351,7 @@ export default function PurchaseMedicineModelPage() {
                     }
                   />
                 </div>
-                
+
 
 
                 {/* AMOUNT */}
@@ -363,7 +363,7 @@ export default function PurchaseMedicineModelPage() {
                 {/* REMOVE BUTTON */}
                 <div className="flex items-end">
                   <Button variant="destructive" onClick={() => removeItem(item.id)}>
-                    <MdDelete/>
+                    <MdDelete />
                   </Button>
                 </div>
               </div>
