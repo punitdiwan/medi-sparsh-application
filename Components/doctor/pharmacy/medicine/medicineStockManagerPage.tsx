@@ -27,6 +27,7 @@ type MedicineDisplay = {
   companyId: string;
   unitId: string;
   groupId: string;
+  quantity: number;
 };
 
 export default function MedicineStockManagerPage() {
@@ -81,21 +82,21 @@ export default function MedicineStockManagerPage() {
   }, []);
 
   const filtered = useMemo(() => {
-  const query = search.toLowerCase().trim();
+    const query = search.toLowerCase().trim();
 
-  if (!query) return medicines;
+    if (!query) return medicines;
 
-  return medicines.filter((m) => {
-    return (
-      (m.name && m.name.toLowerCase().includes(query)) ||
-      (m.categoryName && m.categoryName.toLowerCase().includes(query)) ||
-      (m.companyName && m.companyName.toLowerCase().includes(query)) ||
-      (m.unitName && m.unitName.toLowerCase().includes(query)) ||
-      (m.groupName && m.groupName.toLowerCase().includes(query)) ||
-      m.id.toLowerCase().includes(query) // if ID should be searchable
-    );
-  });
-}, [search, medicines]);
+    return medicines.filter((m) => {
+      return (
+        (m.name && m.name.toLowerCase().includes(query)) ||
+        (m.categoryName && m.categoryName.toLowerCase().includes(query)) ||
+        (m.companyName && m.companyName.toLowerCase().includes(query)) ||
+        (m.unitName && m.unitName.toLowerCase().includes(query)) ||
+        (m.groupName && m.groupName.toLowerCase().includes(query)) ||
+        m.id.toLowerCase().includes(query) // if ID should be searchable
+      );
+    });
+  }, [search, medicines]);
 
 
   // Columns
@@ -109,6 +110,7 @@ export default function MedicineStockManagerPage() {
     { accessorKey: "companyName", header: "Company" },
     { accessorKey: "groupName", header: "Group" },
     { accessorKey: "unitName", header: "Unit" },
+    { accessorKey: "quantity", header: "Quantity" },
 
     {
       id: "actions",
@@ -177,7 +179,7 @@ export default function MedicineStockManagerPage() {
         />
 
         <div className="flex gap-3">
-          
+
           <Button variant="default" onClick={handleAdd}>
             <Plus size={16} /> Add Medicine
           </Button>
@@ -187,7 +189,7 @@ export default function MedicineStockManagerPage() {
         </div>
       </div>
 
-      {isLoading && filtered.length==0 ? (
+      {isLoading && filtered.length == 0 ? (
         <div className="text-center py-4">Loading...</div>
       ) : filtered.length === 0 ? (
         <div className="py-12 flex flex-col items-center justify-center gap-3 

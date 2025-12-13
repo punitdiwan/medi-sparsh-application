@@ -6,6 +6,7 @@ import {
     medicineGroups,
     medicineUnits,
     medicineSuppliers,
+    pharmacyStock,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -17,6 +18,16 @@ export type NewPharmacyMedicine = typeof pharmacyMedicines.$inferInsert;
 // ============================================
 
 export async function getPharmacyMedicinesByHospital(hospitalId: string) {
+    const stockSq = db
+        .select({
+            medicineId: pharmacyStock.medicineId,
+            totalQuantity: sql<number>`sum(${pharmacyStock.quantity})`.as("total_quantity"),
+        })
+        .from(pharmacyStock)
+        .where(eq(pharmacyStock.hospitalId, hospitalId))
+        .groupBy(pharmacyStock.medicineId)
+        .as("stock_sq");
+
     return await db
         .select({
             id: pharmacyMedicines.id,
@@ -29,6 +40,7 @@ export async function getPharmacyMedicinesByHospital(hospitalId: string) {
             groupName: medicineGroups.name,
             unitId: pharmacyMedicines.unitId,
             unitName: medicineUnits.name,
+            quantity: sql<number>`coalesce(${stockSq.totalQuantity}, 0)`,
             hospitalId: pharmacyMedicines.hospitalId,
             createdAt: pharmacyMedicines.createdAt,
             updatedAt: pharmacyMedicines.updatedAt,
@@ -38,6 +50,7 @@ export async function getPharmacyMedicinesByHospital(hospitalId: string) {
         .leftJoin(medicineCompanies, eq(pharmacyMedicines.companyId, medicineCompanies.id))
         .leftJoin(medicineGroups, eq(pharmacyMedicines.groupId, medicineGroups.id))
         .leftJoin(medicineUnits, eq(pharmacyMedicines.unitId, medicineUnits.id))
+        .leftJoin(stockSq, eq(pharmacyMedicines.id, stockSq.medicineId))
         .where(eq(pharmacyMedicines.hospitalId, hospitalId))
         .orderBy(desc(pharmacyMedicines.createdAt));
 }
@@ -119,4 +132,25 @@ export async function getPharmacyMedicinesByCategory(hospitalId: string, categor
             )
         )
         .orderBy(pharmacyMedicines.name);
+}
+
+export async function getPharmacyStockByMedicineId(hospitalId: string, medicineId: string) {
+    return await db
+        .select({
+            id: pharmacyStock.id,
+            batchNumber: pharmacyStock.batchNumber,
+            expiryDate: pharmacyStock.expiryDate,
+            quantity: pharmacyStock.quantity,
+            sellingPrice: pharmacyStock.sellingPrice,
+            mrp: pharmacyStock.mrp,
+        })
+        .from(pharmacyStock)
+        .where(
+            and(
+                eq(pharmacyStock.hospitalId, hospitalId),
+                eq(pharmacyStock.medicineId, medicineId),
+                sql`${pharmacyStock.quantity} > 0`
+            )
+        )
+        .orderBy(pharmacyStock.expiryDate);
 }
