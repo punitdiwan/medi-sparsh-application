@@ -32,6 +32,7 @@ type PurchaseItem = {
   batchNo: string;
   expiry: string;
   mrp: number;
+  salePrice: number; 
   quantity: number;
   purchasePrice: number;
   amount: number;
@@ -55,6 +56,7 @@ export default function PurchaseMedicineModelPage() {
   const [paymentMode, setPaymentMode] = useState<string>("Cash");
   const [paymentNote, setPaymentNote] = useState<string>("");
 
+  
   useEffect(() => {
     const initData = async () => {
       const [suppliersRes, categoriesRes] = await Promise.all([
@@ -109,7 +111,7 @@ export default function PurchaseMedicineModelPage() {
       prev.map((p) => {
         if (p.id !== itemId) return p;
 
-        const numeric = ["mrp", "quantity", "purchasePrice"];
+        const numeric = ["mrp", "quantity", "purchasePrice","salePrice"];
 
         const updated: PurchaseItem = {
           ...p,
@@ -138,6 +140,7 @@ export default function PurchaseMedicineModelPage() {
         batchNo: "",
         expiry: "",
         mrp: 0,
+        salePrice: 0,
         quantity: 0,
         purchasePrice: 0,
         amount: 0,
@@ -309,11 +312,16 @@ export default function PurchaseMedicineModelPage() {
                     }
                   />
                 </div>
-
-
-
-
-
+                <div className="w-[120px] flex flex-col gap-2">
+                  <Label>Sale Price</Label>
+                  <Input
+                    type="number"
+                    value={item.salePrice}
+                    onChange={(e) =>
+                      handleInputChange(item.id, "salePrice", parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </div>
                 <div className="w-[100px] flex flex-col gap-2">
                   <Label>Qty</Label>
                   <Input
@@ -343,7 +351,7 @@ export default function PurchaseMedicineModelPage() {
                     }
                   />
                 </div>
-
+                
 
 
                 {/* AMOUNT */}
