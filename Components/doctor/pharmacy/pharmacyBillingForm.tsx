@@ -262,6 +262,7 @@ export default function PharmacyBillingForm() {
       customerPhone,
       medicines: medicines.map(m => ({
         id: m.medicineId || m.id, // Ensure correct ID is sent
+        batchNumber: m.batchNumber,
         quantity: Number(m.quantity),
         sellingPrice: Number(m.sellingPrice || 0), // Changed from unitPrice to sellingPrice
         amount: Number(m.amount)
@@ -437,6 +438,7 @@ export default function PharmacyBillingForm() {
                     <TableRow>
                       <TableHead>Category</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Batch</TableHead>
                       <TableHead>Expiry</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Available</TableHead>
@@ -449,6 +451,7 @@ export default function PharmacyBillingForm() {
                       <TableRow key={med.id}>
                         <TableCell>{med.medicineCategory}</TableCell>
                         <TableCell>{med.medicineName}</TableCell>
+                        <TableCell>{med.batchNumber}</TableCell>
                         <TableCell>{med.expiryDate}</TableCell>
                         <TableCell>{med.quantity}</TableCell>
                         <TableCell>{med.availableQuantity}</TableCell>

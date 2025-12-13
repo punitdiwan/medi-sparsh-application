@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/db";
-import { pharmacySales, pharmacySalesItems, pharmacyMedicines } from "@/drizzle/schema";
+import { pharmacySales, pharmacySalesItems, pharmacyMedicines, pharmacyStock } from "@/drizzle/schema";
 import { getActiveOrganization } from "../getActiveOrganization";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function createPharmacySale(data: {
@@ -11,6 +11,7 @@ export async function createPharmacySale(data: {
     customerPhone: string;
     medicines: {
         id: string;
+        batchNumber: string;
         quantity: number;
         sellingPrice: number;
         amount: number;
@@ -59,18 +60,22 @@ export async function createPharmacySale(data: {
                 );
 
                 // 3. Update Medicine Stock
-                // TODO: Implement stock deduction from pharmacyStock (requires batch selection or FIFO)
-                /*
                 for (const item of data.medicines) {
+                    // Update pharmacyStock based on medicineId and batchNumber
                     await tx
-                        .update(pharmacyMedicines)
+                        .update(pharmacyStock)
                         .set({
-                            quantity: sql`${pharmacyMedicines.quantity} - ${item.quantity}`,
-                            updatedAt: new Date().toISOString(),
+                            quantity: sql`${pharmacyStock.quantity} - ${item.quantity}`,
+                            updatedAt: new Date(), // Assuming updatedAt is a string in schema, or use new Date() if it's timestamp
                         })
-                        .where(eq(pharmacyMedicines.id, item.id));
+                        .where(
+                            and(
+                                eq(pharmacyStock.hospitalId, org.id),
+                                eq(pharmacyStock.medicineId, item.id),
+                                eq(pharmacyStock.batchNumber, item.batchNumber)
+                            )
+                        );
                 }
-                */
             }
         });
 
