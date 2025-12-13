@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { getUserRole } from "@/db/queries";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 import { db } from "@/db/index";
-import { organization } from "@/db/schema";
+import { organization } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 // GET /api/clinic - Get current organization/clinic details
