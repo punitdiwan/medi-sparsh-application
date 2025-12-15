@@ -29,17 +29,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import MedicineGroupModal, { MedicineGroup } from "./medicineGroupModel";
 import { getMedicineGroups, createMedicineGroup, updateMedicineGroup, deleteMedicineGroup } from "@/lib/actions/medicineGroups";
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function MedicineGroupManager() {
   const [groups, setGroups] = useState<MedicineGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [openMg, setOpenMg] = useState(false);
   const [editing, setEditing] = useState<MedicineGroup | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
@@ -138,9 +141,29 @@ export default function MedicineGroupManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
-          <Button onClick={() => setOpen(true)}>Add Medicine Group</Button>
+          <div className="flex flex-row flex-wrap items-center gap-3">
+            <Button onClick={() => setOpen(true)}>Add Medicine Group</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={() => setOpenMg(true)} className="p-2">
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Medicine Group Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
+        {/* openMg */}
 
+        <ExcelUploadModal
+          open={openMg}
+          setOpen={setOpenMg}
+          entity="medicineGroup"
+          />
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
             <TableHeader className="bg-muted/40">

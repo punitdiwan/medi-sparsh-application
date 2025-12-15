@@ -35,10 +35,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
 import { VitalModal } from "./vitalModel";
 import { toast } from "sonner";
 import ExcelUploadModal from "@/Components/HospitalExcel";
+import { TooltipProvider ,TooltipContent,  TooltipTrigger, Tooltip } from "@/components/ui/tooltip";
+
 
 export type Vital = {
   id: string;
@@ -175,7 +177,22 @@ export default function VitalsManager() {
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
             <Button onClick={() => setOpen(true)}>Add Vital</Button>
-            <Button variant="outline" onClick={() => {console.log("vitals click"),setOpenEx(true)}}>Upload Vitals Excel</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => { console.log("vitals click"); setOpenEx(true); }}
+                    className="p-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Vitals Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         <ExcelUploadModal

@@ -99,6 +99,20 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
       url:"/api/excel/medicneUnit/upload",
       accept:[".xlsx"]
     }
+  },
+  medicineGroup:{
+    title:"Medicine Group",
+    template:{
+      filename:"medicine_group_template.xlsx",
+      columns:[
+        { key:"name", label:"Group Name"}
+      ],
+      downloadUrl:""
+    },
+    upload:{
+      url:"/api/excel/medicineGroup/upload",
+      accept:[".xlsx"]
+    }
   }
 };
 

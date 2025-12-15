@@ -14,7 +14,8 @@ import {
 import { toast } from "sonner";
 import UnitModal from "./unitmodel";
 import ExcelUploadModal from "@/Components/HospitalExcel";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 interface UnitItem {
   id: string;
   name: string;
@@ -144,7 +145,22 @@ export default function UnitManager(): JSX.Element {
         >
           + Add Unit
         </Button>
-        <Button variant="outline" onClick={() => setOpen(true)}>Upload Unit Excel</Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={() => setOpen(true)}
+                className="p-2"
+              >
+                <Upload className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Upload Unit Excel</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         </div>
       </div>
       <ExcelUploadModal

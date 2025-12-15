@@ -26,7 +26,8 @@ import HoneycombLoader from "@/components/HoneycombLoader";
 import { getShortId } from "@/utils/getShortId";
 import AddPatientDialog from "./AddPatientDialog";
 import ExcelUploadModal from "@/Components/HospitalExcel";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 type Patient = {
   id: string;
   name: string;
@@ -242,7 +243,22 @@ useEffect(() => {
             }}
           />
            <AddPatientDialog onPatientAdded={fetchPatients} />
-           <Button variant="outline" onClick={() => setOpen(true)}>Upload Patients Excel</Button>
+           <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  className="p-2"
+                >
+                  <Upload className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload Patients Excel</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
       <div className="mt-2">

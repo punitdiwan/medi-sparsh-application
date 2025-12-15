@@ -17,7 +17,8 @@ import { toast } from "sonner";
 import TaxModal from "./taxModel";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import ExcelUploadModal from "@/Components/HospitalExcel";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 // ---------------- Types ----------------
 interface Tax {
   id: string;
@@ -215,7 +216,23 @@ export default function TaxManager() {
           >
             Add Tax
           </Button>
-          <Button variant="outline" onClick={() => setOpen(true)}>Upload Tax Category Excel</Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  className="p-2"
+                >
+                  <Upload className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload Tax Category Excel</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
         </div>
       </div>
             <ExcelUploadModal
