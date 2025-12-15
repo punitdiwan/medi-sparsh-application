@@ -1,13 +1,15 @@
 "use client";
-import React, { useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 
-import { KbdInputGroup } from "@/features/SearchBar";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ProfileImg from "@/public/palceholderImg.jpg";
+import { useRouter } from "next/navigation";
+
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/Components/theme-provider/ThemeProviderIcon";
+import { Button } from "@/components/ui/button";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,29 +18,52 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import { FaBed, FaUserDoctor, FaUser } from "react-icons/fa6";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
+import {
+  User,
+  ListTodo,
+  KeyRound,
+  LogOut,
+} from "lucide-react";
+
+import { FaUserDoctor, FaUser } from "react-icons/fa6";
 import { FaCrown } from "react-icons/fa6";
+
+import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+
+import ProfileImg from "@/public/palceholderImg.jpg";
+import ChangePasswordForm from "./forms/ChangePasswordForm";
+
 export default function Header() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const roleLabel =
-    user?.memberRole === "owner" ? "Admin" : user?.memberRole || "My Profile";
+    user?.memberRole === "owner"
+      ? "Admin"
+      : user?.memberRole || "My Profile";
 
   const roleIcon =
     user?.memberRole === "owner" ? (
-      <FaCrown className="inline mr-1" />
+      <FaCrown className="w-4 h-4" />
     ) : user?.memberRole === "doctor" ? (
-      <FaUserDoctor className="inline mr-1" />
+      <FaUserDoctor className="w-4 h-4" />
     ) : (
-      <FaUser className="inline mr-1" />
+      <FaUser className="w-4 h-4" />
     );
 
   const handleLogout = async () => {
@@ -53,69 +78,85 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 bg-background z-[9] flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-[9] flex h-16 items-center justify-between bg-background px-2">
+
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Separator orientation="vertical" className="h-4" />
       </div>
 
-      <div className="flex items-center gap-4 ">
-        <div className="hidden md:flex items-center">
-          {/* <KbdInputGroup /> */}
-          <div className="px-4 cursor-pointer">
-            {/* <FaBed /> */}
-          </div>
-        </div>
-
+      <div className="flex items-center gap-4 pr-3">
         <ModeToggle />
-      <div className="pr-3 ">
-        <DropdownMenu open={open} onOpenChange={setOpen}>
-          <DropdownMenuTrigger>
-            <Image
-              src={ProfileImg}
-              alt="Profile"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
+
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <button className="rounded-full focus:outline-none">
+              <Image
+                src={ProfileImg}
+                alt="Profile"
+                width={40}
+                height={40}
+                className="rounded-full border"
+              />
+            </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent 
-            side="top" 
-            align="end" 
-            className="mt-2 w-40"
+          <DropdownMenuContent
+            side="bottom"
+            align="end"
+            className="w-56 rounded-xl p-2"
           >
-            <DropdownMenuLabel className="capitalize flex items-center justify-center ">
+
+            <DropdownMenuLabel className="flex items-center justify-center gap-2 text-sm font-medium capitalize">
               {roleIcon}
               {roleLabel}
             </DropdownMenuLabel>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem className="w-full justify-center text-center" onClick={() => setOpen(false)}>
+            <DropdownMenuItem asChild>
               <Link
                 href="/doctor/settings/profile"
-                className="w-full block p-2 text-gray-700 dark:text-gray-300"
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                onClick={() => setMenuOpen(false)}
               >
-                Profile
+                <User className="h-4 w-4" />
+                <span>Profile</span>
               </Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem className="w-full justify-center text-center" onClick={() => setOpen(false)}>
+            <DropdownMenuItem asChild>
               <Link
                 href="/doctor/todolist"
-                className="w-full block p-2 text-gray-700 dark:text-gray-300"
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+                onClick={() => setMenuOpen(false)}
               >
-                Todo list
+                <ListTodo className="h-4 w-4" />
+                <span>Todo List</span>
               </Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem asChild className="w-full justify-center text-center">
+            <DropdownMenuItem
+              onClick={() => {
+                setMenuOpen(false);
+                setShowPasswordModal(true);
+              }}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted cursor-pointer"
+            >
+              <KeyRound className="h-4 w-4" />
+              <span>Change Password</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            {/* LOGOUT */}
+            <DropdownMenuItem asChild>
               <ConfirmDialog
                 trigger={
-                  <Button className="w-full text-center font-light p-2 mt-1 rounded-md">
-                    Logout
-                  </Button>
+                  <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-red-600 hover:text-white/80 dark:hover:text-black hover:bg-black dark:hover:bg-white cursor-pointer">
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
                 }
                 title="Are you sure you want to logout?"
                 description="You’ll be signed out and redirected to login."
@@ -125,10 +166,49 @@ export default function Header() {
               />
             </DropdownMenuItem>
           </DropdownMenuContent>
-
         </DropdownMenu>
-        </div>
       </div>
+
+      {/* CHANGE PASSWORD MODAL */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent
+          className="max-w-md p-0"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <VisuallyHidden>
+            <DialogTitle>Change Password</DialogTitle>
+          </VisuallyHidden>
+
+          <ChangePasswordForm
+            open={showPasswordModal}
+            onClose={() => setShowPasswordModal(false)}
+            onSubmit={async (values) => {
+              try {
+                const res = await authClient.changePassword({
+                  currentPassword: values.currentPassword,
+                  newPassword: values.newPassword,
+                });
+
+                if (res?.data) {
+                  toast.success("Password changed successfully!");
+                  setShowPasswordModal(false);
+                  return true;
+                } else {
+                  toast.error(
+                    res?.error?.message || "Failed to change password"
+                  );
+                  return false;
+                }
+              } catch (err: any) {
+                toast.error(err.message || "Something went wrong");
+                console.error(err);
+                return false;
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

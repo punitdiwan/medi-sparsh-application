@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-
+export const dynamic = "force-dynamic";
 const page = () => {
 
     return (
