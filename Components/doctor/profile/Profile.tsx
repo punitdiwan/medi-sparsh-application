@@ -13,20 +13,12 @@ import {
     SelectContent,
     SelectItem,
 } from "@/components/ui/select";
-import { authClient, useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 import MaskedInput from "@/components/InputMask";
 import { useAuth } from "@/context/AuthContext";
 import AdminProfileUI from "./adminProfile/page";
-import ChangePasswordForm from "@/Components/forms/ChangePasswordForm";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+
 interface StaffData {
     id: string;
     userId: string;
@@ -361,13 +353,6 @@ export default function DoctorProfile() {
                 >
                     {showClinicDetails ? "View Doctor Profile" : "View Clinic Details"}
                 </Button>
-                <Button
-                    onClick={() => setShowPasswordModal(true)}
-                    variant="outline"
-                    className="w-full"
-                >
-                    Change Password
-                </Button>
 
             </Card>
 
@@ -558,45 +543,6 @@ export default function DoctorProfile() {
                     )}
                 </CardContent>
             </Card>
-            <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-                <DialogContent className="max-w-md p-0"
-                    onInteractOutside={(e) => e.preventDefault()}  
-                    onEscapeKeyDown={(e) => e.preventDefault()} 
-                >
-                     <VisuallyHidden>
-                        <DialogTitle>Change Password</DialogTitle>
-                    </VisuallyHidden>
-                    <ChangePasswordForm
-                        open={showPasswordModal}
-                        onClose={() => setShowPasswordModal(false)}
-                        onSubmit={async (values) => {
-                            try {
-                                const res = await authClient.changePassword({
-                                    currentPassword: values.currentPassword,
-                                    newPassword: values.newPassword,
-                                });
-
-                                if (res?.data != null) {
-                                    toast.success("Password changed successfully!");
-                                    setShowPasswordModal(false);
-                                    return true;
-                                } else {
-                                    toast.error(res?.error?.message || "Failed to change password");
-                                    return false;
-                                }
-                            } catch (err: any) {
-                                toast.error(err.message || "Something went wrong");
-                                console.error(err);
-                                return false;
-                            }
-                        }}
-
-                    />
-                </DialogContent>
-            </Dialog>
-
-
-
         </div>
     );
 }

@@ -1,6 +1,5 @@
 import PharmacyBillingForm from '@/Components/doctor/pharmacy/pharmacyBillingForm'
-import React from 'react'
-
+export const dynamic = "force-dynamic";
 const page = () => {
   return (
     <>
