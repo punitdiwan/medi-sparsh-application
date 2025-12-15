@@ -1,161 +1,100 @@
-// import { NextResponse } from "next/server";
-// import ExcelJS from "exceljs";
-// import { db } from "@/db";
-// import { eq, and } from "drizzle-orm";
-// import {
-//   pharmacyMedicines,
-//   medicineCategories,
-//   medicineCompanies,
-//   medicineUnits,
-//   medicineGroups,
-// } from "@/db/schema";
-// import { getActiveOrganization } from "@/lib/getActiveOrganization";
+import { NextResponse } from "next/server";
+import ExcelJS from "exceljs";
+import { db } from "@/db";
+import { eq } from "drizzle-orm";
+import {
+  medicineCategories,
+  medicineCompanies,
+  medicineUnits,
+  medicineGroups,
+} from "@/db/schema";
+import { getActiveOrganization } from "@/lib/getActiveOrganization";
 
-// export async function POST(req: Request) {
-//   try {
-//     /* ---------------- Auth ---------------- */
-//     const org = await getActiveOrganization();
-//     if (!org) {
-//       return NextResponse.json(
-//         { error: "Unauthorized" },
-//         { status: 401 }
-//       );
-//     }
+export async function GET() {
+  const org = await getActiveOrganization();
+  if (!org) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-//     const hospitalId = org.id;
+  const hospitalId = org.id;
 
-//     /* ---------------- File ---------------- */
-//     const formData = await req.formData();
-//     const file = formData.get("file") as File | null;
+  const [categories, companies, units, groups] = await Promise.all([
+    db.select().from(medicineCategories).where(eq(medicineCategories.hospitalId, hospitalId)),
+    db.select().from(medicineCompanies).where(eq(medicineCompanies.hospitalId, hospitalId)),
+    db.select().from(medicineUnits).where(eq(medicineUnits.hospitalId, hospitalId)),
+    db.select().from(medicineGroups).where(eq(medicineGroups.hospitalId, hospitalId)),
+  ]);
 
-//     if (!file) {
-//       return NextResponse.json(
-//         { error: "File not provided" },
-//         { status: 400 }
-//       );
-//     }
+  const workbook = new ExcelJS.Workbook();
 
-//     const buffer = Buffer.from(await file.arrayBuffer());
 
-//     /* ---------------- Workbook ---------------- */
-//     const workbook = new ExcelJS.Workbook();
-//     await workbook.xlsx.load(buffer);
+  const mainSheet = workbook.addWorksheet("Medicines");
 
-//     const sheet = workbook.getWorksheet("Medicines");
-//     if (!sheet) {
-//       return NextResponse.json(
-//         { error: "Medicines sheet not found" },
-//         { status: 400 }
-//       );
-//     }
+  mainSheet.addRow([
+    "name",
+    "category_name",
+    "company_name",
+    "unit_name",
+    "group_name",
+  ]);
 
-//     /* ---------------- Master Data ---------------- */
-//     const [categories, companies, units, groups] = await Promise.all([
-//       db
-//         .select()
-//         .from(medicineCategories)
-//         .where(eq(medicineCategories.hospitalId, hospitalId)),
+  for (let i = 0; i < 500; i++) {
+    mainSheet.addRow([]);
+  }
 
-//       db
-//         .select()
-//         .from(medicineCompanies)
-//         .where(eq(medicineCompanies.hospitalId, hospitalId)),
 
-//       db
-//         .select()
-//         .from(medicineUnits)
-//         .where(eq(medicineUnits.hospitalId, hospitalId)),
+  const catSheet = workbook.addWorksheet("Categories");
+  catSheet.addRow(["name"]);
+  categories.forEach(c => catSheet.addRow([c.name]));
 
-//       db
-//         .select()
-//         .from(medicineGroups)
-//         .where(eq(medicineGroups.hospitalId, hospitalId)),
-//     ]);
+  const compSheet = workbook.addWorksheet("Companies");
+  compSheet.addRow(["name"]);
+  companies.forEach(c => compSheet.addRow([c.name]));
 
-//     const categoryMap = new Map(
-//       categories.map((c) => [c.name.toLowerCase(), c.id])
-//     );
-//     const companyMap = new Map(
-//       companies.map((c) => [c.name.toLowerCase(), c.id])
-//     );
-//     const unitMap = new Map(
-//       units.map((u) => [u.name.toLowerCase(), u.id])
-//     );
-//     const groupMap = new Map(
-//       groups.map((g) => [g.name.toLowerCase(), g.id])
-//     );
+  const unitSheet = workbook.addWorksheet("Units");
+  unitSheet.addRow(["name"]);
+  units.forEach(u => unitSheet.addRow([u.name]));
 
-//     /* ---------------- Insert ---------------- */
-//     let inserted = 0;
+  const groupSheet = workbook.addWorksheet("Groups");
+  groupSheet.addRow(["name"]);
+  groups.forEach(g => groupSheet.addRow([g.name]));
 
-//     await db.transaction(async (tx) => {
-//       for (let row = 2; row <= sheet.rowCount; row++) {
-//         const r = sheet.getRow(row);
 
-//         const name = String(r.getCell(1).value || "").trim();
-//         const categoryName = String(r.getCell(2).value || "").trim();
-//         const companyName = String(r.getCell(3).value || "").trim();
-//         const unitName = String(r.getCell(4).value || "").trim();
-//         const groupName = String(r.getCell(5).value || "").trim();
-//         const notes = String(r.getCell(6).value || "").trim();
+  for (let row = 2; row <= 501; row++) {
+    mainSheet.getCell(`B${row}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: [`Categories!$A$2:$A$${categories.length + 1}`],
+    };
 
-//         if (!name) continue;
+    mainSheet.getCell(`C${row}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: [`Companies!$A$2:$A$${companies.length + 1}`],
+    };
 
-//         if (!categoryName || !companyName || !unitName) {
-//           throw new Error(`Row ${row}: Required fields missing`);
-//         }
+    mainSheet.getCell(`D${row}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: [`Units!$A$2:$A$${units.length + 1}`],
+    };
 
-//         const categoryId = categoryMap.get(categoryName.toLowerCase());
-//         if (!categoryId) {
-//           throw new Error(`Row ${row}: Invalid category "${categoryName}"`);
-//         }
+    mainSheet.getCell(`E${row}`).dataValidation = {
+      type: "list",
+      allowBlank: false,
+      formulae: [`Groups!$A$2:$A$${groups.length + 1}`],
+    };
+  }
 
-//         const companyId = companyMap.get(companyName.toLowerCase());
-//         if (!companyId) {
-//           throw new Error(`Row ${row}: Invalid company "${companyName}"`);
-//         }
+  const buffer = await workbook.xlsx.writeBuffer();
 
-//         const unitId = unitMap.get(unitName.toLowerCase());
-//         if (!unitId) {
-//           throw new Error(`Row ${row}: Invalid unit "${unitName}"`);
-//         }
-
-//         const groupId = groupName
-//           ? groupMap.get(groupName.toLowerCase()) ?? null
-//           : null;
-
-//         /* ---- Duplicate check ---- */
-//         const exists = await tx.query.pharmacyMedicines.findFirst({
-//           where: and(
-//             eq(pharmacyMedicines.name, name),
-//             eq(pharmacyMedicines.hospitalId, hospitalId)
-//           ),
-//         });
-
-//         if (exists) continue;
-
-//         await tx.insert(pharmacyMedicines).values({
-//           name,
-//           categoryId,
-//           companyId,
-//           unitId,
-//           groupId,
-//           notes,
-//           hospitalId,
-//         });
-
-//         inserted++;
-//       }
-//     });
-
-//     return NextResponse.json({
-//       success: true,
-//       inserted,
-//     });
-//   } catch (err: any) {
-//     return NextResponse.json(
-//       { error: err.message || "Upload failed" },
-//       { status: 400 }
-//     );
-//   }
-// }
+  return new NextResponse(buffer, {
+    status: 200,
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition":
+        'attachment; filename="medicines_template.xlsx"',
+    },
+  });
+}

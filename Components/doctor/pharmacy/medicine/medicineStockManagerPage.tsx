@@ -16,6 +16,7 @@ import {
 } from "@/lib/actions/pharmacyMedicines";
 import { PharmacyMedicineModal, PharmacyMedicine } from "./PharmacyMedicineModal";
 import { PiMagnifyingGlassDuotone } from "react-icons/pi";
+import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
 type MedicineDisplay = {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ export default function MedicineStockManagerPage() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState<PharmacyMedicine | undefined>(undefined);
   const [dropdowns, setDropdowns] = useState<{
     categories: Array<{ id: string; name: string }>;
@@ -181,10 +183,11 @@ export default function MedicineStockManagerPage() {
           <Button variant="default" onClick={handleAdd}>
             <Plus size={16} /> Add Medicine
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setOpen(true)}>
             <PiUploadBold size={16} /> Import Medicine
           </Button>
         </div>
+        <HospitalMedicineExcelModal open={open} setOpen={setOpen} />
       </div>
 
       {isLoading && filtered.length==0 ? (
