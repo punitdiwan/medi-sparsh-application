@@ -16,7 +16,7 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
     try {
       setDownloadLoading(true);
 
-      const res = await fetch("/api/hospita/template");
+      const res = await fetch("/api/medicines/template");
 
       if (!res.ok) {
         toast.error("Failed to download template");
