@@ -25,7 +25,9 @@ import { InputOTPForm } from "@/components/model/Otpmodel";
 import HoneycombLoader from "@/components/HoneycombLoader";
 import { getShortId } from "@/utils/getShortId";
 import AddPatientDialog from "./AddPatientDialog";
-
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 type Patient = {
   id: string;
   name: string;
@@ -50,7 +52,7 @@ function PatientPage() {
   const [filters, setFilters] = useState<PatientFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
+  const [open, setOpen] = useState(false);
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "name",
     "mobileNumber",
@@ -241,11 +243,32 @@ useEffect(() => {
             }}
           />
            <AddPatientDialog onPatientAdded={fetchPatients} />
+           <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  className="p-2"
+                >
+                  <Upload className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload Patients Excel</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
       <div className="mt-2">
         <FilterBar fields={patientFilters} onFilter={setFilters} />
       </div>
+      <ExcelUploadModal
+        open={open}
+        setOpen={setOpen}
+        entity="patient"
+      />
 
       <div className="mt-6 text-sm ">
         {filteredData.length === 0 ? (
@@ -266,62 +289,6 @@ useEffect(() => {
         />
       </div>
 
-     
-
-      {/* Patient Registration Dialog */}
-      {/* <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add New Patient</DialogTitle>
-          </DialogHeader>
-          <PatientRegistrationForm
-            onSuccess={() => {
-              setIsRegistrationOpen(false);
-              setIsOtpOpen(false);
-              // Refresh patient list
-              const fetchPatients = async () => {
-                try {
-                  const response = await fetch("/api/patients");
-                  const result = await response.json();
-                  if (response.ok && result.success) {
-                    setPatients(result.data);
-                  }
-                } catch (err) {
-                  console.error("Error fetching patients:", err);
-                }
-              };
-              fetchPatients();
-            }}
-            onCancel={() => setIsRegistrationOpen(false)}
-            onOtpRequired={(data, verifyHandler) => {
-              // Close registration dialog and open OTP dialog
-              setIsRegistrationOpen(false);
-              setOtpVerifyHandler(() => verifyHandler);
-              setIsOtpOpen(true);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      //OTP Verification Dialog
-      <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Verify Mobile Number</DialogTitle>
-          </DialogHeader>
-          <InputOTPForm
-            onVerify={async (otp) => {
-              if (otpVerifyHandler) {
-                await otpVerifyHandler(otp);
-              }
-            }}
-            onClose={() => {
-              setIsOtpOpen(false);
-              setIsRegistrationOpen(true); // Reopen registration form if OTP is cancelled
-            }}
-          />
-        </DialogContent>
-      </Dialog> */}
     </div>
   );
 }

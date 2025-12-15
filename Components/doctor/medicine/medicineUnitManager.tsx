@@ -26,6 +26,9 @@ import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import { UnitModal, Unit } from "./medicineUnit";
 import { getMedicineUnits, createMedicineUnit, updateMedicineUnit, deleteMedicineUnit } from "@/lib/actions/medicineUnits";
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 
 export default function MedicineUnitManager() {
   const [units, setUnits] = useState<Unit[]>([]);
@@ -35,7 +38,7 @@ export default function MedicineUnitManager() {
   const [editingUnit, setEditingUnit] = useState<Unit | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<string | null>(null);
-
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     fetchUnits();
   }, []);
@@ -138,17 +141,34 @@ export default function MedicineUnitManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
-
-          <Button
-            onClick={() => {
-              setEditingUnit(undefined);
-              setOpenModal(true);
-            }}
-          >
-            Add Unit
-          </Button>
+          <div className="flex flex-row flex-wrap items-center gap-3">
+            <Button
+              onClick={() => {
+                setEditingUnit(undefined);
+                setOpenModal(true);
+              }}
+            >
+              Add Unit
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" onClick={() => setOpen(true)} className="p-2">
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Unit Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-
+        <ExcelUploadModal
+          open={open}
+          setOpen={setOpen}
+          entity="medicineUnit"
+        />
         {/* Table */}
         <div className="rounded-xl border">
           <Table>

@@ -35,9 +35,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
 import { VitalModal } from "./vitalModel";
 import { toast } from "sonner";
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { TooltipProvider ,TooltipContent,  TooltipTrigger, Tooltip } from "@/components/ui/tooltip";
+
 
 export type Vital = {
   id: string;
@@ -51,6 +54,7 @@ export default function VitalsManager() {
   const [vitals, setVitals] = useState<Vital[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [openEx, setOpenEx] = useState(false);
   const [editing, setEditing] = useState<Vital | null>(null);
   const [filter, setFilter] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -171,10 +175,31 @@ export default function VitalsManager() {
             onChange={(e) => setFilter(e.target.value)}
             className="max-w-xs"
           />
-
-          <Button onClick={() => setOpen(true)}>Add Vital</Button>
+          <div className="flex flex-row flex-wrap items-center gap-3">
+            <Button onClick={() => setOpen(true)}>Add Vital</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => { console.log("vitals click"); setOpenEx(true); }}
+                    className="p-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Vitals Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-
+        <ExcelUploadModal
+                open={openEx}
+                setOpen={setOpenEx}
+                entity="vital"
+              />
         {/* Table */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>

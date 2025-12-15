@@ -16,7 +16,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import TaxModal from "./taxModel";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
-
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 // ---------------- Types ----------------
 interface Tax {
   id: string;
@@ -30,7 +32,7 @@ interface Tax {
 export default function TaxManager() {
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState<string>("");
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
@@ -205,17 +207,39 @@ export default function TaxManager() {
           />
           <Label htmlFor="show-deleted">Show Deleted Only</Label>
         </div>
+        <div className="flex flex-row flex-wrap items-center gap-3">
+          <Button
+            onClick={() => {
+              setEditData(null);
+              setModalOpen(true);
+            }}
+          >
+            Add Tax
+          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  className="p-2"
+                >
+                  <Upload className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload Tax Category Excel</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-        <Button
-          onClick={() => {
-            setEditData(null);
-            setModalOpen(true);
-          }}
-        >
-          Add Tax
-        </Button>
+        </div>
       </div>
-
+            <ExcelUploadModal
+              open={open}
+              setOpen={setOpen}
+              entity="hospitalChargeTaxCategory"
+            />
       {/* Table */}
       <Table>
         <TableHeader>

@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import UnitModal from "./unitmodel";
-
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Upload } from "lucide-react";
 interface UnitItem {
   id: string;
   name: string;
@@ -24,7 +26,7 @@ export default function UnitManager(): JSX.Element {
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState<UnitItem | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [open, setOpen] = useState(false);
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -134,7 +136,7 @@ export default function UnitManager(): JSX.Element {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-
+        <div className="flex flex-row flex-wrap items-center gap-3">
         <Button
           onClick={() => {
             setEditingData(null);
@@ -143,8 +145,29 @@ export default function UnitManager(): JSX.Element {
         >
           + Add Unit
         </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={() => setOpen(true)}
+                className="p-2"
+              >
+                <Upload className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Upload Unit Excel</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        </div>
       </div>
-
+      <ExcelUploadModal
+        open={open}
+        setOpen={setOpen}
+        entity="hopitalChargeUnit"
+          />
       <Table>
         <TableHeader className="sticky top-0 items-center z-10">
           <TableRow>
