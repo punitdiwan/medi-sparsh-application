@@ -270,7 +270,7 @@ export default function PrescriptionDetail() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-
+        <div className="flex flex-row flex-wrap gap-2">
         {prescription && (
           <PDFDownloadLink
             document={
@@ -315,6 +315,12 @@ export default function PrescriptionDetail() {
             )}
           </PDFDownloadLink>
         )}
+
+
+          <Button variant="outline" onClick={printPDF}>
+            Print PDF
+          </Button>
+        </div>
 
         <Card className="mb-6">
           <CardHeader>
@@ -481,12 +487,7 @@ export default function PrescriptionDetail() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={printPDF}>
-            Print PDF
-          </Button>
-
-        </div>
+        
       </div>
       
     </div>
