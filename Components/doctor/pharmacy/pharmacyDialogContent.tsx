@@ -19,14 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getPharmacyStock } from "@/lib/actions/pharmacyStock";
+import { toast } from "sonner";
 
 export type Medicine = {
   id: string;
-  medicineCategory: string;
-  medicineName: string;
+  medicineId: string;
+  categoryId: string;
+  medicineCategory?: string;
+  medicineName?: string;
+  batchNumber: string;
   expiryDate: string;
   quantity: number;
   availableQuantity: number;
+  unitPrice?: number;
+  sellingPrice: number;
   amount: number;
 };
 
@@ -41,6 +48,8 @@ export default function MedicineDialog({
 
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedMedicineId, setSelectedMedicineId] = useState("");
+  const [selectedBatch, setSelectedBatch] = useState("");
+  const [batches, setBatches] = useState<any[]>([]);
   const [expiry, setExpiry] = useState("");
   const [availableQuantity, setAvailableQuantity] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
@@ -52,23 +61,48 @@ export default function MedicineDialog({
     setAmount(quantity * sellingPrice);
   }, [quantity, sellingPrice]);
 
-  // Load medicine details when selectedMedicineId changes
+  // Load batches when selectedMedicineId changes
   useEffect(() => {
-    if (!selectedMedicineId) return;
-    const med = medicines.find((m: any) => m.id === selectedMedicineId);
-    if (med) {
-      setExpiry(med.expiry);
-      setAvailableQuantity(med.availableQuantity);
-      setSellingPrice(med.sellingPrice);
+    if (!selectedMedicineId) {
+      setBatches([]);
+      return;
+    }
+
+    const fetchBatches = async () => {
+      const res = await getPharmacyStock(selectedMedicineId);
+      if (res.error) {
+        toast.error(res.error);
+      } else if (res.data) {
+        setBatches(res.data);
+      }
+    };
+    fetchBatches();
+  }, [selectedMedicineId]);
+
+  // Update fields when batch is selected
+  useEffect(() => {
+    if (!selectedBatch) return;
+    const batch = batches.find((b) => b.batchNumber === selectedBatch);
+    if (batch) {
+      setExpiry(batch.expiryDate);
+      setAvailableQuantity(Number(batch.quantity));
+      setSellingPrice(Number(batch.sellingPrice));
       setQuantity(1);
     }
-  }, [selectedMedicineId]);
+  }, [selectedBatch, batches]);
 
   // Load values when editing
   useEffect(() => {
     if (editMedicine) {
       setSelectedCategory(editMedicine.categoryId);
       setSelectedMedicineId(editMedicine.medicineId);
+      // We need to fetch batches first, then set selectedBatch
+      // But for now, let's just set the values directly if possible, or trigger fetch
+      // Since fetch depends on selectedMedicineId, it will run.
+      // We might need a way to set selectedBatch after batches are loaded.
+      // For simplicity, let's assume we just set the ID and let the user re-select batch if needed,
+      // OR we can pass the batch info in editMedicine and set it.
+      setSelectedBatch(editMedicine.batchNumber);
       setExpiry(editMedicine.expiryDate);
       setQuantity(editMedicine.quantity);
       setAvailableQuantity(editMedicine.availableQuantity);
@@ -82,6 +116,8 @@ export default function MedicineDialog({
   const resetForm = () => {
     setSelectedCategory("");
     setSelectedMedicineId("");
+    setSelectedBatch("");
+    setBatches([]);
     setExpiry("");
     setAvailableQuantity(0);
     setSellingPrice(0);
@@ -89,11 +125,11 @@ export default function MedicineDialog({
     setAmount(0);
   };
 
-    const handleAddClick = () => {
-        resetForm();
-        setEditMedicine(null); // now this works
-        setOpen(true);
-    };
+  const handleAddClick = () => {
+    resetForm();
+    setEditMedicine(null); // now this works
+    setOpen(true);
+  };
 
 
   const handleSubmit = () => {
@@ -101,10 +137,14 @@ export default function MedicineDialog({
       id: editMedicine ? editMedicine.id : crypto.randomUUID(),
       categoryId: selectedCategory,
       medicineId: selectedMedicineId,
+      medicineCategory: categories.find((c: any) => c.id === selectedCategory)?.name,
+      medicineName: medicines.find((m: any) => m.id === selectedMedicineId)?.name,
+      batchNumber: selectedBatch,
       expiryDate: expiry,
       quantity,
       availableQuantity,
       sellingPrice,
+      unitPrice: sellingPrice,
       amount,
     });
     setOpen(false);
@@ -136,6 +176,8 @@ export default function MedicineDialog({
               onValueChange={(val) => {
                 setSelectedCategory(val);
                 setSelectedMedicineId("");
+                setSelectedBatch("");
+                setBatches([]);
                 setExpiry("");
                 setAvailableQuantity(0);
                 setSellingPrice(0);
@@ -160,7 +202,15 @@ export default function MedicineDialog({
             <Label>Medicine Name</Label>
             <Select
               value={selectedMedicineId}
-              onValueChange={(val) => setSelectedMedicineId(val)}
+              onValueChange={(val) => {
+                setSelectedMedicineId(val);
+                setSelectedBatch("");
+                setExpiry("");
+                setAvailableQuantity(0);
+                setSellingPrice(0);
+                setQuantity(0);
+                setAmount(0);
+              }}
               disabled={!selectedCategory}
             >
               <SelectTrigger>
@@ -175,6 +225,26 @@ export default function MedicineDialog({
                 {filteredMedicines.map((m: any) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label>Batch Number</Label>
+            <Select
+              value={selectedBatch}
+              onValueChange={(val) => setSelectedBatch(val)}
+              disabled={!selectedMedicineId || batches.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch: any) => (
+                  <SelectItem key={batch.batchNumber} value={batch.batchNumber}>
+                    {batch.batchNumber} (Exp: {batch.expiryDate})
                   </SelectItem>
                 ))}
               </SelectContent>

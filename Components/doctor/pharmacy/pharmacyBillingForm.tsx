@@ -18,37 +18,15 @@ import MedicineDialog, { Medicine } from "./pharmacyDialogContent";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BackButton from "@/Components/BackButton";
 
-const categories = [
-  { id: "cat1", name: "Tablet" },
-  { id: "cat2", name: "Syrup" },
-];
 
-const allMedicines = [
-  {
-    id: "med1",
-    name: "Paracetamol",
-    categoryId: "cat1",
-    expiry: "2026-08",
-    availableQuantity: 200,
-    sellingPrice: 10,
-  },
-  {
-    id: "med2",
-    name: "Crocin",
-    categoryId: "cat1",
-    expiry: "2027-01",
-    availableQuantity: 150,
-    sellingPrice: 12,
-  },
-  {
-    id: "med3",
-    name: "Cough Syrup",
-    categoryId: "cat2",
-    expiry: "2025-10",
-    availableQuantity: 50,
-    sellingPrice: 90,
-  },
-];
+
+import { getPharmacyMedicines } from "@/lib/actions/pharmacyMedicines";
+import { getMedicineCategories } from "@/lib/actions/medicineCategories";
+import { createPharmacySale } from "@/lib/actions/pharmacySales";
+import { toast } from "sonner";
+import { useEffect } from "react";
+
+// ... (keep categories if needed, or fetch them too)
 
 export default function PharmacyBillingForm() {
   // Customer + Billing Fields
@@ -68,133 +46,255 @@ export default function PharmacyBillingForm() {
   // Medicines
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [editMedicine, setEditMedicine] = useState<Medicine | null>(null);
+  const [allMedicines, setAllMedicines] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const [medicinesRes, categoriesRes] = await Promise.all([
+        getPharmacyMedicines(),
+        getMedicineCategories(),
+      ]);
+
+      if (medicinesRes.error) {
+        toast.error(medicinesRes.error);
+      } else if (medicinesRes.data) {
+        // Map DB medicines to the format expected by the form/dialog
+        const mapped = medicinesRes.data.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          categoryId: m.categoryId,
+          categoryName: m.categoryName,
+          // expiry: m.expiry, // Check if expiry is available in pharmacyMedicines query
+          availableQuantity: Number(m.quantity),
+          sellingPrice: 0, // You might need to fetch selling price or let user input it
+        }));
+        setAllMedicines(mapped);
+      }
+
+      if (categoriesRes.error) {
+        toast.error(categoriesRes.error);
+      } else if (categoriesRes.data) {
+        setCategories(categoriesRes.data);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Recalculate billing details
   const recalcBilling = (
-    total: number,
-    discPerc: number,
-    discAmt: number,
-    taxPerc: number,
-    taxAmt: number
+    currentMedicines: Medicine[],
+    discountVal: number,
+    discountType: "amount" | "percentage",
+    taxVal: number,
+    taxType: "amount" | "percentage"
   ) => {
-    let discount = discAmt;
-    if (discPerc) discount = (total * discPerc) / 100;
+    const total = currentMedicines.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    let discount = 0;
+    let tax = 0;
 
-    let tax = taxAmt;
-    if (taxPerc) tax = ((total - discount) * taxPerc) / 100;
+    // Calculate Discount
+    if (discountType === "percentage") {
+      discount = (total * discountVal) / 100;
+    } else {
+      discount = discountVal;
+    }
+
+    // Calculate Tax (on amount after discount? usually on taxable value. Let's assume on total - discount)
+    const taxableAmount = total - discount;
+    if (taxType === "percentage") {
+      tax = (taxableAmount * taxVal) / 100;
+    } else {
+      tax = taxVal;
+    }
 
     const net = total - discount + tax;
 
-    return { discount, tax, net };
+    return {
+      total,
+      discount,
+      tax,
+      net,
+    };
   };
 
-  const updateBilling = (updatedMedicines: Medicine[]) => {
-    const total = updatedMedicines.reduce((sum, med) => sum + (med.amount || 0), 0);
-    const { discount, tax, net } = recalcBilling(
-      total,
-      discountPercentage,
-      discountAmount,
-      taxPercentage,
-      taxAmount
+  const updateBilling = (
+    newMedicines: Medicine[],
+    discVal: number,
+    discType: "amount" | "percentage",
+    taxVal: number,
+    taxType: "amount" | "percentage"
+  ) => {
+    const { total, discount, tax, net } = recalcBilling(
+      newMedicines,
+      discVal,
+      discType,
+      taxVal,
+      taxType
     );
 
+    setMedicines(newMedicines);
+    setTotalAmount(total);
+    setDiscountAmount(discount);
+    setTaxAmount(tax);
+    setNetAmount(net);
+
+    // Update percentage/amount states based on type to keep UI consistent
+    if (discType === "percentage") {
+      setDiscountPercentage(discVal);
+      // discountAmount is already set from calc
+    } else {
+      setDiscountAmount(discVal);
+      // calculate percentage if needed, or just leave as is
+      setDiscountPercentage(total > 0 ? (discVal / total) * 100 : 0);
+    }
+
+    if (taxType === "percentage") {
+      setTaxPercentage(taxVal);
+    } else {
+      setTaxAmount(taxVal);
+      setTaxPercentage(taxableAmount > 0 ? (taxVal / taxableAmount) * 100 : 0);
+    }
+  };
+
+  // Helper to get taxable amount for tax percentage calculation when updating by amount
+  const taxableAmount = totalAmount - discountAmount;
+
+  const handleSaveMedicine = (medicine: Medicine) => {
+    let updatedList = [...medicines];
+    const index = updatedList.findIndex((m) => m.id === medicine.id);
+
+    if (index >= 0) {
+      updatedList[index] = medicine;
+    } else {
+      updatedList.push(medicine);
+    }
+
+    // Recalculate with current discount/tax settings
+    // We'll use the current percentage states as the source of truth for simplicity, 
+    // or we could track which mode is active. 
+    // For now, let's assume percentage is the driver if > 0, else amount.
+    // Actually, let's just use the current values in state.
+    // But wait, updateBilling takes specific values. 
+    // Let's just re-run the calculation using current state values.
+
+    // To simplify, let's just call a specialized update that uses current state
+    const { total, discount, tax, net } = recalcBilling(
+      updatedList,
+      discountPercentage,
+      "percentage", // Defaulting to percentage based calc for updates
+      taxPercentage,
+      "percentage"
+    );
+
+    setMedicines(updatedList);
+    setTotalAmount(total);
+    setDiscountAmount(discount);
+    setTaxAmount(tax);
+    setNetAmount(net);
+    setEditMedicine(null);
+  };
+
+  const handleDeleteMedicine = (id: string) => {
+    const updatedList = medicines.filter((m) => m.id !== id);
+
+    const { total, discount, tax, net } = recalcBilling(
+      updatedList,
+      discountPercentage,
+      "percentage",
+      taxPercentage,
+      "percentage"
+    );
+
+    setMedicines(updatedList);
     setTotalAmount(total);
     setDiscountAmount(discount);
     setTaxAmount(tax);
     setNetAmount(net);
   };
 
-  // -----------------------------
-  // Medicine handlers
-  // -----------------------------
-  const handleSaveMedicine = (medicine: any) => {
-    const category = categories.find((c) => c.id === medicine.categoryId);
-    const medNameObj = allMedicines.find((m) => m.id === medicine.medicineId);
+  const handleDiscountChange = (val: number, type: "amount" | "percentage") => {
+    if (type === "percentage") {
+      setDiscountPercentage(val);
+      const { discount, net, tax } = recalcBilling(medicines, val, "percentage", taxPercentage, "percentage");
+      setDiscountAmount(discount);
+      setTaxAmount(tax);
+      setNetAmount(net);
+    } else {
+      setDiscountAmount(val);
+      // If changing amount, we recalculate percentage
+      const total = medicines.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const newPerc = total > 0 ? (val / total) * 100 : 0;
+      setDiscountPercentage(newPerc);
 
-    const medWithNames = {
-      ...medicine,
-      medicineCategory: category?.name || "",
-      medicineName: medNameObj?.name || "",
-    };
-
-    setMedicines((prev) => {
-      const exists = prev.some((m) => m.id === medicine.id);
-      const updated = exists
-        ? prev.map((m) => (m.id === medicine.id ? medWithNames : m))
-        : [...prev, medWithNames];
-
-      updateBilling(updated);
-      return updated;
-    });
-
-    setEditMedicine(null);
+      const { net, tax } = recalcBilling(medicines, val, "amount", taxPercentage, "percentage");
+      setTaxAmount(tax);
+      setNetAmount(net);
+    }
   };
 
-  const handleDeleteMedicine = (id: string) => {
-    setMedicines((prev) => {
-      const updated = prev.filter((m) => m.id !== id);
-      updateBilling(updated);
-      return updated;
-    });
+  const handleTaxChange = (val: number, type: "amount" | "percentage") => {
+    if (type === "percentage") {
+      setTaxPercentage(val);
+      const { tax, net } = recalcBilling(medicines, discountPercentage, "percentage", val, "percentage");
+      setTaxAmount(tax);
+      setNetAmount(net);
+    } else {
+      setTaxAmount(val);
+      const total = medicines.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const taxable = total - discountAmount;
+      const newPerc = taxable > 0 ? (val / taxable) * 100 : 0;
+      setTaxPercentage(newPerc);
+
+      const { net } = recalcBilling(medicines, discountPercentage, "percentage", val, "amount");
+      setNetAmount(net);
+    }
   };
 
-  const handleDiscountChange = (value: number, type: "amount" | "percentage") => {
-    let discAmt = discountAmount;
-    let discPerc = discountPercentage;
+  const handleSubmit = async () => {
+    if (!customerName || !customerPhone || medicines.length === 0 || !paymentMode) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-    if (type === "amount") discAmt = value;
-    else discPerc = value;
-
-    const { discount, tax, net } = recalcBilling(totalAmount, discPerc, discAmt, taxPercentage, taxAmount);
-
-    setDiscountAmount(discount);
-    setDiscountPercentage(discPerc);
-    setNetAmount(net);
-  };
-
-  const handleTaxChange = (value: number, type: "amount" | "percentage") => {
-    let taxAmt = taxAmount;
-    let taxPerc = taxPercentage;
-
-    if (type === "amount") taxAmt = value;
-    else taxPerc = value;
-
-    const { discount, tax, net } = recalcBilling(totalAmount, discountPercentage, discountAmount, taxPerc, taxAmt);
-
-    setTaxAmount(tax);
-    setTaxPercentage(taxPerc);
-    setNetAmount(net);
-  };
-
-  const handleSubmit = () => {
     const billingData = {
       customerName,
       customerPhone,
-      medicines,
+      medicines: medicines.map(m => ({
+        id: m.medicineId || m.id, // Ensure correct ID is sent
+        batchNumber: m.batchNumber,
+        quantity: Number(m.quantity),
+        sellingPrice: Number(m.sellingPrice || 0), // Changed from unitPrice to sellingPrice
+        amount: Number(m.amount)
+      })),
       totalAmount,
       discountAmount,
-      discountPercentage,
       taxAmount,
-      taxPercentage,
       netAmount,
       paymentMode,
-      paymentAmount,
       note,
     };
-    console.log("Billing Data:", billingData);
-    alert("Billing saved! Check console for data.");
 
-    setCustomerName("");
-    setCustomerPhone("");
-    setNote("");
-    setMedicines([]);
-    setTotalAmount(0);
-    setDiscountAmount(0);
-    setDiscountPercentage(0);
-    setTaxAmount(0);
-    setTaxPercentage(0);
-    setNetAmount(0);
-    setPaymentMode("");
-    setPaymentAmount(0);
+    const res = await createPharmacySale(billingData);
+
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Billing saved successfully");
+      // Reset form
+      setCustomerName("");
+      setCustomerPhone("");
+      setNote("");
+      setMedicines([]);
+      setTotalAmount(0);
+      setDiscountAmount(0);
+      setDiscountPercentage(0);
+      setTaxAmount(0);
+      setTaxPercentage(0);
+      setNetAmount(0);
+      setPaymentMode("");
+      setPaymentAmount(0);
+    }
   };
 
   return (
@@ -338,6 +438,7 @@ export default function PharmacyBillingForm() {
                     <TableRow>
                       <TableHead>Category</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Batch</TableHead>
                       <TableHead>Expiry</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Available</TableHead>
@@ -350,6 +451,7 @@ export default function PharmacyBillingForm() {
                       <TableRow key={med.id}>
                         <TableCell>{med.medicineCategory}</TableCell>
                         <TableCell>{med.medicineName}</TableCell>
+                        <TableCell>{med.batchNumber}</TableCell>
                         <TableCell>{med.expiryDate}</TableCell>
                         <TableCell>{med.quantity}</TableCell>
                         <TableCell>{med.availableQuantity}</TableCell>

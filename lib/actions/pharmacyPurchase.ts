@@ -8,7 +8,8 @@ import {
 import { getPharmacyPurchasesByHospital, getPharmacyPurchaseDetailsById } from "@/db/queries/pharmacyPurchase";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { db } from "@/db";
-import { pharmacyPurchase, pharmacyPurchaseItem } from "@/drizzle/schema";
+import { pharmacyPurchase, pharmacyPurchaseItem, pharmacyMedicines, pharmacyStock } from "@/drizzle/schema";
+import { eq, sql, and } from "drizzle-orm";
 
 export async function getSuppliers() {
     try {
@@ -65,6 +66,7 @@ export async function createPharmacyPurchase(data: {
         mrp: number;
         quantity: number;
         purchasePrice: number;
+        salePrice: number;
         amount: number;
     }[];
     summary: {
@@ -107,11 +109,55 @@ export async function createPharmacyPurchase(data: {
                         batchNumber: item.batchNo,
                         quantity: item.quantity.toString(),
                         costPrice: item.purchasePrice.toString(),
+                        sellingPrice: item.salePrice.toString(),
                         mrp: item.mrp.toString(),
                         amount: item.amount.toString(),
                         expiryDate: item.expiry, // Assuming YYYY-MM-DD string from input
                     }))
                 );
+
+                // 3. Update Pharmacy Stock
+                for (const item of items) {
+                    // Check if stock exists for this medicine and batch
+                    const existingStock = await tx
+                        .select()
+                        .from(pharmacyStock)
+                        .where(
+                            and(
+                                eq(pharmacyStock.hospitalId, org.id),
+                                eq(pharmacyStock.medicineId, item.medicineId),
+                                eq(pharmacyStock.batchNumber, item.batchNo)
+                            )
+                        )
+                        .limit(1);
+
+                    if (existingStock.length > 0) {
+                        // Update existing stock
+                        await tx
+                            .update(pharmacyStock)
+                            .set({
+                                quantity: sql`${pharmacyStock.quantity} + ${item.quantity}`,
+                                costPrice: item.purchasePrice.toString(),
+                                sellingPrice: item.salePrice.toString(),
+                                mrp: item.mrp.toString(),
+                                expiryDate: item.expiry,
+                                updatedAt: new Date(),
+                            })
+                            .where(eq(pharmacyStock.id, existingStock[0].id));
+                    } else {
+                        // Insert new stock
+                        await tx.insert(pharmacyStock).values({
+                            hospitalId: org.id,
+                            medicineId: item.medicineId,
+                            batchNumber: item.batchNo,
+                            quantity: item.quantity.toString(),
+                            costPrice: item.purchasePrice.toString(),
+                            sellingPrice: item.salePrice.toString(),
+                            mrp: item.mrp.toString(),
+                            expiryDate: item.expiry,
+                        });
+                    }
+                }
             }
         });
 

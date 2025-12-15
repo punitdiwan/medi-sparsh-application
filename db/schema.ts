@@ -903,9 +903,7 @@ export const pharmacyMedicines = pgTable("pharmacy_medicines", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-
-
-// medicine stock table
+// pharmacy stock table
 export const pharmacyStock = pgTable("pharmacy_stock", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
@@ -914,8 +912,14 @@ export const pharmacyStock = pgTable("pharmacy_stock", {
 	medicineId: text("medicine_id")
 		.notNull()
 		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
-	quantity: numeric("quantity").notNull(),
+	batchNumber: text("batch_number").notNull(),
+	quantity: numeric("quantity").default("0").notNull(),
 	lowStockAlert: integer("low_stock_alert").notNull().default(10),
+	costPrice: numeric("cost_price").notNull(),
+	mrp: numeric("mrp").notNull(),
+	sellingPrice: numeric("selling_price").default("0").notNull(),
+	expiryDate: date("expiry_date").notNull(),
+	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
@@ -951,6 +955,7 @@ export const pharmacyPurchaseItem = pgTable("pharmacy_purchase_item", {
 	batchNumber: text("batch_number").notNull(),
 	quantity: numeric("quantity").notNull(),
 	costPrice: numeric("cost_price").notNull(),
+	sellingPrice: numeric("selling_price").default("0").notNull(),
 	mrp: numeric("mrp").notNull(),
 	amount: numeric("amount").notNull(),  // qty * cost - discount
 	expiryDate: date("expiry_date").notNull(), // stored per batch
@@ -987,6 +992,7 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	medicineId: text("medicine_id")
 		.notNull()
 		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+	batchNumber: text("batch_number"),
 	quantity: numeric("quantity").notNull(),
 	unitPrice: numeric("unit_price").notNull(),
 	totalAmount: numeric("total_amount").notNull(),
