@@ -78,9 +78,6 @@ export default function EditRolePage() {
   )
 }
 
-/* ---------- HELPERS ---------- */
-
-// Convert API role → RoleForm data
 function mapRoleFromAPI(role: RoleFromAPI): RoleFormData {
   return {
     roleId: role.id,
@@ -89,7 +86,6 @@ function mapRoleFromAPI(role: RoleFromAPI): RoleFormData {
   }
 }
 
-// Convert API permissions → editor-friendly format
 function mapPermissionsFromDB(permission?: Record<string, string[]>): Permission[] {
   if (!permission) return []
 
@@ -98,7 +94,7 @@ function mapPermissionsFromDB(permission?: Record<string, string[]>): Permission
   Object.entries(permission).forEach(([module, actions]) => {
     actions.forEach(action => {
       result.push({
-        subject: module.toLowerCase(), // must match editor keys
+        subject: module.toLowerCase(),
         action: action === "show" ? "read" : (action as Permission["action"]),
       })
     })
