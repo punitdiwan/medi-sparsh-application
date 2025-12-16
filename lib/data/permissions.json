@@ -1,0 +1,17 @@
+{
+  "roles": {
+    "owner": [
+      { "action": "manage", "subject": "all" }
+    ],
+    "doctor": [
+      { "action": "read", "subject": "Patient" },
+      { "action": "read", "subject": "Appointment" },
+      { "action": "update", "subject": "Appointment" }
+    ],
+    "receptionist": [
+      { "action": "create", "subject": "Patient" },
+      { "action": "read", "subject": "Patient" },
+      { "action": "create", "subject": "Appointment" }
+    ]
+  }
+}

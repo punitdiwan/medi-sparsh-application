@@ -8,7 +8,8 @@ import { AuthProvider } from "@/context/AuthContext";
 
 import { getCurrentHospital } from "@/lib/tenant";
 import { getUserRole } from "@/db/queries";
-
+import { AbilityProvider } from "@/components/providers/AbilityProvider"
+import { defineAbilityFromJSON } from "@/lib/casl/defineAbilityFromDB";
 
 export const metadata: Metadata = {
   title: 'medisparsh',
@@ -35,18 +36,21 @@ export default async function DashboardLayout({
     memberRole: memberRole,
   };
   // const userData = null;
+  const ability = defineAbilityFromJSON(memberRole || "other")
   return (
-    <AuthProvider initialUser={userData}>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Navbar />
+    <AbilityProvider role={memberRole || "other"}>
+      <AuthProvider initialUser={userData}>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <Navbar />
 
-          {/* page main content */}
-          {children}
-          {/* page main content ends */}
-        </SidebarInset>
-      </SidebarProvider>
-    </AuthProvider>
+            {/* page main content */}
+            {children}
+            {/* page main content ends */}
+          </SidebarInset>
+        </SidebarProvider>
+      </AuthProvider>
+    </AbilityProvider>
   );
 }

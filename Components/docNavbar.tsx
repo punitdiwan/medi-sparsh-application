@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import  { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/Components/theme-provider/ThemeProviderIcon";
-import { Button } from "@/components/ui/button";
 
 import {
   DropdownMenu,

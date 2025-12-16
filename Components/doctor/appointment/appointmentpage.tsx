@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import AppointmentModal from "./AppointmentModal";
 import { toast } from "sonner";
 import { getShortId } from "@/utils/getShortId";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { AbilityContext } from "@/lib/casl/AbilityContext";
+import { Can } from "@casl/react";
 
 type Appointment = {
   id: number;
@@ -42,6 +44,7 @@ export default function AppointmentPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const ability = useContext(AbilityContext);
   //= FILTER STATES =//
   const [search, setSearch] = useState("");
   const [date, setDate] = useState("");
@@ -163,6 +166,7 @@ export default function AppointmentPage() {
 
         return (
           <div className="flex items-center gap-2">
+            <Can I="update" a="appointment" ability={ability}>
             {ap.status === "completed" ? (
               <Link
                 href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
@@ -188,7 +192,7 @@ export default function AppointmentPage() {
                 </Button>
               </Link>
             )}
-
+            </Can>
             <ConfirmDialog
               title="Cancel Appointment"
               description="Are you sure you want to cancel this appointment?"
