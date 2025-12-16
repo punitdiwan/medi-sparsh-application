@@ -5,8 +5,12 @@ import { eq } from "drizzle-orm";
 import * as schema from "@/drizzle/schema";
 import { organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import {ac} from "./permissions";
-
+import { ac, normal, secret, owner } from "./permissions";
+import {
+  ownerAc,
+  adminAc,
+  memberAc,
+} from "better-auth/plugins/organization/access";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -54,6 +58,12 @@ export const auth = betterAuth({
     plugins: [
         organization({
             ac, // Must be defined in order for dynamic access control to work
+            roles: {
+                owner,
+                admin: adminAc,
+                member: memberAc,
+                normal,
+            },
             dynamicAccessControl: {
                 enabled: true,
             },
