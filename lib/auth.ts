@@ -11,6 +11,8 @@ import {
   adminAc,
   memberAc,
 } from "better-auth/plugins/organization/access";
+import { customSession } from "better-auth/plugins";
+
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -48,10 +50,9 @@ export const auth = betterAuth({
                             //activeTeamId: teamId?.team?.id
                         }
                     } as any;
-                    // console.log("Session Data:", sessionData);
                     return sessionData;
-                }
-            }
+                },
+            },
         }
     },
     trustedOrigins: ["http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
@@ -67,6 +68,16 @@ export const auth = betterAuth({
             dynamicAccessControl: {
                 enabled: true,
             },
+        }),
+         customSession(async ({ user, session }) => {
+            return {
+                greetings: "Hello from custom session!",    
+                user: {
+                    ...user,
+                    newField: "newField",
+                },
+                session
+            };
         }),
         nextCookies()
     ]
