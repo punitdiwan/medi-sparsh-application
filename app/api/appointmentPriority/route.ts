@@ -1,25 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { appointmentPriorities } from "@/drizzle/schema";
-import { auth } from "@/lib/auth"; // Assuming auth helper exists, need to verify
-import { headers } from "next/headers";
+import { getCurrentHospital } from "@/lib/tenant";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const hospital = await getCurrentHospital();
 
-        if (!session) {
+        if (!hospital) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { user, session: sessionData } = session;
-        const hospitalId = sessionData.activeOrganizationId;
-
-        if (!hospitalId) {
-            return NextResponse.json({ error: "Hospital ID not found in session" }, { status: 400 });
         }
 
         const priorities = await db
@@ -27,7 +17,7 @@ export async function GET(req: NextRequest) {
             .from(appointmentPriorities)
             .where(
                 and(
-                    eq(appointmentPriorities.hospitalId, hospitalId),
+                    eq(appointmentPriorities.hospitalId, hospital.hospitalId),
                     eq(appointmentPriorities.isDeleted, false)
                 )
             );
@@ -44,19 +34,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+        const hospital = await getCurrentHospital();
 
-        if (!session) {
+        if (!hospital) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const { user, session: sessionData } = session;
-        const hospitalId = sessionData.activeOrganizationId;
-
-        if (!hospitalId) {
-            return NextResponse.json({ error: "Hospital ID not found in session" }, { status: 400 });
         }
 
         const body = await req.json();
@@ -72,7 +53,7 @@ export async function POST(req: NextRequest) {
         const newPriority = await db
             .insert(appointmentPriorities)
             .values({
-                hospitalId,
+                hospitalId: hospital.hospitalId,
                 priority,
             })
             .returning();
