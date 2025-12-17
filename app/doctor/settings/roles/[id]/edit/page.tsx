@@ -21,10 +21,10 @@ type RoleFromAPI = {
   updatedAt: string | null
 }
 
-type RoleFormData = {
-  roleId?: string
-  name: string
-  permissions: Permission[]
+type RoleData = {
+  id?: string
+  role?: string
+  permission?: Record<string, string[]>
 }
 
 export default function EditRolePage() {
@@ -32,43 +32,80 @@ export default function EditRolePage() {
   const router = useRouter()
   const { user } = useAuth()
 
-  const [role, setRole] = useState<RoleFormData | null>(null)
+  const [role, setRole] = useState<RoleData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (id && user?.hospital?.hospitalId) fetchRole()
-  }, [id, user])
+    if (id) fetchRole()
+  }, [id])
 
   async function fetchRole() {
     setLoading(true)
+    setError(null)
 
-    const { data } = await authClient.organization.getRole({
-      query: {
-        roleId: id as string,
-        organizationId: user?.hospital?.hospitalId!,
-      },
-    })
+    try {
+      const response = await fetch(`/api/settings/roles/${id}`)
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch role")
+      }
 
-    if (data) {
-      setRole(mapRoleFromAPI(data))
+      const result = await response.json()
+      
+      if (result.success && result.data) {
+        setRole(mapRoleFromAPI(result.data))
+      } else {
+        setError("Role not found")
+      }
+    } catch (err) {
+      console.error("Error fetching role:", err)
+      setError(err instanceof Error ? err.message : "Failed to fetch role")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
-  async function updateRole(payload: RoleFormData) {
+  async function updateRole(payload: {
+    roleId?: string
+    name: string
+    permissions: Permission[]
+  }) {
     const permissionObject = buildPermissionObject(payload.permissions)
 
-    await authClient.organization.updateRole({
-      role: payload.name,
-      permission: permissionObject,
-      organizationId: user?.hospital?.hospitalId!,
-    })
+    try {
+      const response = await fetch(`/api/settings/roles/${payload.roleId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: payload.name,
+          permission: permissionObject,
+        }),
+      })
 
-    router.push("/admin/roles")
+      if (!response.ok) {
+        throw new Error("Failed to update role")
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        router.push("/doctor/settings/roles")
+      } else {
+        console.error("Error updating role:", result.error)
+      }
+    } catch (err) {
+      console.error("Error updating role:", err)
+    }
   }
 
-  if (loading || !role) return <p>Loading...</p>
+  if (loading) return <p>Loading...</p>
+  
+  if (error) return <p className="text-red-500">Error: {error}</p>
+  
+  if (!role) return <p>Role not found</p>
 
   return (
     <div className="space-y-6 p-6">
@@ -78,11 +115,17 @@ export default function EditRolePage() {
   )
 }
 
-function mapRoleFromAPI(role: RoleFromAPI): RoleFormData {
+function mapRoleFromAPI(role: RoleFromAPI): RoleData {
+  // Ensure permission keys are lowercase for proper matching in RolePermissionEditor
+  const normalizedPermission: Record<string, string[]> = {}
+  Object.entries(role.permission || {}).forEach(([key, value]) => {
+    normalizedPermission[key.toLowerCase()] = value
+  })
+  
   return {
-    roleId: role.id,
-    name: role.role,
-    permissions: mapPermissionsFromDB(role.permission),
+    id: role.id,
+    role: role.role,
+    permission: normalizedPermission,
   }
 }
 

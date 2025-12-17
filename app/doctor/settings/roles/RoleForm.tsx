@@ -100,16 +100,12 @@ function normalizeToEditor(
       actions.forEach((action) => {
         result.push({
           action: action === "show" ? "read" : (action as any),
-          subject: capitalize(module),
+          subject: module.toLowerCase(),
         })
       })
     }
   )
 
   return result
-}
-
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 

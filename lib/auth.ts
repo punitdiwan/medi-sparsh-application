@@ -7,10 +7,12 @@ import { organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { ac, normal, secret, owner } from "./permissions";
 import {
-  ownerAc,
-  adminAc,
-  memberAc,
+    ownerAc,
+    adminAc,
+    memberAc,
 } from "better-auth/plugins/organization/access";
+import { customSession } from "better-auth/plugins";
+
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -48,10 +50,9 @@ export const auth = betterAuth({
                             //activeTeamId: teamId?.team?.id
                         }
                     } as any;
-                    // console.log("Session Data:", sessionData);
                     return sessionData;
-                }
-            }
+                },
+            },
         }
     },
     trustedOrigins: ["http://localhost:3000", "*.medisparsh.com", "*.vercel.app"],
@@ -67,6 +68,23 @@ export const auth = betterAuth({
             dynamicAccessControl: {
                 enabled: true,
             },
+        }),
+        customSession(async ({ user, session }) => {
+            const organizationId = await getOrganisation(session.userId);
+            return {
+                user,
+                session: {
+                    ...session,
+                    expiresAt: session.expiresAt instanceof Date ? session.expiresAt.toISOString() : session.expiresAt,
+                    createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : session.createdAt,
+                    updatedAt: session.updatedAt instanceof Date ? session.updatedAt.toISOString() : session.updatedAt,
+                    activeOrganizationId: organizationId,
+                    greeting: "hello"
+                },
+
+                // organization: organizationId
+                //activeTeamId: teamId?.team?.id
+            } as any;
         }),
         nextCookies()
     ]
