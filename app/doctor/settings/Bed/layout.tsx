@@ -4,35 +4,43 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAbility } from "@/components/providers/AbilityProvider";
-import { Can } from "@casl/react";
 
 export default function BedLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const ability = useAbility();
 
   const tabs = [
-    { name: "Bed", href: "/doctor/settings/Bed" },
-    { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus" },
-    { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup" },
-    { name: "Bed Type", href: "/doctor/settings/Bed/BedType" },
-    { name: "Floor", href: "/doctor/settings/Bed/Floor" },
+    { name: "Bed", href: "/doctor/settings/Bed",action: "read",
+    subject: "bed", },
+    { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus",action: "read",
+    subject: "bedstatus", },
+    { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup",action: "read",
+    subject: "bedgroups", },
+    { name: "Bed Type", href: "/doctor/settings/Bed/BedType",action: "read",
+    subject: "bedtype", },
+    { name: "Floor", href: "/doctor/settings/Bed/Floor",action: "read",
+    subject: "floor", },
 
   ];
 
-  // Determine active tab
-  const activeTab = tabs.find((tab) => tab.href === pathname)?.href || tabs[0].href;
+   const visibleTabs = tabs.filter((tab) =>
+    ability.can(tab.action, tab.subject)
+  );
+
+  if (!visibleTabs.length) return null;
+
+  const activeTab = visibleTabs.find((tab) => tab.href === pathname)?.href ??
+    visibleTabs[0].href;
 
   return (
     <div className="p-6 space-y-6">
       {/* Tabs */}
       <Tabs value={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          {tabs.map((tab) => (
-            // <Can I ="read" a={tab.name} ability={ability}  >
+        <TabsList className="flex w-full">
+          {visibleTabs.map((tab) => (
               <TabsTrigger key={tab.href} value={tab.href} asChild>
                 <Link href={tab.href}>{tab.name}</Link>
               </TabsTrigger>
-            // </Can>
           ))}
         </TabsList>
       </Tabs>

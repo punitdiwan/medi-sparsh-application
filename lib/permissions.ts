@@ -1,6 +1,5 @@
 import { createAccessControl} from "better-auth/plugins/access";
 import { defaultStatements,  ownerAc } from 'better-auth/plugins/organization/access'
-import { Hospital } from "lucide-react";
 
 const statement = {
      ...defaultStatements, 
@@ -13,7 +12,10 @@ const statement = {
     services:["create","update","delete","read"],
     members:["create","update","delete","read"],
     bed:["create","update","delete","read"],
-    bedStatus:["create","update","delete","read"],
+    bedstatus:["create","update","delete","read"],
+    bedgroups:["create","update","delete","read"],
+    bedtype:["create","update","delete","read"],
+    floor:["create","update","delete","read"],
     hospitalCharger:["create","update","delete","read"],
     payment:["create","update","delete","read"],
     shifts:["create","update","delete","read"],
@@ -46,7 +48,10 @@ export const owner= ac.newRole({
     services:["create","update","delete","read"],
     members:["create","update","delete","read"],
     bed:["create","update","delete","read"],
-    bedStatus:["create","update","delete","read"],
+    bedstatus:["create","update","delete","read"],
+    bedgroups:["create","update","delete","read"],
+    bedtype:["create","update","delete","read"],
+    floor:["create","update","delete","read"],
     hospitalCharger:["create","update","delete","read"],
     payment:["create","update","delete","read"],
     shifts:["create","update","delete","read"],
