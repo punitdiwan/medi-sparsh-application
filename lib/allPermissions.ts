@@ -10,6 +10,7 @@ export const ALL_PERMISSIONS: Record<string, string[]> = {
   services: ["create", "read", "update", "delete"],
   members: ["create", "read", "update", "delete"],
   bed: ["create", "read", "update", "delete"],
+  bedStatus:["create","update","delete","read"],
   hospitalCharger: ["create", "read", "update", "delete"],
   payment: ["create", "read", "update", "delete"],
   shifts: ["create", "read", "update", "delete"],

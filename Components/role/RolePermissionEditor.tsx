@@ -26,6 +26,7 @@ const MODULES = [
   { key: "hospitalCharger", label: "Hospital Charges" },
   { key: "vitals", label: "Vitals" },
   { key: "bed", label: "Bed Management" },
+  { key: "bedStatus", label: "Bed Status" },
   { key: "shifts", label: "Shift Management" },
   { key: "role", label: "Roles" },                         
   { key: "medicineRedord", label: "Medicine Record" }, 

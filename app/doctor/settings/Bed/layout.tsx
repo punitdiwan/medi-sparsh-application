@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function BedLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const ability = useAbility();
 
   const tabs = [
     { name: "Bed", href: "/doctor/settings/Bed" },
@@ -25,9 +28,11 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
       <Tabs value={activeTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           {tabs.map((tab) => (
-            <TabsTrigger key={tab.href} value={tab.href} asChild>
-              <Link href={tab.href}>{tab.name}</Link>
-            </TabsTrigger>
+            // <Can I ="read" a={tab.name} ability={ability}  >
+              <TabsTrigger key={tab.href} value={tab.href} asChild>
+                <Link href={tab.href}>{tab.name}</Link>
+              </TabsTrigger>
+            // </Can>
           ))}
         </TabsList>
       </Tabs>
