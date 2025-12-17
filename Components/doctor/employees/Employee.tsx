@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AddEmployeeForm from "@/Components/doctor/employees/AddEmployee";
 import FilterBar, { FilterField } from "@/features/filterbar/FilterBar";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
+
 type Employee = {
   user_id: string;
   staff_id: string; // Add staffId for API operations
@@ -118,6 +121,7 @@ export default function Employee() {
   ]);
   const [showAddEmployee, setShowAddEmployee] = useState(false);
 
+  const ability = useAbility();
   // const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -342,48 +346,54 @@ export default function Employee() {
           <div className="flex gap-2 justify-center">
             {isDeleted ? (
               // 🟢 Show only "Activate" button when inactive
-              <ConfirmDialog
-                trigger={
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="text-white border border-white/10"
-                  >
-                    Activate
-                  </Button>
-                }
-                title={`Activate ${row.original.name}?`}
-                description={`Are you sure you want to activate ${row.original.name}?`}
-                actionLabel="Activate"
-                cancelLabel="Cancel"
-                onConfirm={() => handleActivate(row.original.staff_id)}
-                onCancel={() => console.log("Activation cancelled")}
-              />
+              <Can I="update" a="members" ability={ability}>
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="text-white border border-white/10"
+                    >
+                      Activate
+                    </Button>
+                  }
+                  title={`Activate ${row.original.name}?`}
+                  description={`Are you sure you want to activate ${row.original.name}?`}
+                  actionLabel="Activate"
+                  cancelLabel="Cancel"
+                  onConfirm={() => handleActivate(row.original.staff_id)}
+                  onCancel={() => console.log("Activation cancelled")}
+                />
+              </Can>
             ) : (
               // 🟥 Normal buttons when active
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedEmployeeId(row.original.staff_id)}
-                >
-                  Edit
-                </Button>
-
-                <ConfirmDialog
-                  trigger={
-                    <Button variant="destructive" size="sm">
-                      Delete
-                    </Button>
-                  }
-                  title={`Delete ${row.original.name}?`}
-                  description={`Are you sure you want to delete ${row.original.name}?`}
-                  actionLabel="Delete"
-                  cancelLabel="Cancel"
-                  onConfirm={() => handleDelete(row.original.staff_id)}
-                  onCancel={() => console.log("Delete cancelled")}
-                />
+                <Can I="update" a="members" ability={ability}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedEmployeeId(row.original.staff_id)}
+                  >
+                    Edit
+                  </Button>
+                </Can>
+                <Can I="delete" a="members" ability={ability}>
+                  <ConfirmDialog
+                    trigger={
+                      <Button variant="destructive" size="sm">
+                        Delete
+                      </Button>
+                    }
+                    title={`Delete ${row.original.name}?`}
+                    description={`Are you sure you want to delete ${row.original.name}?`}
+                    actionLabel="Delete"
+                    cancelLabel="Cancel"
+                    onConfirm={() => handleDelete(row.original.staff_id)}
+                    onCancel={() => console.log("Delete cancelled")}
+                  />
+                </Can>
               </>
+              
             )}
           </div>
         );
@@ -455,14 +465,15 @@ export default function Employee() {
             <Plus className="w-4 h-4" />
             Manage Specializations
           </Button>
-
-          <Button
-            onClick={() => setShowAddEmployee(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Employee
-          </Button>
+          <Can I="create" a="members" ability={ability}>
+            <Button
+              onClick={() => setShowAddEmployee(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Employee
+            </Button>
+          </Can>
         </div>
       </div>
       <div className="mb-2">

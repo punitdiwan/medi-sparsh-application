@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from '@/components/ui/button';
+import { useAbility } from '@/components/providers/AbilityProvider';
+import { Can } from '@casl/react';
 
 type Patient = {
   id: number;
@@ -69,7 +71,7 @@ const columns: ColumnDef<Patient>[] = [
     header: "Action",
     cell: ({ row }) => (
       <Link
-        href={`/doctor/patient/profile/${row.original.id}?name=${encodeURIComponent(row.original.patientName)}`}
+        href={`/doctor/patient`}
         className="hover:underline"
       >
         <Button variant="outline" size="sm" className="cursor-pointer">
@@ -81,13 +83,16 @@ const columns: ColumnDef<Patient>[] = [
 ];
 
 export default function ReportsPage() {
+  const ability = useAbility();
   return (
     <div className='p-6'>
     <div className="mb-3 flex  justify-between">
       <h1 className="text-xl font-semibold mb-4">Lab Reports</h1>
-     <Link href="/doctor/reports/uploadReport">
-         <Button>upload reports</Button>     
-     </Link>
+      <Can I="create" a="reports" ability={ability}>
+        <Link href="/doctor/reports/uploadReport">
+            <Button>upload reports</Button>     
+        </Link>
+      </Can>
       </div>
 
       <div>

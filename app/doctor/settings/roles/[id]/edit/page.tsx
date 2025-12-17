@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation"
 import { RoleForm } from "../../RoleForm"
 import { useAuth } from "@/context/AuthContext"
 import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 type Permission = {
   action: "create" | "read" | "update" | "delete"
@@ -73,32 +74,20 @@ export default function EditRolePage() {
   }) {
     const permissionObject = buildPermissionObject(payload.permissions)
 
-    try {
-      const response = await fetch(`/api/settings/roles/${payload.roleId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+    const { data: updatedRole, error } = await authClient.organization.updateRole({
+        roleName: payload.name,
+        roleId: payload.roleId,
+        data: {
+            permission: permissionObject,
         },
-        body: JSON.stringify({
-          role: payload.name,
-          permission: permissionObject,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to update role")
-      }
-
-      const result = await response.json()
-      
-      if (result.success) {
-        router.push("/doctor/settings/roles")
+    });
+    console.log("updated data",updatedRole?.success);
+     if (updatedRole?.success) {
+        toast.success(`Updated ${updatedRole?.roleData?.role} Permissions`)
+        router.back()
       } else {
-        console.error("Error updating role:", result.error)
+        console.error("Error updating role:", error)
       }
-    } catch (err) {
-      console.error("Error updating role:", err)
-    }
   }
 
   if (loading) return <p>Loading...</p>

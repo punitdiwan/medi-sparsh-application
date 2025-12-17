@@ -16,6 +16,8 @@ import AddServicePage from "./AddServicePage";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { PaginationControl } from "@/components/pagination";
+import { Can } from "@casl/react";
+import { useAbility } from "@/components/providers/AbilityProvider";
 
 type ServiceForm = {
   id?: string;
@@ -42,6 +44,7 @@ export default function Services() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const ability = useAbility();
   const fetchServices = async () => {
     try {
       const res = await fetch("/api/services");
@@ -115,10 +118,11 @@ export default function Services() {
       <Card className="p-4 mb-4">
         <CardHeader className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Our Services</h2>
-
-          <Button variant="outline" onClick={() => { setEditService(undefined); setOpenModal(true); }}>
-            <Plus className="mr-2 h-4 w-4" /> Add Service
-          </Button>
+          <Can I="create" a="services" ability={ability}>
+            <Button variant="outline" onClick={() => { setEditService(undefined); setOpenModal(true); }}>
+              <Plus className="mr-2 h-4 w-4" /> Add Service
+            </Button>
+          </Can>
         </CardHeader>
 
         <CardContent>
@@ -149,7 +153,9 @@ export default function Services() {
                     <TableCell>
                       {service.isDeleted ? <span className="text-red-500">Inactive</span> : <span className="text-green-600">Active</span>}
                     </TableCell>
+                    
                     <TableCell className="flex gap-3 items-center">
+                      <Can I="update" a="services" ability={ability}>
                       <Pencil
                         className="h-4 w-4 cursor-pointer"
                         onClick={() => { setEditService(service); setOpenModal(true); }}
@@ -158,6 +164,7 @@ export default function Services() {
                         checked={!service.isDeleted}
                         onCheckedChange={() => handleDelete(service)}
                       />
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))

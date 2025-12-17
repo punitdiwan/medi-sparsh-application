@@ -9,7 +9,6 @@ const statement = {
     role: ["create","update","delete","read"],
     patient:["create","update","delete","read"],
     prescription:["create","update","delete","read"],
-    pharmacy:["create","update","delete","read"],
     reports:["create","update","delete","read"],
     services:["create","update","delete","read"],
     members:["create","update","delete","read"],
@@ -18,7 +17,11 @@ const statement = {
     payment:["create","update","delete","read"],
     shifts:["create","update","delete","read"],
     vitals:["create","update","delete","read"],
-    medicineRedord:["create","update","delete","read"]
+    medicineRedord:["create","update","delete","read"],
+    stats:["create","update","delete","read"],
+    billing:["create","update","delete","read"],
+    pharmacyMedicine:["create","update","delete","read"],
+    stock:["create","update","delete","read"],
 } as const;
 export const ac = createAccessControl(statement);
 
@@ -38,7 +41,6 @@ export const owner= ac.newRole({
     role: ["create","update","delete","read"],
     patient:["create","update","delete","read"],
     prescription:["create","update","delete","read"],
-    pharmacy:["create","update","delete","read"],
     reports:["create","update","delete","read"],
     services:["create","update","delete","read"],
     members:["create","update","delete","read"],
@@ -48,6 +50,10 @@ export const owner= ac.newRole({
     shifts:["create","update","delete","read"],
     vitals:["create","update","delete","read"],
     medicineRedord:["create","update","delete","read"],
+    stats:["create","update","delete","read"],
+    billing:["create","update","delete","read"],
+    pharmacyMedicine:["create","update","delete","read"],
+    stock:["create","update","delete","read"],
     ...ownerAc.statements
 });
 

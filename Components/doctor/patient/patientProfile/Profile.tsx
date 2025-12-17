@@ -17,6 +17,8 @@ import { useSearchParams, useParams } from "next/navigation";
 
 import { toast } from "sonner";
 import MaskedInput from "@/components/InputMask";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +28,9 @@ function Profile() {
   >("basic");
   const [editMode, setEditMode] = useState(false);
   const [patientInfo, setPatientInfo] = useState<any>();
+
+
+  const ability = useAbility();
   const [patientData, setPatientData] = useState({
     name: "",
     email: "",
@@ -149,11 +154,13 @@ function Profile() {
       <Card className="w-full max-w-5xl p-6">
         <CardHeader className="flex justify-between items-center">
           <CardTitle>Patient Profile</CardTitle>
-          {!editMode && (
-            <Button variant="outline" onClick={handleEditToggle}>
-              Edit
-            </Button>
-          )}
+          <Can I="update" a="patient" ability={ability}>
+            {!editMode && (
+                <Button variant="outline" onClick={handleEditToggle}>
+                  Edit
+                </Button>              
+            )}
+          </Can>
         </CardHeader>
 
         <CardContent>

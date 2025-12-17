@@ -19,14 +19,15 @@ const MODULES = [
   { key: "services", label: "Services" },         
   { key: "payment", label: "Payments" },
   { key: "appSettings", label: "App Settings" },
-  { key: "pharmacy", label: "Pharmacy" },
+  { key: "billing", label: "Pharmacy Billing"},
+  { key: "pharmacyMedicine", label: "Pharmacy Medicines"},
+  { key: "stock", label: "Pharmacy stock"},
   { key: "reports", label: "Reports" },
   { key: "hospitalCharger", label: "Hospital Charges" },
   { key: "vitals", label: "Vitals" },
   { key: "bed", label: "Bed Management" },
   { key: "shifts", label: "Shift Management" },
-  { key: "role", label: "Roles" },                
-  { key: "project", label: "Project" },           
+  { key: "role", label: "Roles" },                         
   { key: "medicineRedord", label: "Medicine Record" }, 
 ] as const
 

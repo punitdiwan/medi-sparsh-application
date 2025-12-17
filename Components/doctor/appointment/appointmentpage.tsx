@@ -194,6 +194,7 @@ export default function AppointmentPage() {
               </Link>
             )}
             </Can>
+            <Can I="delete" a="appointment" ability={ability}>
             <ConfirmDialog
               title="Cancel Appointment"
               description="Are you sure you want to cancel this appointment?"
@@ -214,6 +215,7 @@ export default function AppointmentPage() {
                 </Button>
               }
             />
+            </Can>
           </div>
         );
       },
@@ -237,14 +239,15 @@ export default function AppointmentPage() {
               Manage and view patient appointments
             </p>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            New Appointment
-          </Button>
+          <Can I="create" a="appointment" ability={ability}>
+            <Button
+              variant="outline"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              New Appointment
+            </Button>
+          </Can>
         </div>
 
         {/* FILTER BAR */}

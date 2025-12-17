@@ -74,7 +74,7 @@ const items: SidebarItem[] = [
     icon: BriefcaseMedical,
     children: [
       { title: 'Billing', url: '/doctor/pharmacy' ,subject: 'billing',action: 'read',},
-      { title: 'Medicines', url: '/doctor/pharmacy/medicine',subject: 'hmedicne',action: 'read', },
+      { title: 'Medicines', url: '/doctor/pharmacy/medicine',subject: 'pharmacyMedicine',action: 'read', },
       { title: 'Stock', url: '/doctor/pharmacy/purchase',subject: 'stock',action: 'read', },
     ],
   },
