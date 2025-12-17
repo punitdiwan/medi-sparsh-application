@@ -23,7 +23,8 @@ import AddPatientDialog from "./AddPatientDialog";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Upload } from "lucide-react";
-import { AbilityContext } from "@/lib/casl/AbilityContext";
+// import { AbilityContext } from "@/lib/casl/AbilityContext";
+import { useAbility } from "@/components/providers/AbilityProvider";
 type Patient = {
   id: string;
   name: string;
@@ -50,7 +51,7 @@ function PatientPage() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open, setOpen] = useState(false);
 
-  const ability = useContext(AbilityContext);
+  const ability = useAbility();
 
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "name",
@@ -166,7 +167,7 @@ useEffect(() => {
               View
             </Button>
           </Link>
-          <Can I="create" a="Patient" ability={ability}>
+          <Can I="delete" a="patient" ability={ability}>
           <ConfirmDialog
             trigger={
               <Button variant="destructive" size="sm">
@@ -243,7 +244,7 @@ useEffect(() => {
               );
             }}
           />
-          <Can I="create" a="Patient" ability={ability}>
+          <Can I="create" a="patient" ability={ability}>
             <AddPatientDialog onPatientAdded={fetchPatients} />
           
           

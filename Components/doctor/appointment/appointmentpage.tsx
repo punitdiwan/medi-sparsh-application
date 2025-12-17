@@ -19,8 +19,9 @@ import AppointmentModal from "./AppointmentModal";
 import { toast } from "sonner";
 import { getShortId } from "@/utils/getShortId";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
-import { AbilityContext } from "@/lib/casl/AbilityContext";
+
 import { Can } from "@casl/react";
+import { useAbility } from "@/components/providers/AbilityProvider";
 
 type Appointment = {
   id: number;
@@ -44,7 +45,7 @@ export default function AppointmentPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const ability = useContext(AbilityContext);
+  const ability = useAbility();
   //= FILTER STATES =//
   const [search, setSearch] = useState("");
   const [date, setDate] = useState("");

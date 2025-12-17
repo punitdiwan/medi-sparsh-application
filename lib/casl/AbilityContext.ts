@@ -1,6 +1,6 @@
-"use client"
+// "use client"
 
-import { createContext } from "react"
-import { AppAbility } from "./ability"
+// import { createContext } from "react"
+// import { AppAbility } from "./ability"
 
-export const AbilityContext = createContext<AppAbility>(null as any)
+// export const AbilityContext = createContext<AppAbility>(null as any)

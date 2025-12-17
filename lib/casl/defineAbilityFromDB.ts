@@ -1,26 +1,34 @@
-import fs from "fs"
-import path from "path"
-import { AbilityBuilder, AbilityClass, Ability } from "@casl/ability"
-import type { AppAbility } from "./ability"
+import {
+  AbilityBuilder,
+  createMongoAbility,
+  type MongoAbility,
+} from "@casl/ability";
 
-type Permission = {
-  action: string
-  subject: string
-}
+export type AppAbility = MongoAbility;
 
-export function defineAbilityFromJSON(role: string) {
-  const filePath = path.join(process.cwd(), "lib/data/permissions.json")
-  const json = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+type PermissionJSON = Record<string, string[]>;
+// example:
+// {
+//   appointment: ["create", "read"],
+//   patient: ["read"]
+// }
 
-  const permissions: Permission[] = json.roles[role] ?? []
-
+export function defineAbilityFromJSON(
+  permissions: PermissionJSON
+): AppAbility {
   const { can, build } = new AbilityBuilder<AppAbility>(
-    Ability as AbilityClass<AppAbility>
-  )
+    createMongoAbility
+  );
 
-  permissions.forEach((p) => {
-    can(p.action as any, p.subject as any)
-  })
+  if (!permissions) {
+    return build();
+  }
 
-  return build()
+  Object.entries(permissions).forEach(([subject, actions]) => {
+    actions.forEach((action) => {
+      can(action as any, subject as any);
+    });
+  });
+
+  return build();
 }

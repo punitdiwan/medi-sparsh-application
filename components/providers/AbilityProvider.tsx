@@ -1,20 +1,37 @@
-"use client"
+"use client";
 
-import { AbilityContext } from "@/lib/casl/AbilityContext"
-import { defineAbilityFor } from "@/lib/casl/ability"
+import { createContext, useContext, useMemo } from "react";
+import type { MongoAbility } from "@casl/ability";
+import { defineAbilityFromJSON } from "@/lib/casl/defineAbilityFromDB";
+
+type PermissionJSON = Record<string, string[]>;
+
+export const AbilityContext = createContext<MongoAbility | null>(null);
 
 export function AbilityProvider({
-  role,
+  permissions,
   children,
 }: {
-  role: string
-  children: React.ReactNode
+  permissions: PermissionJSON;
+  children: React.ReactNode;
 }) {
-  const ability = defineAbilityFor(role)
+
+  const ability = useMemo(
+    () => defineAbilityFromJSON(permissions),
+    [permissions]
+  );
 
   return (
     <AbilityContext.Provider value={ability}>
       {children}
     </AbilityContext.Provider>
-  )
+  );
+}
+
+export function useAbility() {
+  const ability = useContext(AbilityContext);
+  if (!ability) {
+    throw new Error("useAbility must be used inside AbilityProvider");
+  }
+  return ability;
 }
