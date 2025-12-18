@@ -34,6 +34,8 @@ import { toast } from "sonner";
 
 import { CompanyModal, Company } from "./medicineCompanyModal";
 import { getMedicineCompanies, createMedicineCompany, updateMedicineCompany, deleteMedicineCompany } from "@/lib/actions/medicineCompanies";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function CompanyManager() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -43,7 +45,7 @@ export default function CompanyManager() {
   const [editing, setEditing] = useState<Company | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
-
+  const ability = useAbility();
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -146,8 +148,9 @@ export default function CompanyManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
-
-          <Button onClick={() => setOpen(true)}>Add Company</Button>
+          <Can I="create" a="medicineCompany" ability={ability}>
+            <Button onClick={() => setOpen(true)}>Add Company</Button>
+          </Can>
         </div>
 
         {/* Table */}
@@ -193,21 +196,24 @@ export default function CompanyManager() {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditing(company);
-                              setOpen(true);
-                            }}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDeleteClick(company.id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
+                          <Can I="update" a="medicineCompany" ability={ability}>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditing(company);
+                                setOpen(true);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                          </Can>
+                          <Can I="delete" a="medicineCompany" ability={ability}>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteClick(company.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </Can>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

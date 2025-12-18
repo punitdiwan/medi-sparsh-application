@@ -49,6 +49,15 @@ export function RolePermissionEditor({ value, onChange }: Props) {
     }
   };
 
+  function formatModuleName(key: string) {
+    return key
+      // camelCase → camel Case
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      // first letter capital
+      .replace(/^./, (char) => char.toUpperCase());
+  }
+
+
   return (
     <Card className="p-4 overflow-x-auto table-custom-bg" >
       <Table>
@@ -80,7 +89,7 @@ export function RolePermissionEditor({ value, onChange }: Props) {
                 <TableRow key={module}>
                   {/* Module name */}
                   <TableCell className="font-medium capitalize">
-                    {module}
+                    {formatModuleName(module)}
                   </TableCell>
 
                   {/* Permissions */}

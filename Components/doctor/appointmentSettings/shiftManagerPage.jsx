@@ -12,14 +12,15 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 export function ShiftManagerPage() {
   const [search, setSearch] = useState("");
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDeleted, setShowDeleted] = useState(false);
   const [filtered, setFiltered] = useState([]);
-
+  const ability =  useAbility();
   // modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState(null);
@@ -178,15 +179,16 @@ export function ShiftManagerPage() {
                 />
                 <Label htmlFor="deleted">Show deleted</Label>
               </div>
-
-              <Button
-                onClick={() => {
-                  setSelectedShift(null);
-                  setModalOpen(true);
-                }}
-              >
-                Add Shift
-              </Button>
+              <Can I="create" a="hospitalShift" ability={ability}>
+                <Button
+                  onClick={() => {
+                    setSelectedShift(null);
+                    setModalOpen(true);
+                  }}
+                >
+                  Add Shift
+                </Button>
+              </Can>
             </div>
           </div>
 
@@ -235,40 +237,45 @@ export function ShiftManagerPage() {
 
                       <TableCell className="flex justify-center gap-3">
                         {!item.isDeleted ? (
-                          <MdEdit
-                            size={20}
-                            className="cursor-pointer text-blue-600"
-                            onClick={() => {
-                              setSelectedShift(item);
-                              setModalOpen(true);
-                            }}
-                          />
-                        ) : (
-                          <MdRestore
-                            size={20}
-                            className="cursor-pointer text-green-600"
-                            onClick={() => handleRestore(item.id)}
-                            title="Restore"
-                          />
-                        )}
-
-                        <ConfirmDialog
-                          trigger={
-                            <MdDelete
+                          <Can I="update" a="hospitalShift" ability={ability}>
+                            <MdEdit
                               size={20}
-                              className="cursor-pointer text-red-600"
+                              className="cursor-pointer text-blue-600"
+                              onClick={() => {
+                                setSelectedShift(item);
+                                setModalOpen(true);
+                              }}
                             />
-                          }
-                          title={item.isDeleted ? "Permanently Delete Shift?" : "Delete Shift?"}
-                          description={
-                            item.isDeleted
-                              ? "This shift is already deleted. Click confirm to permanently delete it."
-                              : "Are you sure you want to delete this shift?"
-                          }
-                          actionLabel={item.isDeleted ? "Permanently Delete" : "Delete"}
-                          cancelLabel="Cancel"
-                          onConfirm={() => performDelete(item.id, item.isDeleted)}
-                        />
+                          </Can>
+                        ) : (
+                          <Can I="delete" a="hospitalShift" ability={ability}>
+                            <MdRestore
+                              size={20}
+                              className="cursor-pointer text-green-600"
+                              onClick={() => handleRestore(item.id)}
+                              title="Restore"
+                            />
+                          </Can>
+                        )}
+                        <Can I="delete" a="hospitalShift" ability={ability}>
+                          <ConfirmDialog
+                            trigger={
+                              <MdDelete
+                                size={20}
+                                className="cursor-pointer text-red-600"
+                              />
+                            }
+                            title={item.isDeleted ? "Permanently Delete Shift?" : "Delete Shift?"}
+                            description={
+                              item.isDeleted
+                                ? "This shift is already deleted. Click confirm to permanently delete it."
+                                : "Are you sure you want to delete this shift?"
+                            }
+                            actionLabel={item.isDeleted ? "Permanently Delete" : "Delete"}
+                            cancelLabel="Cancel"
+                            onConfirm={() => performDelete(item.id, item.isDeleted)}
+                          />
+                        </Can>
                       </TableCell>
                     </TableRow>
                   ))

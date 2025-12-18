@@ -58,6 +58,14 @@ export default function RolesPage() {
     setLoading(false)
   }
 
+  function formatModuleName(key: string) {
+    return key
+      // camelCase → camel Case
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      // first letter capital
+      .replace(/^./, (char) => char.toUpperCase());
+  }
+
   return (
     <div className="m-6 space-y-6">
      <Card className="bg-custom-gradient">
@@ -142,7 +150,7 @@ export default function RolesPage() {
                 ([module, actions]) => (
                   <tr key={module}>
                     <td className="border px-3 py-2 font-medium capitalize ">
-                      {module}
+                      {formatModuleName(module)}
                     </td>
 
                     {["create", "read", "update", "delete"].map(

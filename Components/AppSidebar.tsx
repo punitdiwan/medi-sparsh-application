@@ -89,7 +89,7 @@ const items: SidebarItem[] = [
       { title: 'Members', url: '/doctor/employees',subject: 'members',action: 'read', },
       { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges',subject: 'hospitalCharger',action: 'read', },
       { title: 'Bed', url: '/doctor/settings/Bed',subject: 'bed',action: 'read', },
-      { title: 'Shift Management', url: '/doctor/settings/appointment',subject: 'shifts',action: 'read', },
+      { title: 'Shift Management', url: '/doctor/settings/appointment',subject: 'doctorShift',action: 'read', },
       { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals',action: 'read',},
       { title: 'Medicine Record', url: '/doctor/settings/medicineRecord',subject: 'medicineRedord',action: 'read', },
       { title: 'Stats', url: '/doctor/settings/stats',subject: 'stats',action: 'read', },

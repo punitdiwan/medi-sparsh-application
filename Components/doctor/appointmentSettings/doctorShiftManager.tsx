@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { MdSearch } from "react-icons/md";
+import { useAbility } from "@/components/providers/AbilityProvider";
+
 
 interface Shift {
   id: string;
@@ -27,7 +29,7 @@ export default function DoctorShiftManagerPage() {
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
-
+  const ability = useAbility();
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
 
@@ -169,13 +171,14 @@ export default function DoctorShiftManagerPage() {
                       <td className="p-3 font-medium">{doc.doctorName}</td>
                       {shifts.map((shift) => (
                         <td key={shift.id} className="p-3 text-center">
-                          <Checkbox
-                            className="border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            checked={!!doc.shifts[shift.id]}
-                            onCheckedChange={() =>
-                              toggleDoctorShift(doc.doctorId, shift.id, !!doc.shifts[shift.id])
-                            }
-                          />
+                            <Checkbox
+                              disabled={!ability.can("update","doctorShift")}
+                              className="border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                              checked={!!doc.shifts[shift.id]}
+                              onCheckedChange={() =>
+                                toggleDoctorShift(doc.doctorId, shift.id, !!doc.shifts[shift.id])
+                              }
+                            />
                         </td>
                       ))}
                     </tr>

@@ -16,7 +16,8 @@ import { toast } from "sonner";
 import SlotModal from "./slotModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 const WEEK_DAYS = [
   "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
 ];
@@ -36,7 +37,7 @@ export default function SlotManagerPage() {
 
   const [showWeekPanel, setShowWeekPanel] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
-
+  const ability = useAbility();
   const [filteredShifts, setFilteredShifts] = useState([]);
   const [slotsByDay, setSlotsByDay] = useState(() => {
     const init = {};
@@ -303,7 +304,9 @@ export default function SlotManagerPage() {
             </div>
 
             <div className="col-span-2">
-              <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
+              <Can I="create" a="doctorSlots" ability={ability}>
+                <Button className="w-full" onClick={handleAddNew} disabled={!showWeekPanel}>Add New Slot</Button>
+              </Can>
             </div>
           </div>
 

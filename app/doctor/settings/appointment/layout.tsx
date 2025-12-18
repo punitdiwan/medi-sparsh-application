@@ -3,25 +3,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAbility } from "@/components/providers/AbilityProvider";
 
 export default function AppointmentLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const ability = useAbility();
 
   const tabs = [
-    { name: "Doctor Shift", href: "/doctor/settings/appointment" },
-    { name: "Slots", href: "/doctor/settings/appointment/slots" },
-    { name: "Shift", href: "/doctor/settings/appointment/shifts" },
-    { name: "Appointment Priority", href: "/doctor/settings/appointment/appointmentPriority" },
+    { name: "Doctor Shift", href: "/doctor/settings/appointment",action: "read",
+    subject: "doctorShift" },
+    { name: "Slots", href: "/doctor/settings/appointment/slots",action: "read",
+    subject: "doctorSlots" },
+    { name: "Shift", href: "/doctor/settings/appointment/shifts",action: "read",
+    subject: "hospitalShift" },
+    { name: "Appointment Priority", href: "/doctor/settings/appointment/appointmentPriority" ,action: "read",
+    subject: "appointmentPriority"},
   ];
 
-  // Determine the active tab based on the current pathname
-  const activeTab = tabs.find((tab) => tab.href === pathname)?.href || tabs[0].href;
+  const visibleTabs = tabs.filter((tab) =>
+    ability.can(tab.action, tab.subject)
+  );
+
+  if (!visibleTabs.length) return null;
+
+  const activeTab = visibleTabs.find((tab) => tab.href === pathname)?.href ??
+    visibleTabs[0].href;
 
   return (
     <div className="p-6 space-y-6">
       <Tabs value={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          {tabs.map((tab) => (
+        <TabsList className=" w-full flex flex-wrap ">
+          {visibleTabs.map((tab) => (
             <TabsTrigger key={tab.href} value={tab.href} asChild>
               <Link href={tab.href}>{tab.name}</Link>
             </TabsTrigger>

@@ -63,7 +63,7 @@ export default async function DashboardLayout({
       : rawPermissions;
 
   const RolePermission = permissions || RData.permission;
-  console.log("RolePermission",RolePermission)
+
   const userData = {
     userData: sessionData?.user,
     hospital,
