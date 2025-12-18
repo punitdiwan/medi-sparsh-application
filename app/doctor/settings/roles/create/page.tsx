@@ -7,6 +7,8 @@ import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import BackButton from "@/Components/BackButton"
 
+export const dyanamic = "force-dynamic";
+
 type Permission = {
   action: "create" | "read" | "update" | "delete"
   subject: string

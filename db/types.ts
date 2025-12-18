@@ -51,6 +51,32 @@ export type Gender = "male" | "female" | "other";
 export type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
 export type AppointmentStatus = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
+export type CustomeSession = {
+    user: {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        email: string;
+        emailVerified: boolean;
+        name: string;
+        image?: string | null | undefined;
+    };
+    session: {
+        expiresAt: string;
+        createdAt: string;
+        updatedAt: string;
+        activeOrganizationId: string;
+        id: string;
+        userId: string;
+        token: string;
+        ipAddress?: string | null | undefined;
+        userAgent?: string | undefined;
+    };
+    permissionsData?: undefined;
+    role?: undefined;
+}
+
+
 // Medicine type for prescriptions
 export type Medicine = {
   name: string;

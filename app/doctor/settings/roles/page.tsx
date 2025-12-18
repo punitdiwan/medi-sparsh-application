@@ -65,7 +65,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-
+export const dyanamic = "force-dynamic";
 type RoleData = {
   id: string
   role: string

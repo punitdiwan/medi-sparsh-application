@@ -4,19 +4,22 @@ import { doctors, shifts, doctorShifts, staff, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq, and } from "drizzle-orm";
+import type { CustomeSession } from "@/db/types";
+
+
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
+        const session : CustomeSession = await auth.api.getSession({
             headers: await headers()
-        });
+        }) as CustomeSession;
 
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { session: sessionData } = session;
-        const hospitalId = sessionData.activeOrganizationId;
+        //const { session: sessionData } = session;
+        const hospitalId = session.session.activeOrganizationId;
 
         if (!hospitalId) {
             return NextResponse.json({ error: "Hospital ID not found in session" }, { status: 400 });
@@ -81,10 +84,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const session = await auth.api.getSession({
+        const session:CustomeSession = await auth.api.getSession({
             headers: await headers()
-        });
-
+        }) as CustomeSession;
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
