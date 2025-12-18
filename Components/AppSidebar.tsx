@@ -46,48 +46,56 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAbility } from "@/components/providers/AbilityProvider";
+
 type SidebarChildItem = {
   title: string;
   url: string;
+  subject?: string;
+  action?: string;
 };
 
 type SidebarItem = {
   title: string;
   url?: string;
+  subject?: string;      
+  action?: string; 
   icon: React.ElementType;
   children?: SidebarChildItem[];
 };
 
 const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
-  { title: 'Patients', url: '/doctor/patient', icon: User },
-  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar },
-  { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen },
+  { title: 'Patients', url: '/doctor/patient', icon: User ,subject: 'patient',action: 'read',},
+  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar,subject: 'appointment',action: 'read', },
+  { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen ,subject: 'prescription',action: 'read',},
   {
     title: 'Pharmacy',
     icon: BriefcaseMedical,
     children: [
-      { title: 'Billing', url: '/doctor/pharmacy' },
-      { title: 'Medicines', url: '/doctor/pharmacy/medicine' },
-      { title: 'Stock', url: '/doctor/pharmacy/purchase' },
+      { title: 'Billing', url: '/doctor/pharmacy' ,subject: 'billing',action: 'read',},
+      { title: 'Medicines', url: '/doctor/pharmacy/medicine',subject: 'pharmacyMedicine',action: 'read', },
+      { title: 'Stock', url: '/doctor/pharmacy/purchase',subject: 'stock',action: 'read', },
     ],
   },
-  { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus },
-  { title: 'Services', url: '/doctor/services', icon: ServerCog },
+  { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus,subject: 'reports',
+    action: 'read', },
+  { title: 'Services', url: '/doctor/services', icon: ServerCog ,subject: 'services',
+        action: 'read',},
   {
     title: 'Settings',
     icon: Settings,
     children: [
-      { title: 'Members', url: '/doctor/employees' },
-      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges' },
-      { title: 'Bed', url: '/doctor/settings/Bed' },
-      { title: 'Shift Management', url: '/doctor/settings/appointment' },
-      { title: 'Vital', url: '/doctor/settings/vital' },
-      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord' },
-      { title: 'Stats', url: '/doctor/settings/stats' },
-      { title: 'Payments History', url: '/doctor/billing' },
-      { title: 'App Settings', url: '/doctor/settings/config' },
-      { title: 'Roles', url: '/doctor/settings/roles' },
+      { title: 'Members', url: '/doctor/employees',subject: 'members',action: 'read', },
+      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges',subject: 'hospitalCharger',action: 'read', },
+      { title: 'Bed', url: '/doctor/settings/Bed',subject: 'bed',action: 'read', },
+      { title: 'Shift Management', url: '/doctor/settings/appointment',subject: 'shifts',action: 'read', },
+      { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals',action: 'read',},
+      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord',subject: 'medicineRedord',action: 'read', },
+      { title: 'Stats', url: '/doctor/settings/stats',subject: 'stats',action: 'read', },
+      { title: 'Payments History', url: '/doctor/billing',subject: 'payment',action: 'read', },
+      { title: 'App Settings', url: '/doctor/settings/config',subject: 'appSetting',action: 'read', },
+      { title: 'Roles', url: '/doctor/settings/roles',subject: 'role',action: 'read', },
     ],
   },
 ];
@@ -100,6 +108,35 @@ export function AppSidebar() {
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
   const [staffData, setStaffData] = useState<any>();
+
+    const ability = useAbility();
+
+    const canAccess = (
+      subject?: string,
+      action: string = 'read'
+    ) => {
+      if (!subject) return true; // dashboard, public items
+      return ability.can(action, subject);
+    };
+    const filterItemsByPermission = (items: SidebarItem[]) => {
+  return items
+    .map((item) => {
+      if (!canAccess(item.subject, item.action)) return null;
+
+      if (item.children) {
+        const filteredChildren = item.children.filter((child) =>
+          canAccess(child.subject, child.action)
+        );
+
+        if (filteredChildren.length === 0) return null;
+
+        return { ...item, children: filteredChildren };
+      }
+
+      return item;
+    })
+    .filter(Boolean) as SidebarItem[];
+};
 
   // Close all popovers when route changes
   useEffect(() => {
@@ -166,7 +203,25 @@ export function AppSidebar() {
 
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => {
+                {filterItemsByPermission(items)
+  .filter((item) => {
+    // parent permission
+    if (!canAccess(item.subject, item.action)) return false;
+
+    // agar children hain to unko bhi filter karo
+    if (item.children) {
+      item.children = item.children.filter((child) =>
+        canAccess(child.subject, child.action)
+      );
+    }
+
+    // agar children empty ho gaye → parent hide
+    if (item.children && item.children.length === 0) return false;
+
+    return true;
+  })
+  .map((item) => {
+
                   const hasChildren = item.children?.length ?? 0 > 0;
                   const isActive = isItemActive(item);
                   const isOpen = openMenus[item.title] || isItemActive(item);

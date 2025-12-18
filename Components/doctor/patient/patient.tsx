@@ -1,25 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
 import FilterBar from "@/features/filterbar/FilterBar";
 import { patientFilters } from "@/features/filterbar/configs/patientFilter";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { Can } from "@casl/react"
 import { MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { PaginationControl } from "@/components/pagination";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import PatientRegistrationForm from "@/Components/forms/PatientRegistrationFrom";
 import { InputOTPForm } from "@/components/model/Otpmodel";
 import HoneycombLoader from "@/components/HoneycombLoader";
@@ -28,6 +23,8 @@ import AddPatientDialog from "./AddPatientDialog";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Upload } from "lucide-react";
+// import { AbilityContext } from "@/lib/casl/AbilityContext";
+import { useAbility } from "@/components/providers/AbilityProvider";
 type Patient = {
   id: string;
   name: string;
@@ -53,6 +50,9 @@ function PatientPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open, setOpen] = useState(false);
+
+  const ability = useAbility();
+
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "name",
     "mobileNumber",
@@ -167,6 +167,7 @@ useEffect(() => {
               View
             </Button>
           </Link>
+          <Can I="delete" a="patient" ability={ability}>
           <ConfirmDialog
             trigger={
               <Button variant="destructive" size="sm">
@@ -198,6 +199,7 @@ useEffect(() => {
               }
             }}
           />
+          </Can>
         </div>
       ),
     },
@@ -242,7 +244,10 @@ useEffect(() => {
               );
             }}
           />
-           <AddPatientDialog onPatientAdded={fetchPatients} />
+          <Can I="create" a="patient" ability={ability}>
+            <AddPatientDialog onPatientAdded={fetchPatients} />
+          
+          
            <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -259,6 +264,7 @@ useEffect(() => {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          </Can>
         </div>
       </div>
       <div className="mt-2">

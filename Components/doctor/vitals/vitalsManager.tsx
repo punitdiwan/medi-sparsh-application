@@ -40,6 +40,9 @@ import { VitalModal } from "./vitalModel";
 import { toast } from "sonner";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { TooltipProvider ,TooltipContent,  TooltipTrigger, Tooltip } from "@/components/ui/tooltip";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
+
 
 
 export type Vital = {
@@ -59,6 +62,8 @@ export default function VitalsManager() {
   const [filter, setFilter] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vitalToDelete, setVitalToDelete] = useState<string | null>(null);
+
+  const ability = useAbility();
 
   useEffect(() => {
     fetchVitals();
@@ -176,23 +181,25 @@ export default function VitalsManager() {
             className="max-w-xs"
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
-            <Button onClick={() => setOpen(true)}>Add Vital</Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => { console.log("vitals click"); setOpenEx(true); }}
-                    className="p-2"
-                  >
-                    <Upload className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Vitals Excel</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Can I="create" a="vitals" ability={ability}>
+              <Button onClick={() => setOpen(true)}>Add Vital</Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => { console.log("vitals click"); setOpenEx(true); }}
+                      className="p-2"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Vitals Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Can>
           </div>
         </div>
         <ExcelUploadModal
@@ -249,20 +256,24 @@ export default function VitalsManager() {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditing(v);
-                              setOpen(true);
-                            }}
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDeleteClick(v.id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
+                          <Can I="update" a="vitals" ability={ability}>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditing(v);
+                                setOpen(true);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                          </Can>
+                          <Can I="delete" a="vitals" ability={ability}>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteClick(v.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </Can>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

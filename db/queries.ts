@@ -20,7 +20,8 @@ import {
   taxCategories,
   modules,
   chargeTypes,
-  chargeCategories
+  chargeCategories,
+  organizationRole
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1496,4 +1497,18 @@ export async function permanentlyDeleteCharge(id: string) {
     .returning();
 
   return result[0];
+}
+
+// ============================================
+// Organization Role Queries
+// ============================================
+
+export async function getOrganizationRoleById(roleId: string, organizationId: string) {
+  const result = await db
+    .select()
+    .from(organizationRole)
+    .where(and(eq(organizationRole.id, roleId), eq(organizationRole.organizationId, organizationId)))
+    .limit(1);
+  
+  return result[0] || null;
 }
