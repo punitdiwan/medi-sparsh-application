@@ -34,6 +34,8 @@ import { toast } from "sonner";
 
 import { MedicineCategoryModal, MedicineCategory } from "./medicineCategoryModel";
 import { getMedicineCategories, createMedicineCategory, updateMedicineCategory, deleteMedicineCategory } from "../../../lib/actions/medicineCategories";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function CategoryManager() {
   const [categories, setCategories] = useState<MedicineCategory[]>([]);
@@ -43,6 +45,8 @@ export default function CategoryManager() {
   const [editing, setEditing] = useState<MedicineCategory | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+
+  const ability = useAbility();
 
   useEffect(() => {
     fetchCategories();
@@ -138,7 +142,9 @@ export default function CategoryManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs"
           />
-          <Button onClick={() => setOpen(true)}>Add Category</Button>
+          <Can I="create" a="medicineCategory" ability={ability}>
+            <Button onClick={() => setOpen(true)}>Add Category</Button>
+          </Can>
         </div>
 
         <div className="border rounded-xl overflow-hidden bg-card">
@@ -175,12 +181,16 @@ export default function CategoryManager() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <Can I="update" a="medicineCategory" ability={ability}>
                           <DropdownMenuItem onClick={() => { setEditing(category); setOpen(true); }}>
                             Edit
                           </DropdownMenuItem>
+                          </Can>
+                          <Can I="delete" a="medicineCategory" ability={ability}>
                           <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(category.id)}>
                             Delete
                           </DropdownMenuItem>
+                          </Can>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
