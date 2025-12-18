@@ -18,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export interface ChargeCategoryItem {
   id: string;
@@ -44,6 +46,7 @@ export default function ChargeCategoryManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<ChargeCategoryItem | null>(null);
 
+  const ability = useAbility();
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -203,15 +206,16 @@ export default function ChargeCategoryManager() {
           />
           <Label htmlFor="deleted-filter">Show Deleted Only</Label>
         </div>
-
-        <Button
-          onClick={() => {
-            setEditItem(null);
-            setModalOpen(true);
-          }}
-        >
-          + Add Category
-        </Button>
+        <Can I="create" a="ChargesCategory" ability={ability}>
+          <Button
+            onClick={() => {
+              setEditItem(null);
+              setModalOpen(true);
+            }}
+          >
+            + Add Category
+          </Button>
+        </Can>
       </div>
 
       {/* Table */}
@@ -246,6 +250,7 @@ export default function ChargeCategoryManager() {
                   <TableCell className="text-right space-x-2">
                     {!item.isDeleted ? (
                       <>
+                      <Can I="update" a="ChargesCategory" ability={ability}>
                         <Button
                           size="sm"
                           variant="outline"
@@ -256,7 +261,8 @@ export default function ChargeCategoryManager() {
                         >
                           <MdEdit />
                         </Button>
-
+                      </Can>
+                      <Can I="delete" a="ChargesCategory" ability={ability}>
                         <ConfirmDialog
                           title="Delete Category?"
                           description="This will soft delete the category."
@@ -267,9 +273,11 @@ export default function ChargeCategoryManager() {
                             </Button>
                           }
                         />
+                        </Can>
                       </>
                     ) : (
                       <>
+                      <Can I="delete" a="ChargesCategory" ability={ability}>
                         <ConfirmDialog
                           title="Restore Category?"
                           description="This will reactivate the category."
@@ -280,7 +288,7 @@ export default function ChargeCategoryManager() {
                             </Button>
                           }
                         />
-
+                      
                         <ConfirmDialog
                           title="Delete Permanently?"
                           description="This cannot be undone."
@@ -291,6 +299,7 @@ export default function ChargeCategoryManager() {
                             </Button>
                           }
                         />
+                      </Can>
                       </>
                     )}
                   </TableCell>

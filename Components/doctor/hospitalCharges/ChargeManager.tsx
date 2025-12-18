@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { ChargeModal, ChargeItem } from "./chargeModal";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 // Types for auxiliary data
 interface Option {
@@ -40,6 +42,7 @@ export default function ChargeManager() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState<any | null>(null);
 
+  const ability = useAbility();
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -201,7 +204,7 @@ export default function ChargeManager() {
           />
           <Label htmlFor="deleted-filter">Show Deleted Only</Label>
         </div>
-
+      <Can I="create" a="hospitalCharger" ability={ability}>
         <Button
           onClick={() => {
             setEditData(null);
@@ -210,6 +213,7 @@ export default function ChargeManager() {
         >
           + Add Charge
         </Button>
+        </Can>
       </div>
 
 
@@ -253,6 +257,7 @@ export default function ChargeManager() {
 
                     {!item.isDeleted ? (
                       <>
+                      <Can I="update" a="hospitalCharger" ability={ability}>
                         {/* Edit */}
                         <Button
                           size="sm"
@@ -264,7 +269,8 @@ export default function ChargeManager() {
                         >
                           Edit
                         </Button>
-
+                      </Can>
+                      <Can I="delete" a="hospitalCharger" ability={ability}>
                         <ConfirmDialog
                           title="Delete Charge?"
                           description="This will soft-delete the charge."
@@ -275,9 +281,11 @@ export default function ChargeManager() {
                             </Button>
                           }
                         />
+                      </Can>
                       </>
                     ) : (
                       <>
+                      <Can I="delete" a="hospitalCharger" ability={ability}>
                         <ConfirmDialog
                           title="Restore Charge?"
                           description="This will reactivate the charge."
@@ -299,6 +307,7 @@ export default function ChargeManager() {
                             </Button>
                           }
                         />
+                        </Can>
                       </>
                     )}
 

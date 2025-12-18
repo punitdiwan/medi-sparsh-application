@@ -7,11 +7,9 @@ import { RoleForm } from "../../RoleForm"
 import { useAuth } from "@/context/AuthContext"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { Permission } from "@/Components/role/RolePermissionEditor"
+import BackButton from "@/Components/BackButton"
 
-type Permission = {
-  action: "create" | "read" | "update" | "delete"
-  subject: string
-}
 
 type RoleFromAPI = {
   id: string
@@ -56,6 +54,7 @@ export default function EditRolePage() {
       
       if (result.success && result.data) {
         setRole(mapRoleFromAPI(result.data))
+        // console.log("mapRoleFromAPI(result.data)",mapRoleFromAPI(result.data))
       } else {
         setError("Role not found")
       }
@@ -97,7 +96,8 @@ export default function EditRolePage() {
   if (!role) return <p>Role not found</p>
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 mx-4 mt-10 p-6 rounded-2xl bg-custom-gradient">
+      <BackButton/>
       <h1 className="text-2xl font-semibold">Edit Role</h1>
       <RoleForm role={role} onSubmit={updateRole} />
     </div>
@@ -108,7 +108,7 @@ function mapRoleFromAPI(role: RoleFromAPI): RoleData {
   // Ensure permission keys are lowercase for proper matching in RolePermissionEditor
   const normalizedPermission: Record<string, string[]> = {}
   Object.entries(role.permission || {}).forEach(([key, value]) => {
-    normalizedPermission[key.toLowerCase()] = value
+    normalizedPermission[key] = value
   })
   
   return {
@@ -118,29 +118,12 @@ function mapRoleFromAPI(role: RoleFromAPI): RoleData {
   }
 }
 
-function mapPermissionsFromDB(permission?: Record<string, string[]>): Permission[] {
-  if (!permission) return []
-
-  const result: Permission[] = []
-
-  Object.entries(permission).forEach(([module, actions]) => {
-    actions.forEach(action => {
-      result.push({
-        subject: module.toLowerCase(),
-        action: action === "show" ? "read" : (action as Permission["action"]),
-      })
-    })
-  })
-
-  return result
-}
-
 // Convert editor permissions → API format for save
 function buildPermissionObject(permissions: Permission[]): Record<string, string[]> {
   const result: Record<string, Set<string>> = {}
 
   permissions.forEach(({ subject, action }) => {
-    const module = subject.toLowerCase()
+    const module = subject
     if (!result[module]) result[module] = new Set()
     result[module].add(action)
   })

@@ -1,6 +1,6 @@
 import { organizationClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
-import { ac, normal, owner, secret } from "./permissions";
+import { ac,owner } from "./permissions";
 import { customSessionClient } from "better-auth/client/plugins";
 import { auth } from "./auth";
 
@@ -11,8 +11,6 @@ export const authClient = createAuthClient({
         organizationClient({
             ac, // Must be defined in order for dynamic access control to work
             roles: {
-                normal,
-                secret,
                 owner
             },
             dynamicAccessControl: { 

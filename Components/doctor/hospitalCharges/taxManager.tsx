@@ -19,6 +19,8 @@ import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Upload } from "lucide-react";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 // ---------------- Types ----------------
 interface Tax {
   id: string;
@@ -39,6 +41,7 @@ export default function TaxManager() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const rowsPerPage = 5;
 
+  const ability = useAbility();
   // Modal State
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editData, setEditData] = useState<Tax | null>(null);
@@ -208,14 +211,16 @@ export default function TaxManager() {
           <Label htmlFor="show-deleted">Show Deleted Only</Label>
         </div>
         <div className="flex flex-row flex-wrap items-center gap-3">
-          <Button
-            onClick={() => {
-              setEditData(null);
-              setModalOpen(true);
-            }}
-          >
-            Add Tax
-          </Button>
+          <Can I="create" a="TaxCategory" ability={ability}>
+            <Button
+              onClick={() => {
+                setEditData(null);
+                setModalOpen(true);
+              }}
+            >
+              Add Tax
+            </Button>
+          
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -232,7 +237,7 @@ export default function TaxManager() {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-
+          </Can>
         </div>
       </div>
             <ExcelUploadModal
@@ -265,20 +270,23 @@ export default function TaxManager() {
 
                 <TableCell className="text-right space-x-2">
                   {!tax.isDeleted && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditData(tax);
-                        setModalOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
+                     <Can I="update" a="TaxCategory" ability={ability}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditData(tax);
+                          setModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                     </Can>
                   )}
 
                   {tax.isDeleted ? (
                     <>
+                    <Can I="delete" a="TaxCategory" ability={ability}>
                       {/* Reactivate with confirmation */}
                       <ConfirmDialog
                         title="Reactivate Tax?"
@@ -302,8 +310,10 @@ export default function TaxManager() {
                           </Button>
                         }
                       />
+                      </Can>
                     </>
                   ) : (
+                    <Can I="delete" a="TaxCategory" ability={ability}>
                     /* Soft Delete */
                     <ConfirmDialog
                       title="Delete Tax?"
@@ -315,6 +325,7 @@ export default function TaxManager() {
                         </Button>
                       }
                     />
+                    </Can>
                   )}
                 </TableCell>
 

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { ChargeTypeModal } from "./ChargeTypeModal";
 import { toast } from "sonner";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 // Types
 interface Module {
@@ -25,6 +27,8 @@ export default function ChargeTypeManager() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<ChargeType | null>(null);
+
+  const ability = useAbility();
 
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
@@ -173,14 +177,16 @@ export default function ChargeTypeManager() {
     <div className="p-6 bg-background space-y-4">
 
       <div className="flex justify-between items-center">
-        <Button
-          onClick={() => {
-            setEditItem(null);
-            setModalOpen(true);
-          }}
-        >
-          + Add Charge Type
-        </Button>
+        <Can I="create" a="ChargesType" ability={ability}>
+          <Button
+            onClick={() => {
+              setEditItem(null);
+              setModalOpen(true);
+            }}
+          >
+            + Add Charge Type
+          </Button>
+        </Can>
       </div>
 
       <div className="overflow-auto border rounded-md max-h-[430px]">
@@ -229,24 +235,27 @@ export default function ChargeTypeManager() {
 
                   <td className="border p-2 sticky right-0 bg-background z-10">
                     <div className="flex gap-2 justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditItem(item);
-                          setModalOpen(true);
-                        }}
-                      >
-                        <MdEdit />
-                      </Button>
-
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <MdDelete />
-                      </Button>
+                      <Can I="update" a="ChargesType" ability={ability}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditItem(item);
+                            setModalOpen(true);
+                          }}
+                        >
+                          <MdEdit />
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="ChargesType" ability={ability}>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <MdDelete />
+                        </Button>
+                      </Can>
                     </div>
                   </td>
                 </tr>

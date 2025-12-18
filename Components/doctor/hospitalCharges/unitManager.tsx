@@ -16,6 +16,9 @@ import UnitModal from "./unitmodel";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Upload } from "lucide-react";
+import { Can } from "@casl/react";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { PermissionButton } from "@/Components/role/PermissionButton";
 interface UnitItem {
   id: string;
   name: string;
@@ -29,6 +32,8 @@ export default function UnitManager(): JSX.Element {
   const [open, setOpen] = useState(false);
   const rowsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
+
+  const ability = useAbility();
 
   const [units, setUnits] = useState<UnitItem[]>([]);
 
@@ -137,30 +142,32 @@ export default function UnitManager(): JSX.Element {
           className="max-w-sm"
         />
         <div className="flex flex-row flex-wrap items-center gap-3">
-        <Button
-          onClick={() => {
-            setEditingData(null);
-            setOpenModal(true);
-          }}
-        >
-          + Add Unit
-        </Button>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={() => setOpen(true)}
-                className="p-2"
-              >
-                <Upload className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Upload Unit Excel</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          <Can I="create" a="ChargesUnit" ability={ability}>
+            <Button
+              onClick={() => {
+                setEditingData(null);
+                setOpenModal(true);
+              }}
+            >
+              + Add Unit
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpen(true)}
+                    className="p-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Unit Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Can>
         </div>
       </div>
       <ExcelUploadModal
@@ -188,24 +195,27 @@ export default function UnitManager(): JSX.Element {
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell className="text-right space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingData(item);
-                      setOpenModal(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(item.id)}
-                  >
-                    Delete
-                  </Button>
+                  <Can I="update" a="ChargesUnit" ability={ability}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingData(item);
+                        setOpenModal(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </Can>
+                  <Can I="delete" a="ChargesUnit" ability={ability}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Delete
+                    </Button>
+                  </Can>
                 </TableCell>
               </TableRow>
             ))

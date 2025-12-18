@@ -37,6 +37,8 @@ import { toast } from "sonner";
 
 import AddSupplierModal, { Supplier } from "@/components/model/AddSupplierModal";
 import { getMedicineSuppliers, createMedicineSupplier, updateMedicineSupplier, deleteMedicineSupplier, restoreMedicineSupplier } from "@/lib/actions/medicineSuppliers";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function SupplierManager() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -47,6 +49,8 @@ export default function SupplierManager() {
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
+
+  const ability = useAbility();
 
   useEffect(() => {
     fetchSuppliers();
@@ -193,16 +197,17 @@ export default function SupplierManager() {
                 Show Deleted
               </Label>
             </div>
-
-            <Button
-              className="flex gap-2"
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-            >
-              <Plus size={16} /> Add Supplier
-            </Button>
+            <Can I="create" a="medicineSupplier" ability={ability}>
+              <Button
+                className="flex gap-2"
+                onClick={() => {
+                  setEditing(null);
+                  setOpen(true);
+                }}
+              >
+                <Plus size={16} /> Add Supplier
+              </Button>
+            </Can>
           </div>
         </div>
 
@@ -261,24 +266,30 @@ export default function SupplierManager() {
                         <DropdownMenuContent align="end">
                           {!supplier.isDeleted && (
                             <>
-                              <DropdownMenuItem onClick={() => { setEditing(supplier); setOpen(true); }}>
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => handleDeleteClick(supplier.id)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
+                              <Can I="update" a="medicineSupplier" ability={ability}>
+                                <DropdownMenuItem onClick={() => { setEditing(supplier); setOpen(true); }}>
+                                  Edit
+                                </DropdownMenuItem>
+                              </Can>
+                              <Can I="delete" a="medicineSupplier" ability={ability}>
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => handleDeleteClick(supplier.id)}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </Can>
                             </>
                           )}
                           {supplier.isDeleted && (
-                            <DropdownMenuItem
-                              className="text-green-600"
-                              onClick={() => handleRestore(supplier.id)}
-                            >
-                              Restore
-                            </DropdownMenuItem>
+                            <Can I="delete" a="medicineSupplier" ability={ability}>
+                              <DropdownMenuItem
+                                className="text-green-600"
+                                onClick={() => handleRestore(supplier.id)}
+                              >
+                                Restore
+                              </DropdownMenuItem>
+                            </Can>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>

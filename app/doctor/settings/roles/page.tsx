@@ -1,75 +1,26 @@
 'use client'
-// import { RolePermissionEditor } from "@/Components/role/RolePermissionEditor";
 import { authClient } from "@/lib/auth-client";
-// export const dynamic = "force-dynamic";
-
-// const page = () => {
-
-//     return (
-//         <>
-//             {/* <div onClick={async () => {
-//                 // const org = await authClient.organization.getFullOrganization({
-//                 //     query: {
-//                 //         organizationId: "XVeNOXOH6znV3vdz8R5SytTxcaKdcDgF",
-//                 //     }
-//                 // });
-//                 // console.log("Organization details:", org);
-//                 // const c = await authClient.organization.updateMemberRole({
-//                 //     organizationId: org.data!.id,
-//                 //     role: ["owner", "admin"],
-//                 //     memberId: "zm3vxvR6XoQMZ6lYiWYjBhR1BH0G5bAT"
-//                 // });
-
-//                 // console.log("Update member role response:", c.data);
-
-//                 // const hasPermission = await authClient.organization.hasPermission({
-//                 //     permissions: {
-//                 //         project: ["show"],
-//                 //     }                  
-//                 // });
-//                 // console.log("Has permission:", hasPermission.data);
-
-//                 // console.log("Roles page clicked");
-//                 // const permission = {
-//                 //     project: ["create", "update", "delete"]
-//                 // }
-//                 const permission = {
-//                     project: ["create","show"],
-//                      appointment: ["create","show", "hide"],
-//                 }
-
-//                 await authClient.organization.createRole({
-//                     role: "test2", // required
-//                     permission: permission,
-//                     organizationId: "XVeNOXOH6znV3vdz8R5SytTxcaKdcDgF",
-//                 });
-//             }}>
-//                 hello roles page
-//             </div> */}
-//             <RolePermissionEditor/>
-//         </>
-//     )
-// }
-
-// export default page
-
-
-
-// import Link from "next/link"
-// import { Button } from "@/components/ui/button"
-// import { Card } from "@/components/ui/card"
-// import { authClient } from "@/lib/auth-client"
 import { useAuth } from "@/context/AuthContext"
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { Pencil } from "lucide-react"
+import { RxCross2 } from "react-icons/rx";
+import { GiCheckMark } from "react-icons/gi";
 export const dyanamic = "force-dynamic";
 type RoleData = {
   id: string
   role: string
   permission: Record<string, string[]>
+}
+
+function hasPermission(
+  permissions: Record<string, string[]>,
+  module: string,
+  action: string
+) {
+  return permissions[module]?.includes(action)
 }
 
 export default function RolesPage() {
@@ -107,10 +58,18 @@ export default function RolesPage() {
     setLoading(false)
   }
 
+  function formatModuleName(key: string) {
+    return key
+      // camelCase → camel Case
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      // first letter capital
+      .replace(/^./, (char) => char.toUpperCase());
+  }
+
   return (
-    <div className="p-6 space-y-6">
-     <Card>
-        <CardHeader>
+    <div className="m-6 space-y-6">
+     <Card className="bg-custom-gradient">
+        <CardHeader >
             <h1 className="text-2xl font-semibold">
                 Roles & Permissions
             </h1>
@@ -143,61 +102,90 @@ export default function RolesPage() {
         </p>
       )}
 
-      {/* Roles List */}
-      <div className="grid gap-4">
-        {roles.map((role) => (
-          <Card
-            key={role.id}
-            className="p-4 flex items-start justify-between gap-4"
-          >
-            {/* Left: Role + Permissions */}
-            <div className="space-y-3">
-              <h2 className="text-lg font-medium">
-                {role.role}
-              </h2>
+      <div className="space-y-6">
+  {roles.map((role) => (
+    <Card key={role.id} className="bg-custom-gradient-2">
+      {/* ===== HEADER ROW ===== */}
+      <CardHeader className="flex flex-row items-center justify-between py-4">
+        <h2 className="text-lg font-semibold capitalize">
+          {role.role}'s Permissions
+        </h2>
 
-              <div className="space-y-2">
-                {Object.entries(role.permission).map(
-                  ([module, actions]) => (
-                    <div
-                      key={module}
-                      className="flex flex-wrap items-center gap-2"
+        <Button
+          variant="ghost"
+          onClick={() =>
+            router.push(
+              `/doctor/settings/roles/${role.id}/edit`
+            )
+          }
+        >
+          <Pencil size={24} />Edit
+        </Button>
+      </CardHeader>
+
+      {/* ===== PERMISSION TABLE ===== */}
+      <CardContent className="pt-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm table-custom-bg">
+            <thead className="bg-gray-600 text-white dark:bg-gray-800">
+              <tr>
+                <th className="border px-3 py-2 text-left">
+                  Module
+                </th>
+                {["create", "read", "update", "delete"].map(
+                  (action) => (
+                    <th
+                      key={action}
+                      className="border px-3 py-2 capitalize text-center "
                     >
-                      <span className="text-sm font-semibold capitalize">
-                        {module}
-                      </span>
-
-                      {actions.map((action) => (
-                        <Badge
-                          key={action}
-                          variant="secondary"
-                          className="capitalize"
-                        >
-                          {action === "show"
-                            ? "read"
-                            : action}
-                        </Badge>
-                      ))}
-                    </div>
+                      {action}
+                    </th>
                   )
                 )}
-              </div>
-            </div>
+              </tr>
+            </thead>
 
-            {/* Right: Edit Button */}
-            <Button
-              variant="outline"
-              onClick={() =>
-                router.push(
-                  `/doctor/settings/roles/${role.id}/edit`
+            <tbody>
+              {Object.entries(role.permission).map(
+                ([module, actions]) => (
+                  <tr key={module}>
+                    <td className="border px-3 py-2 font-medium capitalize ">
+                      {formatModuleName(module)}
+                    </td>
+
+                    {["create", "read", "update", "delete"].map(
+                      (action) => (
+                        <td
+                          key={action}
+                          className="border px-3 py-2 text-center"
+                        >
+                          {hasPermission(
+                            role.permission,
+                            module,
+                            action
+                          ) ? (
+                            <span className="text-green-600 font-semibold flex justify-center">
+                              <GiCheckMark />
+                            </span>
+                          ) : (
+                            <span className="text-red-500  flex justify-center">
+                              <RxCross2 size={18}/>
+                            </span>
+                          )}
+                        </td>
+                      )
+                    )}
+                  </tr>
                 )
-              }
-            >
-              Edit
-            </Button>
-          </Card>
-        ))}
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  ))}
+</div>
+
       </CardContent>
       </Card>
     </div>

@@ -36,6 +36,8 @@ import MedicineGroupModal, { MedicineGroup } from "./medicineGroupModel";
 import { getMedicineGroups, createMedicineGroup, updateMedicineGroup, deleteMedicineGroup } from "@/lib/actions/medicineGroups";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function MedicineGroupManager() {
   const [groups, setGroups] = useState<MedicineGroup[]>([]);
@@ -47,6 +49,7 @@ export default function MedicineGroupManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
 
+  const ability = useAbility();
   useEffect(() => {
     fetchGroups();
   }, []);
@@ -142,19 +145,21 @@ export default function MedicineGroupManager() {
             className="max-w-xs"
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
-            <Button onClick={() => setOpen(true)}>Add Medicine Group</Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" onClick={() => setOpenMg(true)} className="p-2">
-                    <Upload className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Medicine Group Excel</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Can I="create" a="medicineGroup" ability={ability}>
+              <Button onClick={() => setOpen(true)}>Add Medicine Group</Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" onClick={() => setOpenMg(true)} className="p-2">
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Medicine Group Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Can>
           </div>
         </div>
         {/* openMg */}
@@ -208,16 +213,20 @@ export default function MedicineGroupManager() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditing(group); setOpen(true); }}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleDeleteClick(group.id)}
-                            disabled={group.isUsed}
-                          >
-                            {group.isUsed ? "Delete (In Use)" : "Delete"}
-                          </DropdownMenuItem>
+                          <Can I="update" a="medicineGroup" ability={ability}>
+                            <DropdownMenuItem onClick={() => { setEditing(group); setOpen(true); }}>
+                              Edit
+                            </DropdownMenuItem>
+                          </Can>
+                          <Can I="delete" a="medicineGroup" ability={ability}>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteClick(group.id)}
+                              disabled={group.isUsed}
+                            >
+                              {group.isUsed ? "Delete (In Use)" : "Delete"}
+                            </DropdownMenuItem>
+                          </Can>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

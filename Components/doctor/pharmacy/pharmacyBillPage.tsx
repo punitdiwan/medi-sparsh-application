@@ -12,6 +12,8 @@ import { Plus } from "lucide-react";
 import { getPharmacySales } from "@/lib/actions/pharmacySales";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 
 type Bill = {
@@ -32,6 +34,7 @@ export default function PharmacyBillPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const route = useRouter();
+  const ability = useAbility();
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "billNo",
     "date",
@@ -141,8 +144,9 @@ export default function PharmacyBillPage() {
         />
 
         <div className="flex gap-3">
-          <Button variant="default" onClick={() => route.push("/doctor/pharmacy/genrateBill")}><Plus size={16} /> Generate Bill</Button>
-
+          <Can I="create" a="billing" ability={ability}>
+            <Button variant="default" onClick={() => route.push("/doctor/pharmacy/genrateBill")}><Plus size={16} /> Generate Bill</Button>
+          </Can>
           <FieldSelectorDropdown
             columns={allColumns as TypedColumn<Bill>[]}
             visibleFields={visibleFields}

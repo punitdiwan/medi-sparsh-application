@@ -29,6 +29,8 @@ import { getMedicineUnits, createMedicineUnit, updateMedicineUnit, deleteMedicin
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Upload } from "lucide-react";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 export default function MedicineUnitManager() {
   const [units, setUnits] = useState<Unit[]>([]);
@@ -39,6 +41,7 @@ export default function MedicineUnitManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const ability = useAbility();
   useEffect(() => {
     fetchUnits();
   }, []);
@@ -142,26 +145,28 @@ export default function MedicineUnitManager() {
             className="max-w-sm"
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
-            <Button
-              onClick={() => {
-                setEditingUnit(undefined);
-                setOpenModal(true);
-              }}
-            >
-              Add Unit
-            </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" onClick={() => setOpen(true)} className="p-2">
-                    <Upload className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Unit Excel</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Can I="create" a="medicineUnit" ability={ability}>
+              <Button
+                onClick={() => {
+                  setEditingUnit(undefined);
+                  setOpenModal(true);
+                }}
+              >
+                Add Unit
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" onClick={() => setOpen(true)} className="p-2">
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Unit Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Can>
           </div>
         </div>
         <ExcelUploadModal
@@ -194,24 +199,27 @@ export default function MedicineUnitManager() {
                     <TableCell>{unit.unitName}</TableCell>
 
                     <TableCell className="text-right space-x-3">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingUnit(unit);
-                          setOpenModal(true);
-                        }}
-                      >
-                        <MdEdit size={18} />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(unit.id)}
-                      >
-                        <MdDelete size={18} className="text-red-500" />
-                      </Button>
+                      <Can I="update" a="medicineUnit" ability={ability}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingUnit(unit);
+                            setOpenModal(true);
+                          }}
+                        >
+                          <MdEdit size={18} />
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="medicineUnit" ability={ability}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(unit.id)}
+                        >
+                          <MdDelete size={18} className="text-red-500" />
+                        </Button>
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))

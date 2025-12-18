@@ -8,14 +8,15 @@ import { PriorityModal } from "./PriorityModal";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
+import { Can } from "@casl/react";
+import { useAbility } from "@/components/providers/AbilityProvider";
 export function PriorityManagerPage() {
   const [search, setSearch] = useState("");
   const [priorities, setPriorities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [filtered, setFiltered] = useState([]);
-
+  const ability = useAbility();
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -124,15 +125,16 @@ export function PriorityManagerPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-
-            <Button
-              onClick={() => {
-                setSelected(null);
-                setModalOpen(true);
-              }}
-            >
-              Add Priority
-            </Button>
+            <Can I="create" a="appointmentPriority" ability={ability}>
+              <Button
+                onClick={() => {
+                  setSelected(null);
+                  setModalOpen(true);
+                }}
+              >
+                Add Priority
+              </Button>
+            </Can>
           </div>
 
           {/* Table */}
@@ -166,22 +168,25 @@ export function PriorityManagerPage() {
                       <TableCell>{item.priority}</TableCell>
 
                       <TableCell className="flex justify-center gap-3">
-                        {/* Edit */}
-                        <MdEdit
-                          className="cursor-pointer text-blue-600"
-                          size={20}
-                          onClick={() => {
-                            setSelected({ id: item.id, name: item.priority });
-                            setModalOpen(true);
-                          }}
-                        />
-
-                        {/* Delete */}
-                        <MdDelete
-                          className="cursor-pointer text-red-600"
-                          size={20}
-                          onClick={() => handleDelete(item.id)}
-                        />
+                        <Can I="update" a="appointmentPriority" ability={ability}>
+                          {/* Edit */}
+                          <MdEdit
+                            className="cursor-pointer text-blue-600"
+                            size={20}
+                            onClick={() => {
+                              setSelected({ id: item.id, name: item.priority });
+                              setModalOpen(true);
+                            }}
+                          />
+                        </Can>
+                        <Can I="delete" a="appointmentPriority" ability={ability}>
+                          {/* Delete */}
+                          <MdDelete
+                            className="cursor-pointer text-red-600"
+                            size={20}
+                            onClick={() => handleDelete(item.id)}
+                          />
+                        </Can>
                       </TableCell>
                     </TableRow>
                   ))
