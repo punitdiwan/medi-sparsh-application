@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RolePermissionEditor } from "@/Components/role/RolePermissionEditor"
 import { Label } from "@/components/ui/label"
-
-type Permission = {
-  action: "create" | "read" | "update" | "delete"
-  subject: string
-}
+import { Permission } from "@/Components/role/RolePermissionEditor"
 
 type RoleData = {
   id?: string
@@ -100,7 +96,7 @@ function normalizeToEditor(
       actions.forEach((action) => {
         result.push({
           action: action === "show" ? "read" : (action as any),
-          subject: module.toLowerCase(),
+          subject: module,
         })
       })
     }

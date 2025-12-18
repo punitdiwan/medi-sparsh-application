@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { FloorModal } from "./floorModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Can } from "@casl/react";
+import { useAbility } from "@/components/providers/AbilityProvider";
 
 type Floor = {
   id: string;
@@ -29,6 +31,8 @@ export default function FloorManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const ability = useAbility();
   const rowsPerPage = 5;
 
   // Fetch user role and floors on mount
@@ -203,8 +207,9 @@ export default function FloorManager() {
                 Show Deleted Only
               </Label>
             </div>
-            
-            <FloorModal onSave={handleSave} />
+            <Can I="create" a="floor" ability={ability}>
+              <FloorModal onSave={handleSave} />
+            </Can>
           </div>
 
           {/* Floor Table */}
@@ -229,14 +234,16 @@ export default function FloorManager() {
                     <TableCell>{floor.name}</TableCell>
                     <TableCell>{floor.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!floor.isDeleted && <FloorModal floor={floor} onSave={handleSave} />}
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleDelete(floor.id, floor.isDeleted)}
-                      >
-                        {floor.isDeleted ? "Permanently Delete" : "Delete"}
-                      </Button>
+                      {!floor.isDeleted && <Can I="update" a="floor" ability={ability}><FloorModal floor={floor} onSave={handleSave} /></Can>}
+                      <Can I="delete" a="floor" ability={ability}>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleDelete(floor.id, floor.isDeleted)}
+                        >
+                          {floor.isDeleted ? "Permanently Delete" : "Delete"}
+                        </Button>
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))

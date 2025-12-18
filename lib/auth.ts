@@ -5,7 +5,7 @@ import { eq,and } from "drizzle-orm";
 import * as schema from "@/drizzle/schema";
 import { organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import { ac, normal, secret, owner } from "./permissions";
+import { ac, owner } from "./permissions";
 import {
     ownerAc,
     adminAc,
@@ -64,7 +64,6 @@ export const auth = betterAuth({
                 owner,
                 admin: adminAc,
                 member: memberAc,
-                normal,
             },
             dynamicAccessControl: {
                 enabled: true,

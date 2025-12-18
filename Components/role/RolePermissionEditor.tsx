@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableHeader,
@@ -8,83 +8,46 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/table"
-import { Card } from "@/components/ui/card"
+} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+import { ALL_PERMISSIONS } from "@/lib/allPermissions";
 
-const MODULES = [
-  { key: "patient", label: "Patients" },
-  { key: "appointment", label: "Appointments" },
-  { key: "members", label: "Members" },            
-  { key: "prescription", label: "Prescriptions" },
-  { key: "services", label: "Services" },         
-  { key: "payment", label: "Payments" },
-  { key: "appSettings", label: "App Settings" },
-  { key: "billing", label: "Pharmacy Billing"},
-  { key: "pharmacyMedicine", label: "Pharmacy Medicines"},
-  { key: "stock", label: "Pharmacy stock"},
-  { key: "reports", label: "Reports" },
-  { key: "hospitalCharger", label: "Hospital Charges" },
-  { key: "vitals", label: "Vitals" },
-  { key: "bed", label: "Bed Management" },
-  { key: "bedstatus", label: "Bed Status" },
-  { key: "bedgroups", label: "Bed Group"},
-  { key: "bedtype", label: "Bed Type"},
-  { key: "floor", label: "Floor"},
-  { key: "shifts", label: "Shift Management" },
-  { key: "role", label: "Roles" },                         
-  { key: "medicineRedord", label: "Medicine Record" }, 
-] as const
-
-
-const ACTIONS = ["create", "read", "update", "delete"] as const
-type Action = (typeof ACTIONS)[number]
+type Resource = keyof typeof ALL_PERMISSIONS;
+type Action = (typeof ALL_PERMISSIONS)[Resource][number];
 
 export type Permission = {
-  action: Action
-  subject: string
-}
+  action: Action;
+  subject: Resource;
+};
 
 type Props = {
-  value: Permission[]
-  onChange: (permissions: Permission[]) => void
-}
+  value: Permission[];
+  onChange: (permissions: Permission[]) => void;
+};
 
-export function RolePermissionEditor({
-  value,
-  onChange,
-}: Props) {
-  function hasPermission(
-    action: Action,
-    subject: string
-  ) {
-    return value.some(
-      (p) =>
-        p.action === action &&
-        p.subject === subject
-    )
-  }
+const ACTIONS = ["create", "read", "update", "delete"] as const;
 
-  function togglePermission(
+export function RolePermissionEditor({ value, onChange }: Props) {
+  const hasPermission = (action: Action, subject: Resource) =>
+    value.some(
+      (p) => p.action === action && p.subject === subject
+    );
+
+  const togglePermission = (
     action: Action,
-    subject: string
-  ) {
+    subject: Resource
+  ) => {
     if (hasPermission(action, subject)) {
       onChange(
         value.filter(
           (p) =>
-            !(
-              p.action === action &&
-              p.subject === subject
-            )
+            !(p.action === action && p.subject === subject)
         )
-      )
+      );
     } else {
-      onChange([
-        ...value,
-        { action, subject },
-      ])
+      onChange([...value, { action, subject }]);
     }
-  }
+  };
 
   return (
     <Card className="p-4 overflow-x-auto">
@@ -108,37 +71,48 @@ export function RolePermissionEditor({
 
         {/* ---------- BODY ---------- */}
         <TableBody>
-          {MODULES.map((module) => (
-            <TableRow key={module.key}>
-              {/* Module Name */}
-              <TableCell className="font-medium">
-                {module.label}
-              </TableCell>
+          {(Object.keys(ALL_PERMISSIONS) as Resource[]).map(
+            (module) => {
+              const allowedActions =
+                ALL_PERMISSIONS[module];
 
-              {/* Permissions */}
-              {ACTIONS.map((action) => (
-                <TableCell
-                  key={action}
-                  className="text-center"
-                >
-                  <Checkbox
-                    checked={hasPermission(
-                      action,
-                      module.key
-                    )}
-                    onCheckedChange={() =>
-                      togglePermission(
-                        action,
-                        module.key
-                      )
-                    }
-                  />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
+              return (
+                <TableRow key={module}>
+                  {/* Module name */}
+                  <TableCell className="font-medium capitalize">
+                    {module}
+                  </TableCell>
+
+                  {/* Permissions */}
+                  {ACTIONS.map((action) => {
+                    const isAllowed =
+                      allowedActions.includes(action);
+
+                    return (
+                      <TableCell
+                        key={action}
+                        className="text-center"
+                      >
+                        <Checkbox
+                          disabled={!isAllowed}
+                          checked={
+                            isAllowed &&
+                            hasPermission(action, module)
+                          }
+                          onCheckedChange={() =>
+                            isAllowed &&
+                            togglePermission(action, module)
+                          }
+                        />
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            }
+          )}
         </TableBody>
       </Table>
     </Card>
-  )
+  );
 }

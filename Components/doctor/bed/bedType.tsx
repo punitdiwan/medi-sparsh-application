@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { BedTypeModal } from "./bedTypeModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 type BedType = {
   id: string;
@@ -29,6 +31,8 @@ export default function BedTypeManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const ability = useAbility();
   const rowsPerPage = 5;
 
   // Fetch user role and bed types on mount
@@ -203,8 +207,9 @@ export default function BedTypeManager() {
                 Show Deleted Only
               </Label>
             </div>
-            
-            <BedTypeModal onSave={handleSave} />
+            <Can I="create" a="bedtype" ability={ability}>
+              <BedTypeModal onSave={handleSave} />
+            </Can>
           </div>
 
           {/* Bed Type Table */}
@@ -229,14 +234,16 @@ export default function BedTypeManager() {
                     <TableCell>{b.name}</TableCell>
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <BedTypeModal bedType={b} onSave={handleSave} />}
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleDelete(b.id, b.isDeleted)}
-                      >
-                        {b.isDeleted ? "Permanently Delete" : "Delete"}
-                      </Button>
+                      {!b.isDeleted && <Can I="update" a="bedtype" ability={ability}> <BedTypeModal bedType={b} onSave={handleSave} /></Can>}
+                      <Can I="delete" a="bedtype" ability={ability}>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleDelete(b.id, b.isDeleted)}
+                        >
+                          {b.isDeleted ? "Permanently Delete" : "Delete"}
+                        </Button>
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))

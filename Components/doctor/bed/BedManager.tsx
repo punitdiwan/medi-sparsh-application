@@ -12,6 +12,8 @@ import BedModal from "./bedModel";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 type Bed = {
   id: string;
@@ -34,6 +36,8 @@ export default function BedManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const ability = useAbility();
   const rowsPerPage = 5;
 
   // Fetch user role and beds on mount
@@ -210,8 +214,9 @@ export default function BedManager() {
               />
               <Label htmlFor="deleted">Show deleted</Label>
             </div>
-
-            <BedModal onSave={handleSave} />
+            <Can I="create" a="bed" ability={ability}>
+              <BedModal onSave={handleSave} />
+            </Can>
           </div>
 
           <Table>
@@ -241,8 +246,8 @@ export default function BedManager() {
                     <TableCell>{b.floorName || "-"}</TableCell>
 
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <BedModal initialData={b} onSave={handleSave} />}
-
+                      {!b.isDeleted && <Can I="update" a="bed" ability={ability}><BedModal initialData={b} onSave={handleSave} /></Can>}
+                    <Can I="delete" a="bed" ability={ability}>
                       <ConfirmDialog
                         trigger={
                           <Button size="sm" variant="destructive">
@@ -259,6 +264,7 @@ export default function BedManager() {
                         cancelLabel="Cancel"
                         onConfirm={() => performDelete(b.id, b.isDeleted)}
                       />
+                     </Can> 
                     </TableCell>
                   </TableRow>
                 ))
