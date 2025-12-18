@@ -2,11 +2,11 @@
 
 import { Command } from "commander";
 import * as readline from "readline";
-import { db } from "@/lib/db";
-import { organizationInAuth as organization, userInAuth as user, memberInAuth as member, staff, accountInAuth as account } from "@/lib/db/migrations/schema";
+// import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth"; // your BetterAuth instance
+import { organization ,user,member,staff,account} from "@/drizzle/schema";
 
 interface HospitalData {
   name: string;
