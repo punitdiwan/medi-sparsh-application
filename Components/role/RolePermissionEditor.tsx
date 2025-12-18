@@ -50,7 +50,7 @@ export function RolePermissionEditor({ value, onChange }: Props) {
   };
 
   return (
-    <Card className="p-4 overflow-x-auto">
+    <Card className="p-4 overflow-x-auto table-custom-bg" >
       <Table>
         {/* ---------- HEADER ---------- */}
         <TableHeader>

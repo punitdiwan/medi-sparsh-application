@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { Permission } from "@/Components/role/RolePermissionEditor"
+import BackButton from "@/Components/BackButton"
 
 
 type RoleFromAPI = {
@@ -95,7 +96,8 @@ export default function EditRolePage() {
   if (!role) return <p>Role not found</p>
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 mx-4 mt-10 p-6 rounded-2xl bg-custom-gradient">
+      <BackButton/>
       <h1 className="text-2xl font-semibold">Edit Role</h1>
       <RoleForm role={role} onSubmit={updateRole} />
     </div>

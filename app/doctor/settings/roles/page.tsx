@@ -3,11 +3,11 @@ import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/context/AuthContext"
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
-
+import { RxCross2 } from "react-icons/rx";
+import { GiCheckMark } from "react-icons/gi";
 type RoleData = {
   id: string
   role: string
@@ -58,9 +58,9 @@ export default function RolesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-     <Card>
-        <CardHeader>
+    <div className="m-6 space-y-6">
+     <Card className="bg-custom-gradient">
+        <CardHeader >
             <h1 className="text-2xl font-semibold">
                 Roles & Permissions
             </h1>
@@ -95,31 +95,30 @@ export default function RolesPage() {
 
       <div className="space-y-6">
   {roles.map((role) => (
-    <Card key={role.id}>
+    <Card key={role.id} className="bg-custom-gradient-2">
       {/* ===== HEADER ROW ===== */}
       <CardHeader className="flex flex-row items-center justify-between py-4">
         <h2 className="text-lg font-semibold capitalize">
-          {role.role}
+          {role.role}'s Permissions
         </h2>
 
         <Button
           variant="ghost"
-          size="icon"
           onClick={() =>
             router.push(
               `/doctor/settings/roles/${role.id}/edit`
             )
           }
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil size={24} />Edit
         </Button>
       </CardHeader>
 
       {/* ===== PERMISSION TABLE ===== */}
       <CardContent className="pt-0">
         <div className="overflow-x-auto">
-          <table className="w-full border text-sm">
-            <thead className="bg-muted">
+          <table className="w-full text-sm table-custom-bg">
+            <thead className="bg-gray-600 text-white dark:bg-gray-800">
               <tr>
                 <th className="border px-3 py-2 text-left">
                   Module
@@ -128,7 +127,7 @@ export default function RolesPage() {
                   (action) => (
                     <th
                       key={action}
-                      className="border px-3 py-2 capitalize text-center"
+                      className="border px-3 py-2 capitalize text-center "
                     >
                       {action}
                     </th>
@@ -141,7 +140,7 @@ export default function RolesPage() {
               {Object.entries(role.permission).map(
                 ([module, actions]) => (
                   <tr key={module}>
-                    <td className="border px-3 py-2 font-medium capitalize">
+                    <td className="border px-3 py-2 font-medium capitalize ">
                       {module}
                     </td>
 
@@ -156,12 +155,12 @@ export default function RolesPage() {
                             module,
                             action
                           ) ? (
-                            <span className="text-green-600 font-semibold">
-                              ✔
+                            <span className="text-green-600 font-semibold flex justify-center">
+                              <GiCheckMark />
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">
-                              —
+                            <span className="text-red-500  flex justify-center">
+                              <RxCross2 size={18}/>
                             </span>
                           )}
                         </td>

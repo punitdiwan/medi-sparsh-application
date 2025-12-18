@@ -6,11 +6,8 @@ import { authClient } from "@/lib/auth-client"
 import { useAuth } from "@/context/AuthContext"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import BackButton from "@/Components/BackButton"
+import { Permission } from "@/Components/role/RolePermissionEditor"
 
-type Permission = {
-  action: "create" | "read" | "update" | "delete"
-  subject: string
-}
 
 export default function CreateRolePage() {
   const router = useRouter()
@@ -39,7 +36,7 @@ export default function CreateRolePage() {
   return (
     <div className="space-y-6 p-6 mt-4">
         <BackButton/>
-        <Card>
+        <Card className="bg-custom-gradient">
             <CardHeader>
                 <h1 className="text-2xl font-semibold">
                     Create Role

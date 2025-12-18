@@ -50,9 +50,9 @@ export function RoleForm({ role, onSubmit }: Props) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 ">
 
-    <div className="space-y-2 max-w-sm">
+    <div className="space-y-2 max-w-sm ">
         <Label htmlFor="roleName">
             Role Name
         </Label>
