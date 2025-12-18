@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import { RxCross2 } from "react-icons/rx";
 import { GiCheckMark } from "react-icons/gi";
+export const dyanamic = "force-dynamic";
 type RoleData = {
   id: string
   role: string

@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import BackButton from "@/Components/BackButton"
 import { Permission } from "@/Components/role/RolePermissionEditor"
 
+export const dyanamic = "force-dynamic";
+
 
 export default function CreateRolePage() {
   const router = useRouter()
