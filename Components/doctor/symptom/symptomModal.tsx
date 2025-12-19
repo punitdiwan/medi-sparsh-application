@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -12,57 +12,77 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+type SymptomType = {
+  id: string;
+  name: string;
+};
 
 type Props = {
-  symptomHeads: string[] // list of existing heads for dropdown
+  symptomTypes: SymptomType[];
   initialData?: {
-    head?: string
-    type?: string
-    description?: string
-  }
-  onSubmit: (data: { head: string; type: string; description?: string }) => Promise<void>
-}
+    id?: string;
+    name?: string;
+    symptomTypeId?: string;
+    description?: string;
+  };
+  onSubmit: (data: { id?: string; name: string; symptomTypeId: string; description: string }) => Promise<void>;
+};
 
-const symptomSchema = z.object({
-  head: z.string().min(1, "Symptoms Head is required"),
-  type: z.string().min(1, "Symptoms Type is required"),
-  description: z.string().optional(),
-})
-
-export function SymptomModal({ symptomHeads, initialData, onSubmit }: Props) {
-  const [open, setOpen] = useState(false)
-  const [head, setHead] = useState(initialData?.head || "")
-  const [type, setType] = useState(initialData?.type || "")
-  const [description, setDescription] = useState(initialData?.description || "")
-  const [loading, setLoading] = useState(false)
+export function SymptomModal({ symptomTypes, initialData, onSubmit }: Props) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(initialData?.name || "");
+  const [symptomTypeId, setSymptomTypeId] = useState(initialData?.symptomTypeId || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
-      setHead(initialData.head || "")
-      setType(initialData.type || "")
-      setDescription(initialData.description || "")
+      setName(initialData.name || "");
+      setSymptomTypeId(initialData.symptomTypeId || "");
+      setDescription(initialData.description || "");
     }
-  }, [initialData, open])
+  }, [initialData, open]);
 
   const handleSubmit = async () => {
-    const result = symptomSchema.safeParse({ head, type, description })
-    if (!result.success) {
-      toast.error(result.error.message)
-      return
+    // Validation
+    if (!name.trim()) {
+      toast.error("Symptom name is required");
+      return;
     }
 
-    setLoading(true)
-    await onSubmit({ head, type, description })
-    setLoading(false)
-    setOpen(false)
-    setHead("")
-    setType("")
-    setDescription("")
-  }
+    if (!symptomTypeId) {
+      toast.error("Symptom type is required");
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error("Description is required");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit({
+        id: initialData?.id,
+        name: name.trim(),
+        symptomTypeId,
+        description: description.trim(),
+      });
+      setOpen(false);
+      // Reset form
+      setName("");
+      setSymptomTypeId("");
+      setDescription("");
+    } catch (error) {
+      console.error("Error submitting symptom:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -76,34 +96,37 @@ export function SymptomModal({ symptomHeads, initialData, onSubmit }: Props) {
 
         <div className="space-y-4 mt-2">
           <div className="space-y-1">
-            <Label>Symptoms Type *</Label>
-            <Select value={head} onValueChange={setHead}>
+            <Label>Symptom Type *</Label>
+            <Select value={symptomTypeId} onValueChange={setSymptomTypeId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select or type head" />
+                <SelectValue placeholder="Select symptom type" />
               </SelectTrigger>
               <SelectContent>
-                {symptomHeads.map((h) => (
-                  <SelectItem key={h} value={h}>{h}</SelectItem>
+                {symptomTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1">
-            <Label>Symptoms Head *</Label>
+            <Label>Symptom Name *</Label>
             <Input
-              placeholder="Enter symptom type"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
+              placeholder="Enter symptom name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="space-y-1">
-            <Label>Description</Label>
+            <Label>Description *</Label>
             <Textarea
-              placeholder="Optional description"
+              placeholder="Enter symptom description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              rows={4}
             />
           </div>
         </div>
@@ -116,5 +139,6 @@ export function SymptomModal({ symptomHeads, initialData, onSubmit }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
+

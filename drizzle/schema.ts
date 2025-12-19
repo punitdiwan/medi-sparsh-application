@@ -965,3 +965,28 @@ export const settings = pgTable("settings", {
 }, (table) => [
 	primaryKey({ columns: [table.organizationId, table.key], name: "settings_key_unique" }),
 ]);
+
+// Symptom Types Table
+export const symptomTypes = pgTable("symptom_types", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	name: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});
+
+// Symptoms Table
+export const symptoms = pgTable("symptoms", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	symptomTypeId: text("symptom_type_id").notNull()
+		.references(() => symptomTypes.id, { onDelete: "cascade" }),
+	name: text().notNull(),
+	description: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});

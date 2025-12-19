@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useMemo, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,179 +10,288 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { toast } from "sonner"
-import { ConfirmDialog } from "@/components/model/ConfirmationModel"
-import { useAbility } from "@/components/providers/AbilityProvider"
-import { Can } from "@casl/react"
-import { SymptomTypeModal } from "./symptomTypeModal"
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
+import { getSymptomTypes, createSymptomType, updateSymptomType, deleteSymptomType } from "@/lib/actions/symptomTypes";
 
-type Symptom = {
-  id: string
-  name: string
-  createdAt: string
-}
-
-const DUMMY_SYMPTOMS: Symptom[] = [
-  { id: "1", name: "Fever", createdAt: new Date().toISOString() },
-  { id: "2", name: "Headache", createdAt: new Date().toISOString() },
-  { id: "3", name: "Cough", createdAt: new Date().toISOString() },
-]
+type SymptomType = {
+  id: string;
+  name: string;
+  createdAt?: Date;
+  usageCount?: number;
+  isUsed?: boolean;
+};
 
 export default function SymptomTypeManager() {
-  const [symptoms, setSymptoms] = useState<Symptom[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [symptomTypes, setSymptomTypes] = useState<SymptomType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<SymptomType | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
+  const [name, setName] = useState("");
 
-  const ability = useAbility()
+  const ability = useAbility();
 
   useEffect(() => {
-    setLoading(true)
-    setTimeout(() => {
-      setSymptoms(DUMMY_SYMPTOMS)
-      setLoading(false)
-    }, 500)
-  }, [])
+    fetchSymptomTypes();
+  }, []);
 
-  const filteredSymptoms = useMemo(() => {
-    return symptoms.filter((s) =>
-      s.name.toLowerCase().includes(search.toLowerCase())
-    )
-  }, [symptoms, search])
-
-  const handleSave = async (payload: { id?: string; name: string }) => {
-    if (!payload.name.trim()) {
-      toast.error("Symptom name is required")
-      return
+  const fetchSymptomTypes = async () => {
+    try {
+      setLoading(true);
+      const result = await getSymptomTypes();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setSymptomTypes(result.data || []);
+    } catch (error) {
+      console.error("Error fetching symptom types:", error);
+      toast.error("Failed to load symptom types");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (payload.id) {
-      // Update
-      setSymptoms((prev) =>
-        prev.map((s) =>
-          s.id === payload.id ? { ...s, name: payload.name } : s
-        )
-      )
-      toast.success("Symptom updated")
+  const filtered = useMemo(() => {
+    if (!search.trim()) return symptomTypes;
+    const q = search.toLowerCase();
+    return symptomTypes.filter((t) => t.name.toLowerCase().includes(q));
+  }, [search, symptomTypes]);
+
+  const handleSave = async () => {
+    try {
+      if (!name.trim()) {
+        toast.error("Symptom type name is required");
+        return;
+      }
+
+      let result;
+      if (editing) {
+        result = await updateSymptomType(editing.id, { name: name.trim() });
+      } else {
+        result = await createSymptomType({ name: name.trim() });
+      }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(editing ? "Symptom type updated" : "Symptom type added");
+      fetchSymptomTypes();
+      setOpen(false);
+      setEditing(null);
+      setName("");
+    } catch (error) {
+      console.error("Error saving symptom type:", error);
+      toast.error("Failed to save symptom type");
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setTypeToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!typeToDelete) return;
+
+    try {
+      const result = await deleteSymptomType(typeToDelete);
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setSymptomTypes((prev) => prev.filter((t) => t.id !== typeToDelete));
+      toast.success("Symptom type deleted");
+    } catch (error) {
+      console.error("Error deleting symptom type:", error);
+      toast.error("Failed to delete symptom type");
+    } finally {
+      setDeleteDialogOpen(false);
+      setTypeToDelete(null);
+    }
+  };
+
+  const handleOpenModal = (type?: SymptomType) => {
+    if (type) {
+      setEditing(type);
+      setName(type.name);
     } else {
-      // Create
-      setSymptoms((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          name: payload.name,
-          createdAt: new Date().toISOString(),
-        },
-      ])
-      toast.success("Symptom added")
+      setEditing(null);
+      setName("");
     }
-  }
-
-  const handleDelete = async (id: string) => {
-    setSymptoms((prev) => prev.filter((s) => s.id !== id))
-    toast.success("Symptom deleted")
-  }
+    setOpen(true);
+  };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
+    <Card className="p-4 shadow-sm">
       <CardHeader>
-        <div>
-          <CardTitle className="text-2xl font-bold">
-            Symptom Type Manager
-          </CardTitle>
-          <CardDescription className="mt-1">
-            Add, edit and manage patient symptoms type.
-          </CardDescription>
-        </div>
+        <CardTitle>Symptom Types</CardTitle>
+        <CardDescription>Manage all symptom types.</CardDescription>
       </CardHeader>
 
-      <Separator />
-
-      <CardContent>
-        <div className="p-4 space-y-4">
-          <div className="flex justify-between items-center gap-4">
-            <Input
-              placeholder="Search symptoms..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-sm"
-            />
-
+      <CardContent className="space-y-5">
+        <div className="flex justify-between items-center flex-wrap gap-3">
+          <Input
+            placeholder="Search symptom types..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-xs"
+          />
+          <div className="flex flex-row flex-wrap items-center gap-3">
             <Can I="create" a="symptomsType" ability={ability}>
-              <SymptomTypeModal
-                onSubmit={async (name) => {
-                  await handleSave({ name })
-                }}
-              />
+              <Button onClick={() => handleOpenModal()}>Add Symptom Type</Button>
             </Can>
           </div>
+        </div>
 
+        <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead>Symptom Name</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Symptom Type Name</TableHead>
+                <TableHead className="w-[120px]">Usage</TableHead>
+                <TableHead className="w-[60px] text-center">Action</TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-muted-foreground">
-                    Loading symptoms...
+                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                    Loading symptom types...
                   </TableCell>
                 </TableRow>
-              ) : filteredSymptoms.length > 0 ? (
-                filteredSymptoms.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>{s.name}</TableCell>
-
-                    <TableCell className="text-right space-x-2">
-                      <Can I="update" a="symptomsType" ability={ability}>
-                        <SymptomTypeModal
-                          initialValue={s.name}
-                          onSubmit={async (name) => {
-                            await handleSave({ id: s.id, name })
-                          }}
-                        />
-                      </Can>
-
-                      <Can I="delete" a="symptomsType" ability={ability}>
-                        <ConfirmDialog
-                          trigger={
-                            <Button size="sm" variant="destructive">
-                              Delete
-                            </Button>
-                          }
-                          title="Delete Symptom?"
-                          description="Are you sure you want to delete this symptom?"
-                          actionLabel="Delete"
-                          cancelLabel="Cancel"
-                          onConfirm={() => handleDelete(s.id)}
-                        />
-                      </Can>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                    No symptom types found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((type) => (
+                  <TableRow key={type.id}>
+                    <TableCell>{type.name}</TableCell>
+                    <TableCell>
+                      {type.isUsed ? (
+                        <span className="text-sm text-muted-foreground">
+                          {type.usageCount} symptom(s)
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Not used</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <Can I="update" a="symptomsType" ability={ability}>
+                            <DropdownMenuItem onClick={() => handleOpenModal(type)}>
+                              Edit
+                            </DropdownMenuItem>
+                          </Can>
+                          <Can I="delete" a="symptomsType" ability={ability}>
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleDeleteClick(type.id)}
+                              disabled={type.isUsed}
+                            >
+                              {type.isUsed ? "Delete (In Use)" : "Delete"}
+                            </DropdownMenuItem>
+                          </Can>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={2} className="text-center text-muted-foreground">
-                    No symptoms found.
-                  </TableCell>
-                </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
       </CardContent>
+
+      {/* Add/Edit Modal */}
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {editing ? "Edit Symptom Type" : "Add Symptom Type"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {editing ? "Update the symptom type name." : "Enter a new symptom type name."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="Symptom type name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSave();
+                }
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setOpen(false); setEditing(null); setName(""); }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSave}>
+              {editing ? "Update" : "Add"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the symptom type.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
-  )
+  );
 }
