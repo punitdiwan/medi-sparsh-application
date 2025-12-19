@@ -132,7 +132,7 @@ export default function SymptomManager() {
                     <TableRow key={s.id}>
                     <TableCell className="whitespace-normal max-w-[150px]">{s.head}</TableCell>
                     <TableCell className="whitespace-normal max-w-[200px]">{s.type}</TableCell>
-                    <TableCell className="whitespace-normal max-w-[400px] break-words">{s.description}</TableCell>
+                    <TableCell className="whitespace-normal max-w-[400px] wrap-break-words">{s.description}</TableCell>
                     <TableCell className="text-right space-x-2">
                         <Can I="update" a="symptoms" ability={ability}>
                         <SymptomModal
