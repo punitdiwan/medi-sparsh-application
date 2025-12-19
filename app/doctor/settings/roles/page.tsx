@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation"
 import { Pencil } from "lucide-react"
 import { RxCross2 } from "react-icons/rx";
 import { GiCheckMark } from "react-icons/gi";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 export const dyanamic = "force-dynamic";
 type RoleData = {
   id: string
@@ -30,6 +32,8 @@ export default function RolesPage() {
 
   const [open, setOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<any>(null)
+
+  const ability = useAbility();
 
   const { user } = useAuth()
 
@@ -79,13 +83,15 @@ export default function RolesPage() {
             <div>
 
             </div>
-            <Button
-                onClick={() => {
-                    router.push("/doctor/settings/roles/create")
-                }}
-                >
-                Add Role
-            </Button>
+            <Can I="create" a="role" ability={ability}>
+              <Button
+                  onClick={() => {
+                      router.push("/doctor/settings/roles/create")
+                  }}
+                  >
+                  Add Role
+              </Button>
+            </Can>
         </div>
 
       {/* Loading */}
@@ -110,17 +116,18 @@ export default function RolesPage() {
         <h2 className="text-lg font-semibold capitalize">
           {role.role}'s Permissions
         </h2>
-
-        <Button
-          variant="ghost"
-          onClick={() =>
-            router.push(
-              `/doctor/settings/roles/${role.id}/edit`
-            )
-          }
-        >
-          <Pencil size={24} />Edit
-        </Button>
+        <Can I="update" a="role" ability={ability}>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              router.push(
+                `/doctor/settings/roles/${role.id}/edit`
+              )
+            }
+          >
+            <Pencil size={24} />Edit
+          </Button>
+        </Can>
       </CardHeader>
 
       {/* ===== PERMISSION TABLE ===== */}

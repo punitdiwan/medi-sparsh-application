@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import { RolePermissionEditor } from "@/Components/role/RolePermissionEditor"
 import { Label } from "@/components/ui/label"
 import { Permission } from "@/Components/role/RolePermissionEditor"
-
+import { z } from "zod"
+import { toast } from "sonner"
 type RoleData = {
   id?: string
   role?: string
@@ -21,6 +22,27 @@ type Props = {
     permissions: Permission[]
   }) => Promise<void>
 }
+
+export const roleSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Role name is required")
+    .regex(
+      /^[a-zA-Z0-9]+$/,
+      "Only alphabets and numbers are allowed"
+    ),
+
+  permissions: z
+    .array(
+      z.object({
+        action: z.string(),
+        subject: z.string(),
+      })
+    )
+    .min(1, "At least one permission must be selected"),
+})
+
 
 export function RoleForm({ role, onSubmit }: Props) {
   const isEdit = Boolean(role?.id)
@@ -38,12 +60,23 @@ export function RoleForm({ role, onSubmit }: Props) {
   }, [role])
 
   async function handleSubmit() {
+    const result = roleSchema.safeParse({
+      name: roleName,
+      permissions,
+    })
+
+    if (!result.success) {
+      const zodError = result.error as z.ZodError
+      toast.error(zodError.issues[0].message)
+      return
+    }
+
     setLoading(true)
 
     await onSubmit({
       roleId: role?.id,
-      name: roleName,
-      permissions,
+      name: result.data.name,
+      permissions: result.data.permissions,
     })
 
     setLoading(false)
