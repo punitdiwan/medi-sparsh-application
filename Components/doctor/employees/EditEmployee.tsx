@@ -24,6 +24,9 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/Spinner";
 import MaskedInput from "@/components/InputMask";
+import { useAuth } from "@/context/AuthContext";
+import { SimpleRole } from "./AddEmployee";
+import { authClient } from "@/lib/auth-client";
 
 
 // ✅ Schemas
@@ -133,7 +136,35 @@ export function EditEmployeeModal({
       }
     };
     fetchSpecializations();
+    fetchRoles();
   }, []);
+
+
+  const {user} = useAuth();
+    
+      const [roles, setRoles] = useState<SimpleRole[]>([])
+    
+      const fetchRoles = async () => {
+    
+        const { data, error } =
+          await authClient.organization.listRoles({
+            query: {
+              organizationId: user?.hospital?.hospitalId,
+            },
+          })
+    
+        if (error) {
+          console.error("Failed to fetch roles", error)
+        } else {
+          const filteredRoles =
+            (data ?? []).map((item) => ({
+              id: item.id,
+              role: item.role,
+            }))
+          setRoles(filteredRoles)
+        }
+    
+      }
 
   // Fetch employee by staffId
   useEffect(() => {
@@ -335,17 +366,21 @@ export function EditEmployeeModal({
 
                 <div className="flex flex-col gap-1">
                   <Label>Role</Label>
+
                   <Select
                     value={form.watch("role")}
-                    onValueChange={(val:any) => form.setValue("role", val as any)}
+                    onValueChange={(val:any) => form.setValue("role", val)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select Role" />
                     </SelectTrigger>
+
                     <SelectContent>
-                      <SelectItem value="doctor">Doctor</SelectItem>
-                      <SelectItem value="receptionist">Receptionist</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {roles.map((item) => (
+                        <SelectItem key={item.id} value={item.role}>
+                          {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

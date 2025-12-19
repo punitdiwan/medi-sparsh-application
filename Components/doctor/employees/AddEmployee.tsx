@@ -34,6 +34,13 @@ import Spinner from "@/components/Spinner";
 import { useSession } from "@/lib/auth-client";
 import { ImCross } from "react-icons/im";
 import MaskedInput from "@/components/InputMask";
+import { useAuth } from "@/context/AuthContext";
+
+export type SimpleRole = {
+  id: string
+  role: string
+}
+
 //employee schema
 const baseEmployeeSchema = z.object({
   user_id: z.string().optional().or(z.literal("")),
@@ -127,7 +134,34 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
 
   useEffect(() => {
     fetchSpecializations();
+    fetchRoles();
   }, []);
+
+    const {user} = useAuth();
+  
+    const [roles, setRoles] = useState<SimpleRole[]>([])
+  
+    const fetchRoles = async () => {
+  
+      const { data, error } =
+        await authClient.organization.listRoles({
+          query: {
+            organizationId: user?.hospital?.hospitalId,
+          },
+        })
+  
+      if (error) {
+        console.error("Failed to fetch roles", error)
+      } else {
+        const filteredRoles =
+          (data ?? []).map((item) => ({
+            id: item.id,
+            role: item.role,
+          }))
+        setRoles(filteredRoles)
+      }
+  
+    }
 
   async function fetchSpecializations() {
     try {
@@ -414,24 +448,31 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                       </FormControl>
+
                       <SelectContent className="z-[99999]">
-                        <SelectItem value="doctor">Doctor</SelectItem>
-                        <SelectItem value="receptionist">
-                          Receptionist
-                        </SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {roles.map((r) => (
+                          <SelectItem key={r.id} value={r.role}>
+                            {r.role.charAt(0).toUpperCase() + r.role.slice(1)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
 
               <FormField
                 control={form.control}
