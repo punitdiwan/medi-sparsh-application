@@ -53,6 +53,13 @@ export default function ExcelUploadModal({
  const downloadTemplate = async () => {
   if (!config) return;
 
+  // CASE 1: Columns empty → server API will generate template
+  if (!config.template.columns || config.template.columns.length === 0) {
+    window.open(config.template.downloadUrl, "_blank");
+    return;
+  }
+
+  // CASE 2: Columns present → client side simple template
   try {
     setDownloading(true);
 
@@ -67,7 +74,10 @@ export default function ExcelUploadModal({
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = config.template.filename;
@@ -80,6 +90,7 @@ export default function ExcelUploadModal({
     setDownloading(false);
   }
 };
+
 
   const uploadFile = async () => {
     if (!file || !config) return toast.error("Select a file");

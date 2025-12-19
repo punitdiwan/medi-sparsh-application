@@ -17,13 +17,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { SymptomModal } from "./symptomModal";
 import { getSymptoms, createSymptom, updateSymptom, deleteSymptom } from "@/lib/actions/symptomActions";
 import { getSymptomTypes } from "@/lib/actions/symptomTypes";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 type Symptom = {
   id: string;
@@ -45,7 +47,7 @@ export default function SymptomManager() {
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [symptomToDelete, setSymptomToDelete] = useState<string | null>(null);
-
+  const [openEx, setOpenEx] = useState(false);
   const ability = useAbility();
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function SymptomManager() {
       if (symptomsResult.error) {
         toast.error(symptomsResult.error);
       } else {
+        console.log("symptomsResult",symptomsResult)
         setSymptoms(symptomsResult.data || []);
       }
 
@@ -171,9 +174,29 @@ export default function SymptomManager() {
 
           <Can I="create" a="symptoms" ability={ability}>
             <SymptomModal symptomTypes={symptomTypes} onSubmit={handleSave} />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenEx(true)}
+                      className="p-2"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Symptom Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
           </Can>
         </div>
-
+        <ExcelUploadModal
+          open={openEx}
+          setOpen={setOpenEx}
+          entity="symptoms"
+        />
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table className="w-full">
             <TableHeader className="bg-muted/40">
