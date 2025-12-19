@@ -171,26 +171,27 @@ export default function SymptomManager() {
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
           />
-
-          <Can I="create" a="symptoms" ability={ability}>
-            <SymptomModal symptomTypes={symptomTypes} onSubmit={handleSave} />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      onClick={() => setOpenEx(true)}
-                      className="p-2"
-                    >
-                      <Upload className="w-5 h-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Upload Symptom Excel</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-          </Can>
+          <div className="flex flex-row flex-wrap items-center gap-3">
+            <Can I="create" a="symptoms" ability={ability}>
+              <SymptomModal symptomTypes={symptomTypes} onSubmit={handleSave} />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpenEx(true)}
+                        className="p-2"
+                      >
+                        <Upload className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upload Symptom Excel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+            </Can>
+          </div>
         </div>
         <ExcelUploadModal
           open={openEx}
