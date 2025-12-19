@@ -24,6 +24,8 @@ export const ALL_PERMISSIONS: Record<string, string[]> = {
   doctorSlots:["create", "read", "update", "delete"],
   hospitalShift:["create", "read", "update", "delete"],
   appointmentPriority:["create", "read", "update", "delete"],
+  symptoms:["create", "read", "update", "delete"],
+  symptomsType:["create", "read", "update", "delete"],
   vitals: ["create", "read", "update", "delete"],
   medicineRedord: ["create", "read", "update", "delete"],
   medicineCategory:["create", "read", "update", "delete"],
