@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,9 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import ExcelJS from "exceljs";
+import { IoCloudUploadOutline } from "react-icons/io5";
+import { BsDownload, BsUpload} from "react-icons/bs";
+
 export default function ExcelUploadModal({
   open,
   setOpen,
@@ -140,34 +144,103 @@ export default function ExcelUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md w-full bg-background rounded-lg shadow-lg p-6">
         <DialogHeader>
-          <DialogTitle>Upload {config.title}</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Upload {config.title}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Select a file to upload via Excel or download the template for the required format.
+          </DialogDescription>
         </DialogHeader>
 
-        {/* <div className="text-sm text-muted-foreground">
-          <p className="font-medium mb-1">Required Columns</p>
-          <ul className="list-disc ml-5 space-y-1">
-            {config.template.columns.map((c: any) => (
-              <li key={c.key}>{c.label} *</li>
-            ))}
-          </ul>
-        </div> */}
+        {/* {config.template.columns && config.template.columns.length > 0 && (
+          <div className="text-sm text-gray-700 dark:text-gray-300 mt-4 mb-2">
+            <p className="font-medium mb-1">Required Columns</p>
+            <ul className="list-disc ml-5 space-y-1">
+              {config.template.columns.map((c: any) => (
+                <li key={c.key}>{c.label} *</li>
+              ))}
+            </ul>
+          </div>
+        )} */}
 
-        <Input
-          type="file"
-          accept={config.upload.accept.join(",")}
-          disabled={busy}
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
+        <div className="mt-4">
+          <label
+            htmlFor="file-upload"
+            className={`
+              flex flex-col items-center justify-center
+              border-2 border-dashed border-gray-300 dark:border-gray-700
+              rounded-lg p-6 cursor-pointer
+              transition-colors duration-200 hover:border-blue-500
+              dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-gray-800
+            `}
+          >
+            <input
+              id="file-upload"
+              type="file"
+              accept={config.upload.accept.join(",")}
+              className="hidden"
+              disabled={busy}
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={downloadTemplate} disabled={busy}>
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Download Template"}
+            <div className="flex flex-col items-center">
+              <IoCloudUploadOutline size={40} className="text-gray-500 dark:text-gray-400"/>
+              <span className="text-gray-700 dark:text-gray-300">
+                {file ? file.name : "Drag & drop a file here or click to select"}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Supported: {config.upload.accept.join(", ")}
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <DialogFooter className="mt-6 flex justify-end gap-3">
+          {/* Download Button */}
+          <Button
+            variant="outline"
+            onClick={downloadTemplate}
+            disabled={busy}
+            className="
+              flex items-center gap-2
+              rounded-lg
+              px-4 py-2
+              transition
+            "
+          >
+            {downloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <BsDownload className="h-4 w-4" />
+                <span className="font-medium">Template</span>
+              </>
+            )}
           </Button>
 
-          <Button onClick={uploadFile} disabled={busy}>
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
+          {/* Upload Button (Primary) */}
+          <Button
+            onClick={uploadFile}
+            disabled={busy}
+            className="
+              flex items-center gap-2
+              rounded-lg
+              px-5 py-2
+              
+              shadow-sm
+              transition
+            "
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <BsUpload className="h-4 w-4" />
+                <span className="font-medium">Upload</span>
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
