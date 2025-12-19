@@ -120,6 +120,13 @@
       "when": 1765624849326,
       "tag": "0016_lying_kulan_gath",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1766133101280,
+      "tag": "0017_loud_deathstrike",
+      "breakpoints": true
     }
   ]
 }

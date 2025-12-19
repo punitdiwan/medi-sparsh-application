@@ -314,7 +314,6 @@ export default function TaxManager() {
                     </>
                   ) : (
                     <Can I="delete" a="TaxCategory" ability={ability}>
-                    /* Soft Delete */
                     <ConfirmDialog
                       title="Delete Tax?"
                       description="This will soft delete the tax."
