@@ -150,8 +150,8 @@ function Profile() {
     fetchPatient();
   }, [id]);
   return (
-    <div className="flex justify-center mt-10">
-      <Card className="w-full max-w-5xl p-6">
+    <div className="flex justify-center mt-10 px-6">
+      <Card className="w-full max-w-5xl p-6 border border-border dark:border-gray-700">
         <CardHeader className="flex justify-between items-center">
           <CardTitle>Patient Profile</CardTitle>
           <Can I="update" a="patient" ability={ability}>
