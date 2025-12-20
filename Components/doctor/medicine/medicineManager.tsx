@@ -22,7 +22,8 @@ import { getMedicineUnits } from "@/lib/actions/medicineUnits";
 import { getMedicineGroups } from "@/lib/actions/medicineGroups";
 import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
 import MedicineExcelModal from "./medicineExcelUploadModel";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function MedicineManager() {
   const [search, setSearch] = useState("");
@@ -142,7 +143,22 @@ export default function MedicineManager() {
           <Input placeholder="Search Medicine..." className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} />
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => { setEditing(undefined); setOpenModal(true); }}>Add Medicine</Button>
-            <Button variant="outline" onClick={() => setOpen(true)}>Upload Medicine Excel</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                     variant="outline"
+                     onClick={() => setOpen(true)}
+                     className="p-2"
+                    >
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Patients Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button variant="outline" onClick={refreshMedicines} disabled={refreshing}>
               {refreshing ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Refreshing...</span> : "Refresh"}
             </Button>

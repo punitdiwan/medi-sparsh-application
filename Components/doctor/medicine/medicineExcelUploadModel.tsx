@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { BsDownload, BsUpload } from "react-icons/bs";
+import { IoCloudUploadOutline } from "react-icons/io5";
 
 export default function MedicineExcelModal({ open, setOpen }: any) {
   const [file, setFile] = useState<File | null>(null);
@@ -79,52 +81,89 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
       >
         <DialogHeader>
           <DialogTitle>Upload Medicines Excel</DialogTitle>
+           <DialogDescription className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Select a file to upload via Excel or download the template for the required format.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
 
           {/* File Upload */}
-          <div>
-            <p className="text-sm font-medium mb-1">Select Excel File</p>
-            <Input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              disabled={isAnyLoading}
-            />
+          <div className="mt-4">
+            <label
+              htmlFor="file-upload"
+              className={`
+                flex flex-col items-center justify-center
+                border-2 border-dashed border-gray-300 dark:border-gray-700
+                rounded-lg p-6 cursor-pointer
+                transition-colors duration-200 hover:border-blue-500
+               dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-gray-800
+                `}
+               >
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  disabled={isAnyLoading}
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                 />
+                  <div className="flex flex-col items-center">
+                    <IoCloudUploadOutline size={40} className="text-gray-500 dark:text-gray-400"/>
+                     <span className="text-gray-700 dark:text-gray-300 mt-2">
+                      {file ? file.name : "Drag & drop a file here or click to select"}
+                     </span>
+                     <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Supported: .xlsx, .xls
+                     </span>
+                  </div>
+            </label>
+          </div>
           </div>
 
-          {/* Download Template */}
-          <div className="flex justify-between items-center pt-2">
-            <p className="text-sm text-muted-foreground">Need format?</p>
-
-            <Button
+        <DialogFooter>
+          <Button
               variant="outline"
               onClick={downloadTemplate}
               disabled={downloadLoading || uploadLoading}
+              className="
+                flex items-center gap-2
+                rounded-lg
+                px-4 py-2
+                transition
+              "
             >
               {downloadLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Preparing...
                 </>
               ) : (
-                "Download Template"
+                <>
+                  <BsDownload className="h-4 w-4" />
+                  <span className="font-medium">Template</span>
+                </>
               )}
             </Button>
-          </div>
-        </div>
-
-        <DialogFooter>
           <Button
             onClick={uploadFile}
             disabled={uploadLoading || downloadLoading}
+            className="
+              flex items-center gap-2
+              rounded-lg
+              px-5 py-2
+              shadow-sm
+              transition
+            "
           >
             {uploadLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...
               </>
             ) : (
-              "Upload"
+              <>
+                <BsUpload className="h-4 w-4" />
+                <span className="font-medium">Upload</span>
+              </>
             )}
           </Button>
         </DialogFooter>

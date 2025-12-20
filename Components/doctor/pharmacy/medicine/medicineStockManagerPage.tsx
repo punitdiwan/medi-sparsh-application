@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { PiUploadBold } from "react-icons/pi";
 import { toast } from "sonner";
 import {
@@ -17,6 +17,7 @@ import {
 import { PharmacyMedicineModal, PharmacyMedicine } from "./PharmacyMedicineModal";
 import { PiMagnifyingGlassDuotone } from "react-icons/pi";
 import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 type MedicineDisplay = {
   id: string;
   name: string;
@@ -188,6 +189,22 @@ export default function MedicineStockManagerPage() {
           <Button variant="outline" onClick={() => setOpen(true)}>
             <PiUploadBold size={16} /> Import Medicine
           </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(true)}
+                  className="p-2"
+                >
+                  <Upload className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Patients Excel</p>
+                </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <HospitalMedicineExcelModal open={open} setOpen={setOpen} />
       </div>

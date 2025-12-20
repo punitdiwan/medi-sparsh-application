@@ -113,30 +113,19 @@ const uploadFile = async () => {
 
     // ---------------- ROW-WISE ERRORS ----------------
     if (data.errors && data.errors.length > 0) {
-      console.table(
-        data.errors.map((e: any) => ({
-          Row: e.row,
-          Error: e.error,
-          Data: JSON.stringify(e.data), // row ka data bhi dikhega
-        }))
-      );
-      console.log("data", data);
-
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Errors");
 
-      // Dynamic headers from first error row
       const firstData = data.errors[0].data || {};
       const headers = ["Row", "Error", ...Object.keys(firstData)];
       sheet.addRow(headers);
 
-      // Add each error row with dynamic columns
       data.errors.forEach((err: any) => {
         const rowData = err.data || {};
         const row = [
           err.row,
           err.error,
-          ...Object.keys(firstData).map((key) => rowData[key] ?? ""), // dynamic columns
+          ...Object.keys(firstData).map((key) => rowData[key] ?? ""),
         ];
         sheet.addRow(row);
       });
