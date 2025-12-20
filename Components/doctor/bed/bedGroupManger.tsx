@@ -217,7 +217,7 @@ export default function BedGroupManager() {
                 Show Deleted Only
               </Label>
             </div>
-            <Can I="create" a="bedgroups" ability={ability}>
+            <Can I="create" a="bedGroups" ability={ability}>
               <BedGroupModal onSave={handleSave} />
             </Can>
           </div>
@@ -246,8 +246,8 @@ export default function BedGroupManager() {
                     <TableCell>{b.floorName || "-"}</TableCell>
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <Can I="update" a="bedgroups" ability={ability}><BedGroupModal bedGroup={b} onSave={handleSave} /></Can>}
-                      <Can I="delete" a="bedgroups" ability={ability}>
+                      {!b.isDeleted && <Can I="update" a="bedGroups" ability={ability}><BedGroupModal bedGroup={b} onSave={handleSave} /></Can>}
+                      <Can I="delete" a="bedGroups" ability={ability}>
                         <Button 
                           variant="destructive" 
                           size="sm" 
