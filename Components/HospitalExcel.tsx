@@ -92,31 +92,87 @@ export default function ExcelUploadModal({
 };
 
 
-  const uploadFile = async () => {
-    if (!file || !config) return toast.error("Select a file");
+const uploadFile = async () => {
+  if (!file || !config) return toast.error("Select a file");
 
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+  setUploading(true);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-      const res = await fetch(config.upload.url, {
-        method: "POST",
-        body: formData,
+  try {
+    const res = await fetch(config.upload.url, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    // ---------------- ROW-WISE ERRORS ----------------
+    if (data.errors && data.errors.length > 0) {
+      console.table(
+        data.errors.map((e: any) => ({
+          Row: e.row,
+          Error: e.error,
+          Data: JSON.stringify(e.data), // row ka data bhi dikhega
+        }))
+      );
+      console.log("data", data);
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Errors");
+
+      // Dynamic headers from first error row
+      const firstData = data.errors[0].data || {};
+      const headers = ["Row", "Error", ...Object.keys(firstData)];
+      sheet.addRow(headers);
+
+      // Add each error row with dynamic columns
+      data.errors.forEach((err: any) => {
+        const rowData = err.data || {};
+        const row = [
+          err.row,
+          err.error,
+          ...Object.keys(firstData).map((key) => rowData[key] ?? ""), // dynamic columns
+        ];
+        sheet.addRow(row);
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "upload_errors.xlsx";
+      link.click();
 
-      toast.success("Upload successful");
-      setOpen(false);
+      // Optional: partial success
+      if (data.inserted > 0) {
+        toast.success(
+          `Partial upload success! ${data.inserted} rows inserted. See errors file for failed rows.`
+        );
+      } else {
+        toast.error("Upload failed. See errors file for details.");
+      }
+
       setFile(null);
-    } catch (e: any) {
-      toast.error(e.message || "Upload failed");
-    } finally {
-      setUploading(false);
+      return;
     }
-  };
+
+    // ---------------- SUCCESS ----------------
+    if (!res.ok) throw new Error(data.error || "Upload failed");
+
+    toast.success(`Upload successful! ${data.inserted} rows inserted`);
+    setOpen(false);
+    setFile(null);
+
+  } catch (e: any) {
+    console.error(e);
+    toast.error(e.message || "Upload failed");
+  } finally {
+    setUploading(false);
+  }
+};
 
   if (!open) return null;
 

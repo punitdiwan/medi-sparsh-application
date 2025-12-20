@@ -27,7 +27,7 @@ export function ShiftManagerPage() {
 
   // pagination
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 20;
 
   const fetchShifts = async () => {
     setLoading(true);

@@ -36,7 +36,7 @@ export default function BedGroupManager() {
 
   const ability = useAbility();
 
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
 
   // Fetch user role and bed groups on mount
   useEffect(() => {

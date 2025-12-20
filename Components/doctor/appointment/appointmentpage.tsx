@@ -39,11 +39,11 @@ export default function AppointmentPage() {
   const [filteredData, setFilteredData] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appointmentFilter, setAppointmentFilter] = useState("active");
+  const [appointmentFilter, setAppointmentFilter] = useState("all");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const ability = useAbility();
   //= FILTER STATES =//
@@ -155,7 +155,17 @@ export default function AppointmentPage() {
     },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "contact", header: "Contact" },
-    { accessorKey: "date", header: "Date" },
+    { accessorKey: "date",
+      header: "Date",
+      cell: ({ row }) => {
+        const date = row.original.date;
+        return new Date(date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      },
+    },
     { accessorKey: "time", header: "Time" },
     { accessorKey: "status", header: "Status" },
 
@@ -284,7 +294,7 @@ export default function AppointmentPage() {
             onClick={() => {
               setSearch("");
               setDate("");
-              setAppointmentFilter("active");
+              setAppointmentFilter("all");
             }}
           >
             Reset

@@ -32,7 +32,7 @@ export default function PharmacyBillPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const route = useRouter();
   const ability = useAbility();
   const [visibleFields, setVisibleFields] = useState<string[]>([

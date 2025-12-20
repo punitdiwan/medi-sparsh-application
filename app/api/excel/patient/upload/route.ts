@@ -5,6 +5,34 @@ import ExcelJS from "exceljs";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
 import { createPatient } from "@/db/queries";
+import { z } from "zod";
+
+const patientRowSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  gender: z
+    .string()
+    .transform((v) => v.toLowerCase())
+    .refine((v) => ["male", "female", "other"].includes(v), {
+      message: "Gender must be male, female or other",
+    }),
+  mobileNumber: z
+    .string()
+    .regex(/^[6-9]\d{9}$/, "Invalid mobile number"),
+  email: z.string().email("Invalid email address").optional().nullable(),
+  dob: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  areaOrPin: z.string().optional().nullable(),
+  bloodGroup: z.string().optional().nullable(),
+  referredByDr: z.string().optional().nullable(),
+});
+
+type RowError = {
+  row: number;
+  error: string;
+  data?: Record<string, any>; 
+};
 
 const getValue = (val: any): string | null => {
   if (val === undefined || val === null) return null;
@@ -43,14 +71,12 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
-
     if (!user || !hospital) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-
 
     if (!file) {
       return NextResponse.json({ error: "File not found" }, { status: 400 });
@@ -60,80 +86,95 @@ export async function POST(request: NextRequest) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
 
-
     const sheet = workbook.worksheets[0];
     if (!sheet) {
       return NextResponse.json({ error: "Invalid Excel file" }, { status: 400 });
     }
 
-
-    let successCount = 0;
+    const rowsData: any[] = [];
     const errors: { row: number; error: string }[] = [];
 
-    /* ---------------- ROW ITERATION ---------------- */
-
+    // ---------------- ROW ITERATION ----------------
     for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber++) {
       const row = sheet.getRow(rowNumber);
       const values = row.values as any[];
-
-      try {
-        const name = getValue(values[1]);
-        const gender = getValue(values[2]);
-        const mobileNumber = getValue(values[5]);
-        const email = getEmail(values[4]);
-
-        console.log("🧍 Patient data:", {
-          name,
-          gender,
-          mobileNumber,
-          email,
-        });
-        if (!name || !gender || !mobileNumber) {
-          throw new Error("Name, Gender and Mobile Number are required");
+       if (
+          values.slice(1, 12).every(
+            (val) => val === null || val === undefined || String(val).trim() === ""
+          )
+        ) {
+          continue; 
         }
 
-        await createPatient({
-          hospitalId: hospital.hospitalId,
-          userId: null,
+      const rawData = {
+        name: getValue(values[1]),
+        gender: getValue(values[2])?.toLowerCase(),
+        dob: getDate(values[3]),
+        email: getEmail(values[4]),
+        mobileNumber: getValue(values[5]),
+        address: getValue(values[6]),
+        city: getValue(values[7]),
+        state: getValue(values[8]),
+        areaOrPin: getValue(values[9]),
+        bloodGroup: getValue(values[10]),
+        referredByDr: getValue(values[11]),
+      };
 
-          name,
-          gender,
-          mobileNumber,
-          email,
+      const parsed = patientRowSchema.safeParse(rawData);
 
-          dob: getDate(values[3]),
-          address: getValue(values[6]),
-          city: getValue(values[7]),
-          state: getValue(values[8]),
-          areaOrPin: getValue(values[9]),
-          bloodGroup: getValue(values[10]),
-          referredByDr: getValue(values[11]),
+      if (!parsed.success) {
 
-          scheduledBy: user.id,
-          isDeleted: false,
-        });
-
-        successCount++;
-      } catch (err: any) {
-        console.error(` Row ${rowNumber} failed:`, err.message);
+        const message = parsed.error.issues.map((e:any) => e.message).join(", ");
         errors.push({
           row: rowNumber,
-          error: err.message || "Failed to create patient",
-        });
+          error: message,
+          data: rawData, 
+        } as RowError);
+      } else {
+        rowsData.push(parsed.data);
       }
+    }
+
+    if (errors.length > 0) {
+      return NextResponse.json({
+        success: false,
+        inserted: 0,
+        failed: errors.length,
+        errors,
+      });
+    }
+
+    // ---------------- INSERT ALL ----------------
+    for (const data of rowsData) {
+      await createPatient({
+        hospitalId: hospital.hospitalId,
+        userId: null,
+        name: data.name,
+        gender: data.gender,
+        mobileNumber: data.mobileNumber,
+        email: data.email,
+        dob: data.dob,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        areaOrPin: data.areaOrPin,
+        bloodGroup: data.bloodGroup,
+        referredByDr: data.referredByDr,
+        scheduledBy: user.id,
+        isDeleted: false,
+      });
     }
 
     return NextResponse.json({
       success: true,
-      inserted: successCount,
-      failed: errors.length,
-      errors,
+      inserted: rowsData.length,
+      failed: 0,
+      errors: [],
     });
+
   } catch (err) {
-    console.error("🔥 Patient Excel Upload Error:", err);
-    return NextResponse.json(
-      { error: "Excel upload failed" },
-      { status: 500 }
-    );
+    console.error(" Patient Excel Upload Error:", err);
+    return NextResponse.json({ error: "Excel upload failed" }, { status: 500 });
   }
 }
+

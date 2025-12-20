@@ -47,7 +47,7 @@ export default function ChargeCategoryManager() {
   const [editItem, setEditItem] = useState<ChargeCategoryItem | null>(null);
 
   const ability = useAbility();
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch Data

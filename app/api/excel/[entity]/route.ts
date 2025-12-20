@@ -20,18 +20,6 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     template: {
         filename: "patient_template.xlsx",
         columns: [
-        { key: "name", label: "Patient Name" },
-        { key: "gender", label: "Gender" },
-        { key: "dob", label: "Date of Birth" },
-        { key: "email", label: "Email" },
-        { key: "mobileNumber", label: "Mobile Number" },
-        { key: "address", label: "Address" },
-        { key: "city", label: "City" },
-        { key: "state", label: "State" },
-        { key: "areaOrPin", label: "Area / PIN" },
-        { key: "bloodGroup", label: "Blood Group" },
-        { key: "referredByDr", label: "Referred By Doctor" },
-        { key: "scheduledBy", label: "Scheduled By" },
         ],
         downloadUrl: "/api/excel/patient/template",
     },

@@ -30,7 +30,7 @@ export default function PrescriptionPage() {
   const [data, setData] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");

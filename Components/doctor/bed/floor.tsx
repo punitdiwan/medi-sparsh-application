@@ -33,7 +33,7 @@ export default function FloorManager() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const ability = useAbility();
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
 
   // Fetch user role and floors on mount
   useEffect(() => {

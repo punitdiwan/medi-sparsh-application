@@ -31,7 +31,7 @@ export default function DoctorShiftManagerPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const ability = useAbility();
   const [page, setPage] = useState(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
 
   const fetchData = async () => {
     setLoading(true);

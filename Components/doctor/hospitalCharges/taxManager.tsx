@@ -39,7 +39,7 @@ export default function TaxManager() {
   const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
 
   const ability = useAbility();
   // Modal State
