@@ -38,37 +38,87 @@ export default function MedicineExcelModal({ open, setOpen }: any) {
     setDownloadLoading(false);
   };
 
-  const uploadFile = async () => {
-    if (!file) {
-      toast.error("Please select an Excel file");
-      return;
-    }
+const uploadFile = async () => {
+  if (!file) {
+    toast.error("Please select an Excel file");
+    return;
+  }
 
-    setUploadLoading(true);
+  setUploadLoading(true);
 
+  try {
     const formData = new FormData();
     formData.append("file", file);
 
-    try {
-      const res = await fetch("/api/medicines/upload", {
-        method: "POST",
-        body: formData,
-      });
+    const res = await fetch("/api/medicines/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (res.ok) {
-        toast.success("Data imported successfully");
-        setOpen(false);
-      } else {
-        toast.error(data.error || "Upload failed");
-      }
-    } catch {
-      toast.error("Upload error");
+    if (res.ok && data.success) {
+      toast.success(`Data imported successfully (${data.inserted} medicine(s))`);
+      setFile(null);
+      setOpen(false);
+      return;
     }
 
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      // Reset the file for retry
+      setFile(null);
+
+      if (data.errors.length === 1) {
+        // Only one error → show toast directly
+        const err = data.errors[0];
+        toast.error(`Row ${err.row}: ${err.error}`);
+      } else {
+        // Multiple errors → show first in toast + generate Excel
+        const firstError = data.errors[0];
+        toast.error(`Row ${firstError.row}: ${firstError.error}`);
+
+        const ExcelJS = (await import("exceljs")).default;
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Errors");
+
+        const firstRowData = firstError.data || {};
+        const headers = ["Row", "Error", ...Object.keys(firstRowData)];
+        sheet.addRow(headers);
+
+        data.errors.forEach((err: any) => {
+          sheet.addRow([
+            err.row,
+            err.error,
+            ...Object.values(err.data || {}),
+          ]);
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "medicine_upload_errors.xlsx";
+        link.click();
+      }
+      return;
+    }
+    setFile(null);
+    setOpen(false);
+    toast.error(data.error || "Upload failed");
+  } catch (err) {
+    console.error("Upload error:", err);
+    setFile(null);
+    setOpen(false);
+    toast.error("Upload failed due to network/server error");
+  } finally {
     setUploadLoading(false);
-  };
+  }
+};
+
+
 
   const isAnyLoading = uploadLoading || downloadLoading;
 

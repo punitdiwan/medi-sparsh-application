@@ -186,9 +186,6 @@ export default function MedicineStockManagerPage() {
           <Button variant="default" onClick={handleAdd}>
             <Plus size={16} /> Add Medicine
           </Button>
-          <Button variant="outline" onClick={() => setOpen(true)}>
-            <PiUploadBold size={16} /> Import Medicine
-          </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

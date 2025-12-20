@@ -53,47 +53,82 @@ export default function HospitalMedicineExcelModal({
     }
   };
 
-  const uploadFile = async () => {
-    if (!file) {
-      toast.error("Please select an Excel file");
+ const uploadFile = async () => {
+  if (!file) {toast.error("Please select an Excel file");
+    return;
+  }
+
+  if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+    toast.error("Only Excel files are allowed");
+    return;
+  }
+
+  setUploadLoading(true);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {const res = await fetch("/api/hospitalmedicines/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    let data: any;
+    try { data = await res.json();
+    } catch {toast.error("Invalid server response");
       return;
     }
 
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      toast.error("Only Excel files are allowed");
+    if (!res.ok) {toast.error(data?.error || "Upload failed");
       return;
     }
 
-    setUploadLoading(true);
+    if (data.success === false && Array.isArray(data.errors) && data.errors.length > 0) {
+      if (data.errors.length === 1) {
+        // Single row error: show directly in toast
+        const err = data.errors[0];
+        toast.error(`Row ${err.row}: ${err.error}`);
+      } else {
+        // Multiple rows: generate Excel
+        toast.error(`Upload failed. ${data.failed} row(s) have errors`);
 
-    const formData = new FormData();
-    formData.append("file", file);
+        const ExcelJS = (await import("exceljs")).default;
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Errors");
+        const firstRowData = data.errors[0]?.data || {};
+        const headers = ["Row", "Error", ...Object.keys(firstRowData)];
+        sheet.addRow(headers);
 
-    try {
-      const res = await fetch("/api/hospitalmedicines/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {}
-
-      if (!res.ok) {
-        toast.error(data?.error || "Upload failed");
-        return;
+        data.errors.forEach((err: any) => {
+          sheet.addRow([
+            err.row,
+            err.error,
+            ...Object.values(err.data || {}),
+          ]);
+        });
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "hospital_medicine_upload_errors.xlsx";
+        link.click();
       }
-
-      toast.success("Hospital medicines imported successfully");
-      setOpen(false);
-      setFile(null);
-    } catch {
-      toast.error("Upload error");
-    } finally {
-      setUploadLoading(false);
+      return;
     }
-  };
+    toast.success(`Upload successful! ${data.inserted} medicine(s) imported`);
+    setFile(null);
+    setOpen(false);
+  } catch (error) {
+    console.error("Upload error:", error);
+    toast.error("Upload failed due to network/server error");
+  } finally {
+    setUploadLoading(false);
+  }
+};
+
+
 
   const handleOpenChange = (value: boolean) => {
     if (!value) setFile(null);
