@@ -38,7 +38,7 @@ export default function BedManager() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const ability = useAbility();
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
 
   // Fetch user role and beds on mount
   useEffect(() => {

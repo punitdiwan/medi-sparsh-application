@@ -48,7 +48,7 @@ export default function BillingPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [visibleFields, setVisibleFields] = useState<string[]>(["patientPhone","patientGender","appointmentDate"]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [activeTab, setActiveTab] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [customRange, setCustomRange] = useState<{from: string|null; to: string|null}>({from: null, to: null});
 

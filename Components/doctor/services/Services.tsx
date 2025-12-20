@@ -42,7 +42,7 @@ export default function Services() {
   const [editService, setEditService] = useState<ServiceForm>();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const ability = useAbility();
   const fetchServices = async () => {

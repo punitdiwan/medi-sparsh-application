@@ -28,7 +28,7 @@ export default function SpecializationsManager() {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 20;
   const [totalCount, setTotalCount] = useState(0);
 
   const [searchTerm, setSearchTerm] = useState("");

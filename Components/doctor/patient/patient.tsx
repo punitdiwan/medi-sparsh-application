@@ -48,7 +48,7 @@ function PatientPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<PatientFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [open, setOpen] = useState(false);
 
   const ability = useAbility();
