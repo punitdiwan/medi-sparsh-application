@@ -207,7 +207,7 @@ export default function BedTypeManager() {
                 Show Deleted Only
               </Label>
             </div>
-            <Can I="create" a="bedtype" ability={ability}>
+            <Can I="create" a="bedType" ability={ability}>
               <BedTypeModal onSave={handleSave} />
             </Can>
           </div>
@@ -234,8 +234,8 @@ export default function BedTypeManager() {
                     <TableCell>{b.name}</TableCell>
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <Can I="update" a="bedtype" ability={ability}> <BedTypeModal bedType={b} onSave={handleSave} /></Can>}
-                      <Can I="delete" a="bedtype" ability={ability}>
+                      {!b.isDeleted && <Can I="update" a="bedType" ability={ability}> <BedTypeModal bedType={b} onSave={handleSave} /></Can>}
+                      <Can I="delete" a="bedType" ability={ability}>
                         <Button 
                           variant="destructive" 
                           size="sm" 

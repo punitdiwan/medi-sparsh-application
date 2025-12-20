@@ -113,6 +113,34 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
       url:"/api/excel/medicineGroup/upload",
       accept:[".xlsx"]
     }
+  },
+  symptomeType:{
+    title:"Symptome Type",
+    template:{
+      filename:"symptome_type_template.xlsx",
+      columns:[
+        {key:"name", label:"Symptom Name"}
+      ],
+      downloadUrl:""
+    },
+    upload:{
+      url:"/api/excel/symptomType/upload",
+      accept:[".xlsx"]
+    }
+
+  },
+  symptoms:{
+    title:"Symptom List",
+     template:{
+      filename:"symptome_list_template.xlsx",
+      columns:[
+      ],
+      downloadUrl:"/api/excel/symptom/template"
+    },
+    upload:{
+      url:"/api/excel/symptom/upload",
+      accept:[".xlsx"]
+    }
   }
 };
 

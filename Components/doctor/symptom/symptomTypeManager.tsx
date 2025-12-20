@@ -29,11 +29,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { getSymptomTypes, createSymptomType, updateSymptomType, deleteSymptomType } from "@/lib/actions/symptomTypes";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ExcelUploadModal from "@/Components/HospitalExcel";
+import { Separator } from "@/components/ui/separator";
 
 type SymptomType = {
   id: string;
@@ -48,6 +51,7 @@ export default function SymptomTypeManager() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [openEx, setOpenEx] = useState(false);
   const [editing, setEditing] = useState<SymptomType | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
@@ -151,14 +155,14 @@ export default function SymptomTypeManager() {
   };
 
   return (
-    <Card className="p-4 shadow-sm">
+    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Symptom Types</CardTitle>
-        <CardDescription>Manage all symptom types.</CardDescription>
+        <CardTitle className="text-2xl font-bold">Symptom Types</CardTitle>
+        <CardDescription className="mt-1">Manage all symptom types.</CardDescription>
       </CardHeader>
-
-      <CardContent className="space-y-5">
-        <div className="flex justify-between items-center flex-wrap gap-3">
+      <Separator />
+      <CardContent className="space-y-4 p-4">
+        <div className="flex justify-between items-center gap-4">
           <Input
             placeholder="Search symptom types..."
             value={search}
@@ -168,10 +172,30 @@ export default function SymptomTypeManager() {
           <div className="flex flex-row flex-wrap items-center gap-3">
             <Can I="create" a="symptomsType" ability={ability}>
               <Button onClick={() => handleOpenModal()}>Add Symptom Type</Button>
+              <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpenEx(true)}
+                    className="p-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload Symptom Type Excel</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             </Can>
           </div>
         </div>
-
+        <ExcelUploadModal
+          open={openEx}
+          setOpen={setOpenEx}
+          entity="symptomeType"
+        />
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
             <TableHeader className="bg-muted/40">
