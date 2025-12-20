@@ -179,7 +179,10 @@ function PrescriptionForm() {
 
         <CardContent className="space-y-8 py-6">
           <Vitals value={formData.vitals} onChange={handleVitalsChange} />
-          <Symptoms value={{ symptoms: formData.symptoms }} onChange={handleSymptomsChange} />
+          <Symptoms  value={formData.symptoms.map((s) => ({ name: s }))}
+            onChange={(newSymptoms) =>
+              handleSymptomsChange({ symptoms: newSymptoms.map((s) => s.name) })
+            } />
           <DiagnosisSection value={{ diagnosis: formData.diagnosis }} onChange={handleDiagnosisChange} />
           <MedicineSection value={formData.medicines} onChange={handleMedicineChange} />
           <NotesSection value={formData.notes} onChange={handleNotesChange} />
