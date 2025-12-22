@@ -47,7 +47,7 @@ function PatientPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setActiveTab("details")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+            className={`flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${
                 activeTab === "details"
                   ? "bg-blue-600 text-white shadow"
@@ -61,7 +61,7 @@ function PatientPage() {
 
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
+            className={`flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${
                 activeTab === "history"
                   ? "bg-green-600 text-white shadow"
