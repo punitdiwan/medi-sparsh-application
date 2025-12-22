@@ -112,7 +112,7 @@ export default function Symptoms({ value, onChange }: Props) {
         </p>
 
         <form
-          className="flex gap-2"
+          className="flex gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             if (suggestions.length > 0) {

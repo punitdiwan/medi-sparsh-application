@@ -109,90 +109,89 @@ export default function RolesPage() {
       )}
 
       <div className="space-y-6">
-  {roles.map((role) => (
-    <Card key={role.id} className="bg-custom-gradient-2">
-      {/* ===== HEADER ROW ===== */}
-      <CardHeader className="flex flex-row items-center justify-between py-4">
-        <h2 className="text-lg font-semibold capitalize">
-          {role.role}'s Permissions
-        </h2>
-        <Can I="update" a="role" ability={ability}>
-          <Button
-            variant="ghost"
-            onClick={() =>
-              router.push(
-                `/doctor/settings/roles/${role.id}/edit`
-              )
-            }
-          >
-            <Pencil size={24} />Edit
-          </Button>
-        </Can>
-      </CardHeader>
-
-      {/* ===== PERMISSION TABLE ===== */}
-      <CardContent className="pt-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm table-custom-bg">
-            <thead className="bg-gray-600 text-white dark:bg-gray-800">
-              <tr>
-                <th className="border px-3 py-2 text-left">
-                  Module
-                </th>
-                {["create", "read", "update", "delete"].map(
-                  (action) => (
-                    <th
-                      key={action}
-                      className="border px-3 py-2 capitalize text-center "
-                    >
-                      {action}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-
-            <tbody>
-              {Object.entries(role.permission).map(
-                ([module, actions]) => (
-                  <tr key={module}>
-                    <td className="border px-3 py-2 font-medium capitalize ">
-                      {formatModuleName(module)}
-                    </td>
-
-                    {["create", "read", "update", "delete"].map(
-                      (action) => (
-                        <td
-                          key={action}
-                          className="border px-3 py-2 text-center"
-                        >
-                          {hasPermission(
-                            role.permission,
-                            module,
-                            action
-                          ) ? (
-                            <span className="text-green-600 font-semibold flex justify-center">
-                              <GiCheckMark />
-                            </span>
-                          ) : (
-                            <span className="text-red-500  flex justify-center">
-                              <RxCross2 size={18}/>
-                            </span>
-                          )}
-                        </td>
+          {roles.map((role) => (
+            <Card key={role.id} className="bg-gradient-to-br dark:from-gray-800 dark:via-gray-700 dark:to-gray-900">
+              {/* ===== HEADER ROW ===== */}
+              <CardHeader className="flex flex-row items-center justify-between py-4">
+                <h2 className="text-lg font-semibold capitalize">
+                  {role.role}'s Permissions
+                </h2>
+                <Can I="update" a="role" ability={ability}>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      router.push(
+                        `/doctor/settings/roles/${role.id}/edit`
                       )
-                    )}
-                  </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
-  ))}
-</div>
+                    }
+                  >
+                    <Pencil size={24} />Edit
+                  </Button>
+                </Can>
+              </CardHeader>
 
+              {/* ===== PERMISSION TABLE ===== */}
+              <CardContent className="pt-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm table-custom-bg">
+                    <thead className="bg-gray-600 text-white dark:bg-gray-800">
+                      <tr>
+                        <th className="border px-3 py-2 text-left">
+                          Module
+                        </th>
+                        {["create", "read", "update", "delete"].map(
+                          (action) => (
+                            <th
+                              key={action}
+                              className="border px-3 py-2 capitalize text-center "
+                            >
+                              {action}
+                            </th>
+                          )
+                        )}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {Object.entries(role.permission).map(
+                        ([module, actions]) => (
+                          <tr key={module}>
+                            <td className="border px-3 py-2 font-medium capitalize ">
+                              {formatModuleName(module)}
+                            </td>
+
+                            {["create", "read", "update", "delete"].map(
+                              (action) => (
+                                <td
+                                  key={action}
+                                  className="border px-3 py-2 text-center"
+                                >
+                                  {hasPermission(
+                                    role.permission,
+                                    module,
+                                    action
+                                  ) ? (
+                                    <span className="text-green-600 font-semibold flex justify-center">
+                                      <GiCheckMark />
+                                    </span>
+                                  ) : (
+                                    <span className="text-red-500  flex justify-center">
+                                      <RxCross2 size={18}/>
+                                    </span>
+                                  )}
+                                </td>
+                              )
+                            )}
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </CardContent>
       </Card>
     </div>
