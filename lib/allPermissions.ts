@@ -3,6 +3,7 @@
 export const ALL_PERMISSIONS: Record<string, string[]> = {
   project: ["create", "read", "update", "delete"],
   appointment: ["create", "read", "update", "delete"],
+  ipd:["create", "read", "update", "delete"],
   role: ["create", "read", "update", "delete"],
   patient: ["create", "read", "update", "delete"],
   prescription: ["create", "read", "update", "delete"],

@@ -9,6 +9,7 @@ import {
   Home,
   User,
   Users2,
+  Bed,
   NotebookPen,
   ChevronDown,
   ChevronUp,
@@ -68,6 +69,7 @@ const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
   { title: 'Patients', url: '/doctor/patient', icon: User ,subject: 'patient',action: 'read',},
   { title: 'Appointment', url: '/doctor/appointment', icon: Calendar,subject: 'appointment',action: 'read', },
+  { title: 'IPD-In Patient' ,url: '/doctor/IPD',icon: Bed,subject:'ipd',action: 'read'},
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen ,subject: 'prescription',action: 'read',},
   {
     title: 'Pharmacy',
