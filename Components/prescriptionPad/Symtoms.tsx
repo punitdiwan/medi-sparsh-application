@@ -1,96 +1,196 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { X, Plus } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { searchSymptoms } from "@/lib/actions/symptomClient";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface SymptomsProps {
-  value: Record<string, any>;
-  onChange: (symptoms: Record<string, any>) => void;
+export interface SymptomItem {
+  id?: string;
+  name: string;
+  description?: string;
+  symptomTypeName?: string;
 }
 
-function Symptoms({ value, onChange }: SymptomsProps) {
-  const [symptom, setSymptom] = useState("");
-  const [localSymptoms, setLocalSymptoms] = useState<string[]>(value.symptoms || []);
+ interface Props {
+  value: SymptomItem[];
+  onChange: (symptoms: SymptomItem[]) => void;
+}
+
+export default function Symptoms({ value, onChange }: Props) {
+  const [input, setInput] = useState("");
+  const [allSymptoms, setAllSymptoms] = useState<SymptomItem[]>([]);
+  const [suggestions, setSuggestions] = useState<SymptomItem[]>([]);
+  const [localSymptoms, setLocalSymptoms] = useState<SymptomItem[]>(
+    Array.isArray(value) ? value : []
+  );
+
+  const fetchedOnce = useRef(false);
 
   useEffect(() => {
-    setLocalSymptoms(value.symptoms || []);
+    setLocalSymptoms(Array.isArray(value) ? value : []);
   }, [value]);
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (symptom.trim()) {
-      const updated = [...localSymptoms, symptom.trim()];
-      setLocalSymptoms(updated);
-      setSymptom("");
-      onChange({ symptoms: updated });
+  useEffect(() => {
+    if (!input.trim()) {
+      setSuggestions([]);
+      return;
     }
+
+    const fetch = async () => {
+      try {
+        if (!fetchedOnce.current) {
+          const res = await searchSymptoms();
+          if (Array.isArray(res?.data)) {
+            const normalized = res.data.map((s) => ({
+              id: s.id,
+              name: s.name,
+              description: s.description ?? undefined,
+              symptomTypeName: s.symptomTypeName ?? undefined,
+            }));
+
+            setAllSymptoms(normalized);
+            fetchedOnce.current = true;
+          }
+        }
+      } catch (err) {
+        console.error("Symptom fetch failed", err);
+      }
+    };
+
+    fetch();
+  }, [input]);
+
+  useEffect(() => {
+    if (!input || !Array.isArray(allSymptoms)) return;
+
+    const filtered = allSymptoms.filter(
+      (s) =>
+        s.name.toLowerCase().includes(input.toLowerCase()) &&
+        !localSymptoms.some(
+          (ls) => ls.name.toLowerCase() === s.name.toLowerCase()
+        )
+    );
+    setSuggestions(filtered);
+  }, [input, allSymptoms, localSymptoms]);
+
+  const addSymptom = (symptom: SymptomItem) => {
+
+    const updated = [...localSymptoms, symptom];
+    setLocalSymptoms(updated);
+    onChange(updated);
+    setInput("");
+    setSuggestions([]);
   };
 
-  const handleRemove = (index: number) => {
+  const addFromInput = () => {
+    if (!input.trim()) return;
+    addSymptom({
+      name: input.trim(),
+      description: "No description added",
+      symptomTypeName: "Unknown",
+    });
+  };
+
+  const removeSymptom = (index: number) => {
     const updated = localSymptoms.filter((_, i) => i !== index);
     setLocalSymptoms(updated);
-    onChange({ symptoms: updated });
+    onChange(updated);
   };
 
   return (
-    <Card className="border border-border shadow-sm rounded-2xl bg-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Symptoms
-        </CardTitle>
+    <Card className="border border-border shadow-sm rounded-2xl">
+      <CardHeader>
+        <CardTitle>Symptoms</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         <p className="text-sm italic text-muted-foreground mb-1">
-          Type a symptom and press <b>Enter</b> or click <b>Add</b>.
+          Search symptoms or add a new one and press <b>Enter</b> or click <b>Add</b>.
         </p>
-        {/* --- Add Symptom Input --- */}
-        <form onSubmit={handleAdd} className="flex items-center gap-3">
+
+        <form
+          className="flex gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (suggestions.length > 0) {
+              addSymptom(suggestions[0]);
+            } else {
+              addFromInput(); 
+            }
+          }}
+        >
           <Input
-            placeholder="Type a symptom"
-            value={symptom}
-            onChange={(e) => setSymptom(e.target.value)}
-            className="flex-1"
+            placeholder="Search or type symptom"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
           />
-          <Button
-            type="submit"
-            variant="secondary"
-            size="icon"
-            className="rounded-full"
-          >
+
+          <Button type="submit" size="icon" variant="secondary">
             <Plus className="h-4 w-4" />
           </Button>
         </form>
 
+       
+        {suggestions.length > 0 && (
+          <div className="border rounded-md max-h-40 overflow-auto">
+            {suggestions.map((s) => (
+              <div
+                key={s.id}
+                className="px-3 py-2 cursor-pointer hover:bg-muted"
+                onClick={() => addSymptom(s)}
+              >
+                <div className="font-medium">{s.name}</div>
+                {s.symptomTypeName && (
+                  <div className="text-xs text-muted-foreground">
+                    {s.symptomTypeName}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         <Separator />
 
-        {/* --- Symptoms List --- */}
-         <div className="flex flex-wrap gap-2">
-          {localSymptoms.length > 0 ? (
-            localSymptoms.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border
-                           bg-blue-100 text-blue-800 border-blue-300
-                           dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700"
+       <div className="flex flex-wrap gap-2">
+          {localSymptoms.length ? (
+            <TooltipProvider>
+            {localSymptoms.map((s, i) => (
+              <span
+                key={i}
+                className="relative flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border
+                          bg-blue-100 text-blue-800 border-blue-300
+                          dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700"
               >
-                <span>{item}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-pointer">{s.name}</span>
+                  </TooltipTrigger>
+
+                  <TooltipContent className="w-max max-w-xs">
+                    <div className="font-semibold">{s.symptomTypeName || "Unknown"}</div>
+                    <div>{s.description || "No description added"}</div>
+                  </TooltipContent>
+
+                </Tooltip>
+
                 <button
-                  type="button"
-                  onClick={() => handleRemove(index)}
-                  className="hover:text-destructive dark:hover:text-red-400"
+                  onClick={() => removeSymptom(i)}
+                  className="cursor-pointer"
                 >
                   <X size={14} />
                 </button>
-              </div>
-            ))
+              </span>
+            ))}
+          </TooltipProvider>
           ) : (
-            <p className="text-sm text-muted-foreground dark:text-gray-400 italic">
-              No symptoms added yet.
+            <p className="text-sm italic text-muted-foreground">
+              No symptoms selected
             </p>
           )}
         </div>
@@ -98,5 +198,3 @@ function Symptoms({ value, onChange }: SymptomsProps) {
     </Card>
   );
 }
-
-export default Symptoms;
