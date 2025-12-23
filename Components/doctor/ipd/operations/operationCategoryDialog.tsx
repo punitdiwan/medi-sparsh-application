@@ -18,6 +18,7 @@ interface OperationCategoryDialogProps {
   onClose: () => void;
   onSubmit: (name: string) => void;
   defaultValue?: string;
+  isLoading?: boolean;
 }
 
 export function OperationCategoryDialog({
@@ -25,6 +26,7 @@ export function OperationCategoryDialog({
   onClose,
   onSubmit,
   defaultValue = "",
+  isLoading = false,
 }: OperationCategoryDialogProps) {
   const [category, setCategory] = useState("");
 
@@ -64,6 +66,7 @@ export function OperationCategoryDialog({
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="focus-visible:ring-primary"
+            disabled={isLoading}
           />
 
           <p className="text-xs text-muted-foreground">
@@ -72,20 +75,19 @@ export function OperationCategoryDialog({
         </div>
 
         <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
 
           <Button
             onClick={() => {
               onSubmit(category.trim());
-              onClose();
             }}
-            disabled={!category.trim()}
+            disabled={!category.trim() || isLoading}
             className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90"
           >
             <PlusCircle className="h-4 w-4" />
-            {isEdit ? "Update Category" : "Save Category"}
+            {isLoading ? "Saving..." : (isEdit ? "Update Category" : "Save Category")}
           </Button>
         </DialogFooter>
 

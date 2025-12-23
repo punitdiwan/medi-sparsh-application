@@ -21,18 +21,20 @@ import {
 import { ClipboardList, Tag } from "lucide-react";
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface OperationDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; categoryId: number }) => void;
+  onSubmit: (data: { id?: string; name: string; operationCategoryId: string }) => void;
   categories: Category[];
+  isLoading?: boolean;
   defaultData?: {
+    id?: string;
     name: string;
-    categoryId: number;
+    operationCategoryId: string;
   };
 }
 
@@ -41,14 +43,15 @@ export function OperationDialog({
   onClose,
   onSubmit,
   categories,
+  isLoading = false,
   defaultData,
 }: OperationDialogProps) {
   const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     setName(defaultData?.name || "");
-    setCategoryId(defaultData?.categoryId ?? null);
+    setCategoryId(defaultData?.operationCategoryId ?? null);
   }, [defaultData, open]);
 
   const isEdit = Boolean(defaultData);
@@ -88,8 +91,8 @@ export function OperationDialog({
               Category <span className="text-destructive">*</span>
             </Label>
             <Select
-              value={categoryId?.toString()}
-              onValueChange={(val) => setCategoryId(Number(val))}
+              value={categoryId || ""}
+              onValueChange={setCategoryId}
             >
               <SelectTrigger className="focus:ring-primary">
                 <SelectValue placeholder="Select category" />
@@ -98,7 +101,7 @@ export function OperationDialog({
                 {categories.map((cat) => (
                   <SelectItem
                     key={cat.id}
-                    value={cat.id.toString()}
+                    value={cat.id}
                     className="cursor-pointer"
                   >
                     {cat.name}
@@ -110,19 +113,23 @@ export function OperationDialog({
         </div>
 
         <DialogFooter className="bg-muted/40 px-6 py-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
           <Button
-            disabled={!name.trim() || categoryId === null}
+            disabled={!name.trim() || categoryId === null || isLoading}
             onClick={() => {
               if (categoryId === null) return;
-              onSubmit({ name, categoryId });
+              onSubmit({ 
+                ...(defaultData?.id && { id: defaultData.id }),
+                name, 
+                operationCategoryId: categoryId 
+              });
               onClose();
             }}
             className="bg-brand-gradient text-white hover:opacity-90"
           >
-            {isEdit ? "Update" : "Save"}
+            {isLoading ? "Saving..." : isEdit ? "Update" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
