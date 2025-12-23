@@ -7,15 +7,16 @@ import { X, Plus } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { searchSymptoms } from "@/lib/actions/symptomClient";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface SymptomItem {
+export interface SymptomItem {
   id?: string;
   name: string;
   description?: string;
   symptomTypeName?: string;
 }
 
-interface Props {
+ interface Props {
   value: SymptomItem[];
   onChange: (symptoms: SymptomItem[]) => void;
 }
@@ -30,12 +31,10 @@ export default function Symptoms({ value, onChange }: Props) {
 
   const fetchedOnce = useRef(false);
 
-  // Sync from parent
   useEffect(() => {
     setLocalSymptoms(Array.isArray(value) ? value : []);
   }, [value]);
 
-  // 🔥 Fetch ONLY when user starts typing
   useEffect(() => {
     if (!input.trim()) {
       setSuggestions([]);
@@ -55,8 +54,8 @@ export default function Symptoms({ value, onChange }: Props) {
             }));
 
             setAllSymptoms(normalized);
+            fetchedOnce.current = true;
           }
-
         }
       } catch (err) {
         console.error("Symptom fetch failed", err);
@@ -66,7 +65,6 @@ export default function Symptoms({ value, onChange }: Props) {
     fetch();
   }, [input]);
 
-  // 🔥 Filter suggestions
   useEffect(() => {
     if (!input || !Array.isArray(allSymptoms)) return;
 
@@ -77,11 +75,11 @@ export default function Symptoms({ value, onChange }: Props) {
           (ls) => ls.name.toLowerCase() === s.name.toLowerCase()
         )
     );
-
     setSuggestions(filtered);
   }, [input, allSymptoms, localSymptoms]);
 
   const addSymptom = (symptom: SymptomItem) => {
+
     const updated = [...localSymptoms, symptom];
     setLocalSymptoms(updated);
     onChange(updated);
@@ -91,7 +89,11 @@ export default function Symptoms({ value, onChange }: Props) {
 
   const addFromInput = () => {
     if (!input.trim()) return;
-    addSymptom({ name: input.trim() });
+    addSymptom({
+      name: input.trim(),
+      description: "No description added",
+      symptomTypeName: "Unknown",
+    });
   };
 
   const removeSymptom = (index: number) => {
@@ -117,10 +119,9 @@ export default function Symptoms({ value, onChange }: Props) {
             e.preventDefault();
             if (suggestions.length > 0) {
               addSymptom(suggestions[0]);
-              return;
+            } else {
+              addFromInput(); 
             }
-
-            addFromInput();
           }}
         >
           <Input
@@ -134,7 +135,7 @@ export default function Symptoms({ value, onChange }: Props) {
           </Button>
         </form>
 
-
+       
         {suggestions.length > 0 && (
           <div className="border rounded-md max-h-40 overflow-auto">
             {suggestions.map((s) => (
@@ -156,21 +157,37 @@ export default function Symptoms({ value, onChange }: Props) {
 
         <Separator />
 
-        <div className="flex flex-wrap gap-2">
+       <div className="flex flex-wrap gap-2">
           {localSymptoms.length ? (
-            localSymptoms.map((s, i) => (
+            <TooltipProvider>
+            {localSymptoms.map((s, i) => (
               <span
                 key={i}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border
-                           bg-blue-100 text-blue-800 border-blue-300
-                           dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700"
+                className="relative flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border
+                          bg-blue-100 text-blue-800 border-blue-300
+                          dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700"
               >
-                {s.name}
-                <button onClick={() => removeSymptom(i)}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-pointer">{s.name}</span>
+                  </TooltipTrigger>
+
+                  <TooltipContent className="w-max max-w-xs">
+                    <div className="font-semibold">{s.symptomTypeName || "Unknown"}</div>
+                    <div>{s.description || "No description added"}</div>
+                  </TooltipContent>
+
+                </Tooltip>
+
+                <button
+                  onClick={() => removeSymptom(i)}
+                  className="cursor-pointer"
+                >
                   <X size={14} />
                 </button>
               </span>
-            ))
+            ))}
+          </TooltipProvider>
           ) : (
             <p className="text-sm italic text-muted-foreground">
               No symptoms selected

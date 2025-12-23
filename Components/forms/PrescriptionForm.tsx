@@ -21,27 +21,107 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import LabTestsEditor from "../prescriptionPad/LabTests";
+import { SymptomItem } from "@/Components/prescriptionPad/Symtoms";
+import { getSymptoms } from "@/lib/actions/symptomActions";
+
+export type MasterSymptom = {
+  id: string;
+  name: string;
+  description: string;
+  symptomTypeName: string;
+};
 
 function PrescriptionForm() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-
+  const [masterSymptoms, setMasterSymptoms] = useState<MasterSymptom[]>([]);
+  const [prescriptionData, setPrescriptionData] = useState<any>(null);
   const patientId = params?.id as string;
   const appointmentId = searchParams.get("appointmentId");
   const patientName = searchParams.get("name");
   const mode = searchParams.get("mode"); // "edit" or "new"
   const isEditMode = mode === "edit";
-
+  const [pageLoading, setPageLoading] = useState(true); // 👈 page level loader
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     prescriptionId: "",
     vitals: {} as Record<string, any>,
-    symptoms: [] as string[],
+    symptoms: [] as SymptomItem[],
     diagnosis: [] as string[],
     medicines: [] as any[],
     notes: "",
   });
+
+  useEffect(() => {
+    if (masterSymptoms.length === 0) return;
+
+    if (isEditMode && !prescriptionData) return;
+
+    setPageLoading(false);
+  }, [masterSymptoms, prescriptionData, isEditMode]);
+
+
+  useEffect(() => {
+    const loadSymptoms = async () => {
+      const res = await getSymptoms();
+
+      if ("data" in res && Array.isArray(res.data)) {
+        setMasterSymptoms(
+          res.data.map((s) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description ?? "No description added",
+            symptomTypeName: s.symptomTypeName ?? "Unknown",
+          }))
+        );
+      }
+    };
+
+    loadSymptoms();
+  }, []);
+
+  const mapSymptomsFromPrescription = (
+    symptomsString: string | null,
+    masterSymptoms: MasterSymptom[]
+  ) => {
+    if (!symptomsString) return [];
+
+    return symptomsString.split(",").map((raw) => {
+      const name = raw.trim();
+
+      const match = masterSymptoms.find(
+        (ms) => ms.name.toLowerCase() === name.toLowerCase()
+      );
+
+      return {
+        id: match?.id,
+        name,
+        description: match?.description || "No description added",
+        symptomTypeName: match?.symptomTypeName || "Unknown",
+      };
+    });
+  };
+
+  useEffect(() => {
+    if (!prescriptionData || masterSymptoms.length === 0) return;
+
+    setFormData({
+      prescriptionId: prescriptionData.id || "",
+      vitals: prescriptionData.vitals || {},
+      symptoms: mapSymptomsFromPrescription(
+        prescriptionData.symptoms,
+        masterSymptoms
+      ),
+      diagnosis: prescriptionData.diagnosis
+        ? prescriptionData.diagnosis.split(",").map((d: string) => d.trim())
+        : [],
+      medicines: prescriptionData.medicines || [],
+      notes: prescriptionData.additionalNotes || "",
+    });
+  }, [prescriptionData, masterSymptoms]);
+
+
 
   useEffect(() => {
     const fetchPrescription = async () => {
@@ -56,18 +136,7 @@ function PrescriptionForm() {
 
         if (response.ok && result.success && result.data?.length > 0) {
           const data = result.data[0];
-          setFormData({
-            prescriptionId: data.id || "",
-            vitals: data.vitals || {},
-            symptoms: data.symptoms
-              ? data.symptoms.split(",").map((s: string) => s.trim())
-              : [],
-            diagnosis: data.diagnosis
-              ? data.diagnosis.split(",").map((d: string) => d.trim())
-              : [],
-            medicines: data.medicines || [],
-            notes: data.additionalNotes || "",
-          });
+          setPrescriptionData(result.data[0]);
         } else {
           toast.warning("No prescription data found for this appointment.");
         }
@@ -115,7 +184,7 @@ function PrescriptionForm() {
         patientId,
         vitals: formData.vitals || null,
         diagnosis: formData.diagnosis.join(", "),
-        symptoms: formData.symptoms.join(", ") || null,
+        symptoms: formData.symptoms.map(s => s.name).join(", ") || null,
         medicines: formData.medicines,
         additionalNotes: formData.notes || null,
       };
@@ -150,7 +219,7 @@ function PrescriptionForm() {
     }
   };
 
-  if (loading) {
+  if (pageLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="flex flex-col items-center gap-3">
@@ -179,10 +248,13 @@ function PrescriptionForm() {
 
         <CardContent className="space-y-8 py-6">
           <Vitals value={formData.vitals} onChange={handleVitalsChange} />
-          <Symptoms  value={formData.symptoms.map((s) => ({ name: s }))}
+          <Symptoms
+            value={formData.symptoms} // already full objects
             onChange={(newSymptoms) =>
-              handleSymptomsChange({ symptoms: newSymptoms.map((s) => s.name) })
-            } />
+              setFormData(prev => ({ ...prev, symptoms: newSymptoms }))
+            }
+          />
+
           <DiagnosisSection value={{ diagnosis: formData.diagnosis }} onChange={handleDiagnosisChange} />
           <MedicineSection value={formData.medicines} onChange={handleMedicineChange} />
           <NotesSection value={formData.notes} onChange={handleNotesChange} />
