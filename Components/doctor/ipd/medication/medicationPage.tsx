@@ -49,7 +49,6 @@ export default function MedicationPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
 
-  // Form state
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [category, setCategory] = useState("");
@@ -59,7 +58,6 @@ export default function MedicationPage() {
 
   const [filteredMedicines, setFilteredMedicines] = useState<MedicineName[]>([]);
 
-  // Load dummy categories & medicines
   useEffect(() => {
     setCategories([
       { id: "1", name: "Antibiotic" },
@@ -158,7 +156,6 @@ export default function MedicationPage() {
             <h2 className="text-2xl font-semibold">Medication List</h2>
             <Button onClick={openAddModal}>Add Medication</Button>
         </div>
-      {/* Medication Table */}
       <Card className="mt-4">
         <CardContent className="p-0">
           <Table>
@@ -201,7 +198,6 @@ export default function MedicationPage() {
         </CardContent>
       </Card>
 
-      {/* Medication Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

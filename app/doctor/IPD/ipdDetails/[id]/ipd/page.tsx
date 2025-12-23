@@ -6,7 +6,6 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-/* ---------------- DUMMY DATA ---------------- */
 
 const billing = {
   total: 100000,
@@ -54,7 +53,6 @@ const departmentBilling = [
   },
 ];
 
-/* ---------------- PAGE ---------------- */
 
 export default function IPDOverviewPage() {
   const pending = billing.total - billing.paid;
@@ -125,7 +123,6 @@ export default function IPDOverviewPage() {
               </span>
             </div>
 
-            {/* Status Badge */}
             <div>
               {overallPercentage === 100 ? (
                 <Badge className="bg-green-600">Fully Paid</Badge>
@@ -138,8 +135,6 @@ export default function IPDOverviewPage() {
           </CardContent>
         </Card>
 
-
-        {/* Current Vitals */}
         <Card>
           <CardHeader>
             <CardTitle>Current Vitals</CardTitle>
@@ -152,7 +147,6 @@ export default function IPDOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Symptoms */}
         <Card>
           <CardHeader>
             <CardTitle>Symptoms</CardTitle>
@@ -164,7 +158,6 @@ export default function IPDOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Doctors */}
         <Card>
           <CardHeader>
             <CardTitle>Doctors</CardTitle>
@@ -175,7 +168,6 @@ export default function IPDOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Nurse Notes */}
         <Card>
           <CardHeader>
             <CardTitle>Nurse Notes</CardTitle>
@@ -189,57 +181,49 @@ export default function IPDOverviewPage() {
       <div className="lg:col-span-8 space-y-8">
 
       <Card>
-  <CardHeader>
-    <CardTitle>Department Wise Billing</CardTitle>
-  </CardHeader>
+        <CardHeader>
+          <CardTitle>Department Wise Billing</CardTitle>
+        </CardHeader>
 
-  <CardContent>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {departmentBilling.map((dept) => {
-        const remaining = dept.total - dept.paid;
-        const percentage = Math.round((dept.paid / dept.total) * 100);
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {departmentBilling.map((dept) => {
+              const remaining = dept.total - dept.paid;
+              const percentage = Math.round((dept.paid / dept.total) * 100);
 
-        return (
-          <div
-            key={dept.name}
-            className="border rounded-lg p-4 space-y-2"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">{dept.name}</h4>
-              <span className="text-sm font-semibold">
-                {percentage}%
-              </span>
-            </div>
-
-            {/* Progress */}
-            <Progress value={percentage} />
-
-            {/* Amounts */}
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                Paid: ₹{dept.paid}
-              </span>
-              <span
-                className={
-                  remaining === 0
-                    ? "text-green-600 font-medium"
-                    : "text-destructive font-medium"
-                }
-              >
-                Remaining: ₹{remaining}
-              </span>
-            </div>
+              return (
+                <div
+                  key={dept.name}
+                  className="border rounded-lg p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">{dept.name}</h4>
+                    <span className="text-sm font-semibold">
+                      {percentage}%
+                    </span>
+                  </div>
+                  <Progress value={percentage} />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Paid: ₹{dept.paid}
+                    </span>
+                    <span
+                      className={
+                        remaining === 0
+                          ? "text-green-600 font-medium"
+                          : "text-destructive font-medium"
+                      }
+                    >
+                      Remaining: ₹{remaining}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-    </div>
-  </CardContent>
-</Card>
+        </CardContent>
+      </Card>
 
-
-
-        {/* SECTION LIST */}
         {sections.map((section) => (
           <div key={section}>
             <h3 className="text-lg font-semibold mb-2">{section}</h3>

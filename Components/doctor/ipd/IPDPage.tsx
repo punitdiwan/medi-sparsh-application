@@ -191,47 +191,47 @@ export default function IPDPatientListPage() {
     <div className="bg-background text-foreground min-h-screen p-6">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         <div>
-          <h3 className="text-2xl font-semibold">IPD Patient List</h3>
-          <p className="text-sm text-muted-foreground">
-            View and search IPD patients
+          <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+            IPD Patient List
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            View and manage IPD patients efficiently
           </p>
         </div>
 
         <div className="flex gap-2 flex-wrap items-center">
-          
-
-          {/* Action buttons */}
-
-            <Button variant="default" className="flex items-center gap-2" onClick={()=>route.push("/doctor/IPD/registration")}>
-              <Plus className="w-4 h-4" /> Add Patient
-            </Button>
-
-            <Button variant="secondary" className="flex items-center gap-2">
-              <List className="w-4 h-4" /> Discharge Patient
-            </Button>
-
+          <Button
+            variant="default"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white dark:bg-none dark:text-inherit dark:hover:bg-none"
+            onClick={() => route.push("/doctor/IPD/registration")}
+          >
+            <Plus className="w-4 h-4" /> Add Patient
+          </Button>
+          <Button
+            variant="outline"
+          >
+            <List className="w-4 h-4" /> Discharged Patient
+          </Button>
         </div>
         
       </div>
-      <div className="flex flex-wrap gap-2">
-            <Input
-            placeholder="Search by any field"
-            className="w-64"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <FieldSelectorDropdown
-            columns={optionalColumns as any}
-            visibleFields={visibleFields}
-            onToggle={(key, checked) => {
-              setVisibleFields((prev) =>
-                checked ? [...prev, key] : prev.filter((f) => f !== key)
-              );
-            }}
-          />
-        </div>
-
+      <div className="flex flex-wrap gap-2 mb-6 items-center">
+        <Input
+          placeholder="Search by any field..."
+          className="w-64"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <FieldSelectorDropdown
+          columns={optionalColumns as any}
+          visibleFields={visibleFields}
+          onToggle={(key, checked) => {
+            setVisibleFields((prev) =>
+              checked ? [...prev, key] : prev.filter((f) => f !== key)
+            );
+          }}
+        />
+      </div>
       <div className="mt-6 text-sm">
         {loading ? (
           <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">

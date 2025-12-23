@@ -52,7 +52,6 @@ const symptomMaster = {
   ],
 };
 
-// ---------------- COMPONENT ----------------
 export default function IPDAdmissionPage() {
   const [bedOptions, setBedOptions] = useState<string[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);

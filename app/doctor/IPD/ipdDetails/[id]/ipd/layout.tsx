@@ -36,7 +36,6 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
     });
   };
 
-  // 🔑 Active tab detection from URL
   const activeTab =
     TAB_ITEMS.find((tab) =>
       tab.path
@@ -51,7 +50,6 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
       </h2>
 
       <Tabs value={activeTab}>
-        {/* TAB HEADER */}
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={() => scrollTabs("left")}>
             <ChevronLeft className="h-4 w-4" />
@@ -78,7 +76,6 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
           </Button>
         </div>
 
-        {/* PAGE CONTENT */}
         <div className="mt-4">{children}</div>
       </Tabs>
     </div>

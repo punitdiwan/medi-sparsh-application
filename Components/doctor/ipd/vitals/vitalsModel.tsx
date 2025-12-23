@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-/* ---------------- TYPES ---------------- */
 interface Vital {
   vitalName: string;
   vitalValue: string;
@@ -33,10 +32,9 @@ interface VitalsModalProps {
   onClose: () => void;
   onSubmit: (data: Vital[]) => void;
   vitalsList: string[];
-  initialData?: Vital[]; // for edit mode
+  initialData?: Vital[];
 }
 
-/* ---------------- COMPONENT ---------------- */
 export default function VitalsModal({
   open,
   onClose,
@@ -91,7 +89,6 @@ export default function VitalsModal({
         <div className="space-y-4 mt-2">
           {vitals.map((v, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end">
-              {/* Vital Name */}
               <div className="col-span-4">
                 <Label>Vital Name *</Label>
                 <Select value={v.vitalName} onValueChange={(val) => handleChange(index, "vitalName", val)}>
@@ -108,7 +105,6 @@ export default function VitalsModal({
                 </Select>
               </div>
 
-              {/* Vital Value */}
               <div className="col-span-4">
                 <Label>Vital Value *</Label>
                 <Input
@@ -118,7 +114,6 @@ export default function VitalsModal({
                 />
               </div>
 
-              {/* Date */}
               <div className="col-span-3">
                 <Label>Date *</Label>
                 <Input
@@ -128,7 +123,6 @@ export default function VitalsModal({
                 />
               </div>
 
-              {/* Remove Button */}
               <div className="col-span-1 flex justify-end">
                 {vitals.length > 1 && (
                   <Button
@@ -143,7 +137,6 @@ export default function VitalsModal({
             </div>
           ))}
 
-          {/* Add Row Button */}
           <Button variant="outline" onClick={handleAddRow}>
             + Add Another Vital
           </Button>

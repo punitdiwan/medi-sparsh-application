@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-/* ---------------- TYPES ---------------- */
 
 interface Nurse {
   id: string;
@@ -33,7 +32,6 @@ interface AddNurseNoteDialogProps {
   onSubmit: (data: any) => void;
 }
 
-/* ---------------- COMPONENT ---------------- */
 
 export default function AddNurseNoteDialog({
   open,
@@ -49,9 +47,7 @@ export default function AddNurseNoteDialog({
 
   const [nurses, setNurses] = useState<Nurse[]>([]);
 
-  /* --------- Fetch Nurses (Dummy for now) --------- */
   useEffect(() => {
-    // Replace with API later
     setNurses([
       { id: "1", name: "Nurse Anjali" },
       { id: "2", name: "Nurse Rekha" },
@@ -59,7 +55,6 @@ export default function AddNurseNoteDialog({
     ]);
   }, []);
 
-  /* --------- Submit --------- */
   const handleSubmit = () => {
     if (!date || !nurseId || !note) return;
 
@@ -71,8 +66,6 @@ export default function AddNurseNoteDialog({
       note,
       comment,
     };
-
-    // mock api delay
     setTimeout(() => {
       onSubmit(payload);
       setLoading(false);
@@ -88,7 +81,6 @@ export default function AddNurseNoteDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Date */}
           <div className="space-y-1">
             <Label>Date *</Label>
             <Input
@@ -98,7 +90,6 @@ export default function AddNurseNoteDialog({
             />
           </div>
 
-          {/* Nurse Select */}
           <div className="space-y-1">
             <Label>Nurse *</Label>
             <Select value={nurseId} onValueChange={setNurseId}>
@@ -115,7 +106,6 @@ export default function AddNurseNoteDialog({
             </Select>
           </div>
 
-          {/* Note */}
           <div className="space-y-1">
             <Label>Note *</Label>
             <Textarea
@@ -125,7 +115,6 @@ export default function AddNurseNoteDialog({
             />
           </div>
 
-          {/* Comment */}
           <div className="space-y-1">
             <Label>Comment</Label>
             <Textarea

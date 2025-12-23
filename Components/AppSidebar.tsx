@@ -94,6 +94,7 @@ const items: SidebarItem[] = [
       { title: 'Shift Management', url: '/doctor/settings/appointment',subject: 'doctorShift',action: 'read', },
       { title: 'Symptoms', url: '/doctor/settings/symptom',subject: 'symptoms',action:'read'},
       { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals',action: 'read',},
+      { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation' ,action: 'read'},
       { title: 'Medicine Record', url: '/doctor/settings/medicineRecord',subject: 'medicineRedord',action: 'read', },
       { title: 'Stats', url: '/doctor/settings/stats',subject: 'stats',action: 'read', },
       { title: 'Payments History', url: '/doctor/billing',subject: 'payment',action: 'read', },

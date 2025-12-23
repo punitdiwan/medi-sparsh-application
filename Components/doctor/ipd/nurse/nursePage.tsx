@@ -14,7 +14,6 @@ import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddNurseNoteDialog from "./nurseModel";
 
-/* ---------------- TYPES ---------------- */
 
 interface NurseNote {
   id: string;
@@ -24,7 +23,6 @@ interface NurseNote {
   note: string;
 }
 
-/* ---------------- DUMMY DATA ---------------- */
 
 const DUMMY_NOTES: NurseNote[] = [
   {
@@ -49,7 +47,6 @@ export default function NurseNotesPage() {
   const [open, setOpen] = useState(false);
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Nurse Notes</h2>
 
@@ -65,7 +62,6 @@ export default function NurseNotesPage() {
             console.log("Nurse Note Data:", data);
         }}
         />
-      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Notes List</CardTitle>

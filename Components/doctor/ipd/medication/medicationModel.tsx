@@ -39,16 +39,13 @@ export default function AddMedicationModal() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [filteredMedicines, setFilteredMedicines] = useState<Medicine[]>([]);
 
-  // Simulate fetching categories & medicines
   useEffect(() => {
-    // Categories
     setCategories([
       { id: "1", name: "Antibiotic" },
       { id: "2", name: "Painkiller" },
       { id: "3", name: "Vitamin" },
     ]);
 
-    // Medicines
     setMedicines([
       { id: "m1", name: "Amoxicillin", categoryId: "1" },
       { id: "m2", name: "Cefixime", categoryId: "1" },
@@ -58,11 +55,10 @@ export default function AddMedicationModal() {
     ]);
   }, []);
 
-  // Filter medicines when category changes
   useEffect(() => {
     if (category) {
       setFilteredMedicines(medicines.filter((m) => m.categoryId === category));
-      setMedicine(""); // reset medicine selection
+      setMedicine("");
     } else {
       setFilteredMedicines([]);
     }
@@ -72,7 +68,6 @@ export default function AddMedicationModal() {
     const payload = { date, time, category, medicine, dosage, remarks };
     console.log("Add Medication Payload:", payload);
     setOpen(false);
-    // Reset form
     setDate("");
     setTime("");
     setCategory("");

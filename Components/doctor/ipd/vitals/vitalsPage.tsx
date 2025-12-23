@@ -9,7 +9,7 @@ export default function VitalsPage() {
     { vitalName: string; vitalValue: string; date: string }[]
   >([]);
 
-  const vitalsList = ["BP", "Pulse", "Temp", "SpO₂", "Respiration"]; // dynamic list
+  const vitalsList = ["BP", "Pulse", "Temp", "SpO₂", "Respiration"];
 
   const handleEdit = (index: number) => {
     setOpen(true);
@@ -33,7 +33,7 @@ export default function VitalsPage() {
         onSubmit={(data) => {
           if (editIndex !== null) {
             const newData = [...vitalsData];
-            newData[editIndex] = data[0]; // updating only the edited row
+            newData[editIndex] = data[0];
             setVitalsData(newData);
           } else {
             setVitalsData((prev) => [...prev, ...data]);
