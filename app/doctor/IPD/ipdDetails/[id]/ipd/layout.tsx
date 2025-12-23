@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
@@ -14,7 +15,7 @@ const TAB_ITEMS = [
   { label: "Prescription", path: "prescription" },
   { label: "Consultant Register", path: "consultant-register" },
   { label: "Lab Investigation", path: "lab-investigation" },
-  { label: "Operations", path: "operations" },
+  { label: "Operations", path: "operation" },
   { label: "Charges", path: "charges" },
   { label: "Payments", path: "payments" },
   { label: "Live Consultation", path: "live-consultation" },
@@ -75,7 +76,7 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-
+        <Separator/>
         <div className="mt-4">{children}</div>
       </Tabs>
     </div>

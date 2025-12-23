@@ -47,14 +47,19 @@ export default function NurseNotesPage() {
   const [open, setOpen] = useState(false);
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Nurse Notes</h2>
+      <Card className="px-6">
+      
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">Nurse Notes</h2>
+            <Button className="flex items-center gap-2" onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add Nurse Note
+            </Button>
+          </div>
+        </CardHeader>
+        
 
-        <Button className="flex items-center gap-2" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Nurse Note
-        </Button>
-      </div>
       <AddNurseNoteDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -105,6 +110,7 @@ export default function NurseNotesPage() {
             </Table>
           </div>
         </CardContent>
+      </Card>
       </Card>
     </div>
   );
