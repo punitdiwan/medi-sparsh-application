@@ -15,15 +15,17 @@ export async function getCurrentHospital() {
   // Extract the subdomain (remove port if present)
   let domain;
   let subdomain;
-  if (process.env.VERCEL) {
-    domain = host.split(".")[0];
-    subdomain = "abc"
-    // subdomain = domain.split(".")[0]; // Get first part as subdomain
-  }
-  else {
+  if (process.env.VERCEL_ENV === "preview") {
+    // preview deployment
+    subdomain = "abc";
+  } else if (process.env.VERCEL_ENV === "production") {
+    // production deployment
+    const parts = host.split(".");
+    subdomain = parts[0];
+  } else {
+    // local development
     domain = host.split(":")[0];
-    subdomain = domain.split(".")[0]; // Get first part as subdomain
-
+    subdomain = domain.split(".")[0];
   }
 
   console.log(domain, subdomain);
