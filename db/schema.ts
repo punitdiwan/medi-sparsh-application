@@ -1,4 +1,5 @@
 import { batched } from "better-auth/react";
+import { create } from "domain";
 import { desc, relations, sql } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey } from "drizzle-orm/pg-core";
 
@@ -1023,4 +1024,26 @@ export const symptoms = pgTable("symptoms", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
+});
+
+// Operation Catgory Table
+export const operationCategories = pgTable("operation_categories", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	name: text().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+// Operation Table
+export const operations = pgTable("operations", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	operationCategoryId: text("operation_category_id").notNull()
+		.references(() => operationCategories.id, { onDelete: "cascade" }),
+	name: text().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull()
 });

@@ -7,46 +7,67 @@ import PrescriptionForm from "@/Components/forms/PrescriptionForm";
 import BackButton from "@/Components/BackButton";
 import { getShortId } from "@/utils/getShortId";
 
+import {
+  FileText,
+  ClipboardList,
+  HeartPulse,
+} from "lucide-react";
+
 export default function VisitPatientPage() {
-  const [activeTab, setActiveTab] = useState("Prescription");
+  const [activeTab, setActiveTab] = useState<"prescription" | "history">(
+    "prescription"
+  );
 
   const params = useParams();
-  const { id } = params;
+  const idParam = params.id;
 
-  console.log("patient Id", id);
+  const id =
+    typeof idParam === "string"
+      ? idParam
+      : Array.isArray(idParam)
+      ? idParam[0]
+      : "";
 
   const searchParams = useSearchParams();
   const name = searchParams.get("name");
 
   return (
-    <div>
+    <div className="min-h-screen mt-6">
       <BackButton />
-      <nav className="flex justify-between items-center mt-4  p-5 border-b border-gray-300">
-        <div>
-          {/* <h2 className="text-sm font-semibold">
-            Patient: {name || "Unknown"}
-          </h2>
-          <p className="text-sm text-gray-600">ID: {id}</p> */}
-          <p className="text-sm text-muted-foreground">
+
+      {/* ===== HEADER ===== */}
+      <nav className="flex items-center justify-between px-6 py-4 border-b">
+        {/* Patient Info */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2">
+            <HeartPulse className="h-5 w-5 text-red-500" />
+            <h2 className="text-lg font-semibold text-foreground">
+              {name || "Unknown Patient"}
+            </h2>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-1">
             Patient ID:{" "}
-            <span className="font-medium text-primary">
-              {Array.isArray(id) ? getShortId(id[0]) : id ? getShortId(id) : "Patient Id"}
+            <span className="font-medium">
+              {id ? getShortId(id) : "N/A"}
             </span>
           </p>
-
         </div>
 
-        <div className="flex space-x-6">
+        {/* Tabs */}
+        <div className="flex gap-3">
           <button
-            onClick={() => setActiveTab("Prescription")}
+            onClick={() => setActiveTab("prescription")}
             className={`px-4 py-2 font-semibold rounded ${
-              activeTab === "Prescription"
+              activeTab === "prescription"
               ? "border-b-2 border-blue-500 cursor-none"
               : "text-gray-600 cursor-pointer"
               }`}
           >
+            <FileText className="h-4 w-4" />
             Prescription
           </button>
+
           <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 font-semibold rounded ${
@@ -55,16 +76,31 @@ export default function VisitPatientPage() {
               : "text-gray-600 cursor-pointer"
               }`}
           >
+            <ClipboardList className="h-4 w-4" />
             Medical History
           </button>
-
-
         </div>
       </nav>
 
-      <main className="p-5">
+      {/* ===== SUB HEADER DESCRIPTION ===== */}
+      <div className="px-6 py-3 bg-muted/40 border-b">
+        {activeTab === "prescription" ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <FileText className="h-4 w-4 text-blue-600" />
+            Create or update the patient’s prescription, medicines and notes.
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <ClipboardList className="h-4 w-4 text-green-600" />
+            Review previous visits, diagnoses and prescribed medicines.
+          </div>
+        )}
+      </div>
+
+      {/* ===== CONTENT ===== */}
+      <main className="px-6 py-4">
+        {activeTab === "prescription" && <PrescriptionForm />}
         {activeTab === "history" && <PatientMedicialHistroy />}
-        {activeTab === "Prescription" && <PrescriptionForm />}
       </main>
     </div>
   );
