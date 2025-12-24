@@ -1,191 +1,173 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { PlusCircle, Eye, Pencil, Trash2, Printer } from "lucide-react";
 import { IPDOperationDialog } from "./operationModel";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-/* ---------------- Types ---------------- */
 
 export type Operation = {
   id: string;
-
   categoryId: number;
   category: string;
-
   name: string;
   date: string;
-
   consultant: string;
   assistant1?: string;
   assistant2?: string;
-
   anesthetist?: string;
   anesthesiaType?: string;
-
   technician?: string;
   otAssistant?: string;
-
   remark?: string;
   result?: string;
 };
 
-
 export default function IPdOperationsPage() {
-  const [open, setOpen] = useState(false);
-  const [editingOperation, setEditingOperation] =
-    useState<Operation | null>(null);
   const [operations, setOperations] = useState<Operation[]>([]);
+  const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingOperation, setEditingOperation] = useState<Operation | null>(null);
 
-  /* ----- Add / Edit ----- */
+  /* ---------------- Search Filter ---------------- */
+  const filtered = useMemo(() => {
+    if (!search) return operations;
+    return operations.filter(
+      (op) =>
+        op.name.toLowerCase().includes(search.toLowerCase()) ||
+        op.category.toLowerCase().includes(search.toLowerCase()) ||
+        op.technician?.toLowerCase().includes(search.toLowerCase()) ||
+        op.date.includes(search)
+    );
+  }, [operations, search]);
+
+  /* ---------------- Add / Edit ---------------- */
   const handleSubmit = (data: Operation) => {
     if (editingOperation) {
       setOperations((prev) =>
-        prev.map((op) =>
-          op.id === editingOperation.id ? { ...data, id: op.id } : op
-        )
+        prev.map((op) => (op.id === editingOperation.id ? { ...data, id: op.id } : op))
       );
+      setEditingOperation(null);
     } else {
-      setOperations((prev) => [
-        ...prev,
-        { ...data, id: crypto.randomUUID() },
-      ]);
+      setOperations((prev) => [...prev, { ...data, id: crypto.randomUUID() }]);
     }
-
-    setOpen(false);
-    setEditingOperation(null);
+    setModalOpen(false);
   };
 
-  /* ----- Delete ----- */
+  /* ---------------- Delete ---------------- */
   const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this operation?")) return;
-    setOperations((prev) => prev.filter((op) => op.id !== id));
+    if (confirm("Are you sure you want to delete this operation?")) {
+      setOperations((prev) => prev.filter((op) => op.id !== id));
+    }
+  };
+
+  /* ---------------- Print ---------------- */
+  const handlePrint = (op: Operation) => {
+    alert(`Print operation: ${op.name}`);
   };
 
   return (
-    <div className=" space-y-6">
-    <Card className="px-6">
-
-      <CardHeader>
-        <CardTitle className="text-2xl font-semibold">Operations</CardTitle>
-      </CardHeader>
-        <Separator/>
-        <div className="flex justify-between items-center">
-            <Input placeholder="Search operation..." className="max-w-sm" />
-            <Button onClick={() => setOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Operation
-            </Button>
-        </div>
-        <Separator/>
-        <CardContent>
-            <div className="rounded-xl border">
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Reference No</TableHead>
-                    <TableHead>Operation Date</TableHead>
-                    <TableHead>Operation Name</TableHead>
-                    <TableHead>Operation Category</TableHead>
-                    <TableHead>OT Technician</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                    {operations.length === 0 && (
-                    <TableRow>
-                        <TableCell
-                        colSpan={6}
-                        className="text-center text-muted-foreground"
-                        >
-                        No operations added
-                        </TableCell>
-                    </TableRow>
-                    )}
-
-                    {operations.map((op, index) => (
-                    <TableRow key={op.id}>
-                        <TableCell>OP-{index + 1}</TableCell>
-                        <TableCell>{op.date}</TableCell>
-                        <TableCell>{op.name}</TableCell>
-                        <TableCell>{op.category}</TableCell>
-                        <TableCell>{op.technician || "—"}</TableCell>
-
-                        <TableCell className="text-right">
-                        <TooltipProvider>
-                            <div className="flex justify-end gap-3">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                <Eye
-                                    className="h-4 w-4 text-blue-600 cursor-pointer"
-                                    onClick={() =>
-                                    alert("View mode coming soon 👀")
-                                    }
-                                />
-                                </TooltipTrigger>
-                                <TooltipContent>View</TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                <Pencil
-                                    className="h-4 w-4 text-green-600 cursor-pointer"
-                                    onClick={() => {
-                                    setEditingOperation(op);
-                                    setOpen(true);
-                                    }}
-                                />
-                                </TooltipTrigger>
-                                <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                <Trash2
-                                    className="h-4 w-4 text-red-600 cursor-pointer"
-                                    onClick={() => handleDelete(op.id)}
-                                />
-                                </TooltipTrigger>
-                                <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                            </div>
-                        </TooltipProvider>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
+    <div className="p-6 space-y-6">
+      {/* HEADER / SEARCH */}
+      <Card className="shadow-sm">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white">Operations Manager</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="flex items-center border rounded-md overflow-hidden bg-white">
+              <Input
+                placeholder="Search by name / category / technician / date"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="border-none text-gray-700 shadow-none focus:ring-0 focus:outline-none"
+              />
             </div>
-      </CardContent>
-    </Card>
-      <IPDOperationDialog
-        open={open}
-        defaultValues={editingOperation || undefined}
-        onClose={() => {
-            setOpen(false);
-            setEditingOperation(null);
-        }}
-        onSubmit={handleSubmit}
-      />
+            <Button
+              onClick={() => { setModalOpen(true); setEditingOperation(null); }}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <PlusCircle className="h-5 w-5" /> Add Operation
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
 
+      {/* OPERATIONS TABLE */}
+      <Card className="shadow-lg border border-gray-200">
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-indigo-700 dark:text-white">Ref No</TableHead>
+                <TableHead className="text-indigo-700 dark:text-white">Date</TableHead>
+                <TableHead className="text-indigo-700 dark:text-white">Operation Name</TableHead>
+                <TableHead className="text-indigo-700 dark:text-white">Category</TableHead>
+                <TableHead className="text-indigo-700 dark:text-white">OT Technician</TableHead>
+                <TableHead className="text-center text-indigo-700 dark:text-white">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length ? (
+                filtered.map((op, index) => (
+                  <TableRow key={op.id}>
+                    <TableCell className="font-medium text-gray-800 dark:text-white">OP-{index + 1}</TableCell>
+                    <TableCell className="text-gray-600 dark:text-white">{op.date}</TableCell>
+                    <TableCell className="text-gray-700 dark:text-white">{op.name}</TableCell>
+                    <TableCell className="text-gray-700 dark:text-white">{op.category}</TableCell>
+                    <TableCell className="text-gray-700 dark:text-white">{op.technician || "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <TooltipProvider>
+                        <div className="flex gap-2 justify-center">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline" onClick={() => handlePrint(op)}>
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Print</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline" onClick={() => { setEditingOperation(op); setModalOpen(true); }}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="destructive" onClick={() => handleDelete(op.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-6 text-gray-400">No operations found</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* ADD / EDIT OPERATION DIALOG */}
+      {modalOpen && (
+        <IPDOperationDialog
+          open={modalOpen}
+          defaultValues={editingOperation || undefined}
+          onClose={() => { setModalOpen(false); setEditingOperation(null); }}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }

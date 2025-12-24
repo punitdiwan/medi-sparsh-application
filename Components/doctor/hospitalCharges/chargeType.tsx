@@ -175,8 +175,7 @@ export default function ChargeTypeManager() {
 
   return (
     <div className="p-6 bg-background space-y-4">
-
-      <div className="flex justify-between items-center">
+      <div className="flex justify-end items-center">
         <Can I="create" a="ChargesType" ability={ability}>
           <Button
             onClick={() => {
