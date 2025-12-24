@@ -50,8 +50,8 @@ function PatientPage() {
             className={`flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${
                 activeTab === "details"
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-muted text-muted-foreground hover:bg-blue-100 hover:text-blue-700"
+                  ? "bg-blue-600 text-white shadow cursor-none"
+                  : "bg-muted text-muted-foreground hover:bg-blue-100 hover:text-blue-700 cursor-pointer"
               }
             `}
           >
@@ -64,8 +64,8 @@ function PatientPage() {
             className={`flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
               ${
                 activeTab === "history"
-                  ? "bg-green-600 text-white shadow"
-                  : "bg-muted text-muted-foreground hover:bg-green-100 hover:text-green-700"
+                  ? "bg-green-600 text-white shadow cursor-none"
+                  : "bg-muted text-muted-foreground hover:bg-green-100 hover:text-green-700 cursor-pointer"
               }
             `}
           >

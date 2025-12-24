@@ -41,8 +41,8 @@ export default function VisitPatientPage() {
             onClick={() => setActiveTab("Prescription")}
             className={`px-4 py-2 font-semibold rounded ${
               activeTab === "Prescription"
-              ? "border-b-2 border-blue-500"
-              : "text-gray-600"
+              ? "border-b-2 border-blue-500 cursor-none"
+              : "text-gray-600 cursor-pointer"
               }`}
           >
             Prescription
@@ -51,8 +51,8 @@ export default function VisitPatientPage() {
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 font-semibold rounded ${
               activeTab === "history"
-              ? "border-b-2 border-blue-500"
-              : "text-gray-600"
+              ? "border-b-2 border-blue-500 cursor-none"
+              : "text-gray-600 cursor-pointer"
               }`}
           >
             Medical History

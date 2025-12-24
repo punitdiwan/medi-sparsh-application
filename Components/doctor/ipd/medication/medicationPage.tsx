@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
 import { Edit } from "lucide-react";
 
@@ -152,10 +152,13 @@ export default function MedicationPage() {
 
   return (
     <div className="p-6 space-y-4">
-        <div className="flex justify-between flex-warp items-center">
-            <h2 className="text-2xl font-semibold">Medication List</h2>
-            <Button onClick={openAddModal}>Add Medication</Button>
-        </div>
+      <Card className="px-6">
+        <CardHeader>
+          <div className="flex justify-between flex-warp items-center">
+              <h2 className="text-2xl font-semibold">Medication List</h2>
+              <Button onClick={openAddModal}>Add Medication</Button>
+          </div>
+        </CardHeader>
       <Card className="mt-4">
         <CardContent className="p-0">
           <Table>
@@ -273,6 +276,7 @@ export default function MedicationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </Card>
     </div>
   );
 }
