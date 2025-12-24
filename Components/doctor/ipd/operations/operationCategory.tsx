@@ -57,6 +57,8 @@ import {
   getAllOperationCategories,
 } from "@/lib/actions/operationCategories";
 import { getOperationCountByCategory } from "@/lib/actions/operations";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Category {
   id: string;
@@ -243,14 +245,18 @@ export default function OperationCategoryManager() {
                     disabled={loading}
                 />
               </div>
-              <Button
-                variant={showDeleted ? "default" : "outline"}
-                onClick={() => setShowDeleted(!showDeleted)}
-                className={showDeleted ? "bg-destructive text-white hover:bg-destructive/90" : ""}
-                disabled={loading}
-              >
-                {showDeleted ? "Show Active" : "Show Deleted"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="deleted"
+                  checked={showDeleted}
+                  onCheckedChange={setShowDeleted}
+                  disabled={loading}
+                />
+                <Label htmlFor="deleted">
+                  {"Show Deleted"}
+                </Label>
+              </div>
+
             </div>
 
             <Button className="flex gap-2 bg-brand-gradient text-white hover:opacity-90"
