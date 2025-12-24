@@ -2,116 +2,228 @@
 
 import { useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  NotebookText,
+  PlusCircle,
+  Pencil,
+  Trash2,
+  MessageCircle,
+} from "lucide-react";
 import AddNurseNoteDialog from "./nurseModel";
-
 
 interface NurseNote {
   id: string;
   date: string;
   time: string;
+  nurseId: string;      // Add this
   nurseName: string;
   note: string;
+  comment?: string;
 }
 
 
-const DUMMY_NOTES: NurseNote[] = [
+/* ---------------- Dummy Data ---------------- */
+const INITIAL_NOTES: NurseNote[] = [
   {
     id: "1",
     date: "12-02-2025",
     time: "10:30 AM",
-    nurseName: "Nurse Anjali",
-    note: "Patient vitals stable. BP normal.",
+    nurseId: "1",
+    nurseName: "April Clinton (9020)",
+    note: "Daily Routine Check up",
+    comment: "Daily Routine Check up",
   },
   {
     id: "2",
     date: "13-02-2025",
     time: "06:45 PM",
-    nurseName: "Nurse Rekha",
-    note: "Administered prescribed medication.",
+    nurseId: "2",
+    nurseName: "Nurse Rekha (9021)",
+    note: "Administered prescribed medication",
+    comment: "Patient responded well",
   },
 ];
 
-
-export default function NurseNotesPage() {
-  const [notes, setNotes] = useState<NurseNote[]>(DUMMY_NOTES);
+export default function NurseNotesTimeline() {
+  const [notes, setNotes] = useState<NurseNote[]>(INITIAL_NOTES);
   const [open, setOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<NurseNote | null>(null);
+
+  const handleAdd = () => {
+    setEditingNote(null);
+    setOpen(true);
+  };
+
+  const handleEdit = (note: NurseNote) => {
+    setEditingNote(note);
+    setOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this note?")) {
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+    }
+  };
+
+  const handleComment = (note: NurseNote) => {
+    const comment = prompt("Enter comment:", note.comment || "");
+    if (comment !== null) {
+      setNotes((prev) =>
+        prev.map((n) => (n.id === note.id ? { ...n, comment } : n))
+      );
+    }
+  };
+
+  const handleSubmit = (data: Partial<NurseNote>) => {
+    if (editingNote) {
+      setNotes((prev) =>
+        prev.map((n) => (n.id === editingNote.id ? { ...n, ...data } : n))
+      );
+    } else {
+      setNotes((prev) => [
+        ...prev,
+        { id: Date.now().toString(), ...data } as NurseNote,
+      ]);
+    }
+    setOpen(false);
+  };
+
   return (
-    <div className="space-y-6">
-      <Card className="px-6">
-      
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Nurse Notes</h2>
-            <Button className="flex items-center gap-2" onClick={() => setOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Add Nurse Note
-            </Button>
-          </div>
-        </CardHeader>
-        
-
-      <AddNurseNoteDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onSubmit={(data) => {
-            console.log("Nurse Note Data:", data);
-        }}
-        />
+    <div className="p-6 space-y-6">
+      {/* HEADER */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Notes List</CardTitle>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
+            <NotebookText className="h-6 w-6 text-indigo-600 " />
+            Nurse Notes
+          </CardTitle>
+
+          <Button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Add Nurse Note
+          </Button>
         </CardHeader>
-
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Nurse Name</TableHead>
-                  <TableHead>Note</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {notes.length > 0 ? (
-                  notes.map((note) => (
-                    <TableRow key={note.id}>
-                      <TableCell>{note.date}</TableCell>
-                      <TableCell>{note.time}</TableCell>
-                      <TableCell>{note.nurseName}</TableCell>
-                      <TableCell className="max-w-[400px] truncate">
-                        {note.note}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center text-muted-foreground py-10"
-                    >
-                      No nurse notes found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
       </Card>
-      </Card>
+
+      {/* TIMELINE */}
+      <div className="relative space-y-6">
+        {/* Vertical Line */}
+        <div className="absolute left-6 top-0 h-full w-[2px] bg-indigo-200" />
+
+        {notes.length ? (
+          notes.map((note) => (
+            <div key={note.id} className="relative flex gap-6 items-start">
+              {/* ICON */}
+              <div className="relative z-10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
+                  <NotebookText className="h-5 w-5" />
+                </div>
+              </div>
+
+              {/* CONTENT */}
+              <div className="flex-1">
+                <Card className="border border-indigo-100 dark:border-indigo-900 shadow-md hover:shadow-lg transition">
+                  <CardContent className="px-4 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">{note.nurseName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {note.date} | {note.time}
+                        </p>
+                      </div>
+
+                      {/* ACTION ICONS */}
+                      <TooltipProvider>
+                        <div className="flex gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Pencil
+                                className="h-4 w-4 cursor-pointer text-green-600"
+                                onClick={() => handleEdit(note)}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Trash2
+                                className="h-4 w-4 cursor-pointer text-red-600"
+                                onClick={() => handleDelete(note.id)}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <MessageCircle
+                                className="h-4 w-4 cursor-pointer text-blue-600"
+                                onClick={() => handleComment(note)}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>Add Comment</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
+                    </div>
+
+                    <div >
+                      <p className="text-sm text-muted-foreground font-medium">Note</p>
+                      <p>{note.note}</p>
+                    </div>
+
+                    {note.comment && (
+                      <div>
+                        <p className="text-sm text-muted-foreground font-medium">Comment</p>
+                        <p>{note.comment}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-muted-foreground py-10">
+            No nurse notes found
+          </p>
+        )}
+      </div>
+
+      {/* ADD / EDIT DIALOG */}
+      {open && (
+        <AddNurseNoteDialog
+          open={open}
+          initialData={editingNote ? {
+            date: editingNote.date,
+            nurseId: editingNote.nurseId,
+            note: editingNote.note,
+            comment: editingNote.comment,
+          } : undefined}
+          onClose={() => {
+            setOpen(false);
+            setEditingNote(null);
+          }}
+          onSubmit={handleSubmit}
+        />
+
+      )}
     </div>
   );
 }

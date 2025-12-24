@@ -163,6 +163,53 @@
     );
   }
 }
+@layer utilities {
+  .bg-Module-header {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600;
+  }
+
+  .dark .bg-Module-header {
+    @apply from-indigo-700 to-purple-700;
+  }
+}
+/* ===============================
+   Indigo 700 Global Utilities
+   =============================== */
+
+/* TEXT COLOR */
+.text-indigo-global {
+  @apply text-indigo-700 transition-colors duration-200;
+}
+
+.text-indigo-global:hover {
+  @apply text-indigo-600;
+}
+
+.dark .text-indigo-global {
+  @apply text-white;
+}
+
+.dark .text-indigo-global:hover {
+  @apply text-white;
+}
+
+
+/* BACKGROUND COLOR */
+.bg-indigo-global {
+  @apply bg-indigo-700 text-white transition-colors duration-200;
+}
+
+.bg-indigo-global:hover {
+  @apply bg-indigo-600;
+}
+
+.dark .bg-indigo-global {
+  @apply bg-white text-black;
+}
+
+.dark .bg-indigo-global:hover {
+  @apply bg-white;
+}
 
 
 /* 🌍 Global: hide scrollbar everywhere */

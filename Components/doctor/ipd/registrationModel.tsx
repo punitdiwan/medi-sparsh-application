@@ -251,10 +251,23 @@ const SymptomsSection = (
   return (
     <div className="p-6 space-y-6 mt-4">
         <BackButton/>
+      <Card className="bg-Module-header text-white shadow-lg">
+        <CardHeader className="flex flex-row items-center gap-3">
+          <BackButton />
+          <div>
+            <CardTitle className="text-3xl font-bold">
+              IPD Admission
+            </CardTitle>
+            <p className="text-sm text-indigo-100">
+              Admit patient, assign bed & record symptoms
+            </p>
+          </div>
+        </CardHeader>
+      </Card>
       {/* Patient Search */}
       <Card>
-        <CardContent className="flex flex-col gap-2 p-4">
-            <Label>Search Patient *</Label>
+        <CardContent className="flex flex-col gap-1 px-4">
+            <Label className="text-lg">Search Patient *</Label>
             <PatientSearchBox onSelect={handlePatientSelect} />
             {!form.watch("patientId") && (
             <p className="text-xs text-muted-foreground">
@@ -401,7 +414,7 @@ const SymptomsSection = (
                 </Select>
               </div>
 
-              <Button type="submit" className="w-full mt-4">
+              <Button type="submit" className="w-full mt-4 bg-indigo-700 text-white hover:bg-indigo-600">
                 Save IPD
               </Button>
             </form>

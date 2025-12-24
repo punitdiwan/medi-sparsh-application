@@ -7,9 +7,23 @@ import { Input } from "@/components/ui/input";
 import { PaginationControl } from "@/components/pagination";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { Button } from "@/components/ui/button";
-import { Plus, List } from "lucide-react";
+import {
+  Plus,
+  List,
+  Search,
+  Users,
+  Bed,
+  Stethoscope,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
+/* ---------- Types ---------- */
 interface IPDPatient {
   ipdNo: string;
   caseId: string;
@@ -24,6 +38,7 @@ interface IPDPatient {
   creditLimit: string;
 }
 
+/* ---------- Dummy Data ---------- */
 const DUMMY_IPD_PATIENTS: IPDPatient[] = [
   {
     ipdNo: "IPD-001",
@@ -51,53 +66,16 @@ const DUMMY_IPD_PATIENTS: IPDPatient[] = [
     previousMedicalIssue: "Anemia",
     creditLimit: "₹75,000",
   },
-  {
-    ipdNo: "IPD-003",
-    caseId: "CASE-1003",
-    name: "Amit Verma",
-    gender: "Male",
-    phone: "9988776655",
-    generatedBy: "Emergency",
-    consultantDoctor: "Dr. Rajesh Singh",
-    bed: "ICU-02",
-    isAntenatal: false,
-    previousMedicalIssue: "Hypertension",
-    creditLimit: "₹1,00,000",
-  },
-  {
-    ipdNo: "IPD-004",
-    caseId: "CASE-1004",
-    name: "Pooja Mehta",
-    gender: "Female",
-    phone: "9090909090",
-    generatedBy: "Reception",
-    consultantDoctor: "Dr. Kavita Rao",
-    bed: "Bed C-10",
-    isAntenatal: true,
-    previousMedicalIssue: "None",
-    creditLimit: "₹60,000",
-  },
-  {
-    ipdNo: "IPD-005",
-    caseId: "CASE-1005",
-    name: "Suresh Yadav",
-    gender: "Male",
-    phone: "9812345678",
-    generatedBy: "OPD Desk",
-    consultantDoctor: "Dr. Manish Jain",
-    bed: "Bed D-03",
-    isAntenatal: false,
-    previousMedicalIssue: "Asthma",
-    creditLimit: "₹40,000",
-  },
 ];
 
+/* ---------- Page ---------- */
 export default function IPDPatientListPage() {
   const [allData, setAllData] = useState<IPDPatient[]>([]);
   const [filteredData, setFilteredData] = useState<IPDPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const route = useRouter();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [visibleFields, setVisibleFields] = useState<string[]>([
@@ -107,22 +85,13 @@ export default function IPDPatientListPage() {
     "creditLimit",
   ]);
 
-  // Fetch patients
-  const fetchPatients = async () => {
-  setLoading(true);
-
-  setTimeout(() => {
-    setAllData(DUMMY_IPD_PATIENTS);
-    setLoading(false);
-  }, 600); 
-};
-
-
   useEffect(() => {
-    fetchPatients();
+    setTimeout(() => {
+      setAllData(DUMMY_IPD_PATIENTS);
+      setLoading(false);
+    }, 600);
   }, []);
 
-  // Filter by search
   useEffect(() => {
     let data = [...allData];
     if (search.trim()) {
@@ -137,26 +106,24 @@ export default function IPDPatientListPage() {
     setCurrentPage(1);
   }, [allData, search]);
 
-  // Table columns
+  /* ---------- Columns ---------- */
   const fixedColumns: ColumnDef<IPDPatient>[] = [
     {
-    accessorKey: "ipdNo",
-    header: "IPD No",
-    cell: ({ row }) => {
-        const ipdNo = row.original.ipdNo;
-
-        return (
-            <button
-            onClick={() => route.push(`/doctor/IPD/ipdDetails/${ipdNo}/ipd`)}
-            className="text-primary underline font-medium hover:text-primary/80"
-            >
-            {ipdNo}
-            </button>
-        );
-        },
+      accessorKey: "ipdNo",
+      header: "IPD No",
+      cell: ({ row }) => (
+        <button
+          onClick={() =>
+            route.push(`/doctor/IPD/ipdDetails/${row.original.ipdNo}/ipd`)
+          }
+          className="font-semibold text-indigo-600 hover:text-indigo-400 underline cursor-pointer"
+        >
+          {row.original.ipdNo}
+        </button>
+      ),
     },
     { accessorKey: "caseId", header: "Case ID" },
-    { accessorKey: "name", header: "Name" },
+    { accessorKey: "name", header: "Patient Name" },
   ];
 
   const optionalColumns: ColumnDef<IPDPatient>[] = [
@@ -167,16 +134,24 @@ export default function IPDPatientListPage() {
     { accessorKey: "bed", header: "Bed" },
     {
       accessorKey: "isAntenatal",
-      header: "Is Antenatal",
-      cell: ({ row }) => (row.original.isAntenatal ? "Yes" : "No"),
+      header: "Antenatal",
+      cell: ({ row }) =>
+        row.original.isAntenatal ? (
+          <span className="text-green-600 font-medium">Yes</span>
+        ) : (
+          <span className="text-gray-500">No</span>
+        ),
     },
-    { accessorKey: "previousMedicalIssue", header: "Previous Medical Issue" },
+    { accessorKey: "previousMedicalIssue", header: "Medical Issue" },
     { accessorKey: "creditLimit", header: "Credit Limit" },
   ];
 
   const displayedOptionalCols = optionalColumns.filter(
-    (col): col is ColumnDef<IPDPatient, any> & { accessorKey: keyof IPDPatient } =>
-      "accessorKey" in col && visibleFields.includes(col.accessorKey as string)
+    (col): col is ColumnDef<IPDPatient, any> & {
+      accessorKey: keyof IPDPatient;
+    } =>
+      "accessorKey" in col &&
+      visibleFields.includes(col.accessorKey as string)
   );
 
   const columns = [...fixedColumns, ...displayedOptionalCols];
@@ -188,72 +163,93 @@ export default function IPDPatientListPage() {
   );
 
   return (
-    <div className="bg-background text-foreground min-h-screen p-6">
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <div>
-          <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-            IPD Patient List
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            View and manage IPD patients efficiently
-          </p>
-        </div>
+    <div className="p-6 space-y-6">
+      {/* ---------- HEADER CARD ---------- */}
+      <Card className="bg-Module-header text-white shadow-lg">
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <Users className="h-7 w-7" />
+              IPD Patient List
+            </CardTitle>
+            <p className="text-sm text-indigo-100 mt-1">
+              Manage admitted patients & bed allocations
+            </p>
+          </div>
 
-        <div className="flex gap-2 flex-wrap items-center">
-          <Button
-            variant="default"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white dark:bg-none dark:text-inherit dark:hover:bg-none"
-            onClick={() => route.push("/doctor/IPD/registration")}
-          >
-            <Plus className="w-4 h-4" /> Add Patient
-          </Button>
-          <Button
-            variant="outline"
-          >
-            <List className="w-4 h-4" /> Discharged Patient
-          </Button>
-        </div>
-        
-      </div>
-      <div className="flex flex-wrap gap-2 mb-6 items-center">
-        <Input
-          placeholder="Search by any field..."
-          className="w-64"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <FieldSelectorDropdown
-          columns={optionalColumns as any}
-          visibleFields={visibleFields}
-          onToggle={(key, checked) => {
-            setVisibleFields((prev) =>
-              checked ? [...prev, key] : prev.filter((f) => f !== key)
-            );
-          }}
-        />
-      </div>
-      <div className="mt-6 text-sm">
-        {loading ? (
-          <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">
-            Loading patients...
-          </p>
-        ): (
-          <>
-            <Table data={paginatedData} columns={columns} fallback="No patients found" />
-            <PaginationControl
-              currentPage={currentPage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              onPageChange={setCurrentPage}
-              onRowsPerPageChange={(val) => {
-                setRowsPerPage(val);
-                setCurrentPage(1);
-              }}
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={() => route.push("/doctor/IPD/registration")}
+              className="bg-white text-indigo-700 hover:bg-indigo-50"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Patient
+            </Button>
+            <Button
+              variant="outline"
+              className="border-white text-foreground"
+              onClick={()=>route.push("/doctor/IPD/dischargedPatients")}
+            >
+              <List className="h-4 w-4 mr-1" />
+              Discharged
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* ---------- FILTER BAR ---------- */}
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search patients..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 w-64"
             />
-          </>
-        )}
-      </div>
+          </div>
+
+          <FieldSelectorDropdown
+            columns={optionalColumns as any}
+            visibleFields={visibleFields}
+            onToggle={(key, checked) =>
+              setVisibleFields((prev) =>
+                checked ? [...prev, key] : prev.filter((f) => f !== key)
+              )
+            }
+          />
+        </CardContent>
+      </Card>
+
+      {/* ---------- TABLE ---------- */}
+      <Card className="shadow-md">
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="h-[300px] flex items-center justify-center text-lg font-medium animate-pulse">
+              Loading patients...
+            </div>
+          ) : (
+            <>
+              <Table
+                data={paginatedData}
+                columns={columns}
+                fallback="No patients found"
+              />
+              <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(val) => {
+                  setRowsPerPage(val);
+                  setCurrentPage(1);
+                }}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
-

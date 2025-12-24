@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, Eye, Pencil, Trash2, Printer } from "lucide-react";
+import { PlusCircle, Eye, Pencil, Trash2, Printer, Users2 } from "lucide-react";
 import { IPDOperationDialog } from "./operationModel";
 
 export type Operation = {
@@ -74,16 +74,17 @@ export default function IPdOperationsPage() {
       {/* HEADER / SEARCH */}
       <Card className="shadow-sm">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white">Operations Manager</CardTitle>
+          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
+            <Users2 className="h-6 w-6 text-indigo-600" />
+            Operations
+          </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <div className="flex items-center border rounded-md overflow-hidden bg-white">
               <Input
                 placeholder="Search by name / category / technician / date"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="border-none text-gray-700 shadow-none focus:ring-0 focus:outline-none"
+                className="sm:w-72"
               />
-            </div>
             <Button
               onClick={() => { setModalOpen(true); setEditingOperation(null); }}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"

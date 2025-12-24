@@ -74,115 +74,157 @@ export default function IPDOverviewPage() {
     ? Math.round((totalPaid / totalAmount) * 100)
     : 0;
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+   return (
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <div className="lg:col-span-4 space-y-6">
+    {/* ================= LEFT PANEL ================= */}
+    <div className="lg:col-span-4 space-y-6">
 
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-4">
-            <Avatar className="h-14 w-14">
-              <AvatarFallback>RK</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold text-lg">Ramesh Kumar</h3>
-              <p className="text-sm text-muted-foreground">IPD-001 • Male • 45Y</p>
-            </div>
-          </CardHeader>
+      {/* PATIENT CARD */}
+      <Card className="border-indigo-200/50 ">
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="h-14 w-14 ring-2 ring-indigo-400">
+            <AvatarFallback className="bg-indigo-600 text-white">
+              RK
+            </AvatarFallback>
+          </Avatar>
 
-          <CardContent className="space-y-2 text-sm">
-            <p><b>Bed:</b> ICU-02</p>
-            <p><b>Doctor:</b> Dr. Amit Sharma</p>
-            <p><b>Admission Date:</b> 12-02-2025</p>
-            <Badge variant="outline">Active</Badge>
-          </CardContent>
-        </Card>
+          <div>
+            <h3 className="font-semibold text-lg text-indigo-global">
+              Ramesh Kumar
+            </h3>
+            <p className="text-sm text-indigo-global">
+              IPD-001 • Male • 45Y
+            </p>
+          </div>
+        </CardHeader>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing Status</CardTitle>
-          </CardHeader>
+        <CardContent className="space-y-2 text-sm text-slate-700">
+          <p><b>Bed:</b> ICU-02</p>
+          <p><b>Doctor:</b> Dr. Amit Sharma</p>
+          <p><b>Admission Date:</b> 12-02-2025</p>
 
-          <CardContent className="space-y-3">
-            <Progress value={overallPercentage} />
+          <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-300">
+            Active
+          </Badge>
+        </CardContent>
+      </Card>
 
-            <div className="flex justify-between text-sm">
-              <span>Paid</span>
-              <span className="font-medium">₹{totalPaid}</span>
-            </div>
+      {/* BILLING STATUS */}
+      <Card className="border-indigo-200/50">
+        <CardHeader>
+          <CardTitle className="text-indigo-global">
+            Billing Status
+          </CardTitle>
+        </CardHeader>
 
-            <div className="flex justify-between text-sm">
-              <span>Total</span>
-              <span className="font-medium">₹{totalAmount}</span>
-            </div>
+        <CardContent className="space-y-4">
+          <Progress
+            value={overallPercentage}
+            className="h-2 bg-indigo-100"
+          />
 
-            <div className="flex justify-between text-sm">
-              <span className="text-destructive">Pending</span>
-              <span className="text-destructive font-medium">
-                ₹{totalPending}
-              </span>
-            </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-600">Paid</span>
+            <span className="font-semibold text-emerald-600">
+              ₹{totalPaid}
+            </span>
+          </div>
 
-            <div>
-              {overallPercentage === 100 ? (
-                <Badge className="bg-green-600">Fully Paid</Badge>
-              ) : overallPercentage >= 50 ? (
-                <Badge variant="secondary">Partially Paid</Badge>
-              ) : (
-                <Badge variant="destructive">Payment Due</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-600">Total</span>
+            <span className="font-medium">
+              ₹{totalAmount}
+            </span>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Vitals</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3 text-sm">
-            <p>BP: 120/80</p>
-            <p>Pulse: 78</p>
-            <p>Temp: 98.6°F</p>
-            <p>SpO₂: 98%</p>
-          </CardContent>
-        </Card>
+          <div className="flex justify-between text-sm">
+            <span className="text-rose-600">Pending</span>
+            <span className="font-semibold text-rose-600">
+              ₹{totalPending}
+            </span>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Symptoms</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <p>• Fever</p>
-            <p>• Chest Pain</p>
-            <p>• Breathlessness</p>
-          </CardContent>
-        </Card>
+          {overallPercentage === 100 ? (
+            <Badge className="bg-emerald-600 text-white">
+              Fully Paid
+            </Badge>
+          ) : overallPercentage >= 50 ? (
+            <Badge className="bg-indigo-100 text-indigo-global">
+              Partially Paid
+            </Badge>
+          ) : (
+            <Badge className="bg-rose-600 text-white">
+              Payment Due
+            </Badge>
+          )}
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Doctors</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Dr. Amit Sharma (Physician)</p>
-            <p>Dr. Neha Gupta (Cardiology)</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Nurse Notes</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm">
-            Patient stable, medication administered on time.
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="lg:col-span-8 space-y-8">
-
+      {/* VITALS */}
       <Card>
         <CardHeader>
-          <CardTitle>Department Wise Billing</CardTitle>
+          <CardTitle className="text-indigo-global">
+            Current Vitals
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-3 text-sm">
+          <div className="bg-indigo-global p-2 rounded">BP: 120/80</div>
+          <div className="bg-indigo-global p-2 rounded">Pulse: 78</div>
+          <div className="bg-indigo-global p-2 rounded">Temp: 98.6°F</div>
+          <div className="bg-indigo-global p-2 rounded">SpO₂: 98%</div>
+        </CardContent>
+      </Card>
+
+      {/* SYMPTOMS */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-indigo-global">
+            Symptoms
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-1">
+          <Badge variant="secondary">Fever</Badge>
+          <Badge variant="secondary">Chest Pain</Badge>
+          <Badge variant="secondary">Breathlessness</Badge>
+        </CardContent>
+      </Card>
+
+      {/* DOCTORS */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-indigo-global">
+            Doctors
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1 text-sm">
+          <p>Dr. Amit Sharma <span className="text-muted-foreground">(Physician)</span></p>
+          <p>Dr. Neha Gupta <span className="text-muted-foreground">(Cardiology)</span></p>
+        </CardContent>
+      </Card>
+
+      {/* NURSE NOTES */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-indigo-global">
+            Nurse Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-slate-600">
+          Patient stable, medication administered on time.
+        </CardContent>
+      </Card>
+    </div>
+
+    {/* ================= RIGHT PANEL ================= */}
+    <div className="lg:col-span-8 space-y-8">
+
+      {/* DEPARTMENT BILLING */}
+      <Card className="border-indigo-200/50">
+        <CardHeader>
+          <CardTitle className="text-indigo-global">
+            Department Wise Billing
+          </CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -194,24 +236,28 @@ export default function IPDOverviewPage() {
               return (
                 <div
                   key={dept.name}
-                  className="border rounded-lg p-4 space-y-2"
+                  className="rounded-xl border bg-gradient-to-br from-white to-indigo-50 p-4 space-y-2"
                 >
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">{dept.name}</h4>
-                    <span className="text-sm font-semibold">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium text-indigo-800">
+                      {dept.name}
+                    </h4>
+                    <span className="text-sm font-semibold text-indigo-800">
                       {percentage}%
                     </span>
                   </div>
-                  <Progress value={percentage} />
+
+                  <Progress value={percentage} className="h-2" />
+
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
+                    <span className="text-slate-600">
                       Paid: ₹{dept.paid}
                     </span>
                     <span
                       className={
                         remaining === 0
-                          ? "text-green-600 font-medium"
-                          : "text-destructive font-medium"
+                          ? "text-emerald-600 font-medium"
+                          : "text-rose-600 font-medium"
                       }
                     >
                       Remaining: ₹{remaining}
@@ -224,21 +270,23 @@ export default function IPDOverviewPage() {
         </CardContent>
       </Card>
 
-        {sections.map((section) => (
-          <div key={section}>
-            <h3 className="text-lg font-semibold mb-2">{section}</h3>
-            <Separator className="mb-4" />
-
-            <Card>
-              <CardContent className="py-4 text-sm text-muted-foreground">
-                No records available
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-      </div>
+      {/* TIMELINE SECTIONS */}
+      {sections.map((section) => (
+        <div key={section}>
+          <h3 className="text-lg font-semibold text-indigo-global mb-2">
+            {section}
+          </h3>
+          <Separator className="mb-4" />
+          <Card>
+            <CardContent className="py-4 text-sm text-muted-foreground">
+              No records available
+            </CardContent>
+          </Card>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 }
 
 

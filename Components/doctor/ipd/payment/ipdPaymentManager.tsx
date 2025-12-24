@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, Printer, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Printer, Pencil, Trash2, CreditCard } from "lucide-react";
 import AddIPDPaymentModal, { PaymentData } from "./ipdPaymentMode";
 
 interface PaymentRecord extends PaymentData {
@@ -66,16 +66,17 @@ export default function IPDPaymentManagerPage() {
       {/* HEADER / SEARCH */}
       <Card className="shadow-sm">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white">Payment Manager</CardTitle>
+          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
+            <CreditCard className="h-6 w-6 text-indigo-600" />
+            Payment
+          </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <div className="flex items-center border rounded-md overflow-hidden bg-white">
-              <Input
+             <Input
                 placeholder="Search by transaction / note / mode"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="border-none text-gray-700 shadow-none focus:ring-0 focus:outline-none"
+                className="sm:w-72"
               />
-            </div>
             <Button
               onClick={() => { setModalOpen(true); setEditPayment(null); }}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"

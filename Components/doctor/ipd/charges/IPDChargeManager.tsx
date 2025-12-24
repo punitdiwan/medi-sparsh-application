@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, Eye, Pencil, Trash2, Printer } from "lucide-react";
+import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt } from "lucide-react";
 import AddIPDChargesFullScreen from "./IPDChargesModel";
 
 interface ChargeRecord {
@@ -101,16 +101,18 @@ export default function IPDChargesManagerPage() {
       {/* HEADER / SEARCH */}
       <Card className="shadow-sm">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white">Charges Manager</CardTitle>
+          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
+            <Receipt className="h-6 w-6 text-indigo-600" />
+            Charges
+          </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <div className="flex items-center border rounded-md overflow-hidden bg-white">
+
               <Input
                 placeholder="Search by bill ID / charge name / type / category"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="border-none text-gray-700 shadow-none focus:ring-0 focus:outline-none"
+                className="sm:w-72"
               />
-            </div>
             <Button onClick={() => setOpenAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
               <PlusCircle className="h-5 w-5" /> Add Charges
             </Button>

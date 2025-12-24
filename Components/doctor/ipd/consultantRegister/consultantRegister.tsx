@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -19,89 +19,74 @@ import {
 } from "@/components/ui/table";
 import {
   Tooltip,
+  TooltipProvider,
   TooltipTrigger,
   TooltipContent,
-  TooltipProvider,
 } from "@/components/ui/tooltip";
-import {
-  PlusCircle,
-  Pencil,
-  Trash2,
-  Printer,
-  Pill,
-} from "lucide-react";
-import { MedicationDialog } from "./medicationDialog";
+import { PlusCircle, Pencil, Trash2, UserRound } from "lucide-react";
+import AddConsultantRegisterDialog, {
+  ConsultantRegisterInput,
+} from "./addConsultantRegisterDialog";
 
 /* ---------------- Types ---------------- */
-export type Medication = {
+export interface ConsultantRegister
+  extends ConsultantRegisterInput {
   id: string;
-  date: string;
-  time: string;
-  categoryId: string;
-  categoryName: string;
-  medicineId: string;
-  medicineName: string;
-  dosage: string;
-  remarks?: string;
-};
-
-/* Dialog input (no id) */
-export type MedicationInput = Omit<Medication, "id">;
-
+}
 
 /* ---------------- Page ---------------- */
-export default function MedicationManagerPage() {
-  const [medications, setMedications] = useState<Medication[]>([]);
+export default function ConsultantRegisterPage() {
+  const [data, setData] = useState<ConsultantRegister[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Medication | null>(null);
+  const [editing, setEditing] =
+    useState<ConsultantRegister | null>(null);
 
   /* ---------------- Filter ---------------- */
-  const filtered = useMemo(() => {
-    if (!search) return medications;
-    return medications.filter(
-      (m) =>
-        m.medicineName.toLowerCase().includes(search.toLowerCase()) ||
-        m.categoryName.toLowerCase().includes(search.toLowerCase()) ||
-        m.date.includes(search)
+  const filteredData = useMemo(() => {
+    if (!search) return data;
+
+    return data.filter(
+      (item) =>
+        item.consultantDoctorName
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.instruction
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        item.appliedDate.includes(search) ||
+        item.consultantDate.includes(search)
     );
-  }, [medications, search]);
+  }, [data, search]);
 
   /* ---------------- Add / Edit ---------------- */
-  const handleSubmit = (data: MedicationInput) => {
-  if (editing) {
-    setMedications((prev) =>
-      prev.map((m) =>
-        m.id === editing.id
-          ? { ...data, id: m.id }
-          : m
-      )
-    );
-  } else {
-    setMedications((prev) => [
-      ...prev,
-      {
-        ...data,
-        id: crypto.randomUUID(),
-      },
-    ]);
-  }
+  const handleSubmit = (input: ConsultantRegisterInput) => {
+    if (editing) {
+      setData((prev) =>
+        prev.map((row) =>
+          row.id === editing.id
+            ? { ...input, id: row.id }
+            : row
+        )
+      );
+    } else {
+      setData((prev) => [
+        ...prev,
+        {
+          ...input,
+          id: crypto.randomUUID(),
+        },
+      ]);
+    }
 
-  setEditing(null);
-  setOpen(false);
-};
-
+    setEditing(null);
+    setOpen(false);
+  };
 
   /* ---------------- Delete ---------------- */
   const handleDelete = (id: string) => {
-    if (confirm("Delete this medication?")) {
-      setMedications((prev) => prev.filter((m) => m.id !== id));
-    }
-  };
-
-  /* ---------------- Print ---------------- */
-  const handlePrint = (med: Medication) => {
-    alert(`Print medication: ${med.medicineName}`);
+    if (!confirm("Delete this consultant register?")) return;
+    setData((prev) => prev.filter((row) => row.id !== id));
   };
 
   return (
@@ -110,17 +95,18 @@ export default function MedicationManagerPage() {
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <Pill className="h-6 w-6 text-indigo-600" />
-            Medication
+            <UserRound className="h-6 w-6 text-indigo-600" />
+            Consultant Register
           </CardTitle>
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              placeholder="Search by medicine / category / date"
+              placeholder="Search by doctor / instruction / date"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
+
             <Button
               onClick={() => {
                 setEditing(null);
@@ -129,7 +115,7 @@ export default function MedicationManagerPage() {
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               <PlusCircle className="h-5 w-5" />
-              Add Medication
+              Add Register
             </Button>
           </div>
         </CardHeader>
@@ -141,28 +127,32 @@ export default function MedicationManagerPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Medicine</TableHead>
-                <TableHead>Dosage</TableHead>
-                <TableHead>Remarks</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead>Applied Date</TableHead>
+                <TableHead>Consultant Date</TableHead>
+                <TableHead>Consultant Doctor</TableHead>
+                <TableHead>Instruction</TableHead>
+                <TableHead className="text-center">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {filtered.length ? (
-                filtered.map((med) => (
-                  <TableRow key={med.id}>
-                    <TableCell>{med.date}</TableCell>
-                    <TableCell>{med.time}</TableCell>
-                    <TableCell>{med.categoryName}</TableCell>
-                    <TableCell className="font-medium">
-                      {med.medicineName}
+              {filteredData.length ? (
+                filteredData.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell>
+                      {row.appliedDate}
                     </TableCell>
-                    <TableCell>{med.dosage}</TableCell>
-                    <TableCell>{med.remarks || "—"}</TableCell>
+                    <TableCell>
+                      {row.consultantDate}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {row.consultantDoctorName}
+                    </TableCell>
+                    <TableCell className="max-w-[400px] truncate">
+                      {row.instruction}
+                    </TableCell>
                     <TableCell>
                       <TooltipProvider>
                         <div className="flex justify-center gap-2">
@@ -171,21 +161,8 @@ export default function MedicationManagerPage() {
                               <Button
                                 size="icon"
                                 variant="outline"
-                                onClick={() => handlePrint(med)}
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Print</TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
                                 onClick={() => {
-                                  setEditing(med);
+                                  setEditing(row);
                                   setOpen(true);
                                 }}
                               >
@@ -200,7 +177,9 @@ export default function MedicationManagerPage() {
                               <Button
                                 size="icon"
                                 variant="destructive"
-                                onClick={() => handleDelete(med.id)}
+                                onClick={() =>
+                                  handleDelete(row.id)
+                                }
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -215,10 +194,10 @@ export default function MedicationManagerPage() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
-                    className="text-center py-6 text-muted-foreground"
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
                   >
-                    No medications found
+                    No consultant register found
                   </TableCell>
                 </TableRow>
               )}
@@ -229,9 +208,9 @@ export default function MedicationManagerPage() {
 
       {/* ADD / EDIT MODAL */}
       {open && (
-        <MedicationDialog
+        <AddConsultantRegisterDialog
           open={open}
-          defaultValues={editing || undefined}
+          initialData={editing || null}
           onClose={() => {
             setOpen(false);
             setEditing(null);
