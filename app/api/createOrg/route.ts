@@ -66,6 +66,23 @@ interface CreateOrgResponse {
  */
 export async function POST(request: NextRequest): Promise<NextResponse<CreateOrgResponse>> {
   try {
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Missing Bearer token" },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (token !== process.env.BETTER_AUTH_SECRET) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Invalid token" },
+        { status: 401 }
+      );
+    }
     const body = await request.json() as CreateOrgRequest;
 
     // Validate required fields
@@ -252,41 +269,76 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    const organizations = await db
+    // 🔐 Bearer auth
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Missing Bearer token" },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (token !== process.env.BETTER_AUTH_SECRET) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Invalid token" },
+        { status: 401 }
+      );
+    }
+
+    // 📌 Read optional id param
+    const { searchParams } = new URL(request.url);
+    const orgId = searchParams.get("id");
+
+    // 🔎 Build query conditionally
+    let organizationsQuery: any = db
       .select()
       .from(organization)
       .innerJoin(member, eq(organization.id, member.organizationId))
       .innerJoin(user, eq(member.userId, user.id));
-      
+
+    if (orgId) {
+      organizationsQuery = organizationsQuery.where(
+        eq(organization.id, orgId)
+      );
+    }
+
+    const organizations = await organizationsQuery;
+
     if (!organizations || organizations.length === 0) {
       return NextResponse.json(
         {
           success: true,
           data: [],
-          message: "No organizations found",
+          message: orgId
+            ? "Organization not found"
+            : "No organizations found",
         },
-        { status: 200 }
+        { status: orgId ? 404 : 200 }
       );
     }
 
-    const orgMap = new Map();
-    
+    // 🧠 Group organizations
+    const orgMap = new Map<string, any>();
+
     organizations.forEach((row: any) => {
       const org = row.organization;
-      const member = row.member;
-      const user = row.user;
+      const memberData = row.member;
+      const userData = row.user;
 
       if (!orgMap.has(org.id)) {
+        let metadata = {};
 
-        let metadata = null;
         if (org.metadata) {
           try {
-            metadata = typeof org.metadata === "string"
-              ? JSON.parse(org.metadata)
-              : org.metadata;
+            metadata =
+              typeof org.metadata === "string"
+                ? JSON.parse(org.metadata)
+                : org.metadata;
           } catch (e) {
             console.error("Error parsing metadata for org:", org.id, e);
-            metadata = {};
           }
         }
 
@@ -296,18 +348,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           slug: org.slug,
           logo: org.logo,
           createdAt: org.createdAt,
-          metadata: metadata || {},
+          metadata,
           members: [],
         });
       }
 
       orgMap.get(org.id).members.push({
-        memberId: member.id,
-        userId: user.id,
-        userName: user.name,
-        userEmail: user.email,
-        role: member.role,
-        memberCreatedAt: member.createdAt,
+        memberId: memberData.id,
+        userId: userData.id,
+        userName: userData.name,
+        userEmail: userData.email,
+        role: memberData.role,
+        memberCreatedAt: memberData.createdAt,
       });
     });
 
@@ -316,19 +368,109 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         success: true,
-        data: parsedOrganizations,
-        total: parsedOrganizations.length,
+        data: orgId ? parsedOrganizations[0] : parsedOrganizations,
+        total: orgId ? 1 : parsedOrganizations.length,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("[Get All Organizations Error]:", error);
+    console.error("[Get Organizations Error]:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch organizations",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch organizations",
       },
       { status: 500 }
     );
   }
 }
+
+
+export async function PUT(request: NextRequest): Promise<NextResponse> {
+  try {
+    // 🔐 API key check
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Missing Bearer token" },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (token !== process.env.BETTER_AUTH_SECRET) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized: Invalid token" },
+        { status: 401 }
+      );
+    }
+
+    // 📌 Get organization id from query params
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: "Organization id is required" },
+        { status: 400 }
+      );
+    }
+
+    // 📦 Get update data from body
+    const body = await request.json();
+
+    // (Optional) Prevent updating restricted fields
+    delete body.id;
+    delete body.createdAt;
+
+    // 🧠 If metadata is an object, stringify it
+    if (body.metadata && typeof body.metadata === "object") {
+      body.metadata = JSON.stringify(body.metadata);
+    }
+
+    // 🔄 Update organization
+    const updatedOrg = await db
+      .update(organization)
+      .set({
+        ...body,
+      })
+      .where(eq(organization.id, id))
+      .returning();
+
+    if (!updatedOrg || updatedOrg.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Organization not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Organization updated successfully",
+        data: updatedOrg[0],
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("[Update Organization Error]:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update organization",
+      },
+      { status: 500 }
+    );
+  }
+}
+
