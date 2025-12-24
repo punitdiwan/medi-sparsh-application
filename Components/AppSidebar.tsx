@@ -9,6 +9,7 @@ import {
   Home,
   User,
   Users2,
+  Bed,
   NotebookPen,
   ChevronDown,
   ChevronUp,
@@ -68,6 +69,7 @@ const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
   { title: 'Patients', url: '/doctor/patient', icon: User ,subject: 'patient',action: 'read',},
   { title: 'Appointment', url: '/doctor/appointment', icon: Calendar,subject: 'appointment',action: 'read', },
+  { title: 'IPD-In Patient' ,url: '/doctor/IPD',icon: Bed,subject:'ipd',action: 'read'},
   { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen ,subject: 'prescription',action: 'read',},
   {
     title: 'Pharmacy',
@@ -92,6 +94,7 @@ const items: SidebarItem[] = [
       { title: 'Shift Management', url: '/doctor/settings/appointment',subject: 'doctorShift',action: 'read', },
       { title: 'Symptoms', url: '/doctor/settings/symptom',subject: 'symptoms',action:'read'},
       { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals',action: 'read',},
+      { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation' ,action: 'read'},
       { title: 'Medicine Record', url: '/doctor/settings/medicineRecord',subject: 'medicineRedord',action: 'read', },
       { title: 'Stats', url: '/doctor/settings/stats',subject: 'stats',action: 'read', },
       { title: 'Payments History', url: '/doctor/billing',subject: 'payment',action: 'read', },

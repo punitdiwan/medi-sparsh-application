@@ -3,6 +3,7 @@
 export const ALL_PERMISSIONS: Record<string, string[]> = {
   project: ["create", "read", "update", "delete"],
   appointment: ["create", "read", "update", "delete"],
+  ipd:["create", "read", "update", "delete"],
   role: ["create", "read", "update", "delete"],
   patient: ["create", "read", "update", "delete"],
   prescription: ["create", "read", "update", "delete"],
@@ -27,6 +28,7 @@ export const ALL_PERMISSIONS: Record<string, string[]> = {
   symptoms:["create", "read", "update", "delete"],
   symptomsType:["create", "read", "update", "delete"],
   vitals: ["create", "read", "update", "delete"],
+  operation: ["create", "read", "update", "delete"],
   medicineRedord: ["create", "read", "update", "delete"],
   medicineCategory:["create", "read", "update", "delete"],
   medicineSupplier:["create", "read", "update", "delete"],

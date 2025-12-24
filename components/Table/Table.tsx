@@ -12,9 +12,10 @@ import { useSidebar } from "@/components/ui/sidebar";
 type TableProps<TData> = {
   data: TData[];
   columns: ColumnDef<TData>[];
+   fallback?: React.ReactNode;
 };
 
-export function Table<TData>({ data, columns }: TableProps<TData>) {
+export function Table<TData>({ data, columns, fallback }: TableProps<TData>) {
   const table = useReactTable({
     data,
     columns,
@@ -56,31 +57,34 @@ export function Table<TData>({ data, columns }: TableProps<TData>) {
         </thead>
 
         <tbody>
-          {table.getRowModel().rows.map((row, index) => (
-            <tr
-              key={row.id}
-              className={`${
-                index % 2 === 0 ? "bg-background" : "bg-muted/50"
-              } hover:bg-muted transition-colors`}
-            >
-              {row.getVisibleCells().map((cell, cellIndex) => {
-                const isLast = cellIndex === row.getVisibleCells().length - 1;
-
-                return (
-                  <td
-                    key={cell.id}
-                    className={`border-b px-6 py-3 capitalize whitespace-nowrap ${
-                      isLast
-                        ? "sticky right-0 bg-background z-10 shadow-md"
-                        : ""
-                    }`}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                );
-              })}
+          {table.getRowModel().rows.length > 0 ? (
+            table.getRowModel().rows.map((row, index) => (
+              <tr
+                key={row.id}
+                className={`${index % 2 === 0 ? "bg-background" : "bg-muted/50"} hover:bg-muted transition-colors`}
+              >
+                {row.getVisibleCells().map((cell, cellIndex) => {
+                  const isLast = cellIndex === row.getVisibleCells().length - 1;
+                  return (
+                    <td
+                      key={cell.id}
+                      className={`border-b px-6 py-3 capitalize whitespace-nowrap ${
+                        isLast ? "sticky right-0 bg-background z-10 shadow-md" : ""
+                      }`}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          ) : fallback ? (
+            <tr>
+              <td colSpan={columns.length} className="text-center py-10 text-muted-foreground">
+                {fallback}
+              </td>
             </tr>
-          ))}
+          ) : null}
         </tbody>
       </table>
     </div>

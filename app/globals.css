@@ -76,6 +76,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --soft-primary-bg: hsl(210 100% 97%);
+  --soft-success-bg: hsl(142 70% 95%);
 }
 
 .dark {
@@ -110,6 +112,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+.light .bg-muted\/40 {
+  background-color: var(--soft-primary-bg);
 }
 
 @layer base {
@@ -147,6 +153,16 @@
   }
 }
 
+@layer utilities {
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      to right,
+      rgb(59 130 246),   /* blue-500 */
+      rgb(168 85 247),  /* purple-500 */
+      rgb(236 72 153)   /* pink-500 */
+    );
+  }
+}
 
 
 /* 🌍 Global: hide scrollbar everywhere */
