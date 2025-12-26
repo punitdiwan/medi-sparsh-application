@@ -77,13 +77,13 @@ export function IPDOperationDialog({ open, onClose, onSubmit, defaultValues }: P
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl rounded-xl border-muted/40 bg-background p-0 overflow-hidden shadow-lg flex flex-col">
+      <DialogContent className="sm:max-w-xl rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg flex flex-col">
         
         {/* HEADER */}
-        <DialogHeader className="px-6 py-4 bg-brand-gradient text-white flex flex-row justify-between items-center sticky top-0 z-10">
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog flex flex-row justify-between items-center sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
-              <Users2 className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-center rounded-lg">
+              <Users2 className="bg-dialog-header text-dialog-icon" />
             </div>
             <DialogTitle className="text-lg font-semibold tracking-wide">
               {defaultValues ? "Edit Operation" : "Add Operation"}
@@ -101,7 +101,7 @@ export function IPDOperationDialog({ open, onClose, onSubmit, defaultValues }: P
         </DialogHeader>
 
         {/* SCROLLABLE BODY */}
-        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[70vh]">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[70vh] bg-dialog-surface text-dialog">
           <div className="grid grid-cols-2 gap-4">
 
             {/* Category */}
@@ -127,7 +127,7 @@ export function IPDOperationDialog({ open, onClose, onSubmit, defaultValues }: P
             />
 
             {/* Date */}
-            <InputField label="Operation Date *" type="date" {...form.register("date")} />
+            <InputField label="Operation Date *" type="date" {...form.register("date")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
 
             {/* Consultant */}
             <SelectField 
@@ -138,22 +138,22 @@ export function IPDOperationDialog({ open, onClose, onSubmit, defaultValues }: P
             />
 
             {/* Assistants / Anesthetist / Technician */}
-            <InputField label="Assistant Consultant 1" {...form.register("assistant1")} />
-            <InputField label="Assistant Consultant 2" {...form.register("assistant2")} />
-            <InputField label="Anesthetist" {...form.register("anesthetist")} />
-            <InputField label="Anesthesia Type" {...form.register("anesthesiaType")} />
-            <InputField label="OT Technician" {...form.register("technician")} />
-            <InputField label="OT Assistant" {...form.register("otAssistant")} />
-            <InputField label="Remark" {...form.register("remark")} />
-            <InputField label="Result" {...form.register("result")} />
+            <InputField label="Assistant Consultant 1" {...form.register("assistant1")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="Assistant Consultant 2" {...form.register("assistant2")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="Anesthetist" {...form.register("anesthetist")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="Anesthesia Type" {...form.register("anesthesiaType")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="OT Technician" {...form.register("technician")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="OT Assistant" {...form.register("otAssistant")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="Remark" {...form.register("remark")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            <InputField label="Result" {...form.register("result")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
 
           </div>
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="px-6 py-2 border-t bg-muted/30 flex justify-end gap-2 sticky bottom-0 z-10">
-          <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
-          <Button type="submit" onClick={form.handleSubmit(handleSubmit)} className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90">
+        <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-end gap-2 sticky bottom-0 z-10">
+          <Button variant="outline" type="button" onClick={onClose} className="text-dialog-muted">Cancel</Button>
+          <Button type="submit" onClick={form.handleSubmit(handleSubmit)} className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
             <PlusCircle className="h-4 w-4" />
             {defaultValues ? "Update Operation" : "Save Operation"}
           </Button>

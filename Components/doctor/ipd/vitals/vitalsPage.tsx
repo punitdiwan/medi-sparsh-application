@@ -57,10 +57,10 @@ export default function VitalsPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-indigo-700 dark:text-white">
-            <HeartPulse className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-dialog">
+            <HeartPulse className="bg-dialog-header text-dialog-icon" />
             Patient Vitals
           </CardTitle>
 
@@ -77,7 +77,7 @@ export default function VitalsPage() {
                 setEditIndex(null);
                 setOpen(true);
               }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
               Add Vital
@@ -87,15 +87,15 @@ export default function VitalsPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vital Name</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-dialog-icon">Vital Name</TableHead>
+                <TableHead className="text-dialog-icon">Value</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -103,12 +103,12 @@ export default function VitalsPage() {
               {filteredVitals.length ? (
                 filteredVitals.map((v, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-dialog-muted">
                       {v.vitalName}
                     </TableCell>
-                    <TableCell>{v.vitalValue}</TableCell>
-                    <TableCell>{v.date}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-dialog-muted">{v.vitalValue}</TableCell>
+                    <TableCell className="text-dialog-muted">{v.date}</TableCell>
+                    <TableCell className="text-center">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>

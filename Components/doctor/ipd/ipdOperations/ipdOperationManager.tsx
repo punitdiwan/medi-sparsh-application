@@ -72,10 +72,10 @@ export default function IPdOperationsPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER / SEARCH */}
-      <Card className="shadow-sm">
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <Users2 className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <Users2 className="bg-dialog-header text-dialog-icon" />
             Operations
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -87,7 +87,7 @@ export default function IPdOperationsPage() {
               />
             <Button
               onClick={() => { setModalOpen(true); setEditingOperation(null); }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" /> Add Operation
             </Button>
@@ -96,17 +96,17 @@ export default function IPdOperationsPage() {
       </Card>
 
       {/* OPERATIONS TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-indigo-700 dark:text-white">Ref No</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Date</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Operation Name</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Category</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">OT Technician</TableHead>
-                <TableHead className="text-center text-indigo-700 dark:text-white">Actions</TableHead>
+                <TableHead className="text-dialog-icon">Ref No</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Operation Name</TableHead>
+                <TableHead className="text-dialog-icon">Category</TableHead>
+                <TableHead className="text-dialog-icon">OT Technician</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -114,10 +114,10 @@ export default function IPdOperationsPage() {
                 filtered.map((op, index) => (
                   <TableRow key={op.id}>
                     <TableCell className="font-medium text-gray-800 dark:text-white">OP-{index + 1}</TableCell>
-                    <TableCell className="text-gray-600 dark:text-white">{op.date}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{op.name}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{op.category}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{op.technician || "—"}</TableCell>
+                    <TableCell className="text-dialog-muted">{op.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{op.name}</TableCell>
+                    <TableCell className="text-dialog-muted">{op.category}</TableCell>
+                    <TableCell className="text-dialog-muted">{op.technician || "—"}</TableCell>
                     <TableCell className="text-right">
                       <TooltipProvider>
                         <div className="flex gap-2 justify-center">

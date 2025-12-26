@@ -103,16 +103,16 @@ export default function NurseNotesTimeline() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <NotebookText className="h-6 w-6 text-indigo-600 " />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <NotebookText className="bg-dialog-header text-dialog-icon" />
             Nurse Notes
           </CardTitle>
 
           <Button
             onClick={handleAdd}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-5 w-5" />
             Add Nurse Note
@@ -130,18 +130,18 @@ export default function NurseNotesTimeline() {
             <div key={note.id} className="relative flex gap-6 items-start">
               {/* ICON */}
               <div className="relative z-10">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-dialog-primary text-dialog-btn shadow-lg">
                   <NotebookText className="h-5 w-5" />
                 </div>
               </div>
 
               {/* CONTENT */}
               <div className="flex-1">
-                <Card className="border border-indigo-100 dark:border-indigo-900 shadow-md hover:shadow-lg transition">
+                <Card className="border border-dialog  shadow-md hover:shadow-lg transition">
                   <CardContent className="px-4 space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">{note.nurseName}</p>
+                        <p className="text-lg font-semibold text-dialog-icon ">{note.nurseName}</p>
                         <p className="text-sm text-muted-foreground">
                           {note.date} | {note.time}
                         </p>

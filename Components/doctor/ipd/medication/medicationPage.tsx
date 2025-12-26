@@ -107,10 +107,10 @@ export default function MedicationManagerPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <Pill className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog dark:text-white flex items-center gap-2">
+            <Pill className="bg-dialog-header text-dialog-icon" />
             Medication
           </CardTitle>
 
@@ -126,7 +126,7 @@ export default function MedicationManagerPage() {
                 setEditing(null);
                 setOpen(true);
               }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
               Add Medication
@@ -136,18 +136,18 @@ export default function MedicationManagerPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border border-gray-200">
-        <CardContent className="p-0 overflow-x-auto">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
+        <CardContent className="p-0 overflow-x-auto ">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Medicine</TableHead>
-                <TableHead>Dosage</TableHead>
-                <TableHead>Remarks</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Time</TableHead>
+                <TableHead className="text-dialog-icon">Category</TableHead>
+                <TableHead className="text-dialog-icon">Medicine</TableHead>
+                <TableHead className="text-dialog-icon">Dosage</TableHead>
+                <TableHead className="text-dialog-icon">Remarks</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -155,15 +155,15 @@ export default function MedicationManagerPage() {
               {filtered.length ? (
                 filtered.map((med) => (
                   <TableRow key={med.id}>
-                    <TableCell>{med.date}</TableCell>
-                    <TableCell>{med.time}</TableCell>
-                    <TableCell>{med.categoryName}</TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-dialog-muted">{med.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.time}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.categoryName}</TableCell>
+                    <TableCell className="font-medium text-dialog-muted">
                       {med.medicineName}
                     </TableCell>
-                    <TableCell>{med.dosage}</TableCell>
-                    <TableCell>{med.remarks || "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-dialog-muted">{med.dosage}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.remarks || "—"}</TableCell>
+                    <TableCell >
                       <TooltipProvider>
                         <div className="flex justify-center gap-2">
                           <Tooltip>
@@ -216,7 +216,7 @@ export default function MedicationManagerPage() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="text-center py-6 text-muted-foreground"
+                    className="text-center py-6 text-dialog-muted"
                   >
                     No medications found
                   </TableCell>

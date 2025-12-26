@@ -95,10 +95,10 @@ export default function LiveConsultationPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <Video className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <Video className="bg-dialog-header text-dialog-icon" />
             Live Consultation
           </CardTitle>
 
@@ -114,19 +114,19 @@ export default function LiveConsultationPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Consultation</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Created By</TableHead>
-                <TableHead>Created For</TableHead>
-                <TableHead>Patient</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-center">Action</TableHead>
+                <TableHead className="text-dialog-icon">Consultation</TableHead>
+                <TableHead className="text-dialog-icon">Title</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Created By</TableHead>
+                <TableHead className="text-dialog-icon">Created For</TableHead>
+                <TableHead className="text-dialog-icon">Patient</TableHead>
+                <TableHead className="text-dialog-icon">Status</TableHead>
+                <TableHead className="text-center text-dialog-icon">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -134,13 +134,13 @@ export default function LiveConsultationPage() {
               {filtered.length ? (
                 filtered.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell>{c.consultation}</TableCell>
-                    <TableCell>{c.title}</TableCell>
-                    <TableCell>{c.date}</TableCell>
-                    <TableCell>{c.createdBy}</TableCell>
-                    <TableCell>{c.createdFor}</TableCell>
-                    <TableCell>{c.patient}</TableCell>
-                    <TableCell>{c.status}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.consultation}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.title}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.createdBy}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.createdFor}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.patient}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.status}</TableCell>
                     <TableCell>
                       <TooltipProvider>
                         <div className="flex justify-center gap-2">

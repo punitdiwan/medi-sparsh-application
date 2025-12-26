@@ -78,6 +78,49 @@
   --sidebar-ring: oklch(0.708 0 0);
   --soft-primary-bg: hsl(210 100% 97%);
   --soft-success-bg: hsl(142 70% 95%);
+  --modal-bg: #ffffff;
+  --modal-surface: #f8fafc;
+  --modal-border: #e2e8f0;
+
+  --header-bg: #dbdbdb;
+  --header-text: #0f172a;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  --input-bg: #ffffff;
+  --input-border: #475569;
+
+  --dialog-primary: #3b82f6;
+  --dialog-primary-hover:#619eff;
+  --dialog-primary-text: #619eff;
+
+  --dialog-danger: #dc2626;
+  --btn-text:#f8fafc;
+
+  /* ---------- BRAND ---------- */
+  --indigo-700: #4338ca;
+  --indigo-600: #4f46e5;
+  --indigo-500: #6366f1;
+
+  /* ---------- LIGHT MODE ---------- */
+  --erp-bg: #f8fafc;
+  --erp-surface: #ffffff;
+  --erp-card: #f9fafb;
+  --erp-border: #e5e7eb;
+
+  --erp-text-primary: #0f172a;
+  --erp-text-secondary: #475569;
+  --erp-text-muted: #94a3b8;
+
+  --erp-input-bg: #ffffff;
+  --erp-input-border: #cbd5e1;
+
+  --erp-primary: var(--indigo-600);
+  --erp-primary-text: #979797;
+
+  --erp-success: #16a34a;
+  --erp-danger: #dc2626;
 }
 
 .dark {
@@ -112,11 +155,196 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --modal-bg: #111827;
+  --modal-surface: #070c16;
+  --modal-border: #1f2937;
+
+  --header-bg: #111827;
+  --header-text: #f1f5f9;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+
+  --input-bg: #020617;
+  --input-border: #1f2937;
+
+  --dialog-primary: #60a5fa;
+  --dialog-primary-hover:#84bbff;
+  --dialog-primary-text: #020617;
+
+  --dialog-danger: #f87171;
+  --btn-text:#e2e2e2;
+
+  --erp-bg: #020617;
+  --erp-surface: #020617;
+  --erp-card: #020617;
+  --erp-border: #020617;
+
+  --erp-text-primary: #f8fafc;
+  --erp-text-secondary: #cbd5e1;
+  --erp-text-muted: #94a3b8;
+
+  --erp-input-bg: #020617;
+  --erp-input-border: #020617;
+
+  --erp-primary: var(--indigo-500);
+  --erp-primary-text: #020617;
+
+  --erp-success: #22c55e;
+  --erp-danger: #f87171;
 }
 
 .light .bg-muted\/40 {
   background-color: var(--soft-primary-bg);
 }
+
+@layer utilities {
+  /* ===== Dialog Backgrounds ===== */
+  .bg-dialog {
+    background-color: var(--modal-bg);
+  }
+
+  .bg-dialog-surface {
+    background-color: var(--modal-surface);
+  }
+
+  .bg-dialog-header {
+    background-color: var(--header-bg);
+  }
+
+  .bg-dialog-body {
+    background-color: var(--text-secondary);
+  }
+  /* ===== Text ===== */
+  .text-header {
+    color: var(--header-text);
+  }
+
+  .text-dialog {
+    color: var(--text-primary);
+  }
+
+  .text-dialog-muted {
+    color: var(--text-secondary);
+  }
+  
+
+  /* ===== Borders ===== */
+  .border-dialog {
+    border-color: var(--modal-border);
+  }
+
+  .border-dialog-input {
+    border-color: var(--input-border);
+  }
+
+  /* ===== Inputs ===== */
+  .bg-dialog-input {
+    background-color: var(--input-bg);
+  }
+
+  /* ===== Buttons ===== */
+  .bg-dialog-primary {
+    background-color: var(--dialog-primary);
+    color: var(--dialog-primary-text);
+  }
+  .text-dialog-btn {
+    color: var(--btn-text);
+  }
+  .bg-btn-hover {
+    color: var(--dialog-primary-hover);
+  }
+  .text-dialog-icon {
+    color: var(--dialog-primary);
+  }
+  .bg-dialog-icon {
+    background-color: var(--icone-bg);
+  }
+  .bg-dialog-danger {
+    background-color: var(--dialog-danger);
+    color: white;
+  }
+}
+
+@layer utilities {
+  /* ===== Select Content ===== */
+  .select-dialog-content {
+    background-color: var(--modal-surface);
+    border-color: var(--modal-border);
+    color: var(--text-primary);
+  }
+
+  /* ===== Select Item ===== */
+  .select-dialog-item {
+    color: var(--text-primary);
+  }
+
+  /* Hover / active */
+  .select-dialog-item[data-highlighted] {
+    background-color: var(--dialog-primary);
+    color: var(--btn-text);
+  }
+
+  /* Selected item */
+  .select-dialog-item[data-state="checked"] {
+    background-color: color-mix(
+      in oklab,
+      var(--dialog-primary) 20%,
+      transparent
+    );
+    color: var(--dialog-primary);
+    font-weight: 500;
+  }
+}
+
+@layer utilities {
+  /* BACKGROUNDS */
+  .bg-erp {
+    background-color: var(--erp-bg);
+  }
+  .bg-erp-card {
+    background-color: var(--erp-card);
+  }
+  .bg-erp-surface {
+    background-color: var(--erp-surface);
+  }
+
+  /* TEXT */
+  .text-erp {
+    color: var(--erp-text-primary);
+  }
+  .text-erp-muted {
+    color: var(--erp-text-secondary);
+  }
+
+  /* BORDERS */
+  .border-erp {
+    border-color: var(--erp-border);
+  }
+
+  /* INPUTS */
+  .bg-erp-input {
+    background-color: var(--erp-input-bg);
+  }
+  .border-erp-input {
+    border-color: var(--erp-input-border);
+  }
+
+  /* BUTTONS */
+  .bg-erp-primary {
+    background-color: var(--erp-primary);
+    color: var(--erp-primary-text);
+  }
+
+  .text-erp-success {
+    color: var(--erp-success);
+  }
+
+  .text-erp-danger {
+    color: var(--erp-danger);
+  }
+}
+
 
 @layer base {
   * {

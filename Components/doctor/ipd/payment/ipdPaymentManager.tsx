@@ -64,10 +64,10 @@ export default function IPDPaymentManagerPage() {
     <div className="p-6 space-y-6">
 
       {/* HEADER / SEARCH */}
-      <Card className="shadow-sm">
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <CreditCard className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <CreditCard className="bg-dialog-header text-dialog-icon" />
             Payment
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -79,7 +79,7 @@ export default function IPDPaymentManagerPage() {
               />
             <Button
               onClick={() => { setModalOpen(true); setEditPayment(null); }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" /> Add Payment
             </Button>
@@ -88,17 +88,17 @@ export default function IPDPaymentManagerPage() {
       </Card>
 
       {/* PAYMENTS TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-indigo-700 dark:text-white">Transaction ID</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Date</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Note</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Payment Mode</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Paid Amount</TableHead>
-                <TableHead className="text-center text-indigo-700 dark:text-white">Actions</TableHead>
+                <TableHead className="text-dialog-icon">Transaction ID</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Note</TableHead>
+                <TableHead className="text-dialog-icon">Payment Mode</TableHead>
+                <TableHead className="text-dialog-icon">Paid Amount</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -106,9 +106,9 @@ export default function IPDPaymentManagerPage() {
                 filtered.map(p => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium text-gray-800 dark:text-white">{p.id}</TableCell>
-                    <TableCell className="text-gray-600 dark:text-white">{p.date}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{p.note || "—"}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{p.paymentMode}</TableCell>
+                    <TableCell className="text-dialog-muted">{p.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{p.note || "—"}</TableCell>
+                    <TableCell className="text-dialog-muted">{p.paymentMode}</TableCell>
                     <TableCell className="font-semibold text-green-600">₹ {p.amount.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <TooltipProvider>

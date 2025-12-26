@@ -86,13 +86,13 @@ export default function VitalsModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl rounded-xl border-muted/40 bg-background p-0 overflow-hidden shadow-lg">
+      <DialogContent className="sm:max-w-2xl rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg">
 
         {/* HEADER */}
-        <DialogHeader className="px-6 py-4 text-white bg-brand-gradient">
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
-              <HeartPulse className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-center rounded-lg ">
+              <HeartPulse className="bg-dialog-header text-dialog-icon" />
             </div>
             <DialogTitle className="text-lg font-semibold tracking-wide">
               {initialData.length ? "Edit Vitals" : "Add Vitals"}
@@ -101,11 +101,11 @@ export default function VitalsModal({
         </DialogHeader>
 
         {/* BODY */}
-        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto bg-dialog-surface text-dialog">
           {vitals.map((v, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end rounded-lg border p-4 bg-muted/20"
+              className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center rounded-lg border p-4 bg-muted/20 border-dialog-input"
             >
               <div className="sm:col-span-4">
                 <Label className="text-sm font-medium">
@@ -117,12 +117,12 @@ export default function VitalsModal({
                     handleChange(index, "vitalName", val)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                     <SelectValue placeholder="Select Vital" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="select-dialog-content">
                     {vitalsList.map((name) => (
-                      <SelectItem key={name} value={name}>
+                      <SelectItem key={name} value={name} className="select-dialog-item">
                         {name}
                       </SelectItem>
                     ))}
@@ -140,6 +140,7 @@ export default function VitalsModal({
                   onChange={(e) =>
                     handleChange(index, "vitalValue", e.target.value)
                   }
+                  className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
                 />
               </div>
 
@@ -153,18 +154,17 @@ export default function VitalsModal({
                   onChange={(e) =>
                     handleChange(index, "date", e.target.value)
                   }
+                  className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
                 />
               </div>
 
               <div className="sm:col-span-1 flex justify-end">
                 {vitals.length > 1 && (
-                  <Button
-                    variant="destructive"
-                    size="icon"
+                  <button
                     onClick={() => handleRemoveRow(index)}
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
+                    <X size={16} color="red"/>
+                  </button>
                 )}
               </div>
             </div>
@@ -173,7 +173,7 @@ export default function VitalsModal({
           <Button
             variant="outline"
             onClick={handleAddRow}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-dialog-input"
           >
             <PlusCircle className="h-4 w-4" />
             Add Another Vital
@@ -181,14 +181,14 @@ export default function VitalsModal({
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-          <Button variant="ghost" onClick={onClose}>
+        <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={onClose} className="text-dialog-muted">
             Cancel
           </Button>
 
           <Button
             onClick={handleSave}
-            className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-4 w-4" />
             {initialData.length ? "Update Vitals" : "Save Vitals"}

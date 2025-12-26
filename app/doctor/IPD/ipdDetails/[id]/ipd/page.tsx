@@ -81,7 +81,7 @@ export default function IPDOverviewPage() {
     <div className="lg:col-span-4 space-y-6">
 
       {/* PATIENT CARD */}
-      <Card className="border-indigo-200/50 ">
+      <Card className="border-dialog bg-dialog-header ">
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-14 w-14 ring-2 ring-indigo-400">
             <AvatarFallback className="bg-indigo-600 text-white">
@@ -111,7 +111,7 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* BILLING STATUS */}
-      <Card className="border-indigo-200/50">
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Billing Status
@@ -125,22 +125,22 @@ export default function IPDOverviewPage() {
           />
 
           <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Paid</span>
+            <span className="text-emerald-600">Paid</span>
             <span className="font-semibold text-emerald-600">
               ₹{totalPaid}
             </span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-slate-600">Total</span>
+            <span className="text-white">Total</span>
             <span className="font-medium">
               ₹{totalAmount}
             </span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-rose-600">Pending</span>
-            <span className="font-semibold text-rose-600">
+            <span className="text-orange-600">Pending</span>
+            <span className="font-semibold text-orange-600">
               ₹{totalPending}
             </span>
           </div>
@@ -162,7 +162,7 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* VITALS */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Current Vitals
@@ -177,7 +177,7 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* SYMPTOMS */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Symptoms
@@ -191,7 +191,7 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* DOCTORS */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Doctors
@@ -204,7 +204,7 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* NURSE NOTES */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Nurse Notes
@@ -220,7 +220,7 @@ export default function IPDOverviewPage() {
     <div className="lg:col-span-8 space-y-8">
 
       {/* DEPARTMENT BILLING */}
-      <Card className="border-indigo-200/50">
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader>
           <CardTitle className="text-indigo-global">
             Department Wise Billing
@@ -277,7 +277,7 @@ export default function IPDOverviewPage() {
             {section}
           </h3>
           <Separator className="mb-4" />
-          <Card>
+          <Card className="border-dialog bg-dialog-header">
             <CardContent className="py-4 text-sm text-muted-foreground">
               No records available
             </CardContent>

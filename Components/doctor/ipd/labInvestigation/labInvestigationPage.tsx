@@ -68,10 +68,10 @@ export default function LabInvestigationPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <FlaskConical className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <FlaskConical className="bg-dialog-header text-dialog-icon" />
             Lab Investigation
           </CardTitle>
 
@@ -87,17 +87,17 @@ export default function LabInvestigationPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Test Name</TableHead>
-                <TableHead>Lab</TableHead>
-                <TableHead>Sample Collected</TableHead>
-                <TableHead>Expected Date</TableHead>
-                <TableHead>Approved By</TableHead>
-                <TableHead className="text-center">Action</TableHead>
+                <TableHead className="text-dialog-icon">Test Name</TableHead>
+                <TableHead className="text-dialog-icon">Lab</TableHead>
+                <TableHead className="text-dialog-icon">Sample Collected</TableHead>
+                <TableHead className="text-dialog-icon">Expected Date</TableHead>
+                <TableHead className="text-dialog-icon">Approved By</TableHead>
+                <TableHead className="text-center text-dialog-icon">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -105,12 +105,12 @@ export default function LabInvestigationPage() {
               {filteredLabs.length ? (
                 filteredLabs.map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell>{l.testName}</TableCell>
-                    <TableCell>{l.lab}</TableCell>
-                    <TableCell>{l.sampleCollected}</TableCell>
-                    <TableCell>{l.expectedDate}</TableCell>
-                    <TableCell>{l.approvedBy}</TableCell>
-                    <TableCell className="flex justify-center">
+                    <TableCell className="text-dialog-muted">{l.testName}</TableCell>
+                    <TableCell className="text-dialog-muted">{l.lab}</TableCell>
+                    <TableCell className="text-dialog-muted">{l.sampleCollected}</TableCell>
+                    <TableCell className="text-dialog-muted">{l.expectedDate}</TableCell>
+                    <TableCell className="text-dialog-muted">{l.approvedBy}</TableCell>
+                    <TableCell className="flex justify-center ">
                       <Button
                         size="sm"
                         variant="outline"

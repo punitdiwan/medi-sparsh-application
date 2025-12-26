@@ -92,10 +92,10 @@ export default function ConsultantRegisterPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <UserRound className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <UserRound className="bg-dialog-header text-dialog-icon" />
             Consultant Register
           </CardTitle>
 
@@ -112,7 +112,7 @@ export default function ConsultantRegisterPage() {
                 setEditing(null);
                 setOpen(true);
               }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
               Add Register
@@ -122,16 +122,16 @@ export default function ConsultantRegisterPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Applied Date</TableHead>
-                <TableHead>Consultant Date</TableHead>
-                <TableHead>Consultant Doctor</TableHead>
-                <TableHead>Instruction</TableHead>
-                <TableHead className="text-center">
+                <TableHead className="text-dialog-icon">Applied Date</TableHead>
+                <TableHead className="text-dialog-icon">Consultant Date</TableHead>
+                <TableHead className="text-dialog-icon">Consultant Doctor</TableHead>
+                <TableHead className="text-dialog-icon">Instruction</TableHead>
+                <TableHead className="text-center text-dialog-icon">
                   Actions
                 </TableHead>
               </TableRow>
@@ -141,16 +141,16 @@ export default function ConsultantRegisterPage() {
               {filteredData.length ? (
                 filteredData.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell>
+                    <TableCell className="text-dialog-muted">
                       {row.appliedDate}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-dialog-muted">
                       {row.consultantDate}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-dialog-muted">
                       {row.consultantDoctorName}
                     </TableCell>
-                    <TableCell className="max-w-[400px] truncate">
+                    <TableCell className="max-w-[400px] truncate text-dialog-muted">
                       {row.instruction}
                     </TableCell>
                     <TableCell>

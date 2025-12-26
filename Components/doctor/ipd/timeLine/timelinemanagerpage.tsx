@@ -93,16 +93,16 @@ export default function TimelineManagerPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-indigo-700 dark:text-white">
-            <Clock className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-dialog">
+            <Clock className="bg-dialog-header text-dialog-icon" />
             Timeline
           </CardTitle>
 
           <Button
             onClick={handleAdd}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-5 w-5" />
             Add Timeline
@@ -111,11 +111,11 @@ export default function TimelineManagerPage() {
       </Card>
 
       {/* TIMELINE */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardContent className="p-6">
           <div className="relative">
             {/* Vertical Line */}
-            <div className="absolute left-5 top-0 h-full w-[2px] bg-indigo-200 dark:bg-indigo-800" />
+            <div className="absolute left-5 top-0 h-full w-[2px] bg-dialog-primary" />
 
             <div className="space-y-10">
               {timeline.length ? (
@@ -126,18 +126,18 @@ export default function TimelineManagerPage() {
                   >
                     {/* ICON */}
                     <div className="relative z-10">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-dialog-primary text-dialog-btn shadow-lg">
                         <CalendarDays className="h-5 w-5" />
                       </div>
                     </div>
 
                     {/* CONTENT */}
                     <div className="flex-1">
-                      <Card className="border border-indigo-100 dark:border-indigo-900 shadow-md hover:shadow-lg transition">
+                      <Card className="border-dialog shadow-md hover:shadow-lg transition">
                         <CardContent className="p-4 space-y-3">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">
+                              <h3 className="text-lg font-semibold text-dialog-icon ">
                                 {item.title}
                               </h3>
                               <p className="text-sm text-muted-foreground">

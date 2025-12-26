@@ -165,48 +165,48 @@ const handleAdd = () => {
       <div className="fixed inset-0 flex flex-col bg-background max-h-screen">
 
         {/* HEADER */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-brand-gradient sticky top-0 z-10">
+        <div className="flex items-center justify-between px-4 py-3 bg-dialog-header border-b border-dialog sticky top-0 z-10">
           <div className="flex items-center gap-2 text-white">
-            <Receipt className="h-5 w-5" />
-            <h2 className="text-lg sm:text-xl font-semibold ">Add Charges</h2>
+            <Receipt className="bg-dialog-header text-dialog-icon" />
+            <h2 className="text-lg sm:text-xl font-semibold text-header">Add Charges</h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>✕</Button>
+          <Button variant="outline" size="icon" onClick={onClose} color="red">✕</Button>
         </div>
 
         {/* CONTENT - SCROLLABLE */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-dialog-surface text-dialog">
 
           {/* DROPDOWNS */}
-          <Card className="border-primary/30">
+          <Card className="border-dialog-input bg-dialog-surface">
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 p-4">
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label>Charge Type *</Label>
                 <Select value={chargeTypeId} onValueChange={setChargeTypeId}>
-                  <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                  <SelectContent>{dummyChargeTypes.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Type" /></SelectTrigger>
+                  <SelectContent className="select-dialog-content">{dummyChargeTypes.map((t) => <SelectItem key={t.id} value={t.id} className="select-dialog-item">{t.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label>Charge Category *</Label>
                 <Select value={chargeCategoryId} onValueChange={setChargeCategoryId} disabled={!chargeTypeId}>
-                  <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                  <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                  <SelectContent className="select-dialog-content">{categories.map((c) => <SelectItem key={c.id} value={c.id} className="select-dialog-item">{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label>Charge Name *</Label>
                 <Select value={chargeId} onValueChange={setChargeId} disabled={!chargeCategoryId}>
-                  <SelectTrigger><SelectValue placeholder="Select Charge" /></SelectTrigger>
-                  <SelectContent>{charges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Charge" /></SelectTrigger>
+                  <SelectContent className="select-dialog-content">{charges.map((c) => <SelectItem key={c.id} value={c.id} className="select-dialog-item">{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label>Standard Charge</Label>
-                <Input readOnly value={standardCharge} placeholder="Standard Charge" />
+                <Input readOnly value={standardCharge} placeholder="Standard Charge" className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
               </div>
-              <div>
+              <div className="flex flex-col gap-2">
                 <Label>Qty</Label>
-                <Input type="number" min={1} value={qty} onChange={(e) => setQty(+e.target.value)} />
+                <Input type="number" min={1} value={qty} onChange={(e) => setQty(+e.target.value)} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
               </div>
               <div className="flex items-end">
                 <Button onClick={handleAdd} className="gap-2 bg-primary w-full">
@@ -217,25 +217,25 @@ const handleAdd = () => {
           </Card>
 
           {/* TOTALS & DETAILS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="space-y-3 p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 ">
+            <Card className="border-dialog-input bg-dialog-surface">
+              <CardContent className="space-y-3 p-4 ">
                 <div className="flex justify-between"><span>Total</span><span className="font-medium">₹ {total.toFixed(2)}</span></div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1 text-orange-600"><Percent className="h-4 w-4" /> Discount</span>
-                  <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(+e.target.value)} className="w-24"/>
+                  <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(+e.target.value)} className="w-24 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
                 </div>
                 <div className="flex justify-between text-blue-600"><span>Tax ({taxPercent}%)</span><span>₹ {taxAmount.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-green-600"><span>Net Amount</span><span>₹ {netAmount.toFixed(2)}</span></div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-dialog-input bg-dialog-surface">
               <CardContent className="space-y-3 p-4">
                 <Label className="flex items-center gap-1"><Calendar className="h-4 w-4" /> Date</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
                 <Label className="flex items-center gap-1"><ClipboardEdit className="h-4 w-4" /> Charge Note</Label>
-                <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" />
+                <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional" className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />
               </CardContent>
             </Card>
           </div>
@@ -285,12 +285,12 @@ const handleAdd = () => {
         </div>
 
         {/* FOOTER */}
-        <div className="sticky bottom-0 bg-background border-t p-4 flex flex-col sm:flex-row gap-2 justify-between items-center">
+        <div className="sticky bottom-0 bg-dialog-header border-t border-dialog text-dialog-muted p-4 flex flex-col sm:flex-row gap-2 justify-between items-center">
           <div className="text-lg font-semibold text-primary flex items-center gap-1">
             <IndianRupee className="h-5 w-5" />
             {grandTotal.toFixed(2)}
           </div>
-          <Button size="lg" className="w-full sm:w-auto">Final Save</Button>
+          <Button size="lg" className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">Final Save</Button>
         </div>
 
       </div>

@@ -68,10 +68,10 @@ export default function BedHistoryManagerPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <BedDouble className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <BedDouble className="bg-dialog-header text-dialog-icon" />
             Bed History
           </CardTitle>
 
@@ -85,16 +85,16 @@ export default function BedHistoryManagerPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border border-gray-200 dark:border-gray-800">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Bed Group</TableHead>
-                <TableHead>Bed</TableHead>
-                <TableHead>From Date</TableHead>
-                <TableHead>To Date</TableHead>
-                <TableHead>Active Bed</TableHead>
+                <TableHead className="text-dialog-icon">Bed Group</TableHead>
+                <TableHead className="text-dialog-icon">Bed</TableHead>
+                <TableHead className="text-dialog-icon">From Date</TableHead>
+                <TableHead className="text-dialog-icon">To Date</TableHead>
+                <TableHead className="text-center text-dialog-icon">Active Bed</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -102,13 +102,13 @@ export default function BedHistoryManagerPage() {
               {filteredData.length ? (
                 filteredData.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-dialog-muted">
                       {item.bedGroup}
                     </TableCell>
-                    <TableCell>{item.bed}</TableCell>
-                    <TableCell>{item.fromDate}</TableCell>
-                    <TableCell>{item.toDate}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-dialog-muted">{item.bed}</TableCell>
+                    <TableCell className="text-dialog-muted">{item.fromDate}</TableCell>
+                    <TableCell className="text-dialog-muted">{item.toDate}</TableCell>
+                    <TableCell className="text-center">
                       {item.active ? (
                         <span className="text-green-600 font-semibold">
                           Yes

@@ -58,9 +58,19 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
 
           <div className="flex-1 overflow-hidden">
             <div ref={tabRef} className="overflow-x-auto whitespace-nowrap scrollbar-hide">
-              <TabsList className="inline-flex gap-2 min-w-max bg-transparent px-1">
+              <TabsList className="inline-flex gap-2 min-w-max bg-erp-card border border-erp px-1 ">
                 {TAB_ITEMS.map((tab) => (
-                  <TabsTrigger key={tab.label} value={tab.label} asChild>
+                  <TabsTrigger key={tab.label} value={tab.label} asChild className="
+                      rounded-lg px-4 py-2 text-sm font-medium
+                      text-erp-muted
+                      transition-all
+                      hover:text-erp
+                      hover:bg-indigo-50
+                      dark:hover:bg-indigo-500/10
+                      data-[state=active]:bg-erp-primary
+                      data-[state=active]:text-black
+                      data-[state=active]:shadow-sm
+                    ">
                     <Link
                       href={`/doctor/IPD/ipdDetails/${id}/ipd/${tab.path}`}
                     >

@@ -63,10 +63,10 @@ export default function TreatmentHistoryPage() {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <Card>
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-indigo-700 dark:text-white">
-            <ClipboardList className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold flex items-center gap-2 text-dialog">
+            <ClipboardList className="bg-dialog-header text-dialog-icon" />
             Treatment History
           </CardTitle>
 
@@ -80,15 +80,15 @@ export default function TreatmentHistoryPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>IPD No</TableHead>
-                <TableHead>Symptoms</TableHead>
-                <TableHead>Consultant Doctor</TableHead>
-                <TableHead>Bed</TableHead>
+                <TableHead className="text-dialog-icon">IPD No</TableHead>
+                <TableHead className="text-dialog-icon">Symptoms</TableHead>
+                <TableHead className="text-dialog-icon">Consultant Doctor</TableHead>
+                <TableHead className="text-dialog-icon text-center">Bed</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -96,14 +96,14 @@ export default function TreatmentHistoryPage() {
               {filteredData.length ? (
                 filteredData.map((row, index) => (
                   <TableRow key={index}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-dialog-muted">
                       {row.ipdNo}
                     </TableCell>
-                    <TableCell className="max-w-[300px] truncate">
+                    <TableCell className="max-w-[300px] truncate text-dialog-muted">
                       {row.symptoms}
                     </TableCell>
-                    <TableCell>{row.consultantDoctor}</TableCell>
-                    <TableCell>{row.bed}</TableCell>
+                    <TableCell className="text-dialog-muted">{row.consultantDoctor}</TableCell>
+                    <TableCell className="text-dialog-muted text-center">{row.bed}</TableCell>
                   </TableRow>
                 ))
               ) : (

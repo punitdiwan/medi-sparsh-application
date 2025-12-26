@@ -115,12 +115,12 @@ export default function AddConsultantRegisterDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg rounded-xl p-0 overflow-hidden shadow-lg">
+      <DialogContent className="sm:max-w-lg rounded-xl p-0 border border-dialog bg-dialog-surface overflow-hidden shadow-lg">
         {/* HEADER */}
-        <DialogHeader className="px-6 py-4 bg-brand-gradient text-white">
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
-              <UserRound className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-center rounded-lg ">
+              <UserRound className="bg-dialog-header text-dialog-icon" />
             </div>
             <DialogTitle className="text-lg font-semibold tracking-wide">
               {isEdit ? "Edit Consultant Register" : "Add Consultant Register"}
@@ -129,40 +129,43 @@ export default function AddConsultantRegisterDialog({
         </DialogHeader>
 
         {/* BODY */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto bg-dialog-surface text-dialog">
           {/* Applied Date */}
-          <div className="space-y-1">
-            <Label>
-              Applied Date <span className="text-destructive">*</span>
-            </Label>
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="date"
-                className="pl-9"
-                value={appliedDate}
-                onChange={(e) => setAppliedDate(e.target.value)}
-                disabled={isLoading}
-              />
+          <div className="space-y-1 flex flex-row gap-2 flex-wrap">
+            <div className="flex-1 space-y-1">
+              <Label>
+                Applied Date <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  className="pl-9 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
+                  value={appliedDate}
+                  onChange={(e) => setAppliedDate(e.target.value)}
+                  disabled={isLoading}
+                />
+            </div>
+            </div>
+              {/* Consultant Date */}
+            <div className="flex-1 space-y-1">
+              <Label>
+                Consultant Date <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="date"
+                  className="pl-9 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
+                  value={consultantDate}
+                  onChange={(e) => setConsultantDate(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Consultant Date */}
-          <div className="space-y-1">
-            <Label>
-              Consultant Date <span className="text-destructive">*</span>
-            </Label>
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="date"
-                className="pl-9"
-                value={consultantDate}
-                onChange={(e) => setConsultantDate(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
+          
 
           {/* Consultant Doctor */}
           <div className="space-y-1">
@@ -170,12 +173,12 @@ export default function AddConsultantRegisterDialog({
               Consultant Doctor <span className="text-destructive">*</span>
             </Label>
             <Select value={doctorId} onValueChange={setDoctorId}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
                 <SelectValue placeholder="Select Consultant Doctor" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="select-dialog-content">
                 {DOCTORS.map((doc) => (
-                  <SelectItem key={doc.id} value={doc.id}>
+                  <SelectItem key={doc.id} value={doc.id} className="select-dialog-item">
                     {doc.name}
                   </SelectItem>
                 ))}
@@ -194,20 +197,21 @@ export default function AddConsultantRegisterDialog({
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               disabled={isLoading}
+              className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
             />
           </div>
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+        <DialogFooter className="px-6 py-3 bg-dialog-header border-t border-dialog flex justify-between">
+          <Button variant="outline" onClick={onClose} disabled={isLoading} className="text-dialog-muted">
             Cancel
           </Button>
 
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90"
+            className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-4 w-4" />
             {isLoading

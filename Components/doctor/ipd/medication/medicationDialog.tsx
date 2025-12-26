@@ -131,12 +131,12 @@ export function MedicationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden rounded-xl">
+      <DialogContent className="sm:max-w-xl p-0 border border-dialog bg-dialog-surface overflow-hidden rounded-xl">
         {/* HEADER */}
-        <DialogHeader className="px-6 py-4 bg-brand-gradient text-white flex flex-row items-center justify-between">
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog flex flex-row items-center justify-between">
             <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                <Pill className="h-5 w-5" />
+                <div className="rounded-lg flex items-center justify-center">
+                <Pill className="bg-dialog-header text-dialog-icon" />
                 </div>
                 <DialogTitle className="text-lg font-semibold">
                 {defaultValues ? "Edit Medication" : "Add Medication"}
@@ -146,14 +146,14 @@ export function MedicationDialog({
 
 
         {/* BODY */}
-        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto overflow-y-auto bg-dialog-surface text-dialog">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Date *">
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
             </Field>
 
             <Field label="Time *">
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
             </Field>
 
             <Field label="Category *">
@@ -161,12 +161,12 @@ export function MedicationDialog({
                 setCategory(v);
                 setMedicine("");
               }}>
-                <SelectTrigger>
+                <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select-dialog-content">
                   {CATEGORIES.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                    <SelectItem key={c.id} value={c.id} className="select-dialog-item">
                       {c.name}
                     </SelectItem>
                   ))}
@@ -180,12 +180,12 @@ export function MedicationDialog({
                 onValueChange={setMedicine}
                 disabled={!category}
               >
-                <SelectTrigger>
+                <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                   <SelectValue placeholder="Select Medicine" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select-dialog-content">
                   {filteredMedicines.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
+                    <SelectItem key={m.id} value={m.id} className="select-dialog-item">
                       {m.name}
                     </SelectItem>
                   ))}
@@ -195,14 +195,14 @@ export function MedicationDialog({
 
             <Field label="Dosage *">
               <Select value={dosage} onValueChange={setDosage}>
-                <SelectTrigger>
+                <SelectTrigger className=" bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                   <SelectValue placeholder="Select Dosage" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1 Tablet">1 Tablet</SelectItem>
-                  <SelectItem value="2 Tablet">2 Tablet</SelectItem>
-                  <SelectItem value="1 ml">1 ml</SelectItem>
-                  <SelectItem value="2 ml">2 ml</SelectItem>
+                <SelectContent className="select-dialog-content">
+                  <SelectItem value="1 Tablet" className="select-dialog-item">1 Tablet</SelectItem>
+                  <SelectItem value="2 Tablet" className="select-dialog-item">2 Tablet</SelectItem>
+                  <SelectItem value="1 ml" className="select-dialog-item">1 ml</SelectItem>
+                  <SelectItem value="2 ml" className="select-dialog-item">2 ml</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -211,19 +211,20 @@ export function MedicationDialog({
               <Textarea
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
+                className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"
               />
             </Field>
           </div>
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="px-6 py-3 border-t bg-muted/30 sticky bottom-0">
-          <Button variant="ghost" onClick={onClose}>
+        <DialogFooter className="px-6 py-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            className="bg-brand-gradient text-white flex items-center gap-2"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2"
           >
             <PlusCircle className="h-4 w-4" />
             {defaultValues ? "Update Medication" : "Save Medication"}

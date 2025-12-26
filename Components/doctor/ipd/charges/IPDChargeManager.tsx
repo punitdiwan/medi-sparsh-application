@@ -99,10 +99,10 @@ export default function IPDChargesManagerPage() {
     <div className="p-6 space-y-6">
 
       {/* HEADER / SEARCH */}
-      <Card className="shadow-sm">
+      <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <Receipt className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+            <Receipt className="bg-dialog-header text-dialog-icon" />
             Charges
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -113,7 +113,7 @@ export default function IPDChargesManagerPage() {
                 onChange={e => setSearch(e.target.value)}
                 className="sm:w-72"
               />
-            <Button onClick={() => setOpenAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Button onClick={() => setOpenAdd(true)} className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
               <PlusCircle className="h-5 w-5" /> Add Charges
             </Button>
           </div>
@@ -121,35 +121,35 @@ export default function IPDChargesManagerPage() {
       </Card>
 
       {/* CHARGES TABLE */}
-      <Card className="shadow-lg border border-gray-200">
+      <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
           <Table className="min-w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-indigo-700 dark:text-white">Date</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Charge Name</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Charge Type</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Charge Category</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Quantity</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Standard Charges</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Discount</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Tax</TableHead>
-                <TableHead className="text-indigo-700 dark:text-white">Amount</TableHead>
-                <TableHead className="text-center text-indigo-700 dark:text-white">Actions</TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Charge Name</TableHead>
+                <TableHead className="text-dialog-icon">Charge Type</TableHead>
+                <TableHead className="text-dialog-icon">Charge Category</TableHead>
+                <TableHead className="text-dialog-icon">Quantity</TableHead>
+                <TableHead className="text-dialog-icon">Standard Charges</TableHead>
+                <TableHead className="text-dialog-icon">Discount</TableHead>
+                <TableHead className="text-dialog-icon">Tax</TableHead>
+                <TableHead className="text-dialog-icon">Amount</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length ? (
                 filtered.map(c => (
                   <TableRow key={c.id}>
-                    <TableCell className="text-gray-600 dark:text-white">{c.date}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{c.chargeName}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{c.chargeType}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{c.chargeCategory}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">{c.quantity}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">₹ {c.standardCharges.toFixed(2)}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">₹ {c.discount.toFixed(2)}</TableCell>
-                    <TableCell className="text-gray-700 dark:text-white">₹ {c.tax.toFixed(2)}</TableCell>
+                    <TableCell className=" text-dialog-muted">{c.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.chargeName}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.chargeType}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.chargeCategory}</TableCell>
+                    <TableCell className="text-dialog-muted">{c.quantity}</TableCell>
+                    <TableCell className="text-dialog-muted">₹ {c.standardCharges.toFixed(2)}</TableCell>
+                    <TableCell className="text-dialog-muted">₹ {c.discount.toFixed(2)}</TableCell>
+                    <TableCell className="text-dialog-muted">₹ {c.tax.toFixed(2)}</TableCell>
                     <TableCell className="font-semibold text-green-600">₹ {c.amount.toFixed(2)}</TableCell>
                     <TableCell className="text-center">
                       <TooltipProvider>

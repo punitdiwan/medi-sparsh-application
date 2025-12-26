@@ -77,15 +77,15 @@ export default function TimelineDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg rounded-xl p-0 overflow-hidden shadow-lg">
+      <DialogContent className="sm:max-w-lg rounded-xl p-0 border border-dialog bg-dialog-surface overflow-hidden shadow-lg">
         {/* HEADER */}
-        <DialogHeader className="px-6 py-4 bg-brand-gradient text-white">
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+            <div className="flex items-center justify-center rounded-lg ">
               {isEdit ? (
-                <Pencil className="h-5 w-5 text-white" />
+                <Pencil className="bg-dialog-header text-dialog-icon" />
               ) : (
-                <PlusCircle className="h-5 w-5 text-white" />
+                <PlusCircle className="bg-dialog-header text-dialog-icon" />
               )}
             </div>
 
@@ -96,7 +96,7 @@ export default function TimelineDialog({
         </DialogHeader>
 
         {/* BODY */}
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto bg-dialog-surface text-dialog">
           {/* Title */}
           <div className="space-y-1">
             <Label>
@@ -109,6 +109,7 @@ export default function TimelineDialog({
                 setForm({ ...form, title: e.target.value })
               }
               disabled={isLoading}
+              className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
             />
           </div>
 
@@ -121,12 +122,13 @@ export default function TimelineDialog({
               <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="date"
-                className="pl-9"
+                // className="pl-9"
                 value={form.date}
                 onChange={(e) =>
                   setForm({ ...form, date: e.target.value })
                 }
                 disabled={isLoading}
+                className="pl-9 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
               />
             </div>
           </div>
@@ -144,6 +146,7 @@ export default function TimelineDialog({
                 setForm({ ...form, description: e.target.value })
               }
               disabled={isLoading}
+              className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
             />
           </div>
 
@@ -160,6 +163,7 @@ export default function TimelineDialog({
                   })
                 }
                 disabled={isLoading}
+                className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
               />
               <FileText className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -176,6 +180,7 @@ export default function TimelineDialog({
                 })
               }
               disabled={isLoading}
+              className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
             />
             <Label className="cursor-pointer">
               Visible to this person
@@ -184,11 +189,12 @@ export default function TimelineDialog({
         </div>
 
         {/* FOOTER */}
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+        <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="text-dialog-muted"
           >
             Cancel
           </Button>
@@ -196,7 +202,7 @@ export default function TimelineDialog({
           <Button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             {isLoading
               ? "Saving..."
