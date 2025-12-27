@@ -20,7 +20,7 @@ const page = async () => {
         symptomsList={symptoms || []}
         doctors={doctors || []}
         bedGroups={bedGroups || []}
-        beds={beds || []}
+        beds={beds?.map(bed => ({ ...bed, isOccupied: bed.isOccupied ?? false })) || []}
       />
     </>
   )
