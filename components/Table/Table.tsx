@@ -39,17 +39,17 @@ export function Table<TData>({
   return (
     <div
       className={clsx(
-        "transition-all duration-200 rounded-md border bg-card shadow-sm overflow-x-auto scrollbar-show",
+        "transition-all duration-200 rounded-md bg-overview-card border-overview-strong shadow-sm overflow-x-auto scrollbar-show",
         isCollapsed
           ? "w-[calc(100vw-100px)]"
           : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
       )}
     >
-      <table className="min-w-max w-full text-sm border-collapse relative">
+      <table className="min-w-max w-full text-sm bg-overview-card border-overview-strong border-collapse relative">
         {/* ================= HEADER ================= */}
         <thead
           className={clsx(
-            "bg-muted text-xs uppercase tracking-wider font-medium",
+            "bg-overview-card text-xs uppercase tracking-wider font-medium",
             headerTextClassName ?? "text-muted-foreground"
           )}
         >
@@ -62,7 +62,7 @@ export function Table<TData>({
                   <th
                     key={header.id}
                     className={clsx(
-                      "border-b px-6 py-3 text-left whitespace-nowrap",
+                      "border-b bg-overview-card px-6 py-3 text-left whitespace-nowrap",
                       isLast && "sticky right-0 bg-muted z-10 shadow-md"
                     )}
                   >

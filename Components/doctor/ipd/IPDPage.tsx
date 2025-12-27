@@ -116,7 +116,7 @@ export default function IPDPatientListPage() {
           onClick={() =>
             route.push(`/doctor/IPD/ipdDetails/${row.original.ipdNo}/ipd`)
           }
-          className="font-semibold text-indigo-600 hover:text-indigo-400 underline cursor-pointer"
+          className="font-semibold text-overview-base hover:text-indigo-400 underline cursor-pointer"
         >
           {row.original.ipdNo}
         </button>
@@ -236,6 +236,7 @@ export default function IPDPatientListPage() {
                 columns={columns}
                 fallback="No patients found"
                 headerTextClassName="text-dialog-icon"
+                bodyTextClassName="text-overview-muted"
               />
               <PaginationControl
                 currentPage={currentPage}
