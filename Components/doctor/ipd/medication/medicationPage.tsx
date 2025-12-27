@@ -1,24 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
-import { Edit } from "lucide-react";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableBody,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  Printer,
+  Pill,
+} from "lucide-react";
+import { MedicationDialog } from "./medicationDialog";
 
-interface Medicine {
+/* ---------------- Types ---------------- */
+export type Medication = {
   id: string;
   date: string;
   time: string;
@@ -27,252 +42,203 @@ interface Medicine {
   medicineId: string;
   medicineName: string;
   dosage: string;
-  remarks: string;
-}
+  remarks?: string;
+};
 
-interface MedicineCategory {
-  id: string;
-  name: string;
-}
+/* Dialog input (no id) */
+export type MedicationInput = Omit<Medication, "id">;
 
-interface MedicineName {
-  id: string;
-  name: string;
-  categoryId: string;
-}
 
-export default function MedicationPage() {
-  const [medications, setMedications] = useState<Medicine[]>([]);
-  const [categories, setCategories] = useState<MedicineCategory[]>([]);
-  const [medicines, setMedicines] = useState<MedicineName[]>([]);
+/* ---------------- Page ---------------- */
+export default function MedicationManagerPage() {
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Medication | null>(null);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
+  /* ---------------- Filter ---------------- */
+  const filtered = useMemo(() => {
+    if (!search) return medications;
+    return medications.filter(
+      (m) =>
+        m.medicineName.toLowerCase().includes(search.toLowerCase()) ||
+        m.categoryName.toLowerCase().includes(search.toLowerCase()) ||
+        m.date.includes(search)
+    );
+  }, [medications, search]);
 
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [category, setCategory] = useState("");
-  const [medicine, setMedicine] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [remarks, setRemarks] = useState("");
-
-  const [filteredMedicines, setFilteredMedicines] = useState<MedicineName[]>([]);
-
-  useEffect(() => {
-    setCategories([
-      { id: "1", name: "Antibiotic" },
-      { id: "2", name: "Painkiller" },
-      { id: "3", name: "Vitamin" },
+  /* ---------------- Add / Edit ---------------- */
+  const handleSubmit = (data: MedicationInput) => {
+  if (editing) {
+    setMedications((prev) =>
+      prev.map((m) =>
+        m.id === editing.id
+          ? { ...data, id: m.id }
+          : m
+      )
+    );
+  } else {
+    setMedications((prev) => [
+      ...prev,
+      {
+        ...data,
+        id: crypto.randomUUID(),
+      },
     ]);
+  }
 
-    setMedicines([
-      { id: "m1", name: "Amoxicillin", categoryId: "1" },
-      { id: "m2", name: "Cefixime", categoryId: "1" },
-      { id: "m3", name: "Paracetamol", categoryId: "2" },
-      { id: "m4", name: "Ibuprofen", categoryId: "2" },
-      { id: "m5", name: "Vitamin C", categoryId: "3" },
-    ]);
-  }, []);
+  setEditing(null);
+  setOpen(false);
+};
 
-  // Filter medicines when category changes
-  useEffect(() => {
-    if (category) {
-      setFilteredMedicines(medicines.filter((m) => m.categoryId === category));
-      setMedicine(""); // reset medicine selection
-    } else {
-      setFilteredMedicines([]);
+
+  /* ---------------- Delete ---------------- */
+  const handleDelete = (id: string) => {
+    if (confirm("Delete this medication?")) {
+      setMedications((prev) => prev.filter((m) => m.id !== id));
     }
-  }, [category, medicines]);
-
-  const openAddModal = () => {
-    setEditingMedicine(null);
-    resetForm();
-    setModalOpen(true);
   };
 
-  const openEditModal = (med: Medicine) => {
-    setEditingMedicine(med);
-    setDate(med.date);
-    setTime(med.time);
-    setCategory(med.categoryId);
-    setMedicine(med.medicineId);
-    setDosage(med.dosage);
-    setRemarks(med.remarks);
-    setModalOpen(true);
-  };
-
-  const resetForm = () => {
-    setDate("");
-    setTime("");
-    setCategory("");
-    setMedicine("");
-    setDosage("");
-    setRemarks("");
-  };
-
-  const handleSubmit = () => {
-    if (!date || !time || !category || !medicine || !dosage) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    const categoryName = categories.find((c) => c.id === category)?.name || "";
-    const medicineName = medicines.find((m) => m.id === medicine)?.name || "";
-
-    if (editingMedicine) {
-      // Edit existing
-      setMedications((prev) =>
-        prev.map((m) =>
-          m.id === editingMedicine.id
-            ? { ...m, date, time, categoryId: category, categoryName, medicineId: medicine, medicineName, dosage, remarks }
-            : m
-        )
-      );
-    } else {
-      // Add new
-      setMedications((prev) => [
-        ...prev,
-        {
-          id: `med-${Date.now()}`,
-          date,
-          time,
-          categoryId: category,
-          categoryName,
-          medicineId: medicine,
-          medicineName,
-          dosage,
-          remarks,
-        },
-      ]);
-    }
-
-    setModalOpen(false);
-    resetForm();
+  /* ---------------- Print ---------------- */
+  const handlePrint = (med: Medication) => {
+    alert(`Print medication: ${med.medicineName}`);
   };
 
   return (
-    <div className="p-6 space-y-4">
-        <div className="flex justify-between flex-warp items-center">
-            <h2 className="text-2xl font-semibold">Medication List</h2>
-            <Button onClick={openAddModal}>Add Medication</Button>
-        </div>
-      <Card className="mt-4">
-        <CardContent className="p-0">
+    <div className="p-6 space-y-6">
+      {/* HEADER */}
+      <Card className="border-dialog bg-dialog-header">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-2xl font-bold text-dialog dark:text-white flex items-center gap-2">
+            <Pill className="bg-dialog-header text-dialog-icon" />
+            Medication
+          </CardTitle>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Search by medicine / category / date"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Add Medication
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* TABLE */}
+      <Card className="shadow-lg border-dialog bg-dialog-header">
+        <CardContent className="p-0 overflow-x-auto ">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Time</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Medicine</TableCell>
-                <TableCell>Dosage</TableCell>
-                <TableCell>Remarks</TableCell>
-                <TableCell>Action</TableCell>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Time</TableHead>
+                <TableHead className="text-dialog-icon">Category</TableHead>
+                <TableHead className="text-dialog-icon">Medicine</TableHead>
+                <TableHead className="text-dialog-icon">Dosage</TableHead>
+                <TableHead className="text-dialog-icon">Remarks</TableHead>
+                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {medications.length === 0 && (
+              {filtered.length ? (
+                filtered.map((med) => (
+                  <TableRow key={med.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
+                    <TableCell className="text-dialog-muted">{med.date}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.time}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.categoryName}</TableCell>
+                    <TableCell className="font-medium text-dialog-muted">
+                      {med.medicineName}
+                    </TableCell>
+                    <TableCell className="text-dialog-muted">{med.dosage}</TableCell>
+                    <TableCell className="text-dialog-muted">{med.remarks || "—"}</TableCell>
+                    <TableCell >
+                      <TooltipProvider>
+                        <div className="flex justify-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handlePrint(med)}
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Print</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditing(med);
+                                  setOpen(true);
+                                }}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="destructive"
+                                onClick={() => handleDelete(med.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    No medications added
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-6 text-dialog-muted"
+                  >
+                    No medications found
                   </TableCell>
                 </TableRow>
               )}
-              {medications.map((med) => (
-                <TableRow key={med.id}>
-                  <TableCell>{med.date}</TableCell>
-                  <TableCell>{med.time}</TableCell>
-                  <TableCell>{med.categoryName}</TableCell>
-                  <TableCell>{med.medicineName}</TableCell>
-                  <TableCell>{med.dosage}</TableCell>
-                  <TableCell>{med.remarks}</TableCell>
-                  <TableCell>
-                    <Button size="sm" variant="outline" onClick={() => openEditModal(med)}>
-                      <Edit className="w-4 h-4 mr-1" /> Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingMedicine ? "Edit Medication" : "Add Medication"}</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-2">
-            <div className="grid w-full items-center gap-1">
-              <Label>Date *</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-
-            <div className="grid w-full items-center gap-1">
-              <Label>Time *</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-
-            <div className="grid w-full items-center gap-1">
-              <Label>Medicine Category *</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid w-full items-center gap-1">
-              <Label>Medicine Name *</Label>
-              <Select value={medicine} onValueChange={setMedicine} disabled={!category}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Medicine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredMedicines.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid w-full items-center gap-1">
-              <Label>Dosage *</Label>
-              <Select value={dosage} onValueChange={setDosage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Dosage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1 Tablet">1 Tablet</SelectItem>
-                  <SelectItem value="2 Tablet">2 Tablet</SelectItem>
-                  <SelectItem value="1 ml">1 ml</SelectItem>
-                  <SelectItem value="2 ml">2 ml</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid w-full items-center gap-1">
-              <Label>Remarks</Label>
-              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={handleSubmit}>{editingMedicine ? "Update Medication" : "Add Medication"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ADD / EDIT MODAL */}
+      {open && (
+        <MedicationDialog
+          open={open}
+          defaultValues={editing || undefined}
+          onClose={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }

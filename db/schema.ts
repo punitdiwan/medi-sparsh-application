@@ -221,6 +221,7 @@ export const beds = pgTable("beds", {
 	name: text().notNull(),
 	bedTypeId: text("bed_type_id").notNull(),
 	bedGroupId: text("bed_group_id").notNull(),
+	isOccupied: boolean("is_occupied").default(false),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1046,4 +1047,31 @@ export const operations = pgTable("operations", {
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+// table ipd admission table
+export const ipdAdmission = pgTable("ipd_admission", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	patientId: text("patient_id").notNull()
+		.references(() => patients.id, { onDelete: "cascade" }),
+	caseId: text("case_id"),
+	caseDetails: text("case_details"),
+	diagnosis: jsonb("diagnosis"),
+	casuality: boolean("casuality").default(false),
+	creditLimit: numeric("credit_limit").default("0").notNull(),
+	refrenceFrom: text("refrence_from"),
+	doctorId: text("doctor_id")
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	bedGroupId: text("bed_group_id")
+		.references(() => bedGroups.id, { onDelete: "cascade" }),
+	bedId: text("bed_id")
+		.references(() => beds.id, { onDelete: "cascade" }),
+	notes: text("notes"),
+	medicalHistory: text("medical_history"),
+	admissionDate: timestamp("admission_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
 });

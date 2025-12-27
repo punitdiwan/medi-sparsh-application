@@ -78,6 +78,57 @@
   --sidebar-ring: oklch(0.708 0 0);
   --soft-primary-bg: hsl(210 100% 97%);
   --soft-success-bg: hsl(142 70% 95%);
+  --modal-bg: #ffffff;
+  --modal-surface: #f8fafc;
+  --modal-border: #e2e8f0;
+
+  --header-bg: #dbdbdb;
+  --header-text: #0f172a;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  --input-bg: #ffffff;
+  --input-border: #475569;
+
+  --dialog-primary: #3b82f6;
+  --dialog-primary-hover:#619eff;
+  --dialog-primary-text: #619eff;
+
+  --dialog-danger: #dc2626;
+  --btn-text:#f8fafc;
+  --overview-back:#f8fafc;
+
+    /* ===============================
+     Core UI / Layout
+     =============================== */
+  --overview-base: #f0f0f0;        /* Page background */
+  --overview-card: #eeeeee;       /* Cards / panels */
+  --overview-muted: #f1f5f9;      /* Subtle sections */
+
+   --overview-border-base: #e4e8ee;   /* Card borders / dividers */
+  --overview-border-strong: #d1d5db;
+
+  --overview-text-base: #111827;     /* Primary text */
+  --overview-text-muted: #6b7280;    /* Secondary labels */
+  --overview-text-subtle: #9ca3af;
+
+  --overview-info: #3f51b5;           /* Metadata / labels */
+  --overview-teal: #2bb7a0;           /* Paid / stable / normal */
+  --overview-bill-card:#e0e0e0;
+
+  /* ===============================
+     Status & Alerts
+     =============================== */
+  --overview-success: #2e7d32;
+  --overview-success-soft: #e6f4ea;
+
+  --overview-warning: #f9a825;
+  --overview-warning-soft: #fff8e1;
+
+  --overview-danger: #d32f2f;
+  --overview-danger-soft: #fdecea;
+
 }
 
 .dark {
@@ -112,11 +163,196 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --modal-bg: #111827;
+  --modal-surface: #070c16;
+  --modal-border: #1f2937;
+
+  --header-bg: #111827;
+  --header-text: #f1f5f9;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+
+  --input-bg: #020617;
+  --input-border: #1f2937;
+
+  --dialog-primary: #60a5fa;
+  --dialog-primary-hover:#84bbff;
+  --dialog-primary-text: #020617;
+
+  --dialog-danger: #f87171;
+  --btn-text:#e2e2e2;
+  --overview-back:#2b43bb;
+
+  /* ===============================
+     Core UI / Layout
+     =============================== */
+  --overview-base: #0b1220;
+  --overview-card: #111827;
+  --overview-muted: #020617;
+
+   --overview-border-base: #1f2937;
+  --overview-border-strong: #374151;
+
+  --overview-text-base: #f1f5f9;
+  --overview-text-muted: #94a3b8;
+  --overview-text-subtle: #64748b;
+
+  --overview-info: #7986cb;
+  --overview-teal: #4cb8a7;
+
+  --overview-bill-card:#141e35;
+
+  /* ===============================
+     Status & Alerts
+     =============================== */
+  --overview-success: #4ade80;
+  --overview-success-soft: #052e16;
+
+  --overview-warning: #facc15;
+  --overview-warning-soft: #451a03;
+
+  --overview-danger: #f87171;
+  --overview-danger-soft: #450a0a;
 }
 
-.light .bg-muted\/40 {
-  background-color: var(--soft-primary-bg);
+@layer utilities {
+  /* Backgrounds */
+  .bg-overview-base { background-color: var(--overview-base); }
+  .bg-overview-card { background-color: var(--overview-card); }
+  .bg-overview-muted { background-color: var(--overview-muted); }
+
+  /* Borders */
+  .border-overview-base { border-color: var(--overview-border-base); }
+  .border-overview-strong { border-color: var(--overview-border-strong); }
+  /* Text */
+  .text-overview-base { color: var(--overview-text-base); }
+  .text-overview-muted { color: var(--overview-text-muted); }
+
+  /* Labels */
+  .text-overview-label {
+    color: var(--overview-info);
+  }
+  .bg-overview-bar {
+    background-color: var(--overview-info);
+  }
+  .bg-overview-activ-btn {
+    background-color: var(--overview-teal);
+  }
+  .bg-bill-card {
+    background-color: var(--overview-bill-card);
+  }
+  /* Status */
+  .text-overview-success { color: var(--overview-success); }
+  .text-overview-warning { color: var(--overview-warning); }
+  .text-overview-danger { color: var(--overview-danger); }
 }
+
+@layer utilities {
+  /* ===== Dialog Backgrounds ===== */
+  .bg-dialog {
+    background-color: var(--modal-bg);
+  }
+
+  .bg-dialog-surface {
+    background-color: var(--modal-surface);
+  }
+
+  .bg-dialog-header {
+    background-color: var(--header-bg);
+  }
+
+  .bg-dialog-body {
+    background-color: var(--text-secondary);
+  }
+  /* ===== Text ===== */
+  .text-header {
+    color: var(--header-text);
+  }
+
+  .text-dialog {
+    color: var(--text-primary);
+  }
+
+  .text-dialog-muted {
+    color: var(--text-secondary);
+  }
+  
+
+  /* ===== Borders ===== */
+  .border-dialog {
+    border-color: var(--modal-border);
+  }
+
+  .border-dialog-input {
+    border-color: var(--input-border);
+  }
+
+  /* ===== Inputs ===== */
+  .bg-dialog-input {
+    background-color: var(--input-bg);
+  }
+
+  /* ===== Buttons ===== */
+  .bg-dialog-primary {
+    background-color: var(--dialog-primary);
+    color: var(--dialog-primary-text);
+  }
+  .text-dialog-btn {
+    color: var(--btn-text);
+  }
+  .bg-btn-hover {
+    color: var(--dialog-primary-hover);
+  }
+  .text-dialog-icon {
+    color: var(--dialog-primary);
+  }
+  .bg-dialog-icon {
+    background-color: var(--icone-bg);
+  }
+  .bg-dialog-danger {
+    background-color: var(--dialog-danger);
+    color: white;
+  }
+
+  /* /// */
+  .bg-overview-backgroud {
+    background-color: var(--overview-back);
+  }
+}
+
+@layer utilities {
+  /* ===== Select Content ===== */
+  .select-dialog-content {
+    background-color: var(--modal-surface);
+    border-color: var(--modal-border);
+    color: var(--text-primary);
+  }
+
+  /* ===== Select Item ===== */
+  .select-dialog-item {
+    color: var(--text-primary);
+  }
+
+  /* Hover / active */
+  .select-dialog-item[data-highlighted] {
+    background-color: var(--dialog-primary);
+    color: var(--btn-text);
+  }
+
+  /* Selected item */
+  .select-dialog-item[data-state="checked"] {
+    background-color: color-mix(
+      in oklab,
+      var(--dialog-primary) 20%,
+      transparent
+    );
+    color: var(--dialog-primary);
+    font-weight: 500;
+  }
+}
+
+
 
 @layer base {
   * {
@@ -162,6 +398,53 @@
       rgb(236 72 153)   /* pink-500 */
     );
   }
+}
+@layer utilities {
+  .bg-Module-header {
+    @apply bg-gradient-to-r from-indigo-600 to-purple-600;
+  }
+
+  .dark .bg-Module-header {
+    @apply from-indigo-700 to-purple-700;
+  }
+}
+/* ===============================
+   Indigo 700 Global Utilities
+   =============================== */
+
+/* TEXT COLOR */
+.text-indigo-global {
+  @apply text-indigo-700 transition-colors duration-200;
+}
+
+.text-indigo-global:hover {
+  @apply text-indigo-600;
+}
+
+.dark .text-indigo-global {
+  @apply text-white;
+}
+
+.dark .text-indigo-global:hover {
+  @apply text-white;
+}
+
+
+/* BACKGROUND COLOR */
+.bg-indigo-global {
+  @apply bg-indigo-700 text-white transition-colors duration-200;
+}
+
+.bg-indigo-global:hover {
+  @apply bg-indigo-600;
+}
+
+.dark .bg-indigo-global {
+  @apply bg-white text-black;
+}
+
+.dark .bg-indigo-global:hover {
+  @apply bg-white;
 }
 
 

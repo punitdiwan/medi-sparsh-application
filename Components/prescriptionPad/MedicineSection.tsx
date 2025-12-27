@@ -174,7 +174,7 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
   );
 
   return (
-    <Card className="m-5 shadow-sm border border-border bg-card">
+    <Card className="shadow-sm bg-overview-card border-overview-strong">
       <CardHeader>
         <CardTitle className="text-base font-semibold text-foreground">
           Medicines
@@ -194,12 +194,12 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
               value={form.category}
               onValueChange={(value) => handleChange("category", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="select-dialog-content">
                 {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.name}>
+                  <SelectItem key={cat.id} value={cat.name} className="select-dialog-item">
                     {cat.name}
                   </SelectItem>
                 ))}
@@ -229,17 +229,17 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
               value={form.frequency}
               onValueChange={(value) => handleChange("frequency", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0-0-1">0-0-1</SelectItem>
-                <SelectItem value="0-1-0">0-1-0</SelectItem>
-                <SelectItem value="0-1-1">0-1-1</SelectItem>
-                <SelectItem value="1-0-0">1-0-0</SelectItem>
-                <SelectItem value="1-0-1">1-0-1</SelectItem>
-                <SelectItem value="1-1-0">1-1-0</SelectItem>
-                <SelectItem value="1-1-1">1-1-1</SelectItem>
+              <SelectContent className="select-dialog-content">
+                <SelectItem value="0-0-1" className="select-dialog-item">0-0-1</SelectItem>
+                <SelectItem value="0-1-0" className="select-dialog-item">0-1-0</SelectItem>
+                <SelectItem value="0-1-1" className="select-dialog-item">0-1-1</SelectItem>
+                <SelectItem value="1-0-0" className="select-dialog-item">1-0-0</SelectItem>
+                <SelectItem value="1-0-1" className="select-dialog-item">1-0-1</SelectItem>
+                <SelectItem value="1-1-0" className="select-dialog-item">1-1-0</SelectItem>
+                <SelectItem value="1-1-1" className="select-dialog-item">1-1-1</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -251,14 +251,14 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
               value={form.timing}
               onValueChange={(value) => handleChange("timing", value)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
                 <SelectValue placeholder="Select timing" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Before Meal">Before Meal</SelectItem>
-                <SelectItem value="After Meal">After Meal</SelectItem>
-                <SelectItem value="Morning">Morning</SelectItem>
-                <SelectItem value="Night">Night</SelectItem>
+              <SelectContent className="select-dialog-content">
+                <SelectItem value="Before Meal" className="select-dialog-item">Before Meal</SelectItem>
+                <SelectItem value="After Meal" className="select-dialog-item">After Meal</SelectItem>
+                <SelectItem value="Morning" className="select-dialog-item">Morning</SelectItem>
+                <SelectItem value="Night" className="select-dialog-item">Night</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -288,7 +288,7 @@ function MedicineSection({ value = [], onChange }: MedicineProps) {
 
         <div className="flex items-center gap-3 mb-5">
           <Button
-            variant={editIndex !== null ? "default" : "secondary"}
+            variant={editIndex !== null ? "default" : "outline"}
             onClick={handleAddOrUpdate}
             type="button"
           >

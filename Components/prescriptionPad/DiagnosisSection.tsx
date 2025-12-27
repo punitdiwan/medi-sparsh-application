@@ -51,7 +51,7 @@ export default function DiagnosisSection({ value, onChange }: DiagnosisProps) {
   };
 
   return (
-    <Card className="border border-border shadow-sm rounded-2xl bg-card">
+    <Card className="bg-overview-card border-overview-strong shadow-sm rounded-2xl">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-semibold text-foreground">

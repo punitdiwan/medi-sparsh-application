@@ -150,7 +150,7 @@ function Vitals({ value, onChange }: VitalsProps) {
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-overview-card border-overview-strong">
       <CardHeader>
         <CardTitle>Vitals</CardTitle>
       </CardHeader>

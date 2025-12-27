@@ -39,18 +39,18 @@ export function ChargeCategoryModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  // Load Edit Data
   useEffect(() => {
-    if (defaultData) {
+    if (defaultData && open) {
       setChargeTypeId(defaultData.chargeTypeId || "");
-      setName(defaultData.name);
-      setDescription(defaultData.description);
-    } else {
+      setName(defaultData.name || "");
+      setDescription(defaultData.description || "");
+    } else if (open) {
       setChargeTypeId("");
       setName("");
       setDescription("");
     }
-  }, [defaultData]);
+  }, [defaultData, open]);
+
 
   // Submit Handler
   const handleSubmit = () => {

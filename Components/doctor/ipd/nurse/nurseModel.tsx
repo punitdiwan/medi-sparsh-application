@@ -19,24 +19,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { NotebookText, PlusCircle } from "lucide-react";
 
-
+/* ---------------- Types ---------------- */
 interface Nurse {
   id: string;
   name: string;
 }
 
+interface NurseNoteData {
+  date: string;
+  nurseId: string;
+  note: string;
+  comment?: string;
+}
+
 interface AddNurseNoteDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: NurseNoteData) => void;
+  initialData?: NurseNoteData; // optional data for editing
 }
 
-
+/* ---------------- Component ---------------- */
 export default function AddNurseNoteDialog({
   open,
   onClose,
   onSubmit,
+  initialData,
 }: AddNurseNoteDialogProps) {
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +57,7 @@ export default function AddNurseNoteDialog({
 
   const [nurses, setNurses] = useState<Nurse[]>([]);
 
+  /* ---------------- Load Nurses ---------------- */
   useEffect(() => {
     setNurses([
       { id: "1", name: "Nurse Anjali" },
@@ -55,17 +66,33 @@ export default function AddNurseNoteDialog({
     ]);
   }, []);
 
+  /* ---------------- Populate initial data for editing ---------------- */
+  useEffect(() => {
+    if (initialData) {
+      setDate(initialData.date);
+      setNurseId(initialData.nurseId);
+      setNote(initialData.note);
+      setComment(initialData.comment || "");
+    } else {
+      setDate("");
+      setNurseId("");
+      setNote("");
+      setComment("");
+    }
+  }, [initialData, open]);
+
   const handleSubmit = () => {
     if (!date || !nurseId || !note) return;
 
     setLoading(true);
 
-    const payload = {
+    const payload: NurseNoteData = {
       date,
       nurseId,
       note,
       comment,
     };
+
     setTimeout(() => {
       onSubmit(payload);
       setLoading(false);
@@ -75,62 +102,86 @@ export default function AddNurseNoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Add Nurse Note</DialogTitle>
+      <DialogContent className="sm:max-w-lg rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg">
+        {/* HEADER */}
+        <DialogHeader className="px-6 py-6 bg-dialog-header border-b border-dialog">
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-lg">
+              <NotebookText className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <DialogTitle className="text-lg font-semibold tracking-wide">
+              {initialData ? "Edit Nurse Note" : "Add Nurse Note"}
+            </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label>Date *</Label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </div>
+        {/* BODY */}
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto bg-dialog-surface text-dialog">
+          <div className="flex flex-row gap-2 w-full">
+            <div className="w-1/2">  
+              <Label className="text-sm font-medium">
+                Date <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className=" bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"/>
+            </div>
 
-          <div className="space-y-1">
-            <Label>Nurse *</Label>
-            <Select value={nurseId} onValueChange={setNurseId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Nurse" />
-              </SelectTrigger>
-              <SelectContent>
-                {nurses.map((nurse) => (
-                  <SelectItem key={nurse.id} value={nurse.id}>
-                    {nurse.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="w-1/2">
+              <Label className="text-sm font-medium">
+                Nurse <span className="text-destructive">*</span>
+              </Label>
+              <Select value={nurseId} onValueChange={setNurseId}>
+                <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
+                  <SelectValue placeholder="Select Nurse" />
+                </SelectTrigger>
+                <SelectContent className="select-dialog-content">
+                  {nurses.map((nurse) => (
+                    <SelectItem key={nurse.id} value={nurse.id} className="select-dialog-item">
+                      {nurse.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
-          <div className="space-y-1">
-            <Label>Note *</Label>
+          <div>
+            <Label className="text-sm font-medium">
+              Note <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               placeholder="Enter nurse note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-            />
+              className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
           </div>
 
-          <div className="space-y-1">
-            <Label>Comment</Label>
+          <div>
+            <Label className="text-sm font-medium">Comment</Label>
             <Textarea
               placeholder="Additional comments"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-            />
+              className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={onClose}>
+        {/* FOOTER */}
+        <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="text-dialog-muted">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : "Save Note"}
+
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {loading ? "Saving..." : initialData ? "Update Note" : "Save Note"}
           </Button>
         </DialogFooter>
       </DialogContent>

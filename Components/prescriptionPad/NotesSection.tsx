@@ -17,7 +17,7 @@ function NotesSection({ value = "", onChange }: NotesProps) {
   }, [notes]);
 
   return (
-    <Card className="m-5 shadow-sm border border-border bg-card">
+    <Card className="shadow-sm bg-overview-card border-overview-strong">
       <CardHeader>
         <CardTitle className="text-base font-semibold text-foreground">
           Notes

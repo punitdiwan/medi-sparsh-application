@@ -1,0 +1,1 @@
+ALTER TABLE "beds" ADD COLUMN "is_occupied" boolean DEFAULT false;

@@ -58,13 +58,11 @@ export default function VisitPatientPage() {
         <div className="flex gap-3">
           <button
             onClick={() => setActiveTab("prescription")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
-              ${
-                activeTab === "prescription"
-                  ? "bg-blue-600 text-white shadow"
-                  : "bg-muted text-muted-foreground hover:bg-blue-100 hover:text-blue-700"
-              }
-            `}
+            className={`px-4 py-2 font-semibold rounded ${
+              activeTab === "prescription"
+              ? "border-b-2 border-blue-500 cursor-none"
+              : "text-gray-600 cursor-pointer"
+              }`}
           >
             <FileText className="h-4 w-4" />
             Prescription
@@ -72,13 +70,11 @@ export default function VisitPatientPage() {
 
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
-              ${
-                activeTab === "history"
-                  ? "bg-green-600 text-white shadow"
-                  : "bg-muted text-muted-foreground hover:bg-green-100 hover:text-green-700"
-              }
-            `}
+            className={`px-4 py-2 font-semibold rounded ${
+              activeTab === "history"
+              ? "border-b-2 border-blue-500 cursor-none"
+              : "text-gray-600 cursor-pointer"
+              }`}
           >
             <ClipboardList className="h-4 w-4" />
             Medical History

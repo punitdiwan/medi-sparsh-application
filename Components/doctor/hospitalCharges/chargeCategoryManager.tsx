@@ -245,7 +245,7 @@ export default function ChargeCategoryManager() {
                 >
                   <TableCell>{item.categoryType || "N/A"}</TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.description || "-"}</TableCell>
+                  <TableCell className="max-w-[300px] wrap-break-words whitespace-normal">{item.description || "-"}</TableCell>
 
                   <TableCell className="text-right space-x-2">
                     {!item.isDeleted ? (

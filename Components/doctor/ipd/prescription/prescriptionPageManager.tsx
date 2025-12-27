@@ -1,0 +1,187 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableBody,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  Printer,
+  FileText,
+} from "lucide-react";
+import PrescriptionModal from "./prescriptionModelPage";
+
+/* ---------------- Types ---------------- */
+type Prescription = {
+  id: string;
+  prescriptionNo: string;
+  date: string;
+  findings: string;
+};
+
+/* ---------------- Page ---------------- */
+export default function IPDPrescriptionPage() {
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  /* ---------------- Filter ---------------- */
+  const filtered = useMemo(() => {
+    if (!search) return prescriptions;
+    return prescriptions.filter(
+      (p) =>
+        p.prescriptionNo.toLowerCase().includes(search.toLowerCase()) ||
+        p.findings.toLowerCase().includes(search.toLowerCase()) ||
+        p.date.includes(search)
+    );
+  }, [prescriptions, search]);
+
+  /* ---------------- Actions ---------------- */
+  const handleDelete = (id: string) => {
+    if (confirm("Delete this prescription?")) {
+      setPrescriptions((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
+
+  const handlePrint = (p: Prescription) => {
+    alert(`Print prescription: ${p.prescriptionNo}`);
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* HEADER */}
+      <Card className="border-dialog bg-dialog-header">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-2xl font-bold text-dialog dark:text-white flex items-center gap-2">
+            <FileText className="text-dialog-icon" />
+            Prescription
+          </CardTitle>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Search by prescription / findings / date"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
+            <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+                onClick={() => setOpen(true)}>
+              <PlusCircle className="h-5 w-5" />
+              Add Prescription
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+     <PrescriptionModal
+        open={open}
+        onClose={() => setOpen(false)}
+        />
+      {/* TABLE */}
+      <Card className="shadow-lg border-dialog bg-dialog-header">
+        <CardContent className="p-0 overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-dialog-icon">
+                  Prescription No.
+                </TableHead>
+                <TableHead className="text-dialog-icon">Date</TableHead>
+                <TableHead className="text-dialog-icon">Findings</TableHead>
+                <TableHead className="text-center text-dialog-icon">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {filtered.length ? (
+                filtered.map((p) => (
+                  <TableRow key={p.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
+                    <TableCell className="font-medium text-dialog-muted">
+                      {p.prescriptionNo}
+                    </TableCell>
+                    <TableCell className="text-dialog-muted">
+                      {p.date}
+                    </TableCell>
+                    <TableCell className="text-dialog-muted">
+                      {p.findings}
+                    </TableCell>
+                    <TableCell>
+                      <TooltipProvider>
+                        <div className="flex justify-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => handlePrint(p)}
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Print</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="destructive"
+                                onClick={() => handleDelete(p.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-6 text-dialog-muted"
+                  >
+                    No prescriptions found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

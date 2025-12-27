@@ -63,31 +63,30 @@ export function ChargeModal({
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
-  // Load default data for edit
   useEffect(() => {
-    if (defaultData) {
-      setChargeTypeId(defaultData.chargeTypeId || "");
-      setChargeCategoryId(defaultData.chargeCategoryId || "");
-      setUnitId(defaultData.unitId || "");
-      setName(defaultData.name);
-      setTaxCategoryId(defaultData.taxCategoryId || "");
-      setAmount(defaultData.amount);
-      setDescription(defaultData.description);
+  if (defaultData && open) {
+    setChargeTypeId(defaultData.chargeTypeId || "");
+    setChargeCategoryId(defaultData.chargeCategoryId || "");
+    setUnitId(defaultData.unitId || "");
+    setName(defaultData.name || "");
+    setTaxCategoryId(defaultData.taxCategoryId || "");
+    setAmount(defaultData.amount || "");
+    setDescription(defaultData.description || "");
 
-      // Set tax percentage based on loaded taxCategoryId
-      const tax = taxCategories.find(t => t.id === defaultData.taxCategoryId);
-      setTaxPercentage(tax ? tax.percent : "");
-    } else {
-      setChargeTypeId("");
-      setChargeCategoryId("");
-      setUnitId("");
-      setName("");
-      setTaxCategoryId("");
-      setTaxPercentage("");
-      setAmount("");
-      setDescription("");
-    }
-  }, [defaultData, taxCategories]);
+    const tax = taxCategories.find(t => t.id === defaultData.taxCategoryId);
+    setTaxPercentage(tax ? tax.percent : "");
+  } else if (open) {
+    setChargeTypeId("");
+    setChargeCategoryId("");
+    setUnitId("");
+    setName("");
+    setTaxCategoryId("");
+    setTaxPercentage("");
+    setAmount("");
+    setDescription("");
+  }
+}, [defaultData, taxCategories, open]);
+
 
   // When chargeType changes → reset category
   const handleChargeTypeChange = (value: string) => {
