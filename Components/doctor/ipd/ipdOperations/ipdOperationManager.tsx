@@ -112,7 +112,7 @@ export default function IPdOperationsPage() {
             <TableBody>
               {filtered.length ? (
                 filtered.map((op, index) => (
-                  <TableRow key={op.id}>
+                  <TableRow key={op.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-gray-800 dark:text-white">OP-{index + 1}</TableCell>
                     <TableCell className="text-dialog-muted">{op.date}</TableCell>
                     <TableCell className="text-dialog-muted">{op.name}</TableCell>

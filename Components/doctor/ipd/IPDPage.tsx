@@ -198,7 +198,7 @@ export default function IPDPatientListPage() {
       </Card>
 
       {/* ---------- FILTER BAR ---------- */}
-      <Card>
+      <Card className="bg-overview-card border-overview-strong">
         <CardContent className="p-4 flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -223,8 +223,8 @@ export default function IPDPatientListPage() {
       </Card>
 
       {/* ---------- TABLE ---------- */}
-      <Card className="shadow-md">
-        <CardContent className="p-0">
+      {/* <Card className="shadow-md bg-overview-card border-overview-strong">
+        <CardContent className="p-0"> */}
           {loading ? (
             <div className="h-[300px] flex items-center justify-center text-lg font-medium animate-pulse">
               Loading patients...
@@ -235,6 +235,7 @@ export default function IPDPatientListPage() {
                 data={paginatedData}
                 columns={columns}
                 fallback="No patients found"
+                headerTextClassName="text-dialog-icon"
               />
               <PaginationControl
                 currentPage={currentPage}
@@ -248,8 +249,8 @@ export default function IPDPatientListPage() {
               />
             </>
           )}
-        </CardContent>
-      </Card>
+        {/* </CardContent>
+      </Card> */}
     </div>
   );
 }

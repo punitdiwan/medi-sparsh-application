@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
@@ -43,10 +44,14 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
         ? pathname.endsWith(`/ipd/${tab.path}`)
         : pathname.endsWith("/ipd")
     )?.label || "Overview";
-
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   return (
-    <div className="p-6 space-y-4 max-w-[95%]">
-      <h2 className="text-2xl font-semibold">
+    <div 
+    className={`transition-all duration-200 overflow-x-auto mx-auto  ${
+       isCollapsed  ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
+      } scrollbar-show`}>
+      <h2 className="text-2xl font-semibold mb-2">
         IPD Patient Details – {id}
       </h2>
 
@@ -58,19 +63,31 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
 
           <div className="flex-1 overflow-hidden">
             <div ref={tabRef} className="overflow-x-auto whitespace-nowrap scrollbar-hide">
-              <TabsList className="inline-flex gap-2 min-w-max bg-erp-card border border-erp px-1 ">
+              <TabsList className="inline-flex gap-2 min-w-max bg-overview-base px-1 ">
                 {TAB_ITEMS.map((tab) => (
                   <TabsTrigger key={tab.label} value={tab.label} asChild className="
-                      rounded-lg px-4 py-2 text-sm font-medium
-                      text-erp-muted
-                      transition-all
-                      hover:text-erp
-                      hover:bg-indigo-50
-                      dark:hover:bg-indigo-500/10
-                      data-[state=active]:bg-erp-primary
-                      data-[state=active]:text-black
+                      relative rounded-lg px-4 py-2 text-sm font-medium
+                      text-text-muted
+                      bg-transparent
+                      transition-all duration-200
+
+                      hover:text-over-primary
+                      hover:bg-over-primary/10
+
+                      dark:hover:bg-over-primary/20
+                      data-[state=active]:text-primary
+                      data-[state=active]:border
+                      data-[state=active]:border-primary
+                      data-[state=active]:bg-transparent
+
+                      dark:data-[state=active]:bg-overview-backgroud
+                      dark:data-[state=active]:border
+                      dark:data-[state=active]:border-primary
+                      dark:data-[state=active]:text-primary
+
                       data-[state=active]:shadow-sm
-                    ">
+                    "
+                    >
                     <Link
                       href={`/doctor/IPD/ipdDetails/${id}/ipd/${tab.path}`}
                     >

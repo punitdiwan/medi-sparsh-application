@@ -44,6 +44,9 @@ function PrescriptionForm() {
   const isEditMode = mode === "edit";
   const [pageLoading, setPageLoading] = useState(true); // 👈 page level loader
   const [loading, setLoading] = useState(false);
+  const [symptomsLoaded, setSymptomsLoaded] = useState(false);
+  const [prescriptionLoaded, setPrescriptionLoaded] = useState(!isEditMode);
+
   const [formData, setFormData] = useState({
     prescriptionId: "",
     vitals: {} as Record<string, any>,
@@ -60,22 +63,30 @@ function PrescriptionForm() {
 
     setPageLoading(false);
   }, [masterSymptoms, prescriptionData, isEditMode]);
-
+    useEffect(() => {
+    if (symptomsLoaded && prescriptionLoaded) {
+      setPageLoading(false);
+    }
+  }, [symptomsLoaded, prescriptionLoaded]);
 
   useEffect(() => {
     const loadSymptoms = async () => {
+    try {
       const res = await getSymptoms();
 
-      if ("data" in res && Array.isArray(res.data)) {
-        setMasterSymptoms(
-          res.data.map((s) => ({
-            id: s.id,
-            name: s.name,
-            description: s.description ?? "No description added",
-            symptomTypeName: s.symptomTypeName ?? "Unknown",
-          }))
-        );
-      }
+        if ("data" in res && Array.isArray(res.data)) {
+          setMasterSymptoms(
+            res.data.map((s) => ({
+              id: s.id,
+              name: s.name,
+              description: s.description ?? "No description added",
+              symptomTypeName: s.symptomTypeName ?? "Unknown",
+            }))
+          );
+        }
+        }finally {
+          setSymptomsLoaded(true);
+        }
     };
 
     loadSymptoms();
@@ -125,7 +136,10 @@ function PrescriptionForm() {
 
   useEffect(() => {
     const fetchPrescription = async () => {
-      if (!isEditMode || !appointmentId) return;
+      if (!isEditMode || !appointmentId) {
+        setPrescriptionLoaded(true);
+        return;
+      }
 
       try {
         setLoading(true);
@@ -145,6 +159,7 @@ function PrescriptionForm() {
         toast.error("Failed to fetch prescription data.");
       } finally {
         setLoading(false);
+        setPrescriptionLoaded(true); 
       }
     };
 
@@ -233,7 +248,7 @@ function PrescriptionForm() {
   // 🟢 Render form
   return (
     <div className="min-h-screen flex justify-center items-center px-4 py-6">
-      <Card className="w-full shadow-lg border border-border/50">
+      <Card className="w-full shadow-lg border border-dialog bg-dialog-surface">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
             {isEditMode ? "Edit Prescription" : "New Prescription"}

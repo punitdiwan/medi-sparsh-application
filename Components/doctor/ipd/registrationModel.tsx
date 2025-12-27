@@ -138,7 +138,7 @@ const [symptoms, setSymptoms] = useState<SymptomRow[]>([
 
 
 const SymptomsSection = (
-  <Card>
+  <Card className="bg-overview-card border-overview-strong">
     <CardHeader>
       <CardTitle>Symptoms</CardTitle>
     </CardHeader>
@@ -164,12 +164,12 @@ const SymptomsSection = (
                     updateSymptom(index, "description", "");
                     }}
                 >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                     <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="select-dialog-content">
                     {Object.keys(symptomMaster).map((type) => (
-                        <SelectItem key={type} value={type}>
+                        <SelectItem key={type} value={type} className="select-dialog-item">
                         {type}
                         </SelectItem>
                     ))}
@@ -189,12 +189,12 @@ const SymptomsSection = (
                     }}
                     disabled={!symptom.type}
                 >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                     <SelectValue placeholder="Select title" />
                     </SelectTrigger>
-                    <SelectContent className="flex-1 w-full">
+                    <SelectContent className="select-dialog-content">
                     {titles.map((t) => (
-                        <SelectItem key={t.title} value={t.title}>
+                        <SelectItem key={t.title} value={t.title} className="select-dialog-item">
                         {t.title}
                         </SelectItem>
                     ))}
@@ -265,7 +265,7 @@ const SymptomsSection = (
         </CardHeader>
       </Card>
       {/* Patient Search */}
-      <Card>
+      <Card className="bg-overview-card border-overview-strong">
         <CardContent className="flex flex-col gap-1 px-4">
             <Label className="text-lg">Search Patient *</Label>
             <PatientSearchBox onSelect={handlePatientSelect} />
@@ -279,7 +279,7 @@ const SymptomsSection = (
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
             <CardTitle>Patient Details</CardTitle>
           </CardHeader>
@@ -304,32 +304,35 @@ const SymptomsSection = (
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
             <CardTitle>IPD Admission</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="flex flex-col gap-1 w-full">
-                <Label>Admission Date *</Label>
-                <Input type="date" {...form.register("admissionDate")} />
-              </div>
-
-              <div className="flex flex-col gap-1 w-full">
+              <div className="flex flex-row gap-4 w-full">
+                <div className="flex flex-col gap-1 w-full">
+                  <Label>Admission Date *</Label>
+                  <Input type="date" {...form.register("admissionDate")} />
+                </div>
+                <div className="flex flex-col gap-1 w-full">
                 <Label>Case</Label>
                 <Input placeholder="Case details" {...form.register("caseDetails")} />
               </div>
+              </div>
+
+              
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Casualty</Label>
                   <Select onValueChange={(v) => form.setValue("casualty", v as any)}>
-                    <SelectTrigger className="flex-1 w-full">
+                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
+                    <SelectContent className="select-dialog-content">
+                      <SelectItem value="yes" className="select-dialog-item">Yes</SelectItem>
+                      <SelectItem value="no" className="select-dialog-item">No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -337,12 +340,12 @@ const SymptomsSection = (
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Old Patient</Label>
                   <Select onValueChange={(v) => form.setValue("oldPatient", v as any)}>
-                    <SelectTrigger className="flex-1 w-full">
+                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
+                    <SelectContent className="select-dialog-content">
+                      <SelectItem value="yes" className="select-dialog-item">Yes</SelectItem>
+                      <SelectItem value="no" className="select-dialog-item">No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -362,54 +365,54 @@ const SymptomsSection = (
               <div className="flex flex-col gap-1 w-full">
                 <Label>Consultant Doctor *</Label>
                 <Select onValueChange={(v) => form.setValue("consultantDoctor", v)}>
-                  <SelectTrigger className="flex-1 w-full">
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                     <SelectValue placeholder="Search doctor" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dr1">Dr. Sharma</SelectItem>
-                    <SelectItem value="dr2">Dr. Khan</SelectItem>
+                  <SelectContent className="select-dialog-content">
+                    <SelectItem value="dr1" className="select-dialog-item">Dr. Sharma</SelectItem>
+                    <SelectItem value="dr2" className="select-dialog-item">Dr. Khan</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex flex-row gap-4">
+                <div className="flex flex-col gap-1 w-full">
+                  <Label>Bed Group *</Label>
+                  <Select onValueChange={onBedGroupChange}>
+                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
+                      <SelectValue placeholder="Select bed group" />
+                    </SelectTrigger>
+                    <SelectContent className="select-dialog-content">
+                      <SelectItem value="ICU" className="select-dialog-item">ICU</SelectItem>
+                      <SelectItem value="WARD" className="select-dialog-item">Ward</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="flex flex-col gap-1 w-full">
-                <Label>Bed Group *</Label>
-                <Select onValueChange={onBedGroupChange}>
-                  <SelectTrigger className="flex-1 w-full">
-                    <SelectValue placeholder="Select bed group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ICU">ICU</SelectItem>
-                    <SelectItem value="WARD">Ward</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-1 w-full">
+                  <Label>Bed Number *</Label>
+                  <Select onValueChange={(v) => form.setValue("bedNumber", v)}>
+                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
+                      <SelectValue placeholder="Select bed" />
+                    </SelectTrigger>
+                    <SelectContent className="select-dialog-content">
+                      {bedOptions.map((b) => (
+                        <SelectItem key={b} value={b} className="select-dialog-item">
+                          {b}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-
-              <div className="flex flex-col gap-1 w-full">
-                <Label>Bed Number *</Label>
-                <Select onValueChange={(v) => form.setValue("bedNumber", v)}>
-                  <SelectTrigger className="flex-1 w-full">
-                    <SelectValue placeholder="Select bed" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bedOptions.map((b) => (
-                      <SelectItem key={b} value={b}>
-                        {b}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="flex flex-col gap-1 w-full">
                 <Label>Live Consultation</Label>
                 <Select onValueChange={(v) => form.setValue("liveConsultation", v as any)}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
+                  <SelectContent className="select-dialog-content">
+                    <SelectItem value="yes" className="select-dialog-item">Yes</SelectItem>
+                    <SelectItem value="no" className="select-dialog-item">No</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

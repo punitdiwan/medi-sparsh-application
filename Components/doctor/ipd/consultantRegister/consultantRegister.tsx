@@ -140,7 +140,7 @@ export default function ConsultantRegisterPage() {
             <TableBody>
               {filteredData.length ? (
                 filteredData.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow key={row.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="text-dialog-muted">
                       {row.appliedDate}
                     </TableCell>

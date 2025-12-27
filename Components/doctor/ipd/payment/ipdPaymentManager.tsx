@@ -104,7 +104,7 @@ export default function IPDPaymentManagerPage() {
             <TableBody>
               {filtered.length ? (
                 filtered.map(p => (
-                  <TableRow key={p.id}>
+                  <TableRow key={p.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-gray-800 dark:text-white">{p.id}</TableCell>
                     <TableCell className="text-dialog-muted">{p.date}</TableCell>
                     <TableCell className="text-dialog-muted">{p.note || "—"}</TableCell>

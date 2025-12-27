@@ -141,7 +141,7 @@ export default function IPDChargesManagerPage() {
             <TableBody>
               {filtered.length ? (
                 filtered.map(c => (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className=" text-dialog-muted">{c.date}</TableCell>
                     <TableCell className="text-dialog-muted">{c.chargeName}</TableCell>
                     <TableCell className="text-dialog-muted">{c.chargeType}</TableCell>

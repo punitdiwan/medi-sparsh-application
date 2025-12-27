@@ -104,7 +104,7 @@ export default function LabInvestigationPage() {
             <TableBody>
               {filteredLabs.length ? (
                 filteredLabs.map((l) => (
-                  <TableRow key={l.id}>
+                  <TableRow key={l.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="text-dialog-muted">{l.testName}</TableCell>
                     <TableCell className="text-dialog-muted">{l.lab}</TableCell>
                     <TableCell className="text-dialog-muted">{l.sampleCollected}</TableCell>

@@ -103,7 +103,7 @@ export default function Symptoms({ value, onChange }: Props) {
   };
 
   return (
-    <Card className="border border-border shadow-sm rounded-2xl">
+    <Card className="bg-overview-card border-overview-strong shadow-sm rounded-2xl">
       <CardHeader>
         <CardTitle>Symptoms</CardTitle>
       </CardHeader>

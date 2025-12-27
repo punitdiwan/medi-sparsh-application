@@ -102,7 +102,7 @@ export default function VitalsPage() {
             <TableBody>
               {filteredVitals.length ? (
                 filteredVitals.map((v, idx) => (
-                  <TableRow key={idx}>
+                  <TableRow key={idx} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-dialog-muted">
                       {v.vitalName}
                     </TableCell>

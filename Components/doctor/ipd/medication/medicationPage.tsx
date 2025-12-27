@@ -154,7 +154,7 @@ export default function MedicationManagerPage() {
             <TableBody>
               {filtered.length ? (
                 filtered.map((med) => (
-                  <TableRow key={med.id}>
+                  <TableRow key={med.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="text-dialog-muted">{med.date}</TableCell>
                     <TableCell className="text-dialog-muted">{med.time}</TableCell>
                     <TableCell className="text-dialog-muted">{med.categoryName}</TableCell>

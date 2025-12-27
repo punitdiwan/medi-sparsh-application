@@ -75,45 +75,45 @@ export default function IPDOverviewPage() {
     : 0;
 
    return (
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 ">
 
     {/* ================= LEFT PANEL ================= */}
     <div className="lg:col-span-4 space-y-6">
 
       {/* PATIENT CARD */}
-      <Card className="border-dialog bg-dialog-header ">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-14 w-14 ring-2 ring-indigo-400">
-            <AvatarFallback className="bg-indigo-600 text-white">
+            <AvatarFallback className="bg-indigo-600 text-overview-base">
               RK
             </AvatarFallback>
           </Avatar>
 
           <div>
-            <h3 className="font-semibold text-lg text-indigo-global">
+            <h3 className="font-semibold text-lg text-overview-base ">
               Ramesh Kumar
             </h3>
-            <p className="text-sm text-indigo-global">
+            <p className="text-sm text-overview-muted">
               IPD-001 • Male • 45Y
             </p>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-2 text-sm text-slate-700">
-          <p><b>Bed:</b> ICU-02</p>
-          <p><b>Doctor:</b> Dr. Amit Sharma</p>
-          <p><b>Admission Date:</b> 12-02-2025</p>
+          <p className="text-overview-muted"><b className="text-overview-base">Bed:</b> ICU-02</p>
+          <p className="text-overview-muted"><b className="text-overview-base">Doctor:</b> Dr. Amit Sharma</p>
+          <p className="text-overview-muted"><b className="text-overview-base">Admission Date:</b> 12-02-2025</p>
 
-          <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-300">
+          <Badge className="bg-overview-activ-btn text-success border text-white dark:text-white/90 border-emerald-400">
             Active
           </Badge>
         </CardContent>
       </Card>
 
       {/* BILLING STATUS */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Billing Status
           </CardTitle>
         </CardHeader>
@@ -121,40 +121,41 @@ export default function IPDOverviewPage() {
         <CardContent className="space-y-4">
           <Progress
             value={overallPercentage}
-            className="h-2 bg-indigo-100"
+            className="h-2"
+            color="bg-emerald-600 "
           />
 
           <div className="flex justify-between text-sm">
-            <span className="text-emerald-600">Paid</span>
-            <span className="font-semibold text-emerald-600">
+            <span className="text-overview-success">Paid</span>
+            <span className="font-semibold text-overview-success">
               ₹{totalPaid}
             </span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-white">Total</span>
-            <span className="font-medium">
+            <span className="text-black dark:text-white">Total</span>
+            <span className="font-medium ">
               ₹{totalAmount}
             </span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-orange-600">Pending</span>
-            <span className="font-semibold text-orange-600">
+            <span className="text-overview-warning">Pending</span>
+            <span className="font-semibold text-overview-warning">
               ₹{totalPending}
             </span>
           </div>
 
           {overallPercentage === 100 ? (
-            <Badge className="bg-emerald-600 text-white">
+            <Badge className="bg-emerald-600 text-overview-success">
               Fully Paid
             </Badge>
           ) : overallPercentage >= 50 ? (
-            <Badge className="bg-indigo-100 text-indigo-global">
+            <Badge className=" border border-overview-base bg-white dark:bg-amber-600 text-amber-600 dark:text-white">
               Partially Paid
             </Badge>
           ) : (
-            <Badge className="bg-rose-600 text-white">
+            <Badge className="bg-rose-600 text-overview-danger">
               Payment Due
             </Badge>
           )}
@@ -162,38 +163,40 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* VITALS */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Current Vitals
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3 text-sm">
-          <div className="bg-indigo-global p-2 rounded">BP: 120/80</div>
-          <div className="bg-indigo-global p-2 rounded">Pulse: 78</div>
-          <div className="bg-indigo-global p-2 rounded">Temp: 98.6°F</div>
-          <div className="bg-indigo-global p-2 rounded">SpO₂: 98%</div>
+          <div className="border border-overview-base shadow-md p-2 rounded">BP: 120/80</div>
+          <div className="border border-overview-base shadow-md p-2 rounded">Pulse: 78</div>
+          <div className="border border-overview-base shadow-md p-2 rounded">Temp: 98.6°F</div>
+          <div className="border border-overview-base shadow-md p-2 rounded">SpO₂: 98%</div>
         </CardContent>
       </Card>
 
       {/* SYMPTOMS */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Symptoms
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-1">
-          <Badge variant="secondary">Fever</Badge>
-          <Badge variant="secondary">Chest Pain</Badge>
-          <Badge variant="secondary">Breathlessness</Badge>
+          <div className="flex flex-row flex-wrap gap-2">
+            <Badge variant="outline" className="bg-bill-card">Fever</Badge>
+            <Badge variant="outline" className="bg-bill-card">Chest Pain</Badge>
+            <Badge variant="outline" className="bg-bill-card">Breathlessness</Badge>
+          </div>
         </CardContent>
       </Card>
 
       {/* DOCTORS */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Doctors
           </CardTitle>
         </CardHeader>
@@ -204,9 +207,9 @@ export default function IPDOverviewPage() {
       </Card>
 
       {/* NURSE NOTES */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Nurse Notes
           </CardTitle>
         </CardHeader>
@@ -220,9 +223,9 @@ export default function IPDOverviewPage() {
     <div className="lg:col-span-8 space-y-8">
 
       {/* DEPARTMENT BILLING */}
-      <Card className="border-dialog bg-dialog-header">
+      <Card className="bg-overview-card border-overview-strong">
         <CardHeader>
-          <CardTitle className="text-indigo-global">
+          <CardTitle className="text-overview-label">
             Department Wise Billing
           </CardTitle>
         </CardHeader>
@@ -236,18 +239,18 @@ export default function IPDOverviewPage() {
               return (
                 <div
                   key={dept.name}
-                  className="rounded-xl border bg-gradient-to-br from-white to-indigo-50 p-4 space-y-2"
+                  className="rounded-xl border-overview-strong bg-bill-card shadow-md p-4 space-y-2"
                 >
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium text-indigo-800">
+                    <h4 className="font-medium text-label">
                       {dept.name}
                     </h4>
-                    <span className="text-sm font-semibold text-indigo-800">
+                    <span className="text-sm font-semibold text-label">
                       {percentage}%
                     </span>
                   </div>
 
-                  <Progress value={percentage} className="h-2" />
+                  <Progress  value={percentage}  className="h-2"  color={percentage === 100 ? "bg-emerald-600" : "bg-overview-bar"}/>
 
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">
@@ -273,11 +276,11 @@ export default function IPDOverviewPage() {
       {/* TIMELINE SECTIONS */}
       {sections.map((section) => (
         <div key={section}>
-          <h3 className="text-lg font-semibold text-indigo-global mb-2">
+          <h3 className="text-lg font-semibold text-label mb-2">
             {section}
           </h3>
           <Separator className="mb-4" />
-          <Card className="border-dialog bg-dialog-header">
+          <Card className="bg-overview-card border-overview-strong">
             <CardContent className="py-4 text-sm text-muted-foreground">
               No records available
             </CardContent>

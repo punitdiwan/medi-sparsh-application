@@ -95,7 +95,7 @@ export default function TreatmentHistoryPage() {
             <TableBody>
               {filteredData.length ? (
                 filteredData.map((row, index) => (
-                  <TableRow key={index}>
+                  <TableRow key={index} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-dialog-muted">
                       {row.ipdNo}
                     </TableCell>

@@ -97,30 +97,38 @@
 
   --dialog-danger: #dc2626;
   --btn-text:#f8fafc;
+  --overview-back:#f8fafc;
 
-  /* ---------- BRAND ---------- */
-  --indigo-700: #4338ca;
-  --indigo-600: #4f46e5;
-  --indigo-500: #6366f1;
+    /* ===============================
+     Core UI / Layout
+     =============================== */
+  --overview-base: #f0f0f0;        /* Page background */
+  --overview-card: #eeeeee;       /* Cards / panels */
+  --overview-muted: #f1f5f9;      /* Subtle sections */
 
-  /* ---------- LIGHT MODE ---------- */
-  --erp-bg: #f8fafc;
-  --erp-surface: #ffffff;
-  --erp-card: #f9fafb;
-  --erp-border: #e5e7eb;
+   --overview-border-base: #e4e8ee;   /* Card borders / dividers */
+  --overview-border-strong: #d1d5db;
 
-  --erp-text-primary: #0f172a;
-  --erp-text-secondary: #475569;
-  --erp-text-muted: #94a3b8;
+  --overview-text-base: #111827;     /* Primary text */
+  --overview-text-muted: #6b7280;    /* Secondary labels */
+  --overview-text-subtle: #9ca3af;
 
-  --erp-input-bg: #ffffff;
-  --erp-input-border: #cbd5e1;
+  --overview-info: #3f51b5;           /* Metadata / labels */
+  --overview-teal: #2bb7a0;           /* Paid / stable / normal */
+  --overview-bill-card:#e0e0e0;
 
-  --erp-primary: var(--indigo-600);
-  --erp-primary-text: #979797;
+  /* ===============================
+     Status & Alerts
+     =============================== */
+  --overview-success: #2e7d32;
+  --overview-success-soft: #e6f4ea;
 
-  --erp-success: #16a34a;
-  --erp-danger: #dc2626;
+  --overview-warning: #f9a825;
+  --overview-warning-soft: #fff8e1;
+
+  --overview-danger: #d32f2f;
+  --overview-danger-soft: #fdecea;
+
 }
 
 .dark {
@@ -174,28 +182,70 @@
 
   --dialog-danger: #f87171;
   --btn-text:#e2e2e2;
+  --overview-back:#2b43bb;
 
-  --erp-bg: #020617;
-  --erp-surface: #020617;
-  --erp-card: #020617;
-  --erp-border: #020617;
+  /* ===============================
+     Core UI / Layout
+     =============================== */
+  --overview-base: #0b1220;
+  --overview-card: #111827;
+  --overview-muted: #020617;
 
-  --erp-text-primary: #f8fafc;
-  --erp-text-secondary: #cbd5e1;
-  --erp-text-muted: #94a3b8;
+   --overview-border-base: #1f2937;
+  --overview-border-strong: #374151;
 
-  --erp-input-bg: #020617;
-  --erp-input-border: #020617;
+  --overview-text-base: #f1f5f9;
+  --overview-text-muted: #94a3b8;
+  --overview-text-subtle: #64748b;
 
-  --erp-primary: var(--indigo-500);
-  --erp-primary-text: #020617;
+  --overview-info: #7986cb;
+  --overview-teal: #4cb8a7;
 
-  --erp-success: #22c55e;
-  --erp-danger: #f87171;
+  --overview-bill-card:#141e35;
+
+  /* ===============================
+     Status & Alerts
+     =============================== */
+  --overview-success: #4ade80;
+  --overview-success-soft: #052e16;
+
+  --overview-warning: #facc15;
+  --overview-warning-soft: #451a03;
+
+  --overview-danger: #f87171;
+  --overview-danger-soft: #450a0a;
 }
 
-.light .bg-muted\/40 {
-  background-color: var(--soft-primary-bg);
+@layer utilities {
+  /* Backgrounds */
+  .bg-overview-base { background-color: var(--overview-base); }
+  .bg-overview-card { background-color: var(--overview-card); }
+  .bg-overview-muted { background-color: var(--overview-muted); }
+
+  /* Borders */
+  .border-overview-base { border-color: var(--overview-border-base); }
+  .border-overview-strong { border-color: var(--overview-border-strong); }
+  /* Text */
+  .text-overview-base { color: var(--overview-text-base); }
+  .text-overview-muted { color: var(--overview-text-muted); }
+
+  /* Labels */
+  .text-overview-label {
+    color: var(--overview-info);
+  }
+  .bg-overview-bar {
+    background-color: var(--overview-info);
+  }
+  .bg-overview-activ-btn {
+    background-color: var(--overview-teal);
+  }
+  .bg-bill-card {
+    background-color: var(--overview-bill-card);
+  }
+  /* Status */
+  .text-overview-success { color: var(--overview-success); }
+  .text-overview-warning { color: var(--overview-warning); }
+  .text-overview-danger { color: var(--overview-danger); }
 }
 
 @layer utilities {
@@ -264,6 +314,11 @@
     background-color: var(--dialog-danger);
     color: white;
   }
+
+  /* /// */
+  .bg-overview-backgroud {
+    background-color: var(--overview-back);
+  }
 }
 
 @layer utilities {
@@ -297,53 +352,6 @@
   }
 }
 
-@layer utilities {
-  /* BACKGROUNDS */
-  .bg-erp {
-    background-color: var(--erp-bg);
-  }
-  .bg-erp-card {
-    background-color: var(--erp-card);
-  }
-  .bg-erp-surface {
-    background-color: var(--erp-surface);
-  }
-
-  /* TEXT */
-  .text-erp {
-    color: var(--erp-text-primary);
-  }
-  .text-erp-muted {
-    color: var(--erp-text-secondary);
-  }
-
-  /* BORDERS */
-  .border-erp {
-    border-color: var(--erp-border);
-  }
-
-  /* INPUTS */
-  .bg-erp-input {
-    background-color: var(--erp-input-bg);
-  }
-  .border-erp-input {
-    border-color: var(--erp-input-border);
-  }
-
-  /* BUTTONS */
-  .bg-erp-primary {
-    background-color: var(--erp-primary);
-    color: var(--erp-primary-text);
-  }
-
-  .text-erp-success {
-    color: var(--erp-success);
-  }
-
-  .text-erp-danger {
-    color: var(--erp-danger);
-  }
-}
 
 
 @layer base {

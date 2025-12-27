@@ -101,7 +101,7 @@ export default function BedHistoryManagerPage() {
             <TableBody>
               {filteredData.length ? (
                 filteredData.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-dialog-muted">
                       {item.bedGroup}
                     </TableCell>
