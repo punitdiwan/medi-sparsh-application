@@ -457,6 +457,7 @@ export const beds = pgTable("beds", {
 	name: text().notNull(),
 	bedTypeId: text("bed_type_id").notNull(),
 	bedGroupId: text("bed_group_id").notNull(),
+	isOccupied: boolean("is_occupied").default(false),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),

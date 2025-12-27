@@ -134,6 +134,13 @@
       "when": 1766495442612,
       "tag": "0018_wild_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1766838193154,
+      "tag": "0019_flashy_wiccan",
+      "breakpoints": true
     }
   ]
 }
