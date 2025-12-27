@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/select";
 import PatientSearchBox from "../appointment/searchPatient";
 import BackButton from "@/Components/BackButton";
+import { createIPDAdmission } from "@/lib/actions/ipdActions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // ---------------- ZOD SCHEMA ----------------
 const ipdSchema = z.object({
@@ -41,19 +44,28 @@ type SymptomRow = {
   description: string;
 };
 
+type Bed = {
+  id: string;
+  name: string;
+  bedGroupId: string;
+  isOccupied: boolean;
+};
+
 interface IPDAdmissionPageProps {
   symptomTypes: any[];
   symptomsList: any[];
   doctors: any[];
   bedGroups: any[];
-  beds: any[];
+  beds: Bed[];
 }
 
+
 export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, bedGroups, beds }: IPDAdmissionPageProps) {
-  const [bedOptions, setBedOptions] = useState<string[]>([]);
+  const [availableBeds, setAvailableBeds] = useState<Bed[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [notes, setNotes] = useState("");
   const [previousMedicalIssue, setPreviousMedicalIssue] = useState("");
+  const router = useRouter();
 
   const [symptoms, setSymptoms] = useState<SymptomRow[]>([
     { type: "", title: "", description: "" },
@@ -77,10 +89,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
     form.setValue("bedNumber", ""); // Reset bed number when group changes
 
     const filteredBeds = beds.filter(b => b.bedGroupId === value);
-    setBedOptions(filteredBeds.map(b => b.name));
+    setAvailableBeds(filteredBeds);
   };
 
-  const onSubmit: SubmitHandler<IPDFormValues> = (data) => {
+  const onSubmit: SubmitHandler<IPDFormValues> = async (data) => {
     const payload = {
       ...data,
       creditLimit: Number(data.creditLimit),
@@ -104,17 +116,19 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       previousMedicalIssue,
     };
 
-    console.log("FINAL IPD PAYLOAD 👉", payload);
+    const result = await createIPDAdmission(payload);
 
-    /**
-     * API CALL EXAMPLE
-     *
-     * await fetch("/api/ipd", {
-     *   method: "POST",
-     *   headers: { "Content-Type": "application/json" },
-     *   body: JSON.stringify(payload),
-     * });
-     */
+    if (result.success) {
+      toast.success("IPD Admission created successfully");
+      form.reset();
+      setSymptoms([{ type: "", title: "", description: "" }]);
+      setSelectedPatient(null);
+      setNotes("");
+      setPreviousMedicalIssue("");
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to create IPD admission");
+    }
   };
 
 
@@ -291,6 +305,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
               Please select patient from list
             </p>
           )}
+          {form.formState.errors.patientId && (
+            <p className="text-red-500 text-xs">{form.formState.errors.patientId.message}</p>
+          )}
         </CardContent>
       </Card>
 
@@ -331,6 +348,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Admission Date *</Label>
                   <Input type="date" {...form.register("admissionDate")} />
+                  {form.formState.errors.admissionDate && (
+                    <p className="text-red-500 text-xs">{form.formState.errors.admissionDate.message}</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Case</Label>
@@ -372,6 +392,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Credit Limit *</Label>
                   <Input type="number" {...form.register("creditLimit")} />
+                  {form.formState.errors.creditLimit && (
+                    <p className="text-red-500 text-xs">{form.formState.errors.creditLimit.message}</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Reference</Label>
@@ -393,6 +416,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                     ))}
                   </SelectContent>
                 </Select>
+                {form.formState.errors.consultantDoctor && (
+                  <p className="text-red-500 text-xs">{form.formState.errors.consultantDoctor.message}</p>
+                )}
               </div>
               <div className="flex flex-row gap-4">
                 <div className="flex flex-col gap-1 w-full">
@@ -409,6 +435,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                       ))}
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.bedGroup && (
+                    <p className="text-red-500 text-xs">{form.formState.errors.bedGroup.message}</p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-1 w-full">
@@ -418,27 +447,19 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                       <SelectValue placeholder="Select bed" />
                     </SelectTrigger>
                     <SelectContent className="select-dialog-content">
-                      {bedOptions.map((b) => (
-                        <SelectItem key={b} value={b} className="select-dialog-item">
-                          {b}
+                      {availableBeds.map((b) => (
+                        <SelectItem key={b.id} value={b.id} className="select-dialog-item">
+                          {b.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.bedNumber && (
+                    <p className="text-red-500 text-xs">{form.formState.errors.bedNumber.message}</p>
+                  )}
                 </div>
               </div>
-              <div className="flex flex-col gap-1 w-full">
-                <Label>Live Consultation</Label>
-                <Select onValueChange={(v) => form.setValue("liveConsultation", v as any)}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent className="select-dialog-content">
-                    <SelectItem value="yes" className="select-dialog-item">Yes</SelectItem>
-                    <SelectItem value="no" className="select-dialog-item">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
 
               <Button type="submit" className="w-full mt-4 bg-indigo-700 text-white hover:bg-indigo-600">
                 Save IPD

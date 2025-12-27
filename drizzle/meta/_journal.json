@@ -141,6 +141,20 @@
       "when": 1766838193154,
       "tag": "0019_flashy_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1766842196601,
+      "tag": "0020_giant_sauron",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1766843208095,
+      "tag": "0021_overjoyed_timeslip",
+      "breakpoints": true
     }
   ]
 }
