@@ -5,6 +5,7 @@ import { ipdAdmission, beds } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
+import { patients } from "@/drizzle/schema";
 
 export async function createIPDAdmission(data: any) {
     try {
@@ -35,6 +36,11 @@ export async function createIPDAdmission(data: any) {
             await tx.update(beds)
                 .set({ isOccupied: true })
                 .where(eq(beds.id, data.bedNumber));
+
+            // Update Patient Status
+            await tx.update(patients)
+                .set({ isAdmitted: true })
+                .where(eq(patients.id, data.patientId));
         });
 
         revalidatePath("/doctor/IPD/registration");

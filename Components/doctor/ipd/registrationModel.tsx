@@ -260,7 +260,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                   )}
                 </div>
               </div>
-              <Separator/>
+              <Separator />
             </div>
           );
         })}
@@ -305,7 +305,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       <Card className="bg-overview-card border-overview-strong">
         <CardContent className="flex flex-col gap-1 px-4">
           <Label className="text-lg">Search Patient *</Label>
-          <PatientSearchBox onSelect={handlePatientSelect} />
+          <PatientSearchBox is_IPD_Patient={true} onSelect={handlePatientSelect} />
           {!form.watch("patientId") && (
             <p className="text-xs text-muted-foreground">
               Please select patient from list
@@ -414,10 +414,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                     <p className="text-red-500 text-xs">{form.formState.errors.consultantDoctor.message}</p>
                   )}
                 </div>
-                
+
               </div>
 
-              
+
               <div className="flex flex-row gap-4">
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Bed Group *</Label>

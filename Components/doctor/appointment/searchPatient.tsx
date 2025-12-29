@@ -23,11 +23,13 @@ type PatientSearchResult = {
 };
 
 type PatientSearchBoxProps = {
+  is_IPD_Patient?: boolean;
   onSelect: (patient: Patient) => void;
   onAddPatient?: () => void;
 };
 
 export default function PatientSearchBox({
+  is_IPD_Patient,
   onSelect,
   onAddPatient,
 }: PatientSearchBoxProps) {
@@ -40,10 +42,11 @@ export default function PatientSearchBox({
 
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
-    setSelectedPatient(null); 
+    setSelectedPatient(null);
 
     if (debounceTimer) clearTimeout(debounceTimer);
 
+    // added IPD Patient search Typing debounce
     const timer = setTimeout(async () => {
       if (!term.trim()) {
         setPatientResults([]);
@@ -53,7 +56,7 @@ export default function PatientSearchBox({
 
       setLoading(true);
       try {
-        const res = await fetch(`/api/patients?search=${encodeURIComponent(term)}`);
+        const res = await fetch(`/api/patients?is_IPD_Patient=${is_IPD_Patient}&search=${encodeURIComponent(term)}`);
         const data = await res.json();
         setPatientResults(data.success ? data.data || [] : []);
       } catch (error) {
@@ -62,7 +65,7 @@ export default function PatientSearchBox({
       } finally {
         setLoading(false);
       }
-    }, 300); 
+    }, 300);
 
     setDebounceTimer(timer);
   }, [debounceTimer]);

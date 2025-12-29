@@ -55,7 +55,14 @@ export async function getPatientById(patientId: string) {
   return result[0] || null;
 }
 
-export async function getPatientsByHospital(hospitalId: string) {
+export async function getPatientsByHospital(hospitalId: string, is_IPD_Patient?: boolean) {
+  if (is_IPD_Patient) {
+    return await db
+      .select()
+      .from(patients)
+      .where(and(eq(patients.hospitalId, hospitalId), eq(patients.isDeleted, false), eq(patients.isAdmitted, false)))
+      .orderBy(desc(patients.createdAt));
+  }
   return await db
     .select()
     .from(patients)
@@ -1509,6 +1516,6 @@ export async function getOrganizationRoleById(roleId: string, organizationId: st
     .from(organizationRole)
     .where(and(eq(organizationRole.id, roleId), eq(organizationRole.organizationId, organizationId)))
     .limit(1);
-  
+
   return result[0] || null;
 }
