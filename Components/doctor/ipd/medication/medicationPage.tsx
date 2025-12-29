@@ -135,7 +135,7 @@ export default function MedicationManagerPage() {
       },
       ...Array.from({ length: maxDoseCount }).map((_, i) => ({
         header: `Dose ${i + 1}`,
-        cell: ({ row }) => {
+        cell: ({ row }:any) => {
           const dose = row.original.doses[i];
           if (!dose) return "—";
 
