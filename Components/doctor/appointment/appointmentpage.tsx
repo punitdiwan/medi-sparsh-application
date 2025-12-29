@@ -308,13 +308,9 @@ export default function AppointmentPage() {
           <p className="h-[400px] flex justify-center items-center text-lg font-medium animate-pulse">
             Loading appointments...
           </p>
-        ) : filteredData.length === 0 ? (
-          <p className="text-muted-foreground mt-4">
-            No appointments found.
-          </p>
         ) : (
           <>
-            <Table data={paginatedData} columns={columns} />
+            <Table data={paginatedData} columns={columns} fallback={"No Appointments found"} />
 
             <PaginationControl
               currentPage={currentPage}

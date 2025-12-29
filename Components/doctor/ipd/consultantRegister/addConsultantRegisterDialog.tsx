@@ -22,10 +22,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { UserRound, PlusCircle, CalendarDays } from "lucide-react";
 
+import { getDoctors } from "@/lib/actions/doctorActions";
+
 /* ---------------- Types ---------------- */
 export interface ConsultantRegisterInput {
   appliedDate: string;
   consultantDate: string;
+  consultationTime: string;
   consultantDoctorId: string;
   consultantDoctorName: string;
   instruction: string;
@@ -39,13 +42,6 @@ interface AddConsultantRegisterDialogProps {
   isLoading?: boolean;
 }
 
-/* ---------------- Dummy Doctors ---------------- */
-const DOCTORS = [
-  { id: "d1", name: "Dr. Amit Sharma" },
-  { id: "d2", name: "Dr. Neha Verma" },
-  { id: "d3", name: "Dr. Rakesh Singh" },
-];
-
 /* ---------------- Component ---------------- */
 export default function AddConsultantRegisterDialog({
   open,
@@ -58,14 +54,30 @@ export default function AddConsultantRegisterDialog({
 
   const [appliedDate, setAppliedDate] = useState("");
   const [consultantDate, setConsultantDate] = useState("");
+  const [consultationTime, setConsultationTime] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [instruction, setInstruction] = useState("");
+  const [doctorsList, setDoctorsList] = useState<{ id: string; name: string }[]>([]);
+
+  /* ---------------- Fetch Doctors ---------------- */
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const result = await getDoctors();
+      if (result.data) {
+        setDoctorsList(result.data);
+      }
+    };
+    if (open) {
+      fetchDoctors();
+    }
+  }, [open]);
 
   /* ---------------- Populate Edit ---------------- */
   useEffect(() => {
     if (initialData) {
       setAppliedDate(initialData.appliedDate);
       setConsultantDate(initialData.consultantDate);
+      setConsultationTime(initialData.consultationTime || "");
       setDoctorId(initialData.consultantDoctorId);
       setInstruction(initialData.instruction);
     } else {
@@ -76,6 +88,7 @@ export default function AddConsultantRegisterDialog({
   const resetForm = () => {
     setAppliedDate("");
     setConsultantDate("");
+    setConsultationTime("");
     setDoctorId("");
     setInstruction("");
   };
@@ -90,6 +103,10 @@ export default function AddConsultantRegisterDialog({
       toast.error("Consultant Date is required");
       return;
     }
+    if (!consultationTime) {
+      toast.error("Consultation Time is required");
+      return;
+    }
     if (!doctorId) {
       toast.error("Consultant Doctor is required");
       return;
@@ -99,11 +116,12 @@ export default function AddConsultantRegisterDialog({
       return;
     }
 
-    const doctor = DOCTORS.find((d) => d.id === doctorId);
+    const doctor = doctorsList.find((d) => d.id === doctorId);
 
     onSubmit({
       appliedDate,
       consultantDate,
+      consultationTime,
       consultantDoctorId: doctorId,
       consultantDoctorName: doctor?.name || "",
       instruction,
@@ -145,9 +163,9 @@ export default function AddConsultantRegisterDialog({
                   onChange={(e) => setAppliedDate(e.target.value)}
                   disabled={isLoading}
                 />
+              </div>
             </div>
-            </div>
-              {/* Consultant Date */}
+            {/* Consultant Date */}
             <div className="flex-1 space-y-1">
               <Label>
                 Consultant Date <span className="text-destructive">*</span>
@@ -165,7 +183,21 @@ export default function AddConsultantRegisterDialog({
             </div>
           </div>
 
-          
+          {/* Consultation Time */}
+          <div className="space-y-1">
+            <Label>
+              Consultation Time <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="time"
+              className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
+              value={consultationTime}
+              onChange={(e) => setConsultationTime(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+
+
 
           {/* Consultant Doctor */}
           <div className="space-y-1">
@@ -177,7 +209,7 @@ export default function AddConsultantRegisterDialog({
                 <SelectValue placeholder="Select Consultant Doctor" />
               </SelectTrigger>
               <SelectContent className="select-dialog-content">
-                {DOCTORS.map((doc) => (
+                {doctorsList.map((doc) => (
                   <SelectItem key={doc.id} value={doc.id} className="select-dialog-item">
                     {doc.name}
                   </SelectItem>
@@ -217,8 +249,8 @@ export default function AddConsultantRegisterDialog({
             {isLoading
               ? "Saving..."
               : isEdit
-              ? "Update Register"
-              : "Save Register"}
+                ? "Update Register"
+                : "Save Register"}
           </Button>
         </DialogFooter>
       </DialogContent>

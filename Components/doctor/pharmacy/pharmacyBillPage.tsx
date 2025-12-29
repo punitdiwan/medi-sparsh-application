@@ -160,7 +160,7 @@ export default function PharmacyBillPage() {
       </div>
 
 
-      <Table data={paginated} columns={columns} />
+      <Table data={paginated} columns={columns} fallback={"No Bill found"} />
 
 
       <PaginationControl

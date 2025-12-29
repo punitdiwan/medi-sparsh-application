@@ -247,9 +247,7 @@ export default function BillingPage() {
             </div>
 
             <div className="rounded-xl overflow-hidden bg-background shadow-sm">
-              {filteredData.length===0
-                ? <p className="text-center p-6 text-muted-foreground">No transactions found.</p>
-                : <Table data={paginatedData} columns={columns}/>}
+               <Table data={paginatedData} columns={columns} fallback={"No transactions found."}/>
             </div>
 
             { (

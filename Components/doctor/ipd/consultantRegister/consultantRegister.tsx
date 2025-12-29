@@ -1,6 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { createIPDConsultation, getIPDConsultations, deleteIPDConsultation, restoreIPDConsultation } from "@/lib/actions/ipdActions";
+import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import { toast } from "sonner";
 import {
   Card,
   CardHeader,
@@ -9,6 +13,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import {
   Table,
   TableHeader,
@@ -23,7 +30,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { PlusCircle, Pencil, Trash2, UserRound } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, UserRound, RotateCcw } from "lucide-react";
 import AddConsultantRegisterDialog, {
   ConsultantRegisterInput,
 } from "./addConsultantRegisterDialog";
@@ -32,15 +39,46 @@ import AddConsultantRegisterDialog, {
 export interface ConsultantRegister
   extends ConsultantRegisterInput {
   id: string;
+  isDeleted?: boolean;
 }
 
 /* ---------------- Page ---------------- */
 export default function ConsultantRegisterPage() {
+  const params = useParams();
+  const ipdAdmissionId = params?.id as string;
+
   const [data, setData] = useState<ConsultantRegister[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] =
     useState<ConsultantRegister | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
+
+  /* ---------------- Fetch Data ---------------- */
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!ipdAdmissionId) return;
+      setLoading(true);
+      const result = await getIPDConsultations(ipdAdmissionId, showDeleted);
+      if (result.data) {
+        const mappedData = result.data.map((item: any) => ({
+          id: item.id,
+          appliedDate: format(new Date(item.appliedDate), "yyyy-MM-dd"),
+          consultantDate: format(new Date(item.consultationDate), "yyyy-MM-dd"),
+          consultationTime: format(new Date(item.consultationTime), "HH:mm"),
+          consultantDoctorName: item.consultantDoctorName,
+          instruction: item.instruction,
+          consultantDoctorId: "", // Not returned by getIPDConsultations but needed for type
+          isDeleted: item.isDeleted,
+        }));
+        setData(mappedData);
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, [ipdAdmissionId, showDeleted]);
 
   /* ---------------- Filter ---------------- */
   const filteredData = useMemo(() => {
@@ -60,33 +98,110 @@ export default function ConsultantRegisterPage() {
   }, [data, search]);
 
   /* ---------------- Add / Edit ---------------- */
-  const handleSubmit = (input: ConsultantRegisterInput) => {
-    if (editing) {
-      setData((prev) =>
-        prev.map((row) =>
-          row.id === editing.id
-            ? { ...input, id: row.id }
-            : row
-        )
-      );
-    } else {
-      setData((prev) => [
-        ...prev,
-        {
+  const handleSubmit = async (input: ConsultantRegisterInput) => {
+    setIsSaving(true);
+    try {
+      if (editing) {
+        // Update logic not requested yet, but we'll update local state for now
+        setData((prev) =>
+          prev.map((row) =>
+            row.id === editing.id
+              ? { ...input, id: row.id }
+              : row
+          )
+        );
+        toast.success("Register updated locally (Update action not implemented)");
+      } else {
+        const result = await createIPDConsultation({
           ...input,
-          id: crypto.randomUUID(),
-        },
-      ]);
-    }
+          ipdAdmissionId,
+        });
 
-    setEditing(null);
-    setOpen(false);
+        if (result.success) {
+          toast.success("Consultant register saved successfully");
+          // Refresh data
+          const freshData = await getIPDConsultations(ipdAdmissionId);
+          if (freshData.data) {
+            const mappedData = freshData.data.map((item: any) => ({
+              id: item.id,
+              appliedDate: format(new Date(item.appliedDate), "yyyy-MM-dd"),
+              consultantDate: format(new Date(item.consultationDate), "yyyy-MM-dd"),
+              consultationTime: format(new Date(item.consultationTime), "HH:mm"),
+              consultantDoctorName: item.consultantDoctorName,
+              instruction: item.instruction,
+              consultantDoctorId: "",
+            }));
+            setData(mappedData);
+          }
+        } else {
+          toast.error(result.error || "Failed to save register");
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setIsSaving(false);
+      setEditing(null);
+      setOpen(false);
+    }
   };
 
   /* ---------------- Delete ---------------- */
-  const handleDelete = (id: string) => {
-    if (!confirm("Delete this consultant register?")) return;
-    setData((prev) => prev.filter((row) => row.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deleteIPDConsultation(id, ipdAdmissionId);
+      if (result.success) {
+        toast.success("Consultant register deleted successfully");
+        // Refresh data
+        const freshData = await getIPDConsultations(ipdAdmissionId, showDeleted);
+        if (freshData.data) {
+          const mappedData = freshData.data.map((item: any) => ({
+            id: item.id,
+            appliedDate: format(new Date(item.appliedDate), "yyyy-MM-dd"),
+            consultantDate: format(new Date(item.consultationDate), "yyyy-MM-dd"),
+            consultationTime: format(new Date(item.consultationTime), "HH:mm"),
+            consultantDoctorName: item.consultantDoctorName,
+            instruction: item.instruction,
+            consultantDoctorId: "",
+            isDeleted: item.isDeleted,
+          }));
+          setData(mappedData);
+        }
+      } else {
+        toast.error(result.error || "Failed to delete register");
+      }
+    } catch (error) {
+      toast.error("An error occurred during deletion");
+    }
+  };
+
+  /* ---------------- Restore ---------------- */
+  const handleRestore = async (id: string) => {
+    try {
+      const result = await restoreIPDConsultation(id, ipdAdmissionId);
+      if (result.success) {
+        toast.success("Consultant register restored successfully");
+        // Refresh data
+        const freshData = await getIPDConsultations(ipdAdmissionId, showDeleted);
+        if (freshData.data) {
+          const mappedData = freshData.data.map((item: any) => ({
+            id: item.id,
+            appliedDate: format(new Date(item.appliedDate), "yyyy-MM-dd"),
+            consultantDate: format(new Date(item.consultationDate), "yyyy-MM-dd"),
+            consultationTime: format(new Date(item.consultationTime), "HH:mm"),
+            consultantDoctorName: item.consultantDoctorName,
+            instruction: item.instruction,
+            consultantDoctorId: "",
+            isDeleted: item.isDeleted,
+          }));
+          setData(mappedData);
+        }
+      } else {
+        toast.error(result.error || "Failed to restore register");
+      }
+    } catch (error) {
+      toast.error("An error occurred during restoration");
+    }
   };
 
   return (
@@ -106,6 +221,15 @@ export default function ConsultantRegisterPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
+
+            <div className="flex items-center gap-2 px-2">
+              <Switch
+                id="show-deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="show-deleted" className="text-dialog-icon whitespace-nowrap">Show Deleted</Label>
+            </div>
 
             <Button
               onClick={() => {
@@ -129,6 +253,7 @@ export default function ConsultantRegisterPage() {
               <TableRow>
                 <TableHead className="text-dialog-icon">Applied Date</TableHead>
                 <TableHead className="text-dialog-icon">Consultant Date</TableHead>
+                <TableHead className="text-dialog-icon">Consultation Time</TableHead>
                 <TableHead className="text-dialog-icon">Consultant Doctor</TableHead>
                 <TableHead className="text-dialog-icon">Instruction</TableHead>
                 <TableHead className="text-center text-dialog-icon">
@@ -138,14 +263,26 @@ export default function ConsultantRegisterPage() {
             </TableHeader>
 
             <TableBody>
-              {filteredData.length ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length ? (
                 filteredData.map((row) => (
-                  <TableRow key={row.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
+                  <TableRow key={row.id} className={`odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors`}>
                     <TableCell className="text-dialog-muted">
                       {row.appliedDate}
                     </TableCell>
                     <TableCell className="text-dialog-muted">
                       {row.consultantDate}
+                    </TableCell>
+                    <TableCell className="text-dialog-muted">
+                      {row.consultationTime}
                     </TableCell>
                     <TableCell className="font-medium text-dialog-muted">
                       {row.consultantDoctorName}
@@ -156,36 +293,57 @@ export default function ConsultantRegisterPage() {
                     <TableCell>
                       <TooltipProvider>
                         <div className="flex justify-center gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditing(row);
-                                  setOpen(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
+                          {!row.isDeleted && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setEditing(row);
+                                    setOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit</TooltipContent>
+                            </Tooltip>
+                          )}
 
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="destructive"
-                                onClick={() =>
-                                  handleDelete(row.id)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
+                          {!row.isDeleted && (
+                            <ConfirmDialog
+                              trigger={
+                                <Button
+                                  size="icon"
+                                  variant="destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              }
+                              title="Delete Consultant Register?"
+                              description="Are you sure you want to delete this consultant register? This action will mark it as deleted."
+                              actionLabel="Delete"
+                              cancelLabel="Cancel"
+                              onConfirm={() => handleDelete(row.id)}
+                            />
+                          )}
+
+                          {row.isDeleted && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="text-emerald-600 hover:text-emerald-400 font-bold"
+                                  onClick={() => handleRestore(row.id)}
+                                >
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Restore</TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </TooltipProvider>
                     </TableCell>
@@ -194,7 +352,7 @@ export default function ConsultantRegisterPage() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className="text-center py-8 text-muted-foreground"
                   >
                     No consultant register found
@@ -210,6 +368,7 @@ export default function ConsultantRegisterPage() {
       {open && (
         <AddConsultantRegisterDialog
           open={open}
+          isLoading={isSaving}
           initialData={editing || null}
           onClose={() => {
             setOpen(false);

@@ -127,10 +127,8 @@ function Dashboard() {
         <div className="text-sm">
           {loading ? (
             <p className="h-[200px] flex justify-center items-center text-lg font-medium animate-pulse">Loading appointments...</p>
-          ) : dashboardData?.upcomingAppointments.length === 0 ? (
-            <p className="text-muted-foreground">No upcoming appointments.</p>
-          ) : (
-            <Table data={dashboardData?.upcomingAppointments || []} columns={columns} />
+          )  : (
+            <Table data={dashboardData?.upcomingAppointments || []} columns={columns} fallback={"No upcoming appointments."} />
           )}
         </div>
       </div>

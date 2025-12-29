@@ -100,7 +100,7 @@ useEffect(() => {
         : true;
 
       const matchesDate = filters.dateCheckIn
-        ? item.createdAt?.split("T")[0] === filters.dateCheckIn
+        ? new Date(item.createdAt).toLocaleDateString("en-CA") === filters.dateCheckIn
         : true;
 
       const matchesFrequency = (() => {
@@ -277,11 +277,8 @@ useEffect(() => {
       />
 
       <div className="mt-6 text-sm ">
-        {filteredData.length === 0 ? (
-          <p className="text-muted-foreground mt-4">No patients found.</p>
-        ) : (
-          <Table data={paginatedData} columns={columns} />
-        )}
+        
+          <Table data={paginatedData} columns={columns} fallback={"No patient found"}/>
 
         <PaginationControl
           currentPage={currentPage}

@@ -473,6 +473,7 @@ export const patients = pgTable("patients", {
 	bloodGroup: text("blood_group"),
 	referredByDr: text("referred_by_dr"),
 	scheduledBy: text("scheduled_by"),
+	isAdmitted: boolean("is_admitted").default(false),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -1071,6 +1072,25 @@ export const ipdAdmission = pgTable("ipd_admission", {
 	notes: text("notes"),
 	medicalHistory: text("medical_history"),
 	admissionDate: timestamp("admission_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	dischargeDate: timestamp("discharge_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});
+
+// table ipd_consultation
+export const ipdConsultation = pgTable("ipd_consultation", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	doctorId: text("doctor_id")
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	appliedDate: timestamp("applied_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationDate: timestamp("consultation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationTime: timestamp("consultation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationDetails: text("consultation_details"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),

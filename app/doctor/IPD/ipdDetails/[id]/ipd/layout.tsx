@@ -8,6 +8,7 @@ import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
+import BackButton from "@/Components/BackButton";
 
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
@@ -48,11 +49,12 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
   const isCollapsed = state === "collapsed";
   return (
     <div 
-    className={`transition-all duration-200 overflow-x-auto mx-auto  ${
+    className={`transition-all duration-200 overflow-x-auto mx-auto mt-8 ${
        isCollapsed  ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
       } scrollbar-show`}>
+        <BackButton/>
       <h2 className="text-2xl font-semibold mb-2">
-        IPD Patient Details – {id}
+        IPD Patient Details
       </h2>
 
       <Tabs value={activeTab}>

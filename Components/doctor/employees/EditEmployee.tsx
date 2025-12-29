@@ -24,10 +24,7 @@ import {
 } from "@/components/ui/select";
 import Spinner from "@/components/Spinner";
 import MaskedInput from "@/components/InputMask";
-import { useAuth } from "@/context/AuthContext";
-import { SimpleRole } from "./AddEmployee";
-import { authClient } from "@/lib/auth-client";
-
+import { useOrganizationRoles } from "@/hooks/useOrganizationRoles"
 
 // ✅ Schemas
 const baseEmployeeSchema = z.object({
@@ -41,7 +38,7 @@ const baseEmployeeSchema = z.object({
     }),
   gender: z.enum(["male", "female", "other"]),
   address: z.string().min(5, "Address required"),
-  role: z.enum(["doctor", "receptionist", "other"]),
+  role: z.string().min(1,"Role required"),
   department: z.string().min(2, "Department required"),
   joiningDate: z.string().nonempty("Joining date required"),
   dob: z.string().optional(),
@@ -81,6 +78,8 @@ export function EditEmployeeModal({
   onClose,
   onUpdated,
 }: EditEmployeeModalProps) {
+
+  const { roles } = useOrganizationRoles()
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
   const [specializations, setSpecializations] = useState<
@@ -136,35 +135,8 @@ export function EditEmployeeModal({
       }
     };
     fetchSpecializations();
-    fetchRoles();
   }, []);
 
-
-  const {user} = useAuth();
-    
-      const [roles, setRoles] = useState<SimpleRole[]>([])
-    
-      const fetchRoles = async () => {
-    
-        const { data, error } =
-          await authClient.organization.listRoles({
-            query: {
-              organizationId: user?.hospital?.hospitalId,
-            },
-          })
-    
-        if (error) {
-          console.error("Failed to fetch roles", error)
-        } else {
-          const filteredRoles =
-            (data ?? []).map((item) => ({
-              id: item.id,
-              role: item.role,
-            }))
-          setRoles(filteredRoles)
-        }
-    
-      }
 
   // Fetch employee by staffId
   useEffect(() => {

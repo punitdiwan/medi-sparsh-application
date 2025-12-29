@@ -20,6 +20,8 @@ import BackButton from "@/Components/BackButton";
 import { createIPDAdmission } from "@/lib/actions/ipdActions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { PatientInfoCard } from "./patientsInfoCard";
+import { Separator } from "@/components/ui/separator";
 
 // ---------------- ZOD SCHEMA ----------------
 const ipdSchema = z.object({
@@ -27,7 +29,6 @@ const ipdSchema = z.object({
   admissionDate: z.string().min(1, "Admission date is required"),
   caseDetails: z.string().optional(),
   casualty: z.enum(["yes", "no"]),
-  oldPatient: z.enum(["yes", "no"]),
   creditLimit: z.string().min(1, "Credit limit required"), // keep as string
   reference: z.string().optional(),
   consultantDoctor: z.string().min(1, "Doctor is required"),
@@ -79,7 +80,6 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
     resolver: zodResolver(ipdSchema),
     defaultValues: {
       casualty: "no",
-      oldPatient: "no",
       liveConsultation: "no",
     },
   });
@@ -93,6 +93,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
   };
 
   const onSubmit: SubmitHandler<IPDFormValues> = async (data) => {
+    if (!selectedPatient) {
+      toast.error("Please select a patient");
+      return;
+    }
     const payload = {
       ...data,
       creditLimit: Number(data.creditLimit),
@@ -125,7 +129,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       setSelectedPatient(null);
       setNotes("");
       setPreviousMedicalIssue("");
-      router.refresh();
+      router.back();
     } else {
       toast.error(result.error || "Failed to create IPD admission");
     }
@@ -185,7 +189,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
               className="flex flex-col gap-4"
             >
               <div className="flex flex-row gap-4 w-full">
-                <div className="flex-1 flex-col gap-1 w-full">
+                <div className="flex flex-1 flex-col gap-1 w-full">
                   <Label>Type</Label>
                   <Select
                     value={symptom.type}
@@ -195,7 +199,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                       updateSymptom(index, "description", "");
                     }}
                   >
-                    <SelectTrigger className="w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
+                    <SelectTrigger className=" w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent className="select-dialog-content">
@@ -209,7 +213,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                 </div>
 
                 {/* Symptom Title */}
-                <div className="flex-1 flex-col gap-1 w-full">
+                <div className="flex flex-1 flex-col gap-1 w-full">
                   <Label>Title</Label>
                   <Select
                     value={symptom.title}
@@ -233,32 +237,34 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                   </Select>
                 </div>
               </div>
+              <div className="flex flex-warp w-full justify-between items-center">
+                <div className="flex flex-col gap-1">
+                  <Label>Description</Label>
+                  <Input
+                    value={symptom.description}
+                    onChange={(e) =>
+                      updateSymptom(index, "description", e.target.value)
+                    }
+                  />
+                </div>
 
-              <div className="flex flex-col gap-1">
-                <Label>Description</Label>
-                <Input
-                  value={symptom.description}
-                  onChange={(e) =>
-                    updateSymptom(index, "description", e.target.value)
-                  }
-                />
+                <div >
+                  {symptoms.length > 1 && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => removeSymptomRow(index)}
+                      className="text-red-500 text-lg bg-transparent hover:bg-transparent active:bg-transparent shadow-none"
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
               </div>
-
-              <div className="md:col-span-1">
-                {symptoms.length > 1 && (
-                  <Button
-                    variant="outline"
-                    onClick={() => removeSymptomRow(index)}
-                  >
-                    ✕
-                  </Button>
-                )}
-              </div>
+              <Separator />
             </div>
           );
         })}
-
-        <Button type="button" variant="secondary" onClick={addSymptomRow}>
+        <Button type="button" variant="outline" onClick={addSymptomRow}>
           + Add Symptom
         </Button>
 
@@ -299,7 +305,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       <Card className="bg-overview-card border-overview-strong">
         <CardContent className="flex flex-col gap-1 px-4">
           <Label className="text-lg">Search Patient *</Label>
-          <PatientSearchBox onSelect={handlePatientSelect} />
+          <PatientSearchBox is_IPD_Patient={true} onSelect={handlePatientSelect} />
           {!form.watch("patientId") && (
             <p className="text-xs text-muted-foreground">
               Please select patient from list
@@ -315,16 +321,19 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
-            <CardTitle>Patient Details</CardTitle>
+
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedPatient ? (
-              <div className="space-y-2 text-sm">
-                <p><span className="font-medium">Name:</span> {selectedPatient.name}</p>
-                <p><span className="font-medium">Mobile:</span> {selectedPatient.mobileNumber}</p>
-                <p><span className="font-medium">Gender:</span> {selectedPatient.gender}</p>
-                <p><span className="font-medium">Age:</span> {selectedPatient.age ?? "N/A"}</p>
-              </div>
+              <PatientInfoCard
+                patient={{
+                  name: selectedPatient.name,
+                  mobileNumber: selectedPatient.mobileNumber,
+                  gender: selectedPatient.gender,
+                  age: selectedPatient.age,
+                }}
+              />
+
             ) : (
               <p className="text-sm text-muted-foreground">
                 Select a patient to view details
@@ -373,18 +382,9 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="flex flex-col gap-1 w-full">
-                  <Label>Old Patient</Label>
-                  <Select onValueChange={(v) => form.setValue("oldPatient", v as any)}>
-                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent className="select-dialog-content">
-                      <SelectItem value="yes" className="select-dialog-item">Yes</SelectItem>
-                      <SelectItem value="no" className="select-dialog-item">No</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Reference</Label>
+                  <Input {...form.register("reference")} />
                 </div>
               </div>
 
@@ -397,29 +397,27 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                   )}
                 </div>
                 <div className="flex flex-col gap-1 w-full">
-                  <Label>Reference</Label>
-                  <Input {...form.register("reference")} />
+                  <Label>Consultant Doctor *</Label>
+                  <Select onValueChange={(v) => form.setValue("consultantDoctor", v)}>
+                    <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
+                      <SelectValue placeholder="Search doctor" />
+                    </SelectTrigger>
+                    <SelectContent className="select-dialog-content">
+                      {doctors.map((doctor) => (
+                        <SelectItem key={doctor.id} value={doctor.id} className="select-dialog-item">
+                          {doctor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.consultantDoctor && (
+                    <p className="text-red-500 text-xs">{form.formState.errors.consultantDoctor.message}</p>
+                  )}
                 </div>
+
               </div>
 
-              <div className="flex flex-col gap-1 w-full">
-                <Label>Consultant Doctor *</Label>
-                <Select onValueChange={(v) => form.setValue("consultantDoctor", v)}>
-                  <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
-                    <SelectValue placeholder="Search doctor" />
-                  </SelectTrigger>
-                  <SelectContent className="select-dialog-content">
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id} className="select-dialog-item">
-                        {doctor.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.consultantDoctor && (
-                  <p className="text-red-500 text-xs">{form.formState.errors.consultantDoctor.message}</p>
-                )}
-              </div>
+
               <div className="flex flex-row gap-4">
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Bed Group *</Label>

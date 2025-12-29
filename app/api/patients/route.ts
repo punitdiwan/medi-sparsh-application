@@ -8,11 +8,12 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
-    
+
     const { searchParams } = new URL(request.url);
     const searchTerm = searchParams.get("search");
+    const is_IPD_Patient = Boolean(searchParams.get("is_IPD_Patient"));
 
-    const patients = await getPatientsByHospital(hospital.hospitalId);
+    const patients = await getPatientsByHospital(hospital.hospitalId, is_IPD_Patient);
 
     // If search term is provided, filter patients
     let filteredPatients = patients;
