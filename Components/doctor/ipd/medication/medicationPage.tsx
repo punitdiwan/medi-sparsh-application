@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   Card,
   CardHeader,
@@ -9,124 +15,176 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableBody,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import {
-  PlusCircle,
-  Pencil,
-  Trash2,
-  Printer,
-  Pill,
-} from "lucide-react";
+import { PlusCircle, Pill } from "lucide-react";
 import { MedicationDialog } from "./medicationDialog";
+import clsx from "clsx";
 
-/* ---------------- Types ---------------- */
-export type Medication = {
+/* ================= TYPES ================= */
+
+export type Dose = {
+  id: string;
+  time: string;
+  dosage: string;
+  createdBy: string;
+};
+
+export type MedicationRow = {
   id: string;
   date: string;
-  time: string;
-  categoryId: string;
   categoryName: string;
-  medicineId: string;
   medicineName: string;
-  dosage: string;
-  remarks?: string;
+  doses: Dose[];
 };
 
-/* Dialog input (no id) */
-export type MedicationInput = Omit<Medication, "id">;
+/* ================= PAGE ================= */
 
-
-/* ---------------- Page ---------------- */
 export default function MedicationManagerPage() {
-  const [medications, setMedications] = useState<Medication[]>([]);
+  const [rows, setRows] = useState<MedicationRow[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Medication | null>(null);
 
-  /* ---------------- Filter ---------------- */
-  const filtered = useMemo(() => {
-    if (!search) return medications;
-    return medications.filter(
-      (m) =>
-        m.medicineName.toLowerCase().includes(search.toLowerCase()) ||
-        m.categoryName.toLowerCase().includes(search.toLowerCase()) ||
-        m.date.includes(search)
-    );
-  }, [medications, search]);
+  /* ================= ADD DOSE ================= */
 
-  /* ---------------- Add / Edit ---------------- */
-  const handleSubmit = (data: MedicationInput) => {
-  if (editing) {
-    setMedications((prev) =>
-      prev.map((m) =>
-        m.id === editing.id
-          ? { ...data, id: m.id }
-          : m
-      )
+  const handleSubmit = (data: {
+    date: string;
+    categoryName: string;
+    medicineName: string;
+    time: string;
+    dosage: string;
+  }) => {
+    setRows((prev) => {
+      const existing = prev.find(
+        (r) =>
+          r.date === data.date &&
+          r.medicineName === data.medicineName
+      );
+
+      if (existing) {
+        return prev.map((r) =>
+          r.id === existing.id
+            ? {
+                ...r,
+                doses: [
+                  ...r.doses,
+                  {
+                    id: crypto.randomUUID(),
+                    time: data.time,
+                    dosage: data.dosage,
+                    createdBy: "Super Admin (9001)",
+                  },
+                ],
+              }
+            : r
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          date: data.date,
+          categoryName: data.categoryName,
+          medicineName: data.medicineName,
+          doses: [
+            {
+              id: crypto.randomUUID(),
+              time: data.time,
+              dosage: data.dosage,
+              createdBy: "Super Admin (9001)",
+            },
+          ],
+        },
+      ];
+    });
+  };
+
+  /* ================= FILTER ================= */
+
+  const filteredRows = useMemo(() => {
+    if (!search) return rows;
+    return rows.filter(
+      (r) =>
+        r.medicineName.toLowerCase().includes(search.toLowerCase()) ||
+        r.date.includes(search)
     );
-  } else {
-    setMedications((prev) => [
-      ...prev,
+  }, [rows, search]);
+
+  /* ================= MAX DOSE COUNT ================= */
+
+  const maxDoseCount = useMemo(
+    () => Math.max(1, ...rows.map((r) => r.doses.length)),
+    [rows]
+  );
+
+  /* ================= COLUMNS ================= */
+
+  const columns = useMemo<ColumnDef<MedicationRow>[]>(() => {
+    return [
       {
-        ...data,
-        id: crypto.randomUUID(),
+        header: "Date",
+        accessorKey: "date",
+        cell: ({ getValue }) =>
+          new Date(getValue<string>()).toLocaleDateString(
+            "en-GB",
+            { day: "2-digit", month: "short", year: "numeric" }
+          ),
       },
-    ]);
-  }
+      {
+        header: "Medicine",
+        accessorKey: "medicineName",
+      },
+      ...Array.from({ length: maxDoseCount }).map((_, i) => ({
+        header: `Dose ${i + 1}`,
+        cell: ({ row }) => {
+          const dose = row.original.doses[i];
+          if (!dose) return "—";
 
-  setEditing(null);
-  setOpen(false);
-};
+          return (
+            <div className="min-w-[200px] rounded-md bg-muted/40 p-2 space-y-1">
+              <p className="text-sm font-medium">
+                Time: {dose.time}
+              </p>
+              <p className="text-sm">{dose.dosage}</p>
+              <p className="text-xs text-muted-foreground">
+                Created by: {dose.createdBy}
+              </p>
+            </div>
+          );
+        },
+      })),
+    ];
+  }, [maxDoseCount]);
 
+  /* ================= TABLE INSTANCE ================= */
 
-  /* ---------------- Delete ---------------- */
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this medication?")) {
-      setMedications((prev) => prev.filter((m) => m.id !== id));
-    }
-  };
+  const table = useReactTable({
+    data: filteredRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
-  /* ---------------- Print ---------------- */
-  const handlePrint = (med: Medication) => {
-    alert(`Print medication: ${med.medicineName}`);
-  };
+  /* ================= RENDER ================= */
 
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-dialog dark:text-white flex items-center gap-2">
-            <Pill className="bg-dialog-header text-dialog-icon" />
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-3">
+          <CardTitle className="flex items-center gap-2 text-2xl font-bold">
+            <Pill />
             Medication
           </CardTitle>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex gap-2">
             <Input
-              placeholder="Search by medicine / category / date"
+              placeholder="Search medicine / date"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
             <Button
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              onClick={() => setOpen(true)}
+              className="flex gap-2"
             >
               <PlusCircle className="h-5 w-5" />
               Add Medication
@@ -136,106 +194,75 @@ export default function MedicationManagerPage() {
       </Card>
 
       {/* TABLE */}
-      <Card className="shadow-lg border-dialog bg-dialog-header">
-        <CardContent className="p-0 overflow-x-auto ">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-dialog-icon">Date</TableHead>
-                <TableHead className="text-dialog-icon">Time</TableHead>
-                <TableHead className="text-dialog-icon">Category</TableHead>
-                <TableHead className="text-dialog-icon">Medicine</TableHead>
-                <TableHead className="text-dialog-icon">Dosage</TableHead>
-                <TableHead className="text-dialog-icon">Remarks</TableHead>
-                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+      <Card className="border-dialog bg-dialog-header">
+        <CardContent className="p-0">
+          <div className="relative max-h-[65vh] overflow-auto scrollbar-show">
+            <table className="min-w-max w-full border-collapse text-sm">
+              {/* HEADER */}
+              <thead className="sticky top-0 z-20 bg-dialog-header">
+                {table.getHeaderGroups().map((group) => (
+                  <tr key={group.id}>
+                    {group.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="px-4 py-3 text-left font-semibold whitespace-nowrap border-b"
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
 
-            <TableBody>
-              {filtered.length ? (
-                filtered.map((med) => (
-                  <TableRow key={med.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                    <TableCell className="text-dialog-muted">{med.date}</TableCell>
-                    <TableCell className="text-dialog-muted">{med.time}</TableCell>
-                    <TableCell className="text-dialog-muted">{med.categoryName}</TableCell>
-                    <TableCell className="font-medium text-dialog-muted">
-                      {med.medicineName}
-                    </TableCell>
-                    <TableCell className="text-dialog-muted">{med.dosage}</TableCell>
-                    <TableCell className="text-dialog-muted">{med.remarks || "—"}</TableCell>
-                    <TableCell >
-                      <TooltipProvider>
-                        <div className="flex justify-center gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => handlePrint(med)}
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Print</TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditing(med);
-                                  setOpen(true);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="destructive"
-                                onClick={() => handleDelete(med.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </TooltipProvider>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-6 text-dialog-muted"
+              {/* BODY */}
+              <tbody>
+                {table.getRowModel().rows.map((row, idx) => (
+                  <tr
+                    key={row.id}
+                    className={clsx(
+                      idx % 2 === 0
+                        ? "bg-background"
+                        : "bg-muted/40"
+                    )}
                   >
-                    No medications found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 align-top border-b whitespace-nowrap"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {table.getRowModel().rows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      className="text-center py-10 text-muted-foreground"
+                    >
+                      No medication data
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
 
-      {/* ADD / EDIT MODAL */}
+      {/* MODAL */}
       {open && (
         <MedicationDialog
           open={open}
-          defaultValues={editing || undefined}
-          onClose={() => {
-            setOpen(false);
-            setEditing(null);
-          }}
+          onClose={() => setOpen(false)}
           onSubmit={handleSubmit}
         />
       )}

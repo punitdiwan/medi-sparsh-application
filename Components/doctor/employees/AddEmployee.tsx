@@ -25,8 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
-
 
 import AddDataModal from "./AddSpecializationModel";
 import { MultiSelectDropdown } from "./MultipleSelect";
@@ -34,7 +32,7 @@ import Spinner from "@/components/Spinner";
 import { useSession } from "@/lib/auth-client";
 import { ImCross } from "react-icons/im";
 import MaskedInput from "@/components/InputMask";
-import { useAuth } from "@/context/AuthContext";
+import { useOrganizationRoles } from "@/hooks/useOrganizationRoles"
 
 export type SimpleRole = {
   id: string
@@ -53,7 +51,7 @@ const baseEmployeeSchema = z.object({
     }),
   gender: z.enum(["male", "female", "other"]),
   address: z.string().min(5, "Address required"),
-  role: z.enum(["doctor", "receptionist", "other"]),
+  role: z.string().min(1,"Role required"),
   department: z.string().min(2, "Department required"),
   joiningDate: z.string().nonempty("Joining date required"),
   dob: z.string().optional(),
@@ -84,14 +82,14 @@ interface AddEmployeeFormProps {
   onCancel?: () => void;
 }
 export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
+  const { roles } = useOrganizationRoles();
   const [isDoctor, setIsDoctor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [doctorErrors, setDoctorErrors] = useState<Record<string, string>>({});
 
   const { data } = useSession();
   // console.log("User Id",data?.user?.id)
-  const AuserId = data?.user?.id;
-  const router = useRouter();
+
   const form = useForm<EmployeeFormType>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -134,34 +132,9 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
 
   useEffect(() => {
     fetchSpecializations();
-    fetchRoles();
   }, []);
 
-    const {user} = useAuth();
-  
-    const [roles, setRoles] = useState<SimpleRole[]>([])
-  
-    const fetchRoles = async () => {
-  
-      const { data, error } =
-        await authClient.organization.listRoles({
-          query: {
-            organizationId: user?.hospital?.hospitalId,
-          },
-        })
-  
-      if (error) {
-        console.error("Failed to fetch roles", error)
-      } else {
-        const filteredRoles =
-          (data ?? []).map((item) => ({
-            id: item.id,
-            role: item.role,
-          }))
-        setRoles(filteredRoles)
-      }
-  
-    }
+
 
   async function fetchSpecializations() {
     try {
