@@ -1077,3 +1077,21 @@ export const ipdAdmission = pgTable("ipd_admission", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
 });
+
+// table ipd_consultation
+export const ipdConsultation = pgTable("ipd_consultation", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	doctorId: text("doctor_id")
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	appliedDate: timestamp("applied_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationDate: timestamp("consultation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationTime: timestamp("consultation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	consultationDetails: text("consultation_details"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});

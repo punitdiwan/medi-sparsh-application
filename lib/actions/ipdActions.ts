@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/index";
-import { ipdAdmission, beds, doctors, staff, user } from "@/db/schema";
+import { ipdAdmission, beds, doctors, staff, user, ipdConsultation } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
@@ -138,5 +138,113 @@ export async function getIPDAdmissionDetails(id: string) {
     } catch (error) {
         console.error("Error fetching IPD admission details:", error);
         return { error: "Failed to fetch IPD admission details" };
+    }
+}
+
+export async function createIPDConsultation(data: any) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        await db.insert(ipdConsultation).values({
+            hospitalId: org.id,
+            ipdAdmissionId: data.ipdAdmissionId,
+            doctorId: data.consultantDoctorId,
+            appliedDate: new Date(data.appliedDate),
+            consultationDate: new Date(data.consultantDate),
+            consultationTime: new Date(data.consultantDate + "T" + (data.consultationTime || "00:00")),
+            consultationDetails: data.instruction,
+        });
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${data.ipdAdmissionId}/ipd/consultantRegister`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error creating IPD consultation:", error);
+        return { error: "Failed to create IPD consultation" };
+    }
+}
+
+export async function getIPDConsultations(ipdAdmissionId: string, showDeleted: boolean = false) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await db.select({
+            id: ipdConsultation.id,
+            appliedDate: ipdConsultation.appliedDate,
+            consultationDate: ipdConsultation.consultationDate,
+            consultationTime: ipdConsultation.consultationTime,
+            consultantDoctorName: user.name,
+            instruction: ipdConsultation.consultationDetails,
+            isDeleted: ipdConsultation.isDeleted,
+        })
+            .from(ipdConsultation)
+            .leftJoin(doctors, eq(ipdConsultation.doctorId, doctors.id))
+            .leftJoin(staff, eq(doctors.staffId, staff.id))
+            .leftJoin(user, eq(staff.userId, user.id))
+            .where(
+                and(
+                    eq(ipdConsultation.hospitalId, org.id),
+                    eq(ipdConsultation.ipdAdmissionId, ipdAdmissionId),
+                    showDeleted ? undefined : eq(ipdConsultation.isDeleted, false)
+                )
+            );
+
+        return { data };
+    } catch (error) {
+        console.error("Error fetching IPD consultations:", error);
+        return { error: "Failed to fetch IPD consultations" };
+    }
+}
+
+export async function deleteIPDConsultation(id: string, ipdAdmissionId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        await db.update(ipdConsultation)
+            .set({ isDeleted: true, updatedAt: new Date() })
+            .where(
+                and(
+                    eq(ipdConsultation.id, id),
+                    eq(ipdConsultation.hospitalId, org.id)
+                )
+            );
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/consultantRegister`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting IPD consultation:", error);
+        return { error: "Failed to delete IPD consultation" };
+    }
+}
+
+export async function restoreIPDConsultation(id: string, ipdAdmissionId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        await db.update(ipdConsultation)
+            .set({ isDeleted: false, updatedAt: new Date() })
+            .where(
+                and(
+                    eq(ipdConsultation.id, id),
+                    eq(ipdConsultation.hospitalId, org.id)
+                )
+            );
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/consultantRegister`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error restoring IPD consultation:", error);
+        return { error: "Failed to restore IPD consultation" };
     }
 }
