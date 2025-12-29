@@ -100,7 +100,7 @@ useEffect(() => {
         : true;
 
       const matchesDate = filters.dateCheckIn
-        ? item.createdAt?.split("T")[0] === filters.dateCheckIn
+        ? new Date(item.createdAt).toLocaleDateString("en-CA") === filters.dateCheckIn
         : true;
 
       const matchesFrequency = (() => {

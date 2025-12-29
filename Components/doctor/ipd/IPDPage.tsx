@@ -22,7 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
+import { getShortId } from "@/utils/getShortId";
 /* ---------- Types ---------- */
 interface IPDPatient {
   ipdNo: string;
@@ -118,7 +118,7 @@ export default function IPDPatientListPage() {
           }
           className="font-semibold text-overview-base hover:text-indigo-400 underline cursor-pointer"
         >
-          {row.original.ipdNo}
+          {getShortId(row.original.ipdNo)}
         </button>
       ),
     },
@@ -223,8 +223,6 @@ export default function IPDPatientListPage() {
       </Card>
 
       {/* ---------- TABLE ---------- */}
-      {/* <Card className="shadow-md bg-overview-card border-overview-strong">
-        <CardContent className="p-0"> */}
           {loading ? (
             <div className="h-[300px] flex items-center justify-center text-lg font-medium animate-pulse">
               Loading patients...
@@ -250,8 +248,6 @@ export default function IPDPatientListPage() {
               />
             </>
           )}
-        {/* </CardContent>
-      </Card> */}
     </div>
   );
 }
