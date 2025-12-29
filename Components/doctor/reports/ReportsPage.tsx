@@ -96,7 +96,7 @@ export default function ReportsPage() {
       </div>
 
       <div>
-      <Table data={initialData} columns={columns} />
+      <Table data={initialData} columns={columns} fallback={"No reports found"}/>
     </div>
     </div>
   );

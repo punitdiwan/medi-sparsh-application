@@ -268,11 +268,7 @@ export default function PrescriptionPage() {
         {["today", "all", "week"].map((tab) => (
           <TabsContent key={tab} value={tab}>
             <div className="rounded-xl overflow-hidden bg-background shadow-sm">
-              {filteredData.length === 0 ? (
-                <p className="text-center p-6 text-muted-foreground">No prescriptions found.</p>
-              ) : (
-                <Table data={paginatedData} columns={columns} />
-              )}
+                <Table data={paginatedData} columns={columns} fallback={"No prescriptions found"}/>
             </div>
 
             {(
@@ -317,13 +313,7 @@ export default function PrescriptionPage() {
           </div>
 
           <div className="rounded-xl overflow-hidden bg-background shadow-sm">
-            {filteredData.length === 0 ? (
-              <p className="text-center p-6 text-muted-foreground">
-                No prescriptions found.
-              </p>
-            ) : (
-              <Table data={paginatedData} columns={columns} />
-            )}
+              <Table data={paginatedData} columns={columns} fallback={"No prescriptions found"} />
           </div>
 
           {filteredData.length > rowsPerPage && (
