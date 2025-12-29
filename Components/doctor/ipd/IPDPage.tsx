@@ -23,6 +23,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getShortId } from "@/utils/getShortId";
+import { getIPDAdmissions } from "@/lib/actions/ipdActions";
+
 /* ---------- Types ---------- */
 interface IPDPatient {
   ipdNo: string;
@@ -37,36 +39,6 @@ interface IPDPatient {
   previousMedicalIssue: string;
   creditLimit: string;
 }
-
-/* ---------- Dummy Data ---------- */
-const DUMMY_IPD_PATIENTS: IPDPatient[] = [
-  {
-    ipdNo: "IPD-001",
-    caseId: "CASE-1001",
-    name: "Ramesh Kumar",
-    gender: "Male",
-    phone: "9876543210",
-    generatedBy: "Reception",
-    consultantDoctor: "Dr. Amit Sharma",
-    bed: "Bed A-12",
-    isAntenatal: false,
-    previousMedicalIssue: "Diabetes",
-    creditLimit: "₹50,000",
-  },
-  {
-    ipdNo: "IPD-002",
-    caseId: "CASE-1002",
-    name: "Sunita Devi",
-    gender: "Female",
-    phone: "9123456780",
-    generatedBy: "OPD Desk",
-    consultantDoctor: "Dr. Neha Gupta",
-    bed: "Bed B-05",
-    isAntenatal: true,
-    previousMedicalIssue: "Anemia",
-    creditLimit: "₹75,000",
-  },
-];
 
 /* ---------- Page ---------- */
 export default function IPDPatientListPage() {
@@ -86,10 +58,28 @@ export default function IPDPatientListPage() {
   ]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setAllData(DUMMY_IPD_PATIENTS);
+    const fetchData = async () => {
+      setLoading(true);
+      const result = await getIPDAdmissions();
+      if (result.data) {
+        const mappedData: IPDPatient[] = result.data.map((item: any) => ({
+          ipdNo: item.ipdNo,
+          caseId: item.caseId || "N/A",
+          name: item.patientName || "Unknown",
+          gender: item.gender || "Unknown",
+          phone: item.phone || "N/A",
+          generatedBy: "System", // Placeholder as we don't have this field yet
+          consultantDoctor: item.doctorName || "Unknown",
+          bed: item.bedName || "Unassigned",
+          isAntenatal: false, // Placeholder
+          previousMedicalIssue: item.medicalHistory || "None",
+          creditLimit: item.creditLimit ? `₹${item.creditLimit}` : "₹0",
+        }));
+        setAllData(mappedData);
+      }
       setLoading(false);
-    }, 600);
+    };
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -188,7 +178,7 @@ export default function IPDPatientListPage() {
             <Button
               variant="outline"
               className="border-white text-foreground"
-              onClick={()=>route.push("/doctor/IPD/dischargedPatients")}
+              onClick={() => route.push("/doctor/IPD/dischargedPatients")}
             >
               <List className="h-4 w-4 mr-1" />
               Discharged
@@ -223,31 +213,31 @@ export default function IPDPatientListPage() {
       </Card>
 
       {/* ---------- TABLE ---------- */}
-          {loading ? (
-            <div className="h-[300px] flex items-center justify-center text-lg font-medium animate-pulse">
-              Loading patients...
-            </div>
-          ) : (
-            <>
-              <Table
-                data={paginatedData}
-                columns={columns}
-                fallback="No patients found"
-                headerTextClassName="text-dialog-icon"
-                bodyTextClassName="text-overview-muted"
-              />
-              <PaginationControl
-                currentPage={currentPage}
-                totalPages={totalPages}
-                rowsPerPage={rowsPerPage}
-                onPageChange={setCurrentPage}
-                onRowsPerPageChange={(val) => {
-                  setRowsPerPage(val);
-                  setCurrentPage(1);
-                }}
-              />
-            </>
-          )}
+      {loading ? (
+        <div className="h-[300px] flex items-center justify-center text-lg font-medium animate-pulse">
+          Loading patients...
+        </div>
+      ) : (
+        <>
+          <Table
+            data={paginatedData}
+            columns={columns}
+            fallback="No patients found"
+            headerTextClassName="text-dialog-icon"
+            bodyTextClassName="text-overview-muted"
+          />
+          <PaginationControl
+            currentPage={currentPage}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setCurrentPage}
+            onRowsPerPageChange={(val) => {
+              setRowsPerPage(val);
+              setCurrentPage(1);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
