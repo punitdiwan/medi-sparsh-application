@@ -253,7 +253,7 @@ export default function MedicationManagerPage() {
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-2xl font-bold">
-            <Pill />
+            <Pill className="bg-dialog-header text-dialog-icon"/>
             Medication
           </CardTitle>
 
@@ -266,7 +266,7 @@ export default function MedicationManagerPage() {
             />
             <Button
               onClick={() => setOpen(true)}
-              className="flex gap-2"
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
               Add Medication
