@@ -482,11 +482,7 @@ export default function Employee() {
 
       {/* ✅ Table Section */}
 
-      {employees?.length === 0 ? (
-        <p className="text-gray-500 text-center mt-10">No employees found.</p>
-      ) : (
-        <Table data={paginatedEmployees} columns={columns} />
-      )}
+        <Table data={paginatedEmployees} columns={columns} fallback={"No employee found"}/>
 
       {employees.length > rowsPerPage && (
         <div className="flex justify-between items-center mt-4 px-2">
