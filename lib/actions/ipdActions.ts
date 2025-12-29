@@ -93,3 +93,50 @@ export async function getIPDAdmissions() {
         return { error: "Failed to fetch IPD admissions" };
     }
 }
+
+export async function getIPDAdmissionDetails(id: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await db.select({
+            ipdNo: ipdAdmission.id,
+            caseId: ipdAdmission.caseId,
+            patientName: patients.name,
+            gender: patients.gender,
+            phone: patients.mobileNumber,
+            dob: patients.dob,
+            doctorName: user.name,
+            bedName: beds.name,
+            admissionDate: ipdAdmission.admissionDate,
+            creditLimit: ipdAdmission.creditLimit,
+            medicalHistory: ipdAdmission.medicalHistory,
+            notes: ipdAdmission.notes,
+            diagnosis: ipdAdmission.diagnosis,
+        })
+            .from(ipdAdmission)
+            .leftJoin(patients, eq(ipdAdmission.patientId, patients.id))
+            .leftJoin(doctors, eq(ipdAdmission.doctorId, doctors.id))
+            .leftJoin(staff, eq(doctors.staffId, staff.id))
+            .leftJoin(user, eq(staff.userId, user.id))
+            .leftJoin(beds, eq(ipdAdmission.bedId, beds.id))
+            .where(
+                and(
+                    eq(ipdAdmission.hospitalId, org.id),
+                    eq(ipdAdmission.id, id)
+                )
+            )
+            .limit(1);
+
+        if (data.length === 0) {
+            return { error: "Admission not found" };
+        }
+
+        return { data: data[0] };
+    } catch (error) {
+        console.error("Error fetching IPD admission details:", error);
+        return { error: "Failed to fetch IPD admission details" };
+    }
+}
