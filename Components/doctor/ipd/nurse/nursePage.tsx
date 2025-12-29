@@ -123,7 +123,7 @@ export default function NurseNotesTimeline() {
       {/* TIMELINE */}
       <div className="relative space-y-6">
         {/* Vertical Line */}
-        <div className="absolute left-6 top-0 h-full w-[2px] bg-indigo-200" />
+        <div className="absolute left-6 top-0 h-full w-0.5 bg-indigo-200" />
 
         {notes.length ? (
           notes.map((note) => (

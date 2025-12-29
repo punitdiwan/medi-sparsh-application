@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Pill, PlusCircle } from "lucide-react";
+import { Dose } from "./medicationPage";
 
 export type MedicationInput = {
   date: string;
@@ -34,6 +35,7 @@ export type MedicationInput = {
 
 type Medication = MedicationInput & {
   id: string;
+  dose: Dose;
 };
 
 
@@ -146,7 +148,7 @@ export function MedicationDialog({
 
 
         {/* BODY */}
-        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto overflow-y-auto bg-dialog-surface text-dialog">
+        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto bg-dialog-surface text-dialog">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Date *">
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
