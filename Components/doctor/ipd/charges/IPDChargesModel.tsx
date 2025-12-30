@@ -157,6 +157,44 @@ const handleAdd = () => {
   setDate("");
 };
 
+const handleSubmit = async () => {
+  if (!items.length) {
+    toast.error("Please add at least one charge");
+    return;
+  }
+
+  const payload = {
+    ipdAdmissionId: "IPD123", // TODO: pass from props / route
+    charges: items.map((i) => ({
+      date: i.date,
+      chargeTypeId,
+      chargeCategoryId,
+      chargeId,
+      qty: i.qty,
+      standardCharge: i.standardCharge,
+      totalAmount: i.total,
+      discountAmount: i.discount,
+      taxAmount: i.tax,
+      netAmount: i.netAmount,
+      note: i.note || "",
+    })),
+    grandTotal,
+  };
+
+  try {
+    console.log("SUBMIT PAYLOAD 👉", payload);
+
+    // 🔗 API CALL (example)
+    // await addIPDCharges(payload);
+
+    toast.success("Charges added successfully");
+    onClose();
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to save charges");
+  }
+};
+
 
   if (!open) return null;
 
@@ -168,7 +206,13 @@ const handleAdd = () => {
         <div className="flex items-center justify-between px-4 py-3 bg-dialog-header border-b border-dialog sticky top-0 z-10">
           <div className="flex items-center gap-2 text-white">
             <Receipt className="bg-dialog-header text-dialog-icon" />
-            <h2 className="text-lg sm:text-xl font-semibold text-header">Add Charges</h2>
+            <div className="flex flex-col">
+              <h2 className="text-lg sm:text-xl font-semibold text-header">Add Charges</h2>
+              <p className="text-xs text-muted-foreground">
+                Below charges will be added to the patient’s IPD bill after clicking
+                <span className="font-medium text-primary"> Final Save</span>.
+              </p>
+            </div>
           </div>
           <Button variant="outline" size="icon" onClick={onClose} color="red">✕</Button>
         </div>
@@ -239,7 +283,17 @@ const handleAdd = () => {
               </CardContent>
             </Card>
           </div>
-
+        <div className="space-y-2">
+  
+        {/* TABLE INFO */}
+          <div className="rounded-lg border border-dialog-input bg-dialog-surface p-3">
+            <h3 className="text-sm font-medium text-foreground">
+              Added Charges Preview
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              You can remove any charge before saving.
+            </p>
+          </div>
           {/* TABLE */}
           <div className="overflow-x-auto rounded-lg border">
             <Table>
@@ -281,7 +335,7 @@ const handleAdd = () => {
               </TableBody>
             </Table>
           </div>
-
+        </div>
         </div>
 
         {/* FOOTER */}
@@ -290,7 +344,10 @@ const handleAdd = () => {
             <IndianRupee className="h-5 w-5" />
             {grandTotal.toFixed(2)}
           </div>
-          <Button size="lg" className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">Final Save</Button>
+          <Button size="lg" 
+            onClick={handleSubmit}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+            >Final Save</Button>
         </div>
 
       </div>
