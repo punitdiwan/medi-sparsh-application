@@ -1081,3 +1081,15 @@ export const ipdOperations = pgTable("ipd_operations", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
 });
+
+// IPD Vital Table
+export const ipdVitals = pgTable("ipd_vitals", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	vitals: jsonb("vitals").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});

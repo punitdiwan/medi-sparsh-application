@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -17,42 +18,83 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { PlusCircle, HeartPulse, Pencil } from "lucide-react";
 import VitalsModal from "./vitalsModel";
+import { getIPDVitals } from "@/lib/actions/ipdVitals";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* ---------------- Types ---------------- */
-interface Vital {
+interface VitalEntry {
+  vitalId: string;
   vitalName: string;
   vitalValue: string;
+  unit: string;
+  range: string;
   date: string;
+}
+
+interface IPDVitalRecord {
+  id: string;
+  vitals: VitalEntry[];
+  createdAt: Date;
 }
 
 /* ---------------- Page ---------------- */
 export default function VitalsPage() {
+  const params = useParams();
+  const id = params.id as string;
+
   const [open, setOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [records, setRecords] = useState<IPDVitalRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [vitalsData, setVitalsData] = useState<Vital[]>([]);
+  const fetchVitals = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getIPDVitals(id);
+      if (result.data) {
+        setRecords(result.data as IPDVitalRecord[]);
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching vitals:", error);
+      toast.error("Failed to load vitals");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-  const vitalsList = ["BP", "Pulse", "Temp", "SpO₂", "Respiration"];
+  useEffect(() => {
+    fetchVitals();
+  }, [fetchVitals]);
 
-  /* ---------------- Filter ---------------- */
-  const filteredVitals = useMemo(() => {
-    if (!search) return vitalsData;
-    return vitalsData.filter(
+  /* ---------------- Flatten and Filter ---------------- */
+  const flattenedVitals = useMemo(() => {
+    const all: (VitalEntry & { recordId: string; createdAt: Date })[] = [];
+    records.forEach((record) => {
+      record.vitals.forEach((v) => {
+        all.push({
+          ...v,
+          recordId: record.id,
+          createdAt: record.createdAt,
+        });
+      });
+    });
+
+    if (!search) return all;
+    const q = search.toLowerCase();
+    return all.filter(
       (v) =>
-        v.vitalName.toLowerCase().includes(search.toLowerCase()) ||
-        v.vitalValue.toLowerCase().includes(search.toLowerCase()) ||
-        v.date.includes(search)
+        v.vitalName.toLowerCase().includes(q) ||
+        v.vitalValue.toLowerCase().includes(q) ||
+        format(new Date(v.date), "dd-MM-yyyy").includes(search)
     );
-  }, [vitalsData, search]);
+  }, [records, search]);
 
   return (
     <div className="p-6 space-y-6">
@@ -73,10 +115,7 @@ export default function VitalsPage() {
             />
 
             <Button
-              onClick={() => {
-                setEditIndex(null);
-                setOpen(true);
-              }}
+              onClick={() => setOpen(true)}
               className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
@@ -94,21 +133,32 @@ export default function VitalsPage() {
               <TableRow>
                 <TableHead className="text-dialog-icon">Vital Name</TableHead>
                 <TableHead className="text-dialog-icon">Value</TableHead>
+                <TableHead className="text-dialog-icon">Unit</TableHead>
+                <TableHead className="text-dialog-icon">Reference Range</TableHead>
                 <TableHead className="text-dialog-icon">Date</TableHead>
-                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
+                {/* <TableHead className="text-dialog-icon">Actions</TableHead> */}
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {filteredVitals.length ? (
-                filteredVitals.map((v, idx) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Loading vitals...
+                  </TableCell>
+                </TableRow>
+              ) : flattenedVitals.length ? (
+                flattenedVitals.map((v, idx) => (
                   <TableRow key={idx} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-dialog-muted">
                       {v.vitalName}
                     </TableCell>
                     <TableCell className="text-dialog-muted">{v.vitalValue}</TableCell>
                     <TableCell className="text-dialog-muted">{v.date}</TableCell>
-                    <TableCell className="text-center">
+                    {/* <TableCell className="text-center">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -126,13 +176,13 @@ export default function VitalsPage() {
                           <TooltipContent>Edit Vital</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-8 text-muted-foreground"
                   >
                     No vitals recorded
@@ -145,24 +195,13 @@ export default function VitalsPage() {
       </Card>
 
       {/* MODAL */}
-      {open && (
-        <VitalsModal
-          open={open}
-          onClose={() => setOpen(false)}
-          vitalsList={vitalsList}
-          initialData={editIndex !== null ? [vitalsData[editIndex]] : []}
-          onSubmit={(data) => {
-            if (editIndex !== null) {
-              const updated = [...vitalsData];
-              updated[editIndex] = data[0];
-              setVitalsData(updated);
-            } else {
-              setVitalsData((prev) => [...prev, ...data]);
-            }
-            setOpen(false);
-          }}
-        />
-      )}
+      <VitalsModal
+        open={open}
+        onClose={() => setOpen(false)}
+        ipdAdmissionId={id}
+        onSuccess={fetchVitals}
+      />
     </div>
   );
 }
+
