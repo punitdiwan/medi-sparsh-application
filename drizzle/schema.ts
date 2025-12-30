@@ -1060,3 +1060,24 @@ export const ipdConsultation = pgTable("ipd_consultation", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
 });
+
+// IPD Operation Table	
+export const ipdOperations = pgTable("ipd_operations", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	operationId: text("operation_id").notNull()
+		.references(() => operations.id, { onDelete: "cascade" }),
+	operationDate: timestamp("operation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	doctors: jsonb("doctors").notNull(),
+	operationTime: timestamp("operation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	anaesthetist: jsonb("anaesthetist"),
+	anaesthetiaType: text("anaesthetia_type"),
+	operationDetails: text("operation_details"),
+	supportStaff: jsonb("support_staff"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});

@@ -17,10 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Operation } from "./ipdOperationManager";
 import { PlusCircle, Users2, X } from "lucide-react";
 import { getOperationCategories } from "@/lib/actions/operationCategories";
-import { getOperationsByCategory, createIPDOperation, updateIPDOperation } from "@/lib/actions/operations";
+import { getOperationsByCategory, createIPDOperation } from "@/lib/actions/operations";
 import { getDoctors } from "@/lib/actions/doctorActions";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MultiSelect } from "./multi-select";
 
 /* ---------------- Schema ---------------- */
 const operationSchema = z.object({
@@ -30,7 +31,7 @@ const operationSchema = z.object({
   name: z.string().min(1),
   date: z.string().min(1),
   time: z.string().min(1),
-  doctor: z.string().min(1, "Please select a doctor"),
+  doctors: z.array(z.string()).min(1, "Please select at least one doctor"),
   assistant1: z.string().optional(),
   assistant2: z.string().optional(),
   anesthetist: z.string().optional(),
@@ -59,51 +60,17 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
 
   const form = useForm<OperationFormValues>({
     resolver: zodResolver(operationSchema),
-    defaultValues: useMemo(() => {
-      if (!defaultValues) {
-        return {
-          categoryId: "",
-          category: "",
-          operationId: "",
-          name: "",
-          date: new Date().toISOString().split('T')[0],
-          time: "",
-          doctor: "",
-        };
-      }
-
-      // Parse operation details
-      const details = defaultValues.operationDetails || "";
-      const lines = details.split('\n');
-      const remarkLine = lines.find(l => l.startsWith('Remarks: '));
-      const resultLine = lines.find(l => l.startsWith('Result: '));
-
-      return {
-        categoryId: defaultValues.categoryId || "",
-        category: defaultValues.categoryName || "",
-        operationId: defaultValues.operationId || "",
-        name: defaultValues.operationName || "",
-        date: defaultValues.operationDate ? new Date(defaultValues.operationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        time: defaultValues.operationTime ? new Date(defaultValues.operationTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "",
-        doctor: defaultValues.doctors?.[0] || "",
-        assistant1: defaultValues.supportStaff?.assistant1 || "",
-        assistant2: defaultValues.supportStaff?.assistant2 || "",
-        anesthetist: defaultValues.anaesthetist?.name || "",
-        anesthesiaType: defaultValues.anaesthetiaType || "",
-        technician: defaultValues.supportStaff?.technician || "",
-        otAssistant: defaultValues.supportStaff?.otAssistant || "",
-        remark: remarkLine ? remarkLine.replace('Remarks: ', '') : "",
-        result: resultLine ? resultLine.replace('Result: ', '') : "",
-      };
-    }, [defaultValues]),
+    defaultValues: {
+      categoryId: "",
+      category: "",
+      operationId: "",
+      name: "",
+      date: new Date().toISOString().split('T')[0],
+      time: "",
+      doctors: [],
+      ...defaultValues,
+    },
   });
-
-  // Reset form when defaultValues changes
-  useEffect(() => {
-    if (open) {
-      form.reset(form.control._defaultValues);
-    }
-  }, [open, form]);
 
   const categoryId = form.watch("categoryId");
 
@@ -149,29 +116,20 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
     const [hours, minutes] = data.time.split(":").map(Number);
     const opDate = new Date(year, month - 1, day, hours, minutes);
 
-    const payload = {
+    const res = await createIPDOperation({
+      ipdAdmissionId,
       operationId: data.operationId,
       operationDate: opDate,
       operationTime: opDate,
-      doctors: [data.doctor],
+      doctors: data.doctors,
       anaesthetist: anaesthetistJson,
       anaesthetiaType: data.anesthesiaType || "",
       operationDetails,
       supportStaff: supportStaffJson,
-    };
-
-    let res;
-    if (defaultValues?.id) {
-      res = await updateIPDOperation(defaultValues.id, payload);
-    } else {
-      res = await createIPDOperation({
-        ipdAdmissionId,
-        ...payload,
-      });
-    }
+    });
 
     if (res.data) {
-      toast.success(defaultValues?.id ? "Operation updated successfully" : "Operation saved successfully");
+      toast.success("Operation saved successfully");
       onSubmit();
     } else {
       toast.error(res.error || "Failed to save operation");
@@ -180,31 +138,17 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent
-        className="sm:max-w-xl rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg flex flex-col"
-        onInteractOutside={(e) => {
-          // Allow interactions with popovers
-          const target = e.target as HTMLElement;
-          if (target.closest('[role="listbox"]') || target.closest('[data-radix-popper-content-wrapper]')) {
-            e.preventDefault();
-          }
-        }}
-      >
+      <DialogContent className="sm:max-w-xl rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg flex flex-col">
 
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog flex flex-row justify-between items-center sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <PlusCircle className="h-5 w-5 text-primary" />
+            <div className="flex items-center justify-center rounded-lg">
+              <Users2 className="bg-dialog-header text-dialog-icon" />
             </div>
-            <div>
-              <DialogTitle className="text-xl font-bold text-dialog">
-                {defaultValues?.id ? "Edit Operation" : "Add Operation"}
-              </DialogTitle>
-              <p className="text-xs text-dialog-muted">
-                {defaultValues?.id ? "Update the operation details" : "Fill in the details to record a new operation"}
-              </p>
-            </div>
+            <DialogTitle className="text-lg font-semibold tracking-wide">
+              {defaultValues ? "Edit Operation" : "Add Operation"}
+            </DialogTitle>
           </div>
 
           {/* CROSS BUTTON */}
@@ -257,10 +201,16 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
             {/* Consultant Doctor */}
             <SelectField
               label="Consultant Doctor *"
-              value={form.watch("doctor")}
-              onValueChange={(v: string) => form.setValue("doctor", v)}
+              value={form.watch("doctors")}
+              onValueChange={(v: string) => form.setValue("doctors", v)}
               options={doctors.map(d => ({ label: d.name, value: d.name }))}
             />
+
+            {/* <MultiSelect
+              options={options}
+              onValueChange={setSelectedValues}
+              defaultValue={selectedValues}
+            /> */}
 
             {/* Assistants / Anesthetist / Technician */}
             <InputField label="Assistant Consultant 1" {...form.register("assistant1")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />
