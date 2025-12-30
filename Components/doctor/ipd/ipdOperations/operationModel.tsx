@@ -21,6 +21,7 @@ import { getOperationsByCategory, createIPDOperation, updateIPDOperation } from 
 import { getDoctors } from "@/lib/actions/doctorActions";
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
+import { MultiSelectDropdown } from "./multi-select-dropdown";
 
 /* ---------------- Schema ---------------- */
 const operationSchema = z.object({
@@ -30,7 +31,7 @@ const operationSchema = z.object({
   name: z.string().min(1),
   date: z.string().min(1),
   time: z.string().min(1),
-  doctor: z.string().min(1, "Please select a doctor"),
+  doctor: z.array(z.string()).min(1, "Select at least one doctor"),
   assistant1: z.string().optional(),
   assistant2: z.string().optional(),
   anesthetist: z.string().optional(),
@@ -68,7 +69,7 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
           name: "",
           date: new Date().toISOString().split('T')[0],
           time: "",
-          doctor: "",
+          doctor: [],
         };
       }
 
@@ -85,7 +86,7 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
         name: defaultValues.operationName || "",
         date: defaultValues.operationDate ? new Date(defaultValues.operationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         time: defaultValues.operationTime ? new Date(defaultValues.operationTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : "",
-        doctor: defaultValues.doctors?.[0] || "",
+        doctor: defaultValues?.doctors || [],
         assistant1: defaultValues.supportStaff?.assistant1 || "",
         assistant2: defaultValues.supportStaff?.assistant2 || "",
         anesthetist: defaultValues.anaesthetist?.name || "",
@@ -153,12 +154,14 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
       operationId: data.operationId,
       operationDate: opDate,
       operationTime: opDate,
-      doctors: [data.doctor],
+      doctors: data.doctor,
       anaesthetist: anaesthetistJson,
       anaesthetiaType: data.anesthesiaType || "",
       operationDetails,
       supportStaff: supportStaffJson,
     };
+
+    console.log("OPeration Payload data",payload)
 
     let res;
     if (defaultValues?.id) {
@@ -255,12 +258,26 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
             <InputField label="Operation Time *" type="time" {...form.register("time")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />
 
             {/* Consultant Doctor */}
-            <SelectField
-              label="Consultant Doctor *"
-              value={form.watch("doctor")}
-              onValueChange={(v: string) => form.setValue("doctor", v)}
-              options={doctors.map(d => ({ label: d.name, value: d.name }))}
-            />
+            <div className="flex flex-col gap-1 w-full">
+              <Label>Consultant Doctors *</Label>
+
+              <MultiSelectDropdown
+                options={doctors.map((d) => ({
+                  label: d.name,
+                  value: d.name, // ya d.id (recommended)
+                }))}
+                value={form.watch("doctor") || []}
+                onChange={(val) => form.setValue("doctor", val)}
+                placeholder="Select doctors"
+              />
+
+              {form.formState.errors.doctor && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.doctor.message as string}
+                </p>
+              )}
+            </div>
+
 
             {/* Assistants / Anesthetist / Technician */}
             <InputField label="Assistant Consultant 1" {...form.register("assistant1")} className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />

@@ -48,11 +48,8 @@ export async function getIPDOperations(ipdAdmissionId: string, showDeleted: bool
         const whereConditions = [
             eq(ipdOperations.hospitalId, org.id),
             eq(ipdOperations.ipdAdmissionId, ipdAdmissionId),
+            eq(ipdOperations.isDeleted, showDeleted),
         ];
-
-        if (!showDeleted) {
-            whereConditions.push(eq(ipdOperations.isDeleted, false));
-        }
 
         const ops = await db
             .select({

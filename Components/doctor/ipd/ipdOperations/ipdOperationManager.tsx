@@ -14,8 +14,9 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RotateCcw, Trash } from "lucide-react";
+import { RotateCcw, Trash,AlignJustify } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
+import { ShowOperationDialog } from "./ShowOperationDialog";
 
 export type Operation = {
   id: string;
@@ -44,6 +45,8 @@ export default function IPdOperationsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [operationToDelete, setOperationToDelete] = useState<{ id: string, permanent: boolean } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showModalOpen, setShowModalOpen] = useState(false);
+  const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
 
   const fetchOperations = async () => {
     const res = await getIPDOperations(ipdAdmissionId, showDeleted);
@@ -113,10 +116,12 @@ export default function IPdOperationsPage() {
     }
   };
 
-  /* ---------------- Print ---------------- */
-  const handlePrint = (op: Operation) => {
-    alert(`Print operation: ${op.operationName}`);
+  /* ---------------- show opdetails ---------------- */
+  const handleShow = (op: Operation) => {
+    setSelectedOperation(op);
+    setShowModalOpen(true);
   };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -127,7 +132,7 @@ export default function IPdOperationsPage() {
             <Users2 className="bg-dialog-header text-dialog-icon" />
             Operations
           </CardTitle>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex items-center space-x-2 bg-background/50 p-2 rounded-lg border border-dialog">
               <Switch
                 id="show-deleted"
@@ -184,11 +189,11 @@ export default function IPdOperationsPage() {
                             <>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button size="icon" variant="outline" onClick={() => handlePrint(op)}>
-                                    <Printer className="h-4 w-4" />
+                                  <Button size="icon" variant="outline" onClick={() => handleShow(op)}>
+                                    <AlignJustify className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Print</TooltipContent>
+                                <TooltipContent>Show Details</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -262,6 +267,14 @@ export default function IPdOperationsPage() {
           : "Are you sure you want to delete this operation? You can restore it later from the deleted list."}
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
+      />
+      <ShowOperationDialog
+        open={showModalOpen}
+        onClose={() => {
+          setShowModalOpen(false);
+          setSelectedOperation(null);
+        }}
+        operation={selectedOperation}
       />
     </div>
   );
