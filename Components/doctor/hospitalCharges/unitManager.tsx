@@ -30,7 +30,7 @@ export default function UnitManager(): JSX.Element {
   const [editingData, setEditingData] = useState<UnitItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const rowsPerPage = 5;
+  const rowsPerPage = 20;
   const [currentPage, setCurrentPage] = useState(1);
 
   const ability = useAbility();
