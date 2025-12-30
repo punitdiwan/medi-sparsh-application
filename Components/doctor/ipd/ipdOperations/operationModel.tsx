@@ -161,8 +161,6 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
       supportStaff: supportStaffJson,
     };
 
-    console.log("OPeration Payload data",payload)
-
     let res;
     if (defaultValues?.id) {
       res = await updateIPDOperation(defaultValues.id, payload);

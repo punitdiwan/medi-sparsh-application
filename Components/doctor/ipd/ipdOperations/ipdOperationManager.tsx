@@ -132,7 +132,13 @@ export default function IPdOperationsPage() {
             <Users2 className="bg-dialog-header text-dialog-icon" />
             Operations
           </CardTitle>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-2">
+            <Input
+              placeholder="Search by name / category / technician / date"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
             <div className="flex items-center space-x-2 bg-background/50 p-2 rounded-lg border border-dialog">
               <Switch
                 id="show-deleted"
@@ -143,12 +149,6 @@ export default function IPdOperationsPage() {
                 Show Deleted
               </Label>
             </div>
-            <Input
-              placeholder="Search by name / category / technician / date"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="sm:w-72"
-            />
             <Button
               onClick={() => { setModalOpen(true); setEditingOperation(null); }}
               className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"

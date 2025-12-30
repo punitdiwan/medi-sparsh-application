@@ -222,13 +222,13 @@ export default function ConsultantRegisterPage() {
               className="sm:w-72"
             />
 
-            <div className="flex items-center gap-2 px-2">
+            <div className="flex items-center space-x-2 bg-background/50 p-2 rounded-lg border border-dialog">
               <Switch
                 id="show-deleted"
                 checked={showDeleted}
                 onCheckedChange={setShowDeleted}
               />
-              <Label htmlFor="show-deleted" className="text-dialog-icon whitespace-nowrap">Show Deleted</Label>
+              <Label htmlFor="show-deleted" className="text-sm font-medium text-dialog cursor-pointer">Show Deleted</Label>
             </div>
 
             <Button
