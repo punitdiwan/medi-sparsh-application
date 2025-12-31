@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 import { patients } from "@/drizzle/schema";
+import { createIPDChargesBatch, getIPDChargesByAdmission } from "@/db/queries";
 
 export async function createIPDAdmission(data: any) {
     try {
@@ -246,5 +247,89 @@ export async function restoreIPDConsultation(id: string, ipdAdmissionId: string)
     } catch (error) {
         console.error("Error restoring IPD consultation:", error);
         return { error: "Failed to restore IPD consultation" };
+    }
+}
+
+export async function createIPDCharges(data: {
+    ipdAdmissionId: string;
+    charges: Array<{
+        chargeTypeId: string;
+        chargeCategoryId: string;
+        chargeId: string;
+        qty: number;
+        standardCharge: number;
+        totalAmount: number;
+        discountPercent?: number;
+        taxPercent?: number;
+        note?: string | null;
+    }>;
+}) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        if (!data.ipdAdmissionId) {
+            return { error: "IPD Admission ID is required" };
+        }
+
+        if (!data.charges || !Array.isArray(data.charges) || data.charges.length === 0) {
+            return { error: "At least one charge is required" };
+        }
+
+        // Validate each charge
+        for (const charge of data.charges) {
+            if (!charge.chargeTypeId || !charge.chargeCategoryId || !charge.chargeId) {
+                return { error: "All charge fields (Type, Category, Charge) are required" };
+            }
+            if (!charge.qty || charge.qty <= 0) {
+                return { error: "Quantity must be greater than 0" };
+            }
+            if (!charge.standardCharge || charge.standardCharge < 0) {
+                return { error: "Standard charge must be a valid number" };
+            }
+        }
+
+        const result = await createIPDChargesBatch({
+            hospitalId: org.id,
+            ipdAdmissionId: data.ipdAdmissionId,
+            charges: data.charges.map((charge) => ({
+                chargeTypeId: charge.chargeTypeId,
+                chargeCategoryId: charge.chargeCategoryId,
+                chargeId: charge.chargeId,
+                qty: charge.qty,
+                standardCharge: charge.standardCharge,
+                totalAmount: charge.totalAmount,
+                discountPercent: charge.discountPercent ?? 0,
+                taxPercent: charge.taxPercent ?? 0,
+                note: charge.note ?? undefined,
+            })),
+        });
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${data.ipdAdmissionId}/ipd/charges`);
+        return { data: result, success: true };
+    } catch (error) {
+        console.error("Error creating IPD charges:", error);
+        return { error: "Failed to create IPD charges" };
+    }
+}
+
+export async function getIPDCharges(ipdAdmissionId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        if (!ipdAdmissionId) {
+            return { error: "IPD Admission ID is required" };
+        }
+
+        const data = await getIPDChargesByAdmission(ipdAdmissionId, org.id);
+        return { data };
+    } catch (error) {
+        console.error("Error fetching IPD charges:", error);
+        return { error: "Failed to fetch IPD charges" };
     }
 }

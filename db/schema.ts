@@ -1095,3 +1095,60 @@ export const ipdConsultation = pgTable("ipd_consultation", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
 });
+
+
+// IPD Operation Table	
+export const ipdOperations = pgTable("ipd_operations", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	operationId: text("operation_id").notNull()
+		.references(() => operations.id, { onDelete: "cascade" }),
+	operationDate: timestamp("operation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	doctors: jsonb("doctors").notNull(),
+	operationTime: timestamp("operation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	anaesthetist: jsonb("anaesthetist"),
+	anaesthetiaType: text("anaesthetia_type"),
+	operationDetails: text("operation_details"),
+	supportStaff: jsonb("support_staff"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false),
+});
+
+// IPD Vital Table
+export const ipdVitals = pgTable("ipd_vitals", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	vitals: jsonb("vitals").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// IPD Charges Table
+export const ipdCharges = pgTable("ipd_charges", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	chargeTypeId: text("charge_type_id").notNull()
+		.references(() => chargeTypes.id, { onDelete: "cascade" }),
+	chargeCategoryId: text("charge_category_id").notNull()
+		.references(() => chargeCategories.id, { onDelete: "cascade" }),
+	chargeId: text("charge_id").notNull()
+		.references(() => charges.id, { onDelete: "cascade" }),
+	qty: integer("qty").notNull(),
+	standardCharge: numeric("standard_charge").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	discountPercent: numeric("discount_percent").notNull(),
+	taxPercent: numeric("tax_percent").notNull(),
+	note: text("note"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});

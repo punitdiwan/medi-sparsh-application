@@ -11,9 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { ALL_PERMISSIONS } from "@/lib/allPermissions";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { useState } from "react";
 
 type Resource = keyof typeof ALL_PERMISSIONS;
 type Action = (typeof ALL_PERMISSIONS)[Resource][number];
+type SortOrder = "none" | "asc" | "desc";
+
+
 
 export type Permission = {
   action: Action;
@@ -28,6 +33,14 @@ type Props = {
 const ACTIONS = ["create", "read", "update", "delete"] as const;
 
 export function RolePermissionEditor({ value, onChange }: Props) {
+  const [sortOrder, setSortOrder] = useState<SortOrder>("none");
+
+  const toggleSort = () => {
+    setSortOrder((prev) =>
+      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+    );
+  };
+
   const hasPermission = (action: Action, subject: Resource) =>
     value.some(
       (p) => p.action === action && p.subject === subject
@@ -56,6 +69,16 @@ export function RolePermissionEditor({ value, onChange }: Props) {
       // first letter capital
       .replace(/^./, (char) => char.toUpperCase());
   }
+  const modules = Object.keys(ALL_PERMISSIONS) as Resource[];
+
+  const sortedModules =
+    sortOrder === "none"
+      ? modules
+      : [...modules].sort((a, b) =>
+          sortOrder === "asc"
+            ? a.localeCompare(b)
+            : b.localeCompare(a)
+        );
 
 
   return (
@@ -64,8 +87,14 @@ export function RolePermissionEditor({ value, onChange }: Props) {
         {/* ---------- HEADER ---------- */}
         <TableHeader>
           <TableRow>
-            <TableHead className="w-64">
-              Module
+            <TableHead className="w-64 cursor-pointer select-none"
+            onClick={toggleSort}>
+              <div className="flex items-center gap-2">
+                Module
+                {sortOrder === "none" && <ArrowUpDown size={16} />}
+                {sortOrder === "asc" && <ArrowUp size={16} />}
+                {sortOrder === "desc" && <ArrowDown size={16} />}
+              </div>
             </TableHead>
             {ACTIONS.map((action) => (
               <TableHead
@@ -80,7 +109,7 @@ export function RolePermissionEditor({ value, onChange }: Props) {
 
         {/* ---------- BODY ---------- */}
         <TableBody>
-          {(Object.keys(ALL_PERMISSIONS) as Resource[]).map(
+          {sortedModules.map(
             (module) => {
               const allowedActions =
                 ALL_PERMISSIONS[module];

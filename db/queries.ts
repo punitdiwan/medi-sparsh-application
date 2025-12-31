@@ -21,7 +21,8 @@ import {
   modules,
   chargeTypes,
   chargeCategories,
-  organizationRole
+  organizationRole,
+  ipdCharges
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1518,4 +1519,106 @@ export async function getOrganizationRoleById(roleId: string, organizationId: st
     .limit(1);
 
   return result[0] || null;
+}
+
+// ============================================
+// IPD Charges Queries
+// ============================================
+
+export async function createIPDCharge(data: {
+  hospitalId: string;
+  ipdAdmissionId: string;
+  chargeTypeId: string;
+  chargeCategoryId: string;
+  chargeId: string;
+  qty: number;
+  standardCharge: number;
+  totalAmount: number;
+  discountPercent: number;
+  taxPercent: number;
+  note?: string;
+}) {
+  const result = await db
+    .insert(ipdCharges)
+    .values({
+      hospitalId: data.hospitalId,
+      ipdAdmissionId: data.ipdAdmissionId,
+      chargeTypeId: data.chargeTypeId,
+      chargeCategoryId: data.chargeCategoryId,
+      chargeId: data.chargeId,
+      qty: data.qty,
+      standardCharge: data.standardCharge.toString(),
+      totalAmount: data.totalAmount.toString(),
+      discountPercent: data.discountPercent.toString(),
+      taxPercent: data.taxPercent.toString(),
+      note: data.note,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function createIPDChargesBatch(data: {
+  hospitalId: string;
+  ipdAdmissionId: string;
+  charges: Array<{
+    chargeTypeId: string;
+    chargeCategoryId: string;
+    chargeId: string;
+    qty: number;
+    standardCharge: number;
+    totalAmount: number;
+    discountPercent: number;
+    taxPercent: number;
+    note?: string;
+  }>;
+}) {
+  const values = data.charges.map((charge) => ({
+    hospitalId: data.hospitalId,
+    ipdAdmissionId: data.ipdAdmissionId,
+    chargeTypeId: charge.chargeTypeId,
+    chargeCategoryId: charge.chargeCategoryId,
+    chargeId: charge.chargeId,
+    qty: charge.qty,
+    standardCharge: charge.standardCharge.toString(),
+    totalAmount: charge.totalAmount.toString(),
+    discountPercent: charge.discountPercent.toString(),
+    taxPercent: charge.taxPercent.toString(),
+    note: charge.note,
+  }));
+
+  const result = await db
+    .insert(ipdCharges)
+    .values(values)
+    .returning();
+
+  return result;
+}
+
+export async function getIPDChargesByAdmission(ipdAdmissionId: string, hospitalId: string) {
+  return await db
+    .select({
+      id: ipdCharges.id,
+      chargeName: charges.name,
+      chargeType: chargeTypes.name,
+      chargeCategory: chargeCategories.name,
+      qty: ipdCharges.qty,
+      standardCharge: ipdCharges.standardCharge,
+      totalAmount: ipdCharges.totalAmount,
+      discountPercent: ipdCharges.discountPercent,
+      taxPercent: ipdCharges.taxPercent,
+      note: ipdCharges.note,
+      createdAt: ipdCharges.createdAt,
+    })
+    .from(ipdCharges)
+    .leftJoin(charges, eq(ipdCharges.chargeId, charges.id))
+    .leftJoin(chargeTypes, eq(ipdCharges.chargeTypeId, chargeTypes.id))
+    .leftJoin(chargeCategories, eq(ipdCharges.chargeCategoryId, chargeCategories.id))
+    .where(
+      and(
+        eq(ipdCharges.ipdAdmissionId, ipdAdmissionId),
+        eq(ipdCharges.hospitalId, hospitalId)
+      )
+    )
+    .orderBy(desc(ipdCharges.createdAt));
 }

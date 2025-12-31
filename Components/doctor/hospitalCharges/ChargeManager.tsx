@@ -43,7 +43,7 @@ export default function ChargeManager() {
   const [editData, setEditData] = useState<any | null>(null);
 
   const ability = useAbility();
-  const rowsPerPage = 5;
+  const rowsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch Data

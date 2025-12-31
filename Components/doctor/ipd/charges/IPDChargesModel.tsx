@@ -10,6 +10,8 @@ import {
   Calendar,
   ClipboardEdit,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+import { createIPDCharges } from "@/lib/actions/ipdActions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,49 +34,45 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-/* -------------------- DUMMY DATA -------------------- */
-const dummyChargeTypes = [
-  { id: "type1", name: "Lab" },
-  { id: "type2", name: "Procedure" },
-];
-
-const dummyChargeCategories = [
-  {
-    id: "cat1",
-    name: "Blood Test",
-    chargeTypeId: "type1",
-    charges: [
-      { id: "c1", name: "CBC", standardCharge: 300, taxPercent: 5 },
-      { id: "c2", name: "Blood Sugar", standardCharge: 150, taxPercent: 5 },
-    ],
-  },
-  {
-    id: "cat2",
-    name: "X-Ray",
-    chargeTypeId: "type2",
-    charges: [
-      { id: "c3", name: "Chest X-Ray", standardCharge: 500, taxPercent: 12 },
-      { id: "c4", name: "Arm X-Ray", standardCharge: 400, taxPercent: 12 },
-    ],
-  },
-];
-
 /* -------------------- TYPES -------------------- */
+interface ChargeType {
+  id: string;
+  name: string;
+}
+
+interface ChargeCategory {
+  id: string;
+  name: string;
+  chargeTypeId: string;
+}
+
+interface Charge {
+  id: string;
+  name: string;
+  amount: number;
+  chargeCategoryId: string;
+  chargeTypeId: string;
+  taxPercent: number | null;
+}
+
 interface AddedCharge {
   date: string;
   chargeType: string;
   chargeCategory: string;
   chargeName: string;
+  chargeId: string;
+  chargeTypeId: string;
+  chargeCategoryId: string;
   note: string;
   qty: number;
   standardCharge: number;
   total: number;
   discount: number;
   tax: number;
+  discountPercent: number;
+  taxPercent: number;
   netAmount: number;
 }
-export interface ChargeOption { id: string; name: string; standardCharge: number; taxPercent: number; }
-export interface IPDChargeCategory { id: string; name: string; chargeTypeId: string; charges: ChargeOption[]; }
 
 /* -------------------- COMPONENT -------------------- */
 export default function AddIPDChargesFullScreen({
@@ -84,6 +82,14 @@ export default function AddIPDChargesFullScreen({
   open: boolean;
   onClose: () => void;
 }) {
+  const params = useParams();
+  const ipdAdmissionId = params?.id as string;
+
+  const [chargeTypes, setChargeTypes] = useState<ChargeType[]>([]);
+  const [chargeCategories, setChargeCategories] = useState<ChargeCategory[]>([]);
+  const [charges, setCharges] = useState<Charge[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [chargeTypeId, setChargeTypeId] = useState("");
   const [chargeCategoryId, setChargeCategoryId] = useState("");
   const [chargeId, setChargeId] = useState("");
@@ -93,14 +99,89 @@ export default function AddIPDChargesFullScreen({
   const [date, setDate] = useState("");
   const [items, setItems] = useState<AddedCharge[]>([]);
 
-  const categories = dummyChargeCategories.filter(
-    (c) => c.chargeTypeId === chargeTypeId
-  );
-  const charges =
-    categories.find((c) => c.id === chargeCategoryId)?.charges || [];
-  const selectedCharge = charges.find((c) => c.id === chargeId);
+  // Fetch charge types
+  useEffect(() => {
+    const fetchChargeTypes = async () => {
+      try {
+        const response = await fetch("/api/charge-types");
+        if (response.ok) {
+          const data = await response.json();
+          setChargeTypes(data);
+        } else {
+          toast.error("Failed to fetch charge types");
+        }
+      } catch (error) {
+        console.error("Error fetching charge types:", error);
+        toast.error("Failed to fetch charge types");
+      }
+    };
 
-  const standardCharge = selectedCharge?.standardCharge || 0;
+    if (open) {
+      fetchChargeTypes();
+    }
+  }, [open]);
+
+  // Fetch charge categories
+  useEffect(() => {
+    const fetchChargeCategories = async () => {
+      try {
+        const response = await fetch("/api/charge-categories");
+        if (response.ok) {
+          const data = await response.json();
+          setChargeCategories(data);
+        } else {
+          toast.error("Failed to fetch charge categories");
+        }
+      } catch (error) {
+        console.error("Error fetching charge categories:", error);
+        toast.error("Failed to fetch charge categories");
+      }
+    };
+
+    if (open) {
+      fetchChargeCategories();
+    }
+  }, [open]);
+
+  // Fetch charges
+  useEffect(() => {
+    const fetchCharges = async () => {
+      try {
+        const response = await fetch("/api/charges");
+        if (response.ok) {
+          const data = await response.json();
+          setCharges(data);
+        } else {
+          toast.error("Failed to fetch charges");
+        }
+      } catch (error) {
+        console.error("Error fetching charges:", error);
+        toast.error("Failed to fetch charges");
+      }
+    };
+
+    if (open) {
+      fetchCharges();
+    }
+  }, [open]);
+
+  // Filter categories based on selected charge type
+  const filteredCategories = useMemo(() => {
+    if (!chargeTypeId) return [];
+    return chargeCategories.filter((c) => c.chargeTypeId === chargeTypeId);
+  }, [chargeCategories, chargeTypeId]);
+
+  // Filter charges based on selected charge category
+  const filteredCharges = useMemo(() => {
+    if (!chargeCategoryId) return [];
+    return charges.filter((c) => c.chargeCategoryId === chargeCategoryId);
+  }, [charges, chargeCategoryId]);
+
+  const selectedCharge = filteredCharges.find((c) => c.id === chargeId);
+  const selectedChargeType = chargeTypes.find((t) => t.id === chargeTypeId);
+  const selectedChargeCategory = filteredCategories.find((c) => c.id === chargeCategoryId);
+
+  const standardCharge = selectedCharge?.amount || 0;
   const taxPercent = selectedCharge?.taxPercent || 0;
   const total = standardCharge * qty;
   const discountAmount = (total * discountPercent) / 100;
@@ -112,6 +193,7 @@ export default function AddIPDChargesFullScreen({
     [items]
   );
 
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       setChargeTypeId("");
@@ -125,37 +207,112 @@ export default function AddIPDChargesFullScreen({
     }
   }, [open]);
 
+  // Reset dependent dropdowns when parent changes
+  useEffect(() => {
+    if (chargeTypeId) {
+      setChargeCategoryId("");
+      setChargeId("");
+    }
+  }, [chargeTypeId]);
+
+  useEffect(() => {
+    if (chargeCategoryId) {
+      setChargeId("");
+    }
+  }, [chargeCategoryId]);
+
   /* ---------- ADD ROW WITH VALIDATION ---------- */
-const handleAdd = () => {
-  if (!chargeTypeId) { toast.error("Please select Charge Type"); return; }
-  if (!chargeCategoryId) { toast.error("Please select Charge Category"); return; }
-  if (!chargeId) { toast.error("Please select Charge Name"); return; }
-  if (!date) { toast.error("Please select Date"); return; }
+  const handleAdd = () => {
+    if (!chargeTypeId) {
+      toast.error("Please select Charge Type");
+      return;
+    }
+    if (!chargeCategoryId) {
+      toast.error("Please select Charge Category");
+      return;
+    }
+    if (!chargeId) {
+      toast.error("Please select Charge Name");
+      return;
+    }
+    if (!date) {
+      toast.error("Please select Date");
+      return;
+    }
 
-  setItems((prev) => [
-    ...prev,
-    {
-      date,
-      chargeType: dummyChargeTypes.find((t) => t.id === chargeTypeId)?.name || "",
-      chargeCategory: categories.find((c) => c.id === chargeCategoryId)?.name || "",
-      chargeName: selectedCharge?.name || "",
-      note,
-      qty,
-      standardCharge,
-      total,
-      discount: discountAmount,
-      tax: taxAmount,
-      netAmount,
-    },
-  ]);
+    setItems((prev) => [
+      ...prev,
+      {
+        date,
+        chargeType: selectedChargeType?.name || "",
+        chargeCategory: selectedChargeCategory?.name || "",
+        chargeName: selectedCharge?.name || "",
+        chargeId: selectedCharge?.id || "",
+        chargeTypeId: chargeTypeId,
+        chargeCategoryId: chargeCategoryId,
+        note,
+        qty,
+        standardCharge,
+        total,
+        discount: discountAmount,
+        tax: taxAmount,
+        discountPercent,
+        taxPercent,
+        netAmount,
+      },
+    ]);
 
-  // Reset form fields except date
-  setQty(1);
-  setDiscountPercent(0);
-  setNote("");
-  setChargeId("");
-  setDate("");
-};
+    // Reset form fields except date, charge type, and charge category
+    setQty(1);
+    setDiscountPercent(0);
+    setNote("");
+    setChargeId("");
+  };
+
+  const handleSubmit = async () => {
+    if (!items.length) {
+      toast.error("Please add at least one charge");
+      return;
+    }
+
+    if (!ipdAdmissionId) {
+      toast.error("IPD Admission ID is missing");
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      ipdAdmissionId,
+      charges: items.map((i) => ({
+        chargeTypeId: i.chargeTypeId,
+        chargeCategoryId: i.chargeCategoryId,
+        chargeId: i.chargeId,
+        qty: i.qty,
+        standardCharge: i.standardCharge,
+        totalAmount: i.total, // total before discount (standardCharge * qty)
+        discountPercent: i.discountPercent, // discount percentage (0-100)
+        taxPercent: i.taxPercent, // tax percentage (0-100)
+        note: i.note || null,
+      })),
+    };
+
+    try {
+      const result = await createIPDCharges(payload);
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast.success("Charges added successfully");
+      onClose();
+    } catch (error: any) {
+      console.error("Error saving IPD charges:", error);
+      toast.error(error.message || "Failed to save charges");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   if (!open) return null;
@@ -168,7 +325,13 @@ const handleAdd = () => {
         <div className="flex items-center justify-between px-4 py-3 bg-dialog-header border-b border-dialog sticky top-0 z-10">
           <div className="flex items-center gap-2 text-white">
             <Receipt className="bg-dialog-header text-dialog-icon" />
-            <h2 className="text-lg sm:text-xl font-semibold text-header">Add Charges</h2>
+            <div className="flex flex-col">
+              <h2 className="text-lg sm:text-xl font-semibold text-header">Add Charges</h2>
+              <p className="text-xs text-muted-foreground">
+                Below charges will be added to the patient’s IPD bill after clicking
+                <span className="font-medium text-primary"> Final Save</span>.
+              </p>
+            </div>
           </div>
           <Button variant="outline" size="icon" onClick={onClose} color="red">✕</Button>
         </div>
@@ -181,23 +344,74 @@ const handleAdd = () => {
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 p-4">
               <div className="flex flex-col gap-2">
                 <Label>Charge Type *</Label>
-                <Select value={chargeTypeId} onValueChange={setChargeTypeId}>
-                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Type" /></SelectTrigger>
-                  <SelectContent className="select-dialog-content">{dummyChargeTypes.map((t) => <SelectItem key={t.id} value={t.id} className="select-dialog-item">{t.name}</SelectItem>)}</SelectContent>
+                <Select
+                  value={chargeTypeId}
+                  onValueChange={(value) => {
+                    setChargeTypeId(value);
+                    setChargeCategoryId("");
+                    setChargeId("");
+                  }}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent className="select-dialog-content">
+                    {chargeTypes.map((t) => (
+                      <SelectItem key={t.id} value={t.id} className="select-dialog-item">
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Charge Category *</Label>
-                <Select value={chargeCategoryId} onValueChange={setChargeCategoryId} disabled={!chargeTypeId}>
-                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Category" /></SelectTrigger>
-                  <SelectContent className="select-dialog-content">{categories.map((c) => <SelectItem key={c.id} value={c.id} className="select-dialog-item">{c.name}</SelectItem>)}</SelectContent>
+                <Select
+                  value={chargeCategoryId}
+                  onValueChange={(value) => {
+                    setChargeCategoryId(value);
+                    setChargeId("");
+                  }}
+                  disabled={!chargeTypeId || loading}
+                >
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
+                    <SelectValue
+                      placeholder={
+                        chargeTypeId ? "Select Category" : "Select Charge Type First"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="select-dialog-content">
+                    {filteredCategories.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="select-dialog-item">
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Charge Name *</Label>
-                <Select value={chargeId} onValueChange={setChargeId} disabled={!chargeCategoryId}>
-                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"><SelectValue placeholder="Select Charge" /></SelectTrigger>
-                  <SelectContent className="select-dialog-content">{charges.map((c) => <SelectItem key={c.id} value={c.id} className="select-dialog-item">{c.name}</SelectItem>)}</SelectContent>
+                <Select
+                  value={chargeId}
+                  onValueChange={setChargeId}
+                  disabled={!chargeCategoryId || loading}
+                >
+                  <SelectTrigger className="flex-1 w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
+                    <SelectValue
+                      placeholder={
+                        chargeCategoryId ? "Select Charge" : "Select Charge Category First"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="select-dialog-content">
+                    {filteredCharges.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="select-dialog-item">
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
@@ -239,7 +453,17 @@ const handleAdd = () => {
               </CardContent>
             </Card>
           </div>
-
+        <div className="space-y-2">
+  
+        {/* TABLE INFO */}
+          <div className="rounded-lg border border-dialog-input bg-dialog-surface p-3">
+            <h3 className="text-sm font-medium text-foreground">
+              Added Charges Preview
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              You can remove any charge before saving.
+            </p>
+          </div>
           {/* TABLE */}
           <div className="overflow-x-auto rounded-lg border">
             <Table>
@@ -281,7 +505,7 @@ const handleAdd = () => {
               </TableBody>
             </Table>
           </div>
-
+        </div>
         </div>
 
         {/* FOOTER */}
@@ -290,7 +514,14 @@ const handleAdd = () => {
             <IndianRupee className="h-5 w-5" />
             {grandTotal.toFixed(2)}
           </div>
-          <Button size="lg" className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">Final Save</Button>
+          <Button 
+            size="lg" 
+            onClick={handleSubmit}
+            disabled={loading || items.length === 0}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+          >
+            {loading ? "Saving..." : "Final Save"}
+          </Button>
         </div>
 
       </div>

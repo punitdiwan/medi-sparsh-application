@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -17,43 +18,102 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PlusCircle, HeartPulse, Pencil, Trash2 } from "lucide-react";
+import VitalsModal from "./vitalsModel";
+import { deleteIPDVital, getIPDVitals } from "@/lib/actions/ipdVitals";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { buildVitalsMatrix } from "@/lib/utils/vitals-table";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { PlusCircle, HeartPulse, Pencil } from "lucide-react";
-import VitalsModal from "./vitalsModel";
 
 /* ---------------- Types ---------------- */
-interface Vital {
+export interface VitalEntry {
+  id?: string;
+  vitalId: string;
   vitalName: string;
   vitalValue: string;
+  unit: string;
+  range: string;
   date: string;
+  time: string;
 }
 
-/* ---------------- Page ---------------- */
+export interface IPDVitalRecord {
+  id: string;
+  vitals: VitalEntry[];
+  createdAt: Date;
+}
+
 export default function VitalsPage() {
+  const params = useParams();
+  const id = params.id as string;
+
   const [open, setOpen] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editData, setEditData] = useState<any[] | null>(null);
   const [search, setSearch] = useState("");
+  const [records, setRecords] = useState<IPDVitalRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [vitalsData, setVitalsData] = useState<Vital[]>([]);
+  const { headers, rows } = useMemo(() => buildVitalsMatrix(records), [records]);
 
-  const vitalsList = ["BP", "Pulse", "Temp", "SpO₂", "Respiration"];
+  const fetchVitals = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await getIPDVitals(id);
+      if (result.data) setRecords(result.data as IPDVitalRecord[]);
+      else if (result.error) toast.error(result.error);
+    } catch (err) {
+      toast.error("Failed to load vitals");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
-  /* ---------------- Filter ---------------- */
-  const filteredVitals = useMemo(() => {
-    if (!search) return vitalsData;
-    return vitalsData.filter(
-      (v) =>
-        v.vitalName.toLowerCase().includes(search.toLowerCase()) ||
-        v.vitalValue.toLowerCase().includes(search.toLowerCase()) ||
-        v.date.includes(search)
-    );
-  }, [vitalsData, search]);
+  useEffect(() => {
+    fetchVitals();
+  }, [fetchVitals]);
 
+  const handleEdit = (vital: any) => {
+    const headerInfo = headers.find(([name]) => name === vital.vitalName)?.[1] || {};
+    setEditData([{
+      id: vital.id,
+      vitalId: vital.vitalId,
+      vitalName: vital.vitalName,
+      vitalValue: vital.value,
+      unit: headerInfo.unit || "",
+      range: headerInfo.range || "",
+      date: vital.date,
+      time: vital.time,
+    }]);
+
+
+    setOpen(true);
+  };
+
+  const handleDelete = async (vital: any) => {
+    if (!confirm("Are you sure you want to delete this vital?")) return;
+    try {
+      await deleteIPDVital(id, vital.id);
+      toast.success("Vital deleted");
+      fetchVitals();
+    } catch {
+      toast.error("Failed to delete vital");
+    }
+  };
+
+  function formatTime(time: string) {
+    const [h, m] = time.split(":").map(Number);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  }
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
@@ -63,7 +123,6 @@ export default function VitalsPage() {
             <HeartPulse className="bg-dialog-header text-dialog-icon" />
             Patient Vitals
           </CardTitle>
-
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
               placeholder="Search by vital / value / date"
@@ -71,12 +130,8 @@ export default function VitalsPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
-
             <Button
-              onClick={() => {
-                setEditIndex(null);
-                setOpen(true);
-              }}
+              onClick={() => setOpen(true)}
               className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
@@ -92,77 +147,103 @@ export default function VitalsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-dialog-icon">Vital Name</TableHead>
-                <TableHead className="text-dialog-icon">Value</TableHead>
-                <TableHead className="text-dialog-icon">Date</TableHead>
-                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
+                <TableHead className="w-32">Date</TableHead>
+                {headers.map(([name, meta]) => (
+                  <TableHead key={name} className="text-center min-w-[160px]">
+                    <div className="font-semibold">{name}</div>
+                    {meta.range && (
+                      <div className="text-[11px] text-muted-foreground">
+                        ({meta.range} {meta.unit})
+                      </div>
+                    )}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
-
             <TableBody>
-              {filteredVitals.length ? (
-                filteredVitals.map((v, idx) => (
-                  <TableRow key={idx} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                    <TableCell className="font-medium text-dialog-muted">
-                      {v.vitalName}
-                    </TableCell>
-                    <TableCell className="text-dialog-muted">{v.vitalValue}</TableCell>
-                    <TableCell className="text-dialog-muted">{v.date}</TableCell>
-                    <TableCell className="text-center">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditIndex(idx);
-                                setOpen(true);
-                              }}
+              {Object.entries(rows).map(([date, vitals]) => (
+                <TableRow key={date} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
+                  <TableCell className="font-medium">{date}</TableCell>
+                  {headers.map(([name]) => (
+                    <TableCell key={name} className="text-center align-top">
+                      {vitals[name] ? (
+                        <div className="flex flex-col gap-1">
+                          {vitals[name].map((v: any) => (
+                            <div
+                              key={v.id} 
+                              className="ml-4 flex justify-center gap-2 items-center group"
                             >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit Vital</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                              <span>
+                                {v.value} ({formatTime(v.time)})
+                              </span>
+
+                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() =>
+                                          handleEdit({
+                                            ...v,
+                                            date,
+                                            vitalName: name,
+                                          })
+                                        }
+                                        className="text-blue-600 hover:text-blue-800"
+                                      >
+                                        <Pencil size={14} />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit Vital</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() =>
+                                          handleDelete({
+                                            ...v,
+                                            date,
+                                            vitalName: name,
+                                          })
+                                        }
+                                        className="text-red-600 hover:text-red-800"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete Vital</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+
                     </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No vitals recorded
-                  </TableCell>
+                  ))}
                 </TableRow>
-              )}
+              ))}
+
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {/* MODAL */}
-      {open && (
-        <VitalsModal
-          open={open}
-          onClose={() => setOpen(false)}
-          vitalsList={vitalsList}
-          initialData={editIndex !== null ? [vitalsData[editIndex]] : []}
-          onSubmit={(data) => {
-            if (editIndex !== null) {
-              const updated = [...vitalsData];
-              updated[editIndex] = data[0];
-              setVitalsData(updated);
-            } else {
-              setVitalsData((prev) => [...prev, ...data]);
-            }
-            setOpen(false);
-          }}
-        />
-      )}
+
+      <VitalsModal
+        open={open}
+        onClose={() => { setOpen(false); setEditData(null); }}
+        ipdAdmissionId={id}
+        onSuccess={fetchVitals}
+        initialData={editData || undefined}
+      />
+
     </div>
   );
 }
