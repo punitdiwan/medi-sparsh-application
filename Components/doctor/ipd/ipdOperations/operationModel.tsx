@@ -262,7 +262,7 @@ export function IPDOperationDialog({ open, ipdAdmissionId, onClose, onSubmit, de
               <MultiSelectDropdown
                 options={doctors.map((d) => ({
                   label: d.name,
-                  value: d.name, // ya d.id (recommended)
+                  value: d.name, 
                 }))}
                 value={form.watch("doctor") || []}
                 onChange={(val) => form.setValue("doctor", val)}

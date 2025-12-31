@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { HeartPulse, PlusCircle, X, Info } from "lucide-react";
-import { getVitalDefinitions, addIPDVitals } from "@/lib/actions/ipdVitals";
+import { getVitalDefinitions, addIPDVitals, updateIPDVital } from "@/lib/actions/ipdVitals";
 
 /* ---------------- Types ---------------- */
 interface VitalDefinition {
@@ -32,12 +32,14 @@ interface VitalDefinition {
 }
 
 interface VitalEntry {
+  id?:string;
   vitalId: string;
   vitalName: string;
   vitalValue: string;
   unit: string;
   range: string;
   date: string;
+  time: string;
 }
 
 interface VitalsModalProps {
@@ -59,26 +61,48 @@ export default function VitalsModal({
   const [definitions, setDefinitions] = useState<VitalDefinition[]>([]);
   const [entries, setEntries] = useState<VitalEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const now = new Date();
 
   useEffect(() => {
-    if (open) {
-      fetchDefinitions();
-      setEntries(
-        initialData && initialData.length > 0
-          ? initialData
-          : [
-            {
-              vitalId: "",
-              vitalName: "",
-              vitalValue: "",
-              unit: "",
-              range: "",
-              date: new Date().toISOString().split("T")[0],
-            },
-          ]
-      );
+  fetchDefinitions();
+  if (open) {
+    if (initialData && initialData.length > 0) {
+      // EDIT mode → sirf pehla record show karo
+      const item = initialData[0];
+      console.log("Inital data on Edit mode",item)
+      setEntries([
+        {
+          id: item.id ?? "",
+          vitalId: item.vitalId ?? "",
+          vitalName: item.vitalName ?? "",
+          vitalValue: item.vitalValue ?? "",
+          unit: item.unit ?? "",
+          range: item.range ?? "",
+          date: item.date ?? "",
+          time: item.time ?? "",
+        },
+      ]);
+    } else {
+      // ADD mode → empty row
+      const now = new Date();
+      setEntries([
+        {
+          vitalId: "",
+          vitalName: "",
+          vitalValue: "",
+          unit: "",
+          range: "",
+          date: now.toISOString().split("T")[0],
+          time: now.toTimeString().slice(0, 5),
+        },
+      ]);
     }
-  }, [open, initialData]);
+  } else {
+    // Modal closed → reset entries
+    setEntries([]);
+  }
+}, [open, initialData]);
+
 
   const fetchDefinitions = async () => {
     const result = await getVitalDefinitions();
@@ -115,7 +139,8 @@ export default function VitalsModal({
         vitalValue: "",
         unit: "",
         range: "",
-        date: new Date().toISOString().split("T")[0],
+        date: now.toISOString().split("T")[0],
+        time: now.toTimeString().slice(0, 5),
       },
     ]);
   };
@@ -126,10 +151,11 @@ export default function VitalsModal({
 
   const validateEntries = () => {
     for (const entry of entries) {
-      if (!entry.vitalId || !entry.vitalValue || !entry.date) {
+      if (!entry.vitalId || !entry.vitalValue || !entry.date || !entry.time) {
         toast.error("Please fill all required fields");
         return false;
       }
+
 
       // Range validation (if numeric)
       const def = definitions.find((d) => d.id === entry.vitalId);
@@ -143,6 +169,7 @@ export default function VitalsModal({
             toast.warning(
               `${entry.vitalName} value (${val}) is outside the reference range (${from} - ${to})`
             );
+            return false;
           }
         }
       }
@@ -151,11 +178,21 @@ export default function VitalsModal({
   };
 
   const handleSave = async () => {
-    if (!validateEntries()) return;
+  if (!validateEntries()) return;
+  setLoading(true);
 
-    setLoading(true);
-    try {
-      const result = await addIPDVitals(ipdAdmissionId, entries);
+  try {
+      let result;
+      if (initialData && initialData.length > 0) {
+        // EDIT mode
+        const entry = entries[0];
+  
+        result = await updateIPDVital( entry, ipdAdmissionId,);
+      } else {
+        // ADD mode → multiple entries
+        result = await addIPDVitals(ipdAdmissionId, entries);
+      }
+
       if (result.data) {
         toast.success("Vitals saved successfully");
         onSuccess();
@@ -171,8 +208,27 @@ export default function VitalsModal({
     }
   };
 
+
+  const handleClose = () => {
+  // Reset entries for Add mode
+  const now = new Date();
+  setEntries([
+    {
+      vitalId: "",
+      vitalName: "",
+      vitalValue: "",
+      unit: "",
+      range: "",
+      date: now.toISOString().split("T")[0],
+      time: now.toTimeString().slice(0, 5),
+    },
+  ]);
+  onClose(); // Parent ko bhi call karo
+};
+
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-3xl rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg">
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
@@ -191,7 +247,7 @@ export default function VitalsModal({
           {entries.map((v, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start rounded-lg border p-4 bg-muted/20 border-dialog-input"
+              className="flex flex-warp gap-4 items-start rounded-lg border p-4 bg-muted/20 border-dialog-input"
             >
               <div className="sm:col-span-4 space-y-2">
                 <Label className="text-sm font-medium">
@@ -200,10 +256,13 @@ export default function VitalsModal({
                 <Select
                   value={v.vitalId}
                   onValueChange={(val) => handleChange(index, "vitalId", val)}
+                  disabled={!!initialData?.length}
                 >
                   <SelectTrigger className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
-                    <SelectValue placeholder="Select Vital" />
-                  </SelectTrigger>
+  <SelectValue>
+    {definitions.find(d => d.id === v.vitalId)?.name || "Select Vital"}
+  </SelectValue>
+</SelectTrigger>
                   <SelectContent className="select-dialog-content">
                     {definitions.map((def) => (
                       <SelectItem
@@ -217,7 +276,7 @@ export default function VitalsModal({
                   </SelectContent>
                 </Select>
                 {v.range && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-blue-500 font-medium bg-blue-50/50 p-1.5 rounded border border-blue-100/50">
+                  <div className="flex items-center gap-1.5 text-[11px] bg-dialog-primary text-dialog-btn font-medium p-1.5 rounded border border-blue-100/50">
                     <Info className="h-3 w-3" />
                     Range: {v.range} {v.unit}
                   </div>
@@ -235,17 +294,12 @@ export default function VitalsModal({
                     onChange={(e) =>
                       handleChange(index, "vitalValue", e.target.value)
                     }
-                    className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary pr-12"
+                    className="max-w-[150px] bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary pr-12"
                   />
-                  {v.unit && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium">
-                      {v.unit}
-                    </span>
-                  )}
                 </div>
               </div>
 
-              <div className="sm:col-span-3 space-y-2">
+              <div className="sm:col-span-2 space-y-2">
                 <Label className="text-sm font-medium">
                   Date <span className="text-destructive">*</span>
                 </Label>
@@ -253,7 +307,19 @@ export default function VitalsModal({
                   type="date"
                   value={v.date}
                   onChange={(e) => handleChange(index, "date", e.target.value)}
-                  className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
+                  className="bg-dialog-input border-dialog-input"
+                />
+              </div>
+
+              <div className="sm:col-span-2 space-y-2">
+                <Label className="text-sm font-medium">
+                  Time <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="time"
+                  value={v.time}
+                  onChange={(e) => handleChange(index, "time", e.target.value)}
+                  className="bg-dialog-input border-dialog-input"
                 />
               </div>
 
@@ -284,7 +350,7 @@ export default function VitalsModal({
         <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             className="text-dialog-muted"
           >
             Cancel
