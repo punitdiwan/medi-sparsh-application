@@ -162,7 +162,7 @@ export default function VitalsPage() {
             </TableHeader>
             <TableBody>
               {Object.entries(rows).map(([date, vitals]) => (
-                <TableRow key={date}>
+                <TableRow key={date} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                   <TableCell className="font-medium">{date}</TableCell>
                   {headers.map(([name]) => (
                     <TableCell key={name} className="text-center align-top">
@@ -174,7 +174,7 @@ export default function VitalsPage() {
                               className="ml-4 flex justify-center gap-2 items-center group"
                             >
                               <span>
-                                {v.vitalValue} ({formatTime(v.time)})
+                                {v.value} ({formatTime(v.time)})
                               </span>
 
                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
