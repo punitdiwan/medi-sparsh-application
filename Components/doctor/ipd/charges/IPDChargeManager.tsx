@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,65 +9,55 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt } from "lucide-react";
 import AddIPDChargesFullScreen from "./IPDChargesModel";
+import { getIPDCharges } from "@/lib/actions/ipdActions";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface ChargeRecord {
   id: string;
-  date: string;
-  chargeName: string;
-  chargeType: string;
-  chargeCategory: string;
-  quantity: number;
-  standardCharges: number;
-  discount: number;
-  tax: number;
-  amount: number;
-  createdBy: string;
+  chargeName: string | null;
+  chargeType: string | null;
+  chargeCategory: string | null;
+  qty: number;
+  standardCharge: string;
+  totalAmount: string;
+  discountPercent: string;
+  taxPercent: string;
+  note: string | null;
+  createdAt: Date;
 }
 
 export default function IPDChargesManagerPage() {
-  const [charges, setCharges] = useState<ChargeRecord[]>([
-    {
-      id: "CHG-001",
-      date: "2025-12-24",
-      chargeName: "MRI Scan",
-      chargeType: "Radiology",
-      chargeCategory: "Imaging",
-      quantity: 1,
-      standardCharges: 5000,
-      discount: 500,
-      tax: 225,
-      amount: 4725,
-      createdBy: "Dr. Smith",
-    },
-    {
-      id: "CHG-002",
-      date: "2025-12-23",
-      chargeName: "Blood Test",
-      chargeType: "Lab",
-      chargeCategory: "Pathology",
-      quantity: 3,
-      standardCharges: 300,
-      discount: 30,
-      tax: 12.6,
-      amount: 882.6,
-      createdBy: "Nurse Jane",
-    },
-    {
-      id: "CHG-003",
-      date: "2025-12-22",
-      chargeName: "X-Ray",
-      chargeType: "Radiology",
-      chargeCategory: "Imaging",
-      quantity: 2,
-      standardCharges: 800,
-      discount: 80,
-      tax: 36,
-      amount: 1556,
-      createdBy: "Dr. John",
-    },
-  ]);
+  const params = useParams();
+  const ipdAdmissionId = params?.id as string;
+  
+  const [charges, setCharges] = useState<ChargeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [openAdd, setOpenAdd] = useState(false);
+
+  useEffect(() => {
+    const fetchCharges = async () => {
+      if (!ipdAdmissionId) return;
+      
+      setLoading(true);
+      try {
+        const result = await getIPDCharges(ipdAdmissionId);
+        if (result.error) {
+          toast.error(result.error);
+        } else if (result.data) {
+          setCharges(result.data as ChargeRecord[]);
+        }
+      } catch (error) {
+        console.error("Error fetching IPD charges:", error);
+        toast.error("Failed to fetch charges");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCharges();
+  }, [ipdAdmissionId]);
 
   // Filter charges based on search term
   const filtered = useMemo(() => {
@@ -75,11 +66,30 @@ export default function IPDChargesManagerPage() {
     return charges.filter(
       (c) =>
         c.id.toLowerCase().includes(term) ||
-        c.chargeName.toLowerCase().includes(term) ||
-        c.chargeType.toLowerCase().includes(term) ||
-        c.chargeCategory.toLowerCase().includes(term)
+        c.chargeName?.toLowerCase().includes(term) ||
+        c.chargeType?.toLowerCase().includes(term) ||
+        c.chargeCategory?.toLowerCase().includes(term)
     );
   }, [charges, search]);
+
+  const handleRefresh = async () => {
+    if (!ipdAdmissionId) return;
+    
+    setLoading(true);
+    try {
+      const result = await getIPDCharges(ipdAdmissionId);
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        setCharges(result.data as ChargeRecord[]);
+      }
+    } catch (error) {
+      console.error("Error fetching IPD charges:", error);
+      toast.error("Failed to refresh charges");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (charge: ChargeRecord) => {
     alert(`Edit charge ${charge.id}`);
@@ -139,18 +149,39 @@ export default function IPDChargesManagerPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.length ? (
-                filtered.map(c => (
-                  <TableRow key={c.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                    <TableCell className=" text-dialog-muted">{c.date}</TableCell>
-                    <TableCell className="text-dialog-muted">{c.chargeName}</TableCell>
-                    <TableCell className="text-dialog-muted">{c.chargeType}</TableCell>
-                    <TableCell className="text-dialog-muted">{c.chargeCategory}</TableCell>
-                    <TableCell className="text-dialog-muted">{c.quantity}</TableCell>
-                    <TableCell className="text-dialog-muted">₹ {c.standardCharges.toFixed(2)}</TableCell>
-                    <TableCell className="text-dialog-muted">₹ {c.discount.toFixed(2)}</TableCell>
-                    <TableCell className="text-dialog-muted">₹ {c.tax.toFixed(2)}</TableCell>
-                    <TableCell className="font-semibold text-green-600">₹ {c.amount.toFixed(2)}</TableCell>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-6 text-gray-400">
+                    Loading charges...
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length ? (
+                filtered.map(c => {
+                  const totalAmount = parseFloat(c.totalAmount || "0");
+                  const discountPercent = parseFloat(c.discountPercent || "0");
+                  const taxPercent = parseFloat(c.taxPercent || "0");
+                  const standardCharge = parseFloat(c.standardCharge || "0");
+                  
+                  // Calculate discount amount
+                  const discountAmount = (totalAmount * discountPercent) / 100;
+                  // Calculate tax amount (on amount after discount)
+                  const taxAmount = ((totalAmount - discountAmount) * taxPercent) / 100;
+                  // Calculate net amount
+                  const netAmount = totalAmount - discountAmount + taxAmount;
+                  
+                  return (
+                    <TableRow key={c.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
+                      <TableCell className="text-dialog-muted">
+                        {c.createdAt ? format(new Date(c.createdAt), "yyyy-MM-dd") : "-"}
+                      </TableCell>
+                      <TableCell className="text-dialog-muted">{c.chargeName || "-"}</TableCell>
+                      <TableCell className="text-dialog-muted">{c.chargeType || "-"}</TableCell>
+                      <TableCell className="text-dialog-muted">{c.chargeCategory || "-"}</TableCell>
+                      <TableCell className="text-dialog-muted">{c.qty}</TableCell>
+                      <TableCell className="text-dialog-muted">₹ {standardCharge.toFixed(2)}</TableCell>
+                      <TableCell className="text-dialog-muted">₹ {discountAmount.toFixed(2)}</TableCell>
+                      <TableCell className="text-dialog-muted">₹ {taxAmount.toFixed(2)}</TableCell>
+                      <TableCell className="font-semibold text-green-600">₹ {netAmount.toFixed(2)}</TableCell>
                     <TableCell className="text-center">
                       <TooltipProvider>
                         <div className="flex gap-2 justify-end">
@@ -184,7 +215,8 @@ export default function IPDChargesManagerPage() {
                       </TooltipProvider>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-6 text-gray-400">
@@ -200,7 +232,10 @@ export default function IPDChargesManagerPage() {
       {/* ADD CHARGES FULLSCREEN */}
       <AddIPDChargesFullScreen
         open={openAdd}
-        onClose={() => setOpenAdd(false)}
+        onClose={() => {
+          setOpenAdd(false);
+          handleRefresh();
+        }}
       />
     </div>
   );
