@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt,MoreVertical } from "lucide-react";
+import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt, MoreVertical } from "lucide-react";
 import AddIPDChargesFullScreen from "./IPDChargesModel";
-import { getIPDCharges } from "@/lib/actions/ipdActions";
+import { getIPDCharges, deleteIPDCharge } from "@/lib/actions/ipdActions";
+import { DeleteConfirmationDialog } from "../../medicine/deleteConfirmationDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
@@ -46,11 +47,15 @@ export default function IPDChargesManagerPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedCharge, setSelectedCharge] = useState<ChargeRecord | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [chargeToDelete, setChargeToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCharges = async () => {
       if (!ipdAdmissionId) return;
-      
+
       setLoading(true);
       try {
         const result = await getIPDCharges(ipdAdmissionId);
@@ -111,7 +116,7 @@ export default function IPDChargesManagerPage() {
 
   const handleRefresh = async () => {
     if (!ipdAdmissionId) return;
-    
+
     setLoading(true);
     try {
       const result = await getIPDCharges(ipdAdmissionId);
@@ -129,12 +134,34 @@ export default function IPDChargesManagerPage() {
   };
 
   const handleEdit = (charge: ChargeRecord) => {
-    alert(`Edit charge ${charge.id}`);
+    setSelectedCharge(charge);
+    setOpenEdit(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this charge?")) {
-      setCharges((prev) => prev.filter((c) => c.id !== id));
+    setChargeToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!chargeToDelete) return;
+
+    setLoading(true);
+    try {
+      const result = await deleteIPDCharge(chargeToDelete, ipdAdmissionId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Charge deleted successfully");
+        handleRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting charge:", error);
+      toast.error("Failed to delete charge");
+    } finally {
+      setLoading(false);
+      setDeleteDialogOpen(false);
+      setChargeToDelete(null);
     }
   };
 
@@ -147,115 +174,115 @@ export default function IPDChargesManagerPage() {
     onDelete: (id: string) => void,
     onPrint: (c: ChargeRecord) => void
   ): ColumnDef<ChargeRecord>[] => [
-    {
-      accessorKey: "createdAt",
-      header: "Date",
-      cell: ({ row }) =>
-        row.original.createdAt
-          ? format(new Date(row.original.createdAt), "yyyy-MM-dd")
-          : "-",
-    },
-    {
-      accessorKey: "chargeName",
-      header: "Charge Name",
-      cell: ({ row }) => row.original.chargeName || "-",
-    },
-    {
-      accessorKey: "chargeType",
-      header: "Charge Type",
-      cell: ({ row }) => row.original.chargeType || "-",
-    },
-    {
-      accessorKey: "chargeCategory",
-      header: "Charge Category",
-      cell: ({ row }) => row.original.chargeCategory || "-",
-    },
-    {
-      accessorKey: "qty",
-      header: "Qty",
-    },
-    {
-      accessorKey: "standardCharge",
-      header: "Standard",
-      cell: ({ row }) => `₹ ${Number(row.original.standardCharge || 0).toFixed(2)}`,
-    },
-    {
-      id: "discount",
-      header: "Discount",
-      cell: ({ row }) => {
-        const total = Number(row.original.totalAmount || 0);
-        const discount = Number(row.original.discountPercent || 0);
-        return `₹ ${((total * discount) / 100).toFixed(2)}`;
+      {
+        accessorKey: "createdAt",
+        header: "Date",
+        cell: ({ row }) =>
+          row.original.createdAt
+            ? format(new Date(row.original.createdAt), "yyyy-MM-dd")
+            : "-",
       },
-    },
-    {
-      id: "tax",
-      header: "Tax",
-      cell: ({ row }) => {
-        const total = Number(row.original.totalAmount || 0);
-        const discount = Number(row.original.discountPercent || 0);
-        const tax = Number(row.original.taxPercent || 0);
-        const afterDiscount = total - (total * discount) / 100;
-        return `₹ ${((afterDiscount * tax) / 100).toFixed(2)}`;
+      {
+        accessorKey: "chargeName",
+        header: "Charge Name",
+        cell: ({ row }) => row.original.chargeName || "-",
       },
-    },
-    {
-      id: "netAmount",
-      header: "Amount",
-      cell: ({ row }) => {
-        const total = Number(row.original.totalAmount || 0);
-        const discount = Number(row.original.discountPercent || 0);
-        const tax = Number(row.original.taxPercent || 0);
-
-        const discountAmount = (total * discount) / 100;
-        const taxAmount = ((total - discountAmount) * tax) / 100;
-        const net = total - discountAmount + taxAmount;
-
-        return <span className="font-semibold text-green-600">₹ {net.toFixed(2)}</span>;
+      {
+        accessorKey: "chargeType",
+        header: "Charge Type",
+        cell: ({ row }) => row.original.chargeType || "-",
       },
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+      {
+        accessorKey: "chargeCategory",
+        header: "Charge Category",
+        cell: ({ row }) => row.original.chargeCategory || "-",
+      },
+      {
+        accessorKey: "qty",
+        header: "Qty",
+      },
+      {
+        accessorKey: "standardCharge",
+        header: "Standard",
+        cell: ({ row }) => `₹ ${Number(row.original.standardCharge || 0).toFixed(2)}`,
+      },
+      {
+        id: "discount",
+        header: "Discount",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          return `₹ ${((total * discount) / 100).toFixed(2)}`;
+        },
+      },
+      {
+        id: "tax",
+        header: "Tax",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          const tax = Number(row.original.taxPercent || 0);
+          const afterDiscount = total - (total * discount) / 100;
+          return `₹ ${((afterDiscount * tax) / 100).toFixed(2)}`;
+        },
+      },
+      {
+        id: "netAmount",
+        header: "Amount",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          const tax = Number(row.original.taxPercent || 0);
 
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                onClick={() => onPrint(row.original)}
-                className="cursor-pointer"
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </DropdownMenuItem>
+          const discountAmount = (total * discount) / 100;
+          const taxAmount = ((total - discountAmount) * tax) / 100;
+          const net = total - discountAmount + taxAmount;
 
-              <DropdownMenuItem
-                onClick={() => onEdit(row.original)}
-                className="cursor-pointer"
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
+          return <span className="font-semibold text-green-600">₹ {net.toFixed(2)}</span>;
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
 
-              <DropdownMenuItem
-                onClick={() => onDelete(row.original.id)}
-                className="cursor-pointer text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-    }
-  ];
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={() => onPrint(row.original)}
+                  className="cursor-pointer"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onEdit(row.original)}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original.id)}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      }
+    ];
 
 
 
@@ -271,34 +298,34 @@ export default function IPDChargesManagerPage() {
             Charges
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <Input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="sm:w-40"
-          />
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="sm:w-40"
+            />
 
-          <Input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="sm:w-40"
-          />
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="sm:w-40"
+            />
 
-          <Input
-            placeholder="Search by bill ID / charge name / type / category"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="sm:w-72"
-          />
+            <Input
+              placeholder="Search by bill ID / charge name / type / category"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
 
-          <Button
-            onClick={() => setOpenAdd(true)}
-            className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-          >
-            <PlusCircle className="h-5 w-5" /> Add Charges
-          </Button>
-        </div>
+            <Button
+              onClick={() => setOpenAdd(true)}
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+            >
+              <PlusCircle className="h-5 w-5" /> Add Charges
+            </Button>
+          </div>
         </CardHeader>
       </Card>
 
@@ -328,8 +355,29 @@ export default function IPDChargesManagerPage() {
         open={openAdd}
         onClose={() => {
           setOpenAdd(false);
-          handleRefresh();
         }}
+        onSuccess={handleRefresh}
+      />
+
+      {/* EDIT CHARGE MODAL */}
+      <AddIPDChargesFullScreen
+        open={openEdit}
+        onClose={() => {
+          setOpenEdit(false);
+          setSelectedCharge(null);
+        }}
+        mode="edit"
+        chargeData={selectedCharge}
+        onSuccess={handleRefresh}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Charge"
+        description="Are you sure you want to delete this charge? This action cannot be undone."
+        onConfirm={confirmDelete}
+        isLoading={loading}
       />
     </div>
   );
