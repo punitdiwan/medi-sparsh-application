@@ -1,12 +1,19 @@
 import IPDPrescriptionPage from '@/Components/doctor/ipd/prescription/prescriptionPageManager'
 import React from 'react'
 
-const page = () => {
+type Props = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+const page = async ({ params }: Props) => {
+  const { id } = await params;
   return (
     <>
-      <IPDPrescriptionPage/>
+      <IPDPrescriptionPage ipdId={id} />
     </>
-  )
-}
+  );
+};
 
-export default page
+export default page;

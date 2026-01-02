@@ -12,36 +12,18 @@ import Symptoms, { SymptomItem } from "@/Components/prescriptionPad/Symtoms";
 import { MasterSymptom } from "@/Components/forms/PrescriptionForm";
 import { getSymptoms } from "@/lib/actions/symptomActions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-/* ---------------- Mock Doctors ---------------- */
-const doctors = [
-  { id: "1", name: "Dr. Amit Sharma" },
-  { id: "2", name: "Dr. Neha Verma" },
-];
-
-/* ---------------- Dummy Prescription Data ---------------- */
-const dummyPrescriptions = [
-  {
-    doctorId: "1",
-    symptoms: "Fever, Cough",
-    medicines: [{ name: "Paracetamol", dose: "500mg", frequency: "2x/day" }],
-    notes: "Take rest and drink water",
-  },
-  {
-    doctorId: "2",
-    symptoms: "Headache",
-    medicines: [{ name: "Ibuprofen", dose: "200mg", frequency: "1x/day" }],
-    notes: "Avoid screen time",
-  },
-];
+import { createIPDPrescription, updateIPDPrescription } from "@/app/actions/ipdPrescriptionActions";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  editDoctorId?: string; // Optional: for edit mode
+  ipdId: string;
+  doctors: any[];
+  editPrescriptionId?: string;
+  prescriptions?: any[];
 };
 
-export default function PrescriptionModal({ open, onClose, editDoctorId }: Props) {
+export default function PrescriptionModal({ open, onClose, ipdId, doctors, editPrescriptionId, prescriptions }: Props) {
   const [doctorId, setDoctorId] = useState<string>();
   const [medicines, setMedicines] = useState<any[]>([]);
   const [notes, setNotes] = useState("");
@@ -90,25 +72,26 @@ export default function PrescriptionModal({ open, onClose, editDoctorId }: Props
   useEffect(() => {
     if (!open) return;
 
-    setDoctorId(editDoctorId);
+    setDoctorId(undefined);
     setMedicines([]);
     setNotes("");
     setAttachments([]);
     setFormData({ symptoms: [] });
 
-    if (editDoctorId) {
-      // Dummy fetch for edit
-      const presc = dummyPrescriptions.find((p) => p.doctorId === editDoctorId);
+    if (editPrescriptionId && prescriptions) {
+      const presc = prescriptions.find((p) => p.id === editPrescriptionId);
       if (presc) {
+        setDoctorId(presc.doctorId || undefined);
         setMedicines(presc.medicines || []);
         setNotes(presc.notes || "");
-        setFormData({ symptoms: mapSymptomsFromString(presc.symptoms) });
+        setFormData({ symptoms: mapSymptomsFromString(presc.findings) });
+        // Attachments handling would require more complex logic if we want to show existing ones
       }
     }
-  }, [open, editDoctorId, masterSymptoms]);
+  }, [open, editPrescriptionId, prescriptions, masterSymptoms]);
 
   const handleSymptomsChange = (symptoms: SymptomItem[]) =>
-  setFormData((prev) => ({ ...prev, symptoms }));
+    setFormData((prev) => ({ ...prev, symptoms }));
 
 
   /* ---------------- Save ---------------- */
@@ -117,19 +100,32 @@ export default function PrescriptionModal({ open, onClose, editDoctorId }: Props
     if (formData.symptoms.length === 0) return toast.error("Please enter symptoms");
     // if (medicines.length === 0) return toast.error("Add at least one medicine");
 
+    console.log("Saving prescription with ipdId:", ipdId);
+
     try {
       setLoading(true);
       const payload = {
+        ipdAdmissionId: ipdId,
         doctorId,
         symptoms: formData.symptoms.map((s) => s.name).join(", "),
         medicines,
         notes,
-        attachments,
+        attachments, // Note: File upload logic needs to be handled properly for server actions (e.g., FormData)
       };
 
-      console.log("Prescription Payload:", payload);
-      toast.success("Prescription saved!");
-      onClose();
+      let res;
+      if (editPrescriptionId) {
+        res = await updateIPDPrescription(editPrescriptionId, payload);
+      } else {
+        res = await createIPDPrescription(payload);
+      }
+
+      if (res.success) {
+        toast.success(editPrescriptionId ? "Prescription updated!" : "Prescription saved!");
+        onClose();
+      } else {
+        toast.error(res.error || "Failed to save prescription");
+      }
     } catch {
       toast.error("Failed to save prescription");
     } finally {
@@ -142,11 +138,11 @@ export default function PrescriptionModal({ open, onClose, editDoctorId }: Props
 
     const files = Array.from(e.target.files);
     setAttachments((prev) => [...prev, ...files]);
-    };
+  };
 
-    const removeAttachment = (index: number) => {
+  const removeAttachment = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
-    };
+  };
 
 
   const handlePrint = () => window.print();
@@ -182,44 +178,44 @@ export default function PrescriptionModal({ open, onClose, editDoctorId }: Props
           <Symptoms value={formData.symptoms} onChange={handleSymptomsChange} />
           <MedicineSection value={medicines} onChange={setMedicines} />
           {/* Attachments */}
-            <Card className="border border-dialog bg-dialog-surface rounded-2xl">
+          <Card className="border border-dialog bg-dialog-surface rounded-2xl">
             <CardHeader>
-                <CardTitle className="text-base">Attachments</CardTitle>
+              <CardTitle className="text-base">Attachments</CardTitle>
             </CardHeader>
 
             <CardContent className="space-y-4">
-                <Input
+              <Input
                 type="file"
                 multiple
                 onChange={handleAttachmentChange}
                 className="bg-dialog-input border-dialog-input"
-                />
+              />
 
-                {attachments.length > 0 ? (
+              {attachments.length > 0 ? (
                 <div className="space-y-2">
-                    {attachments.map((file, index) => (
+                  {attachments.map((file, index) => (
                     <div
-                        key={index}
-                        className="flex items-center justify-between text-sm px-3 py-2 rounded-md border bg-muted/40"
+                      key={index}
+                      className="flex items-center justify-between text-sm px-3 py-2 rounded-md border bg-muted/40"
                     >
-                        <span className="truncate">{file.name}</span>
-                        <Button
+                      <span className="truncate">{file.name}</span>
+                      <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => removeAttachment(index)}
-                        >
+                      >
                         <X className="h-4 w-4 text-destructive" />
-                        </Button>
+                      </Button>
                     </div>
-                    ))}
+                  ))}
                 </div>
-                ) : (
+              ) : (
                 <p className="text-sm italic text-muted-foreground">
-                    No attachments added
+                  No attachments added
                 </p>
-                )}
+              )}
             </CardContent>
-            </Card>
+          </Card>
           <NotesSection value={notes} onChange={setNotes} />
         </div>
 

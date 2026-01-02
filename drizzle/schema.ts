@@ -1116,3 +1116,22 @@ export const ipdCharges = pgTable("ipd_charges", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
+
+
+// IPD Prescription Table
+export const ipdPrescriptions = pgTable("ipd_prescriptions", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	ipdAdmissionId: text("ipd_admission_id").notNull()
+		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+	symptoms: text(),
+	note: text(),
+	medicines: jsonb().notNull(),
+	attachments: text(),
+	prescribeBy: text()
+		.references(() => doctors.id, { onDelete: "cascade" }),
+	prescribeDate: timestamp("prescribe_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
