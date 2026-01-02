@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { vi } from "zod/v4/locales";
 
 /* ---------------- Types ---------------- */
 export interface VitalEntry {
@@ -42,6 +43,7 @@ export interface VitalEntry {
   range: string;
   date: string;
   time: string;
+  recordId?: string;
 }
 
 export interface IPDVitalRecord {
@@ -82,6 +84,7 @@ export default function VitalsPage() {
 
   const handleEdit = (vital: any) => {
     const headerInfo = headers.find(([name]) => name === vital.vitalName)?.[1] || {};
+    // console.log("Editing vital:", vital, "with header info:", headerInfo);
     setEditData([{
       id: vital.id,
       vitalId: vital.vitalId,
@@ -91,6 +94,7 @@ export default function VitalsPage() {
       range: headerInfo.range || "",
       date: vital.date,
       time: vital.time,
+      recordId: vital.recordId,
     }]);
 
 
@@ -115,7 +119,7 @@ export default function VitalsPage() {
     return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
   }
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -187,6 +191,7 @@ export default function VitalsPage() {
                                             ...v,
                                             date,
                                             vitalName: name,
+                                            vitalId: v.vitalId,
                                           })
                                         }
                                         className="text-blue-600 hover:text-blue-800"

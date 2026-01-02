@@ -61,7 +61,7 @@ export default function IPDPaymentManagerPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
 
       {/* HEADER / SEARCH */}
       <Card className="border-dialog bg-dialog-header">

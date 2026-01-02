@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import BackButton from "@/Components/BackButton";
+import { getIPDAdmissionDetails } from "@/lib/actions/ipdActions";
 
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
@@ -31,7 +32,18 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
   const tabRef = useRef<HTMLDivElement>(null);
   const { id } = useParams();
   const pathname = usePathname();
-
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+      const fetchData = async () => {
+        if (id) {
+          const result = await getIPDAdmissionDetails(id as string);
+          if (result.data) {
+            setData(result.data);
+          }
+        }
+      };
+      fetchData();
+    }, [id]);
   const scrollTabs = (dir: "left" | "right") => {
     tabRef.current?.scrollBy({
       left: dir === "left" ? -200 : 200,
@@ -54,7 +66,7 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
       } scrollbar-show`}>
         <BackButton/>
       <h2 className="text-2xl font-semibold mb-2">
-        IPD Patient Details
+        IPD Patient {data ? `- ${data.patientName}` : ""}
       </h2>
 
       <Tabs value={activeTab}>
@@ -65,7 +77,7 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
 
           <div className="flex-1 overflow-hidden">
             <div ref={tabRef} className="overflow-x-auto whitespace-nowrap scrollbar-hide">
-              <TabsList className="inline-flex gap-2 min-w-max bg-overview-base px-1 ">
+              <TabsList className="inline-flex gap-2  bg-overview-base px-1 ">
                 {TAB_ITEMS.map((tab) => (
                   <TabsTrigger key={tab.label} value={tab.label} asChild className="
                       relative rounded-lg px-4 py-2 text-sm font-medium

@@ -1599,6 +1599,9 @@ export async function getIPDChargesByAdmission(ipdAdmissionId: string, hospitalI
   return await db
     .select({
       id: ipdCharges.id,
+      chargeTypeId: ipdCharges.chargeTypeId,
+      chargeCategoryId: ipdCharges.chargeCategoryId,
+      chargeId: ipdCharges.chargeId,
       chargeName: charges.name,
       chargeType: chargeTypes.name,
       chargeCategory: chargeCategories.name,

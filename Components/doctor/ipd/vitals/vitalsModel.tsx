@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { HeartPulse, PlusCircle, X, Info } from "lucide-react";
 import { getVitalDefinitions, addIPDVitals, updateIPDVital } from "@/lib/actions/ipdVitals";
+import { VitalEntry } from "./vitalsPage";
 
 /* ---------------- Types ---------------- */
 interface VitalDefinition {
@@ -29,17 +30,6 @@ interface VitalDefinition {
   unit: string;
   from: string;
   to: string;
-}
-
-interface VitalEntry {
-  id?:string;
-  vitalId: string;
-  vitalName: string;
-  vitalValue: string;
-  unit: string;
-  range: string;
-  date: string;
-  time: string;
 }
 
 interface VitalsModalProps {
@@ -80,6 +70,7 @@ export default function VitalsModal({
           range: item.range ?? "",
           date: item.date ?? "",
           time: item.time ?? "",
+          recordId: item.recordId ?? "",
         },
       ]);
     } else {

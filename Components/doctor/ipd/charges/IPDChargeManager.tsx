@@ -5,14 +5,23 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt } from "lucide-react";
+import { PlusCircle, Eye, Pencil, Trash2, Printer, Receipt, MoreVertical } from "lucide-react";
 import AddIPDChargesFullScreen from "./IPDChargesModel";
-import { getIPDCharges } from "@/lib/actions/ipdActions";
+import { getIPDCharges, deleteIPDCharge } from "@/lib/actions/ipdActions";
+import { DeleteConfirmationDialog } from "../../medicine/deleteConfirmationDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
-
+import { ColumnDef } from "@tanstack/react-table";
+import { Table } from "@/components/Table/Table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PaginationControl } from "@/components/pagination";
 interface ChargeRecord {
   id: string;
   chargeName: string | null;
@@ -30,16 +39,23 @@ interface ChargeRecord {
 export default function IPDChargesManagerPage() {
   const params = useParams();
   const ipdAdmissionId = params?.id as string;
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const [charges, setCharges] = useState<ChargeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedCharge, setSelectedCharge] = useState<ChargeRecord | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [chargeToDelete, setChargeToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCharges = async () => {
       if (!ipdAdmissionId) return;
-      
+
       setLoading(true);
       try {
         const result = await getIPDCharges(ipdAdmissionId);
@@ -61,20 +77,46 @@ export default function IPDChargesManagerPage() {
 
   // Filter charges based on search term
   const filtered = useMemo(() => {
-    if (!search) return charges;
-    const term = search.toLowerCase();
-    return charges.filter(
-      (c) =>
+    return charges.filter((c) => {
+      const term = search.toLowerCase();
+      const matchesSearch =
+        !search ||
         c.id.toLowerCase().includes(term) ||
         c.chargeName?.toLowerCase().includes(term) ||
         c.chargeType?.toLowerCase().includes(term) ||
-        c.chargeCategory?.toLowerCase().includes(term)
-    );
-  }, [charges, search]);
+        c.chargeCategory?.toLowerCase().includes(term);
+
+      const createdDate = new Date(c.createdAt);
+      const from = fromDate ? new Date(fromDate) : null;
+      const to = toDate ? new Date(toDate) : null;
+
+      if (to) to.setHours(23, 59, 59, 999);
+
+      const matchesDate =
+        (!from || createdDate >= from) &&
+        (!to || createdDate <= to);
+
+      return matchesSearch && matchesDate;
+    });
+  }, [charges, search, fromDate, toDate]);
+
+
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return filtered.slice(start, end);
+  }, [filtered, currentPage, rowsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, fromDate, toDate, rowsPerPage]);
+
 
   const handleRefresh = async () => {
     if (!ipdAdmissionId) return;
-    
+
     setLoading(true);
     try {
       const result = await getIPDCharges(ipdAdmissionId);
@@ -92,12 +134,34 @@ export default function IPDChargesManagerPage() {
   };
 
   const handleEdit = (charge: ChargeRecord) => {
-    alert(`Edit charge ${charge.id}`);
+    setSelectedCharge(charge);
+    setOpenEdit(true);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this charge?")) {
-      setCharges((prev) => prev.filter((c) => c.id !== id));
+    setChargeToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!chargeToDelete) return;
+
+    setLoading(true);
+    try {
+      const result = await deleteIPDCharge(chargeToDelete, ipdAdmissionId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Charge deleted successfully");
+        handleRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting charge:", error);
+      toast.error("Failed to delete charge");
+    } finally {
+      setLoading(false);
+      setDeleteDialogOpen(false);
+      setChargeToDelete(null);
     }
   };
 
@@ -105,8 +169,126 @@ export default function IPDChargesManagerPage() {
     alert(`Print charge ${charge.id}`);
   };
 
+  const ipdChargeColumns = (
+    onEdit: (c: ChargeRecord) => void,
+    onDelete: (id: string) => void,
+    onPrint: (c: ChargeRecord) => void
+  ): ColumnDef<ChargeRecord>[] => [
+      {
+        accessorKey: "createdAt",
+        header: "Date",
+        cell: ({ row }) =>
+          row.original.createdAt
+            ? format(new Date(row.original.createdAt), "yyyy-MM-dd")
+            : "-",
+      },
+      {
+        accessorKey: "chargeName",
+        header: "Charge Name",
+        cell: ({ row }) => row.original.chargeName || "-",
+      },
+      {
+        accessorKey: "chargeType",
+        header: "Charge Type",
+        cell: ({ row }) => row.original.chargeType || "-",
+      },
+      {
+        accessorKey: "chargeCategory",
+        header: "Charge Category",
+        cell: ({ row }) => row.original.chargeCategory || "-",
+      },
+      {
+        accessorKey: "qty",
+        header: "Qty",
+      },
+      {
+        accessorKey: "standardCharge",
+        header: "Standard",
+        cell: ({ row }) => `₹ ${Number(row.original.standardCharge || 0).toFixed(2)}`,
+      },
+      {
+        id: "discount",
+        header: "Discount",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          return `₹ ${((total * discount) / 100).toFixed(2)}`;
+        },
+      },
+      {
+        id: "tax",
+        header: "Tax",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          const tax = Number(row.original.taxPercent || 0);
+          const afterDiscount = total - (total * discount) / 100;
+          return `₹ ${((afterDiscount * tax) / 100).toFixed(2)}`;
+        },
+      },
+      {
+        id: "netAmount",
+        header: "Amount",
+        cell: ({ row }) => {
+          const total = Number(row.original.totalAmount || 0);
+          const discount = Number(row.original.discountPercent || 0);
+          const tax = Number(row.original.taxPercent || 0);
+
+          const discountAmount = (total * discount) / 100;
+          const taxAmount = ((total - discountAmount) * tax) / 100;
+          const net = total - discountAmount + taxAmount;
+
+          return <span className="font-semibold text-green-600">₹ {net.toFixed(2)}</span>;
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={() => onPrint(row.original)}
+                  className="cursor-pointer"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onEdit(row.original)}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onDelete(row.original.id)}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      }
+    ];
+
+
+
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
 
       {/* HEADER / SEARCH */}
       <Card className="border-dialog bg-dialog-header">
@@ -116,14 +298,31 @@ export default function IPDChargesManagerPage() {
             Charges
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="sm:w-40"
+            />
 
-              <Input
-                placeholder="Search by bill ID / charge name / type / category"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="sm:w-72"
-              />
-            <Button onClick={() => setOpenAdd(true)} className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="sm:w-40"
+            />
+
+            <Input
+              placeholder="Search by bill ID / charge name / type / category"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
+
+            <Button
+              onClick={() => setOpenAdd(true)}
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+            >
               <PlusCircle className="h-5 w-5" /> Add Charges
             </Button>
           </div>
@@ -133,109 +332,52 @@ export default function IPDChargesManagerPage() {
       {/* CHARGES TABLE */}
       <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
-          <Table className="min-w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-dialog-icon">Date</TableHead>
-                <TableHead className="text-dialog-icon">Charge Name</TableHead>
-                <TableHead className="text-dialog-icon">Charge Type</TableHead>
-                <TableHead className="text-dialog-icon">Charge Category</TableHead>
-                <TableHead className="text-dialog-icon">Quantity</TableHead>
-                <TableHead className="text-dialog-icon">Standard Charges</TableHead>
-                <TableHead className="text-dialog-icon">Discount</TableHead>
-                <TableHead className="text-dialog-icon">Tax</TableHead>
-                <TableHead className="text-dialog-icon">Amount</TableHead>
-                <TableHead className="text-center text-dialog-icon">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center py-6 text-gray-400">
-                    Loading charges...
-                  </TableCell>
-                </TableRow>
-              ) : filtered.length ? (
-                filtered.map(c => {
-                  const totalAmount = parseFloat(c.totalAmount || "0");
-                  const discountPercent = parseFloat(c.discountPercent || "0");
-                  const taxPercent = parseFloat(c.taxPercent || "0");
-                  const standardCharge = parseFloat(c.standardCharge || "0");
-                  
-                  // Calculate discount amount
-                  const discountAmount = (totalAmount * discountPercent) / 100;
-                  // Calculate tax amount (on amount after discount)
-                  const taxAmount = ((totalAmount - discountAmount) * taxPercent) / 100;
-                  // Calculate net amount
-                  const netAmount = totalAmount - discountAmount + taxAmount;
-                  
-                  return (
-                    <TableRow key={c.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                      <TableCell className="text-dialog-muted">
-                        {c.createdAt ? format(new Date(c.createdAt), "yyyy-MM-dd") : "-"}
-                      </TableCell>
-                      <TableCell className="text-dialog-muted">{c.chargeName || "-"}</TableCell>
-                      <TableCell className="text-dialog-muted">{c.chargeType || "-"}</TableCell>
-                      <TableCell className="text-dialog-muted">{c.chargeCategory || "-"}</TableCell>
-                      <TableCell className="text-dialog-muted">{c.qty}</TableCell>
-                      <TableCell className="text-dialog-muted">₹ {standardCharge.toFixed(2)}</TableCell>
-                      <TableCell className="text-dialog-muted">₹ {discountAmount.toFixed(2)}</TableCell>
-                      <TableCell className="text-dialog-muted">₹ {taxAmount.toFixed(2)}</TableCell>
-                      <TableCell className="font-semibold text-green-600">₹ {netAmount.toFixed(2)}</TableCell>
-                    <TableCell className="text-center">
-                      <TooltipProvider>
-                        <div className="flex gap-2 justify-end">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => handlePrint(c)}>
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Print</TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => handleEdit(c)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
-
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="destructive" onClick={() => handleDelete(c.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </TooltipProvider>
-                    </TableCell>
-                  </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center py-6 text-gray-400">
-                    No charges found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <Table
+            data={paginatedData}
+            columns={ipdChargeColumns(handleEdit, handleDelete, handlePrint)}
+            fallback={loading ? "Loading charges..." : "No charges found"}
+            headerTextClassName="text-dialog-icon"
+            bodyTextClassName="text-dialog-muted"
+          />
         </CardContent>
       </Card>
+      {/* PAGINATION */}
+      <PaginationControl
+        currentPage={currentPage}
+        totalPages={totalPages}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setCurrentPage}
+        onRowsPerPageChange={setRowsPerPage}
+      />
 
       {/* ADD CHARGES FULLSCREEN */}
       <AddIPDChargesFullScreen
         open={openAdd}
         onClose={() => {
           setOpenAdd(false);
-          handleRefresh();
         }}
+        onSuccess={handleRefresh}
+      />
+
+      {/* EDIT CHARGE MODAL */}
+      <AddIPDChargesFullScreen
+        open={openEdit}
+        onClose={() => {
+          setOpenEdit(false);
+          setSelectedCharge(null);
+        }}
+        mode="edit"
+        chargeData={selectedCharge}
+        onSuccess={handleRefresh}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Charge"
+        description="Are you sure you want to delete this charge? This action cannot be undone."
+        onConfirm={confirmDelete}
+        isLoading={loading}
       />
     </div>
   );

@@ -5,7 +5,7 @@ import { ipdAdmission, beds, doctors, staff, user, ipdConsultation } from "@/db/
 import { eq, and } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
-import { patients } from "@/drizzle/schema";
+import { patients, ipdCharges } from "@/drizzle/schema";
 import { createIPDChargesBatch, getIPDChargesByAdmission } from "@/db/queries";
 
 export async function createIPDAdmission(data: any) {
@@ -331,5 +331,60 @@ export async function getIPDCharges(ipdAdmissionId: string) {
     } catch (error) {
         console.error("Error fetching IPD charges:", error);
         return { error: "Failed to fetch IPD charges" };
+    }
+}
+
+export async function deleteIPDCharge(id: string, ipdAdmissionId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        await db.delete(ipdCharges)
+            .where(
+                and(
+                    eq(ipdCharges.id, id),
+                    eq(ipdCharges.hospitalId, org.id)
+                )
+            );
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/charges`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error deleting IPD charge:", error);
+        return { error: "Failed to delete IPD charge" };
+    }
+}
+
+export async function updateIPDCharge(id: string, data: any, ipdAdmissionId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        await db.update(ipdCharges)
+            .set({
+                qty: data.qty,
+                totalAmount: data.totalAmount,
+                discountPercent: data.discountPercent,
+                taxPercent: data.taxPercent,
+                note: data.note,
+                createdAt: data.date ? new Date(data.date) : undefined, // Update date if provided
+                updatedAt: new Date(),
+            })
+            .where(
+                and(
+                    eq(ipdCharges.id, id),
+                    eq(ipdCharges.hospitalId, org.id)
+                )
+            );
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/charges`);
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating IPD charge:", error);
+        return { error: "Failed to update IPD charge" };
     }
 }
