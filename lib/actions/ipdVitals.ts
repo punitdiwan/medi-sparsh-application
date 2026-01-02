@@ -136,7 +136,13 @@ export async function updateIPDVital(
 ) {
   try {
     const org = await getActiveOrganization();
-    if (!org) return { error: "Unauthorized" };
+
+    if (!org) {
+      return { error: "Unauthorized" };
+    }
+    if (!updatedVital.recordId) {
+      return { error: "Vital recordId missing" };
+    }
 
     const [record] = await db
       .select()
@@ -144,29 +150,34 @@ export async function updateIPDVital(
       .where(
         and(
           eq(ipdVitals.ipdAdmissionId, ipdAdmissionId),
+          eq(ipdVitals.id, updatedVital.recordId),
           eq(ipdVitals.hospitalId, org.id)
         )
       );
 
-    if (!record) return { error: "Vital record not found" };
+    if (!record) {
+      return { error: "Vital record not found" };
+    }
 
     if (!updatedVital.id) {
       return { error: "Vital ID missing for update" };
     }
 
-    const updatedVitals = (record.vitals as VitalEntry[]).map((v) =>
-      v.id === updatedVital.id
-        ? {
-            ...v,
-            vitalValue: updatedVital.vitalValue,
-            date: updatedVital.date,
-            time: updatedVital.time,
-            unit: updatedVital.unit,
-            range: updatedVital.range,
-            updatedAt: new Date(), // optional
-          }
-        : v
-    );
+    const updatedVitals = (record.vitals as VitalEntry[]).map((v) => {
+      if (v.id === updatedVital.id) {
+        return {
+          ...v,
+          vitalValue: updatedVital.vitalValue,
+          date: updatedVital.date,
+          time: updatedVital.time,
+          unit: updatedVital.unit,
+          range: updatedVital.range,
+          updatedAt: new Date(),
+        };
+      }
+      return v;
+    });
+
 
     await db
       .update(ipdVitals)
@@ -182,10 +193,10 @@ export async function updateIPDVital(
 
     return { data: true };
   } catch (error) {
-    console.error("Error updating vital:", error);
     return { error: "Failed to update vital" };
   }
 }
+
 
 
 
