@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,52 +8,84 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { PlusCircle, Printer, Pencil, Trash2, CreditCard } from "lucide-react";
 import AddIPDPaymentModal, { PaymentData } from "./ipdPaymentMode";
+import { getIPDPayments, deleteIPDPayment } from "@/app/actions/ipdPaymentActions";
+import { toast } from "sonner";
 
-interface PaymentRecord extends PaymentData {
+interface PaymentRecord {
   id: string;
+  date: string;
+  amount: number;
+  paymentMode: string;
+  note?: string;
+  paymentAmount: string; // From DB
+  paymentDate: Date; // From DB
+  paymentNote: string | null; // From DB
 }
 
-export default function IPDPaymentManagerPage() {
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+
+export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<PaymentRecord | null>(null);
 
+  // Delete Confirmation State
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const fetchPayments = async () => {
+    const res = await getIPDPayments(ipdId);
+    if (res.success && res.data) {
+      // Map DB fields to UI fields
+      const mappedPayments = res.data.map((p: any) => ({
+        id: p.id,
+        date: new Date(p.paymentDate).toISOString().split('T')[0],
+        amount: Number(p.paymentAmount),
+        paymentMode: p.paymentMode,
+        note: p.paymentNote || "",
+        paymentAmount: p.paymentAmount,
+        paymentDate: p.paymentDate,
+        paymentNote: p.paymentNote
+      }));
+      setPayments(mappedPayments);
+    }
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, [ipdId, modalOpen]);
+
   const filtered = useMemo(() => {
     if (!search) return payments;
     return payments.filter(
       (p) =>
-        p.id.toLowerCase().includes(search.toLowerCase()) ||
-        p.note?.toLowerCase().includes(search.toLowerCase()) ||
-        p.paymentMode.toLowerCase().includes(search.toLowerCase())
+        p.paymentMode.toLowerCase().includes(search.toLowerCase()) ||
+        (p.note && p.note.toLowerCase().includes(search.toLowerCase()))
     );
   }, [payments, search]);
 
-  const handleAddPayment = (payment: PaymentData) => {
-    if (editPayment) {
-      setPayments((prev) =>
-        prev.map((p) => (p.id === editPayment.id ? { ...p, ...payment } : p))
-      );
-      setEditPayment(null);
-    } else {
-      const newPayment: PaymentRecord = {
-        id: `TXN-${Date.now()}`,
-        ...payment,
-      };
-      setPayments((prev) => [newPayment, ...prev]);
-    }
+  const handleAddPayment = () => {
+    fetchPayments();
     setModalOpen(false);
   };
 
-  const handleEdit = (payment: PaymentRecord) => {
-    setEditPayment(payment);
-    setModalOpen(true);
+
+  const handleDeleteClick = (id: string) => {
+    confirmDelete(id);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this payment?")) {
-      setPayments((prev) => prev.filter((p) => p.id !== id));
+  const confirmDelete = async (id: string) => {
+    if (!id) return;
+
+    const res = await deleteIPDPayment(id, ipdId);
+    if (res.success) {
+      toast.success("Payment deleted");
+      fetchPayments();
+    } else {
+      toast.error("Failed to delete payment");
     }
+    setIsDeleteConfirmOpen(false);
   };
 
   const handlePrint = (payment: PaymentRecord) => {
@@ -71,12 +103,12 @@ export default function IPDPaymentManagerPage() {
             Payment
           </CardTitle>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-             <Input
-                placeholder="Search by transaction / note / mode"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="sm:w-72"
-              />
+            <Input
+              placeholder="Search by transaction / note / mode"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="sm:w-72"
+            />
             <Button
               onClick={() => { setModalOpen(true); setEditPayment(null); }}
               className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
@@ -105,8 +137,8 @@ export default function IPDPaymentManagerPage() {
               {filtered.length ? (
                 filtered.map(p => (
                   <TableRow key={p.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                    <TableCell className="font-medium text-gray-800 dark:text-white">{p.id}</TableCell>
-                    <TableCell className="text-dialog-muted">{p.date}</TableCell>
+                    <TableCell className="font-medium text-gray-800 dark:text-white">{p.id.substring(0, 8)}...</TableCell>
+                    <TableCell className="text-dialog-muted">{new Date(p.date).toLocaleDateString()}</TableCell>
                     <TableCell className="text-dialog-muted">{p.note || "—"}</TableCell>
                     <TableCell className="text-dialog-muted">{p.paymentMode}</TableCell>
                     <TableCell className="font-semibold text-green-600">₹ {p.amount.toFixed(2)}</TableCell>
@@ -122,20 +154,30 @@ export default function IPDPaymentManagerPage() {
                             <TooltipContent>Print</TooltipContent>
                           </Tooltip>
 
-                          <Tooltip>
+                          {/* <Tooltip>
                             <TooltipTrigger asChild>
                               <Button size="icon" variant="outline" onClick={() => handleEdit(p)}>
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
+                          </Tooltip> */}
 
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="destructive" onClick={() => handleDelete(p.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <span>
+                                <ConfirmDialog
+                                  trigger={
+                                    <Button size="icon" variant="destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                  title="Delete Payment"
+                                  description="Are you sure you want to delete this payment? This action cannot be undone."
+                                  actionLabel="Delete"
+                                  onConfirm={() => handleDeleteClick(p.id)}
+                                />
+                              </span>
                             </TooltipTrigger>
                             <TooltipContent>Delete</TooltipContent>
                           </Tooltip>
@@ -162,9 +204,22 @@ export default function IPDPaymentManagerPage() {
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onSubmit={handleAddPayment}
-          paymentToEdit={editPayment || undefined}
+          paymentToEdit={editPayment ? {
+            date: editPayment.date,
+            amount: editPayment.amount,
+            paymentMode: editPayment.paymentMode,
+            note: editPayment.note
+          } : undefined}
+          ipdId={ipdId}
         />
       )}
+
+      {/* Delete Confirmation Dialog - Actually handled by the trigger above, but let's check if we need a separate state controlled one. 
+          The ConfirmDialog component uses AlertDialogTrigger, so it handles open state internally via trigger.
+          However, onConfirm needs to execute the delete.
+          Wait, the ConfirmDialog implementation takes onConfirm prop.
+          So I can just pass the delete logic directly to onConfirm in the loop.
+      */}
     </div>
   );
 }
