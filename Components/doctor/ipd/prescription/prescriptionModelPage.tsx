@@ -29,6 +29,7 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
   const [notes, setNotes] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
 
   const [masterSymptoms, setMasterSymptoms] = useState<MasterSymptom[]>([]);
   const [formData, setFormData] = useState({ symptoms: [] as SymptomItem[] });
@@ -69,26 +70,41 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
   };
 
   /* ---------------- Prefill for edit ---------------- */
-  useEffect(() => {
+ useEffect(() => {
     if (!open) return;
 
-    setDoctorId(undefined);
-    setMedicines([]);
-    setNotes("");
-    setAttachments([]);
-    setFormData({ symptoms: [] });
-
-    if (editPrescriptionId && prescriptions) {
+    // ADD MODE
+    if (!editPrescriptionId) {
+      setDoctorId(undefined);
+      setMedicines([]);
+      setNotes("");
+      setAttachments([]);
+      setFormData({ symptoms: [] });
+      return;
+    }
+    setIsEditLoading(true);
+    // EDIT MODE (wait till data ready)
+    if (
+      editPrescriptionId &&
+      prescriptions &&
+      prescriptions.length > 0 &&
+      masterSymptoms.length > 0
+    ) {
       const presc = prescriptions.find((p) => p.id === editPrescriptionId);
-      if (presc) {
-        setDoctorId(presc.doctorId || undefined);
-        setMedicines(presc.medicines || []);
-        setNotes(presc.notes || "");
-        setFormData({ symptoms: mapSymptomsFromString(presc.findings) });
-        // Attachments handling would require more complex logic if we want to show existing ones
-      }
+      if (!presc) return;
+
+      setDoctorId(presc.doctorId ?? undefined);
+      setMedicines(Array.isArray(presc.medicines) ? presc.medicines : []);
+      setNotes(presc.notes ?? "");
+      setAttachments([]);
+      setFormData({
+        symptoms: mapSymptomsFromString(presc.findings),
+      });
+      setIsEditLoading(false);
     }
   }, [open, editPrescriptionId, prescriptions, masterSymptoms]);
+
+
 
   const handleSymptomsChange = (symptoms: SymptomItem[]) =>
     setFormData((prev) => ({ ...prev, symptoms }));
@@ -174,50 +190,60 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
         </div>
 
         {/* BODY */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-dialog-surface text-dialog">
-          <Symptoms value={formData.symptoms} onChange={handleSymptomsChange} />
-          <MedicineSection value={medicines} onChange={setMedicines} />
-          {/* Attachments */}
-          <Card className="border border-dialog bg-dialog-surface rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Attachments</CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <Input
-                type="file"
-                multiple
-                onChange={handleAttachmentChange}
-                className="bg-dialog-input border-dialog-input"
-              />
-
-              {attachments.length > 0 ? (
-                <div className="space-y-2">
-                  {attachments.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between text-sm px-3 py-2 rounded-md border bg-muted/40"
-                    >
-                      <span className="truncate">{file.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeAttachment(index)}
-                      >
-                        <X className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm italic text-muted-foreground">
-                  No attachments added
-                </p>
-              )}
-            </CardContent>
-          </Card>
-          <NotesSection value={notes} onChange={setNotes} />
+        {editPrescriptionId && isEditLoading ? (
+        /* 🔄 Loader */
+        <div className="flex h-full items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">
+              Loading prescription...
+            </p>
+          </div>
         </div>
+          ) : (<div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-dialog-surface text-dialog">
+              <Symptoms value={formData.symptoms} onChange={handleSymptomsChange} />
+              <MedicineSection key={editPrescriptionId ?? "add"} value={medicines} onChange={setMedicines} />
+              {/* Attachments */}
+              <Card className="border border-dialog bg-dialog-surface rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-base">Attachments</CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <Input
+                    type="file"
+                    multiple
+                    onChange={handleAttachmentChange}
+                    className="bg-dialog-input border-dialog-input"
+                  />
+
+                  {attachments.length > 0 ? (
+                    <div className="space-y-2">
+                      {attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between text-sm px-3 py-2 rounded-md border bg-muted/40"
+                        >
+                          <span className="truncate">{file.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeAttachment(index)}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm italic text-muted-foreground">
+                      No attachments added
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+              <NotesSection value={notes} onChange={setNotes} />
+            </div>)}
 
         {/* FOOTER */}
         <div className="border-t px-6 py-4 flex justify-end gap-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">

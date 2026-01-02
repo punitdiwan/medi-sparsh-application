@@ -203,7 +203,8 @@ export async function updateIPDVital(
 /* ---------------- DELETE VITAL ---------------- */
 export async function deleteIPDVital(
   ipdAdmissionId: string,
-  vitalEntryId: string
+  vitalEntryId: string,
+  recordId?: string
 ) {
   try {
     const org = await getActiveOrganization();
@@ -215,7 +216,8 @@ export async function deleteIPDVital(
       .where(
         and(
           eq(ipdVitals.ipdAdmissionId, ipdAdmissionId),
-          eq(ipdVitals.hospitalId, org.id)
+          eq(ipdVitals.hospitalId, org.id),
+          recordId ? eq(ipdVitals.id, recordId) : undefined
         )
       );
 

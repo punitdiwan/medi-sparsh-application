@@ -31,7 +31,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { vi } from "zod/v4/locales";
 
 /* ---------------- Types ---------------- */
 export interface VitalEntry {
@@ -104,7 +103,7 @@ export default function VitalsPage() {
   const handleDelete = async (vital: any) => {
     if (!confirm("Are you sure you want to delete this vital?")) return;
     try {
-      await deleteIPDVital(id, vital.id);
+      await deleteIPDVital(id, vital.id, vital.recordId);
       toast.success("Vital deleted");
       fetchVitals();
     } catch {
@@ -212,6 +211,7 @@ export default function VitalsPage() {
                                             ...v,
                                             date,
                                             vitalName: name,
+                                            vitalId: v.vitalId,
                                           })
                                         }
                                         className="text-red-600 hover:text-red-800"

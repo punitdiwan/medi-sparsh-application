@@ -119,7 +119,7 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -144,6 +144,7 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
         </CardHeader>
       </Card>
       <PrescriptionModal
+        key={editPrescriptionId ?? "add"}   
         open={open}
         onClose={() => setOpen(false)}
         ipdId={ipdId}
@@ -196,7 +197,21 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
                             </TooltipTrigger>
                             <TooltipContent>Print</TooltipContent>
                           </Tooltip>
-
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditPrescriptionId(p.id);
+                                  setOpen(true);
+                                }}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View</TooltipContent>
+                          </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
