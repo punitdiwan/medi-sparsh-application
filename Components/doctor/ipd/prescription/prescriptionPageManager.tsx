@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -31,6 +31,10 @@ import {
   FileText,
 } from "lucide-react";
 import PrescriptionModal from "./prescriptionModelPage";
+import { getIPDPrescriptions, deleteIPDPrescription } from "@/app/actions/ipdPrescriptionActions";
+import { getDoctors } from "@/lib/actions/doctorActions";
+import { toast } from "sonner";
+import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
 
 /* ---------------- Types ---------------- */
 type Prescription = {
@@ -38,29 +42,92 @@ type Prescription = {
   prescriptionNo: string;
   date: string;
   findings: string;
+  doctorName: string | null;
+  doctorId: string | null;
+  medicines: any;
+  notes: string | null;
+};
+
+type Doctor = {
+  id: string;
+  name: string | null;
 };
 
 /* ---------------- Page ---------------- */
-export default function IPDPrescriptionPage() {
+export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const [editPrescriptionId, setEditPrescriptionId] = useState<string | undefined>(undefined);
+
+  // Delete Dialog State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchData = async () => {
+    const [prescriptionsRes, doctorsRes] = await Promise.all([
+      getIPDPrescriptions(ipdId),
+      getDoctors(),
+    ]);
+
+    if (prescriptionsRes.success && prescriptionsRes.data) {
+      // @ts-ignore
+      setPrescriptions(prescriptionsRes.data);
+    }
+    if (doctorsRes.data) {
+      // @ts-ignore
+      setDoctors(doctorsRes.data);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [ipdId, open]); // Refetch when modal closes (saved)
+
   /* ---------------- Filter ---------------- */
   const filtered = useMemo(() => {
     if (!search) return prescriptions;
     return prescriptions.filter(
       (p) =>
         p.prescriptionNo.toLowerCase().includes(search.toLowerCase()) ||
-        p.findings.toLowerCase().includes(search.toLowerCase()) ||
-        p.date.includes(search)
+        (p.findings && p.findings.toLowerCase().includes(search.toLowerCase())) ||
+        (p.date && new Date(p.date).toLocaleDateString().includes(search))
     );
   }, [prescriptions, search]);
 
   /* ---------------- Actions ---------------- */
   const handleDelete = (id: string) => {
-    if (confirm("Delete this prescription?")) {
-      setPrescriptions((prev) => prev.filter((p) => p.id !== id));
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+
+    setIsDeleting(true);
+    const res = await deleteIPDPrescription(deleteId, ipdId);
+    setIsDeleting(false);
+
+    if (res.success) {
+      toast.success("Prescription deleted");
+      setDeleteDialogOpen(false);
+      setDeleteId(null);
+      fetchData();
+    } else {
+      toast.error("Failed to delete prescription");
     }
+  };
+
+  const handleEdit = (id: string) => {
+    setEditPrescriptionId(id);
+    setOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditPrescriptionId(undefined);
+    setOpen(true);
   };
 
   const handlePrint = (p: Prescription) => {
@@ -68,7 +135,7 @@ export default function IPDPrescriptionPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -85,17 +152,32 @@ export default function IPDPrescriptionPage() {
               className="sm:w-72"
             />
             <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-                onClick={() => setOpen(true)}>
+              onClick={handleAdd}>
               <PlusCircle className="h-5 w-5" />
               Add Prescription
             </Button>
           </div>
         </CardHeader>
       </Card>
-     <PrescriptionModal
+      <PrescriptionModal
+        key={editPrescriptionId ?? "add"}
         open={open}
         onClose={() => setOpen(false)}
-        />
+        ipdId={ipdId}
+        doctors={doctors}
+        editPrescriptionId={editPrescriptionId}
+        prescriptions={prescriptions}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Prescription"
+        description="Are you sure you want to delete this prescription? This action cannot be undone."
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+      />
+
       {/* TABLE */}
       <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
@@ -121,7 +203,7 @@ export default function IPDPrescriptionPage() {
                       {p.prescriptionNo}
                     </TableCell>
                     <TableCell className="text-dialog-muted">
-                      {p.date}
+                      {p.date ? new Date(p.date).toLocaleDateString() : "-"}
                     </TableCell>
                     <TableCell className="text-dialog-muted">
                       {p.findings}
@@ -141,10 +223,24 @@ export default function IPDPrescriptionPage() {
                             </TooltipTrigger>
                             <TooltipContent>Print</TooltipContent>
                           </Tooltip>
-
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline">
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditPrescriptionId(p.id);
+                                  setOpen(true);
+                                }}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
