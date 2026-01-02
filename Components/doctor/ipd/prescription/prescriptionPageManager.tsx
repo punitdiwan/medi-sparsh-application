@@ -34,6 +34,7 @@ import PrescriptionModal from "./prescriptionModelPage";
 import { getIPDPrescriptions, deleteIPDPrescription } from "@/app/actions/ipdPrescriptionActions";
 import { getDoctors } from "@/lib/actions/doctorActions";
 import { toast } from "sonner";
+import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
 
 /* ---------------- Types ---------------- */
 type Prescription = {
@@ -59,6 +60,11 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editPrescriptionId, setEditPrescriptionId] = useState<string | undefined>(undefined);
+
+  // Delete Dialog State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     const [prescriptionsRes, doctorsRes] = await Promise.all([
@@ -92,15 +98,25 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
   }, [prescriptions, search]);
 
   /* ---------------- Actions ---------------- */
-  const handleDelete = async (id: string) => {
-    if (confirm("Delete this prescription?")) {
-      const res = await deleteIPDPrescription(id, ipdId);
-      if (res.success) {
-        toast.success("Prescription deleted");
-        fetchData();
-      } else {
-        toast.error("Failed to delete prescription");
-      }
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+
+    setIsDeleting(true);
+    const res = await deleteIPDPrescription(deleteId, ipdId);
+    setIsDeleting(false);
+
+    if (res.success) {
+      toast.success("Prescription deleted");
+      setDeleteDialogOpen(false);
+      setDeleteId(null);
+      fetchData();
+    } else {
+      toast.error("Failed to delete prescription");
     }
   };
 
@@ -144,7 +160,7 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
         </CardHeader>
       </Card>
       <PrescriptionModal
-        key={editPrescriptionId ?? "add"}   
+        key={editPrescriptionId ?? "add"}
         open={open}
         onClose={() => setOpen(false)}
         ipdId={ipdId}
@@ -152,6 +168,16 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
         editPrescriptionId={editPrescriptionId}
         prescriptions={prescriptions}
       />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Prescription"
+        description="Are you sure you want to delete this prescription? This action cannot be undone."
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+      />
+
       {/* TABLE */}
       <Card className="shadow-lg border-dialog bg-dialog-header">
         <CardContent className="p-0 overflow-x-auto">
