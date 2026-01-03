@@ -12,6 +12,10 @@ import { getIPDAdmissionDetails } from "@/lib/actions/ipdActions";
 import { useEffect, useState } from "react";
 import { getShortId } from "@/utils/getShortId";
 import { format } from "date-fns";
+import { DischargePatientModal } from "@/Components/doctor/ipd/DischargePatientModal";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { FaRegHospital } from "react-icons/fa";
 
 const billing = {
   total: 100000,
@@ -64,7 +68,7 @@ export default function IPDOverviewPage() {
   const params = useParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
+  const [openDischarge, setOpenDischarge] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       if (params?.id) {
@@ -119,14 +123,43 @@ export default function IPDOverviewPage() {
                 {data.patientName ? data.patientName.substring(0, 2).toUpperCase() : "PT"}
               </AvatarFallback>
             </Avatar>
+            <div className="flex w-full gap-2">
+              <div>
+                <h3 className="font-semibold text-lg text-overview-base ">
+                  {data.patientName}
+                </h3>
+                <p className="text-sm text-overview-muted">
+                  {getShortId(data.ipdNo)} • {data.gender} • {data.dob ? new Date().getFullYear() - new Date(data.dob).getFullYear() + "Y" : "N/A"}
+                </p>
+              </div>
+              <div className="ml-auto">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setOpenDischarge(true)}
+                        className="h-9 w-9"
+                      >
+                        <FaRegHospital className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
 
-            <div>
-              <h3 className="font-semibold text-lg text-overview-base ">
-                {data.patientName}
-              </h3>
-              <p className="text-sm text-overview-muted">
-                {getShortId(data.ipdNo)} • {data.gender} • {data.dob ? new Date().getFullYear() - new Date(data.dob).getFullYear() + "Y" : "N/A"}
-              </p>
+                    <TooltipContent side="top">
+                      <p>Discharge Patient</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <DischargePatientModal
+                  open={openDischarge}
+                  onClose={() => setOpenDischarge(false)}
+                  onSubmit={(data) => {
+                    console.log("Discharge Data:", data);
+                  }}
+                />
+              </div>
             </div>
           </CardHeader>
 

@@ -14,6 +14,7 @@ import { getIPDAdmissionDetails } from "@/lib/actions/ipdActions";
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
   // { label: "Nurse Notes", path: "nurseNote" },
+  { label: "Vitals", path: "vitals" },
   { label: "Medication", path: "medication" },
   { label: "Prescription", path: "prescription" },
   { label: "Consultant Register", path: "consultantRegister" },
@@ -21,11 +22,11 @@ const TAB_ITEMS = [
   { label: "Operations", path: "operation" },
   { label: "Charges", path: "charges" },
   { label: "Payments", path: "payments" },
+  { label: "Timeline", path: "timeline" },
   // { label: "Live Consultation", path: "liveConsultation" },
   { label: "Bed History", path: "bedHistory" },
-  { label: "Timeline", path: "timeline" },
   { label: "Treatment History", path: "treatmentHistory" },
-  { label: "Vitals", path: "vitals" },
+  
 ];
 
 export default function IPDLayout({ children }: { children: ReactNode }) {

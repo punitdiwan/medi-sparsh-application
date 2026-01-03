@@ -327,7 +327,7 @@ export default function MedicationManagerPage() {
   /* ================= RENDER ================= */
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row justify-between gap-3">

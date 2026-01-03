@@ -36,6 +36,8 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
 
   /* ---------------- Load Master Symptoms ---------------- */
   useEffect(() => {
+    if (!open) return;
+    let isActive = true; 
     const loadSymptoms = async () => {
       const res = await getSymptoms();
       if (res.data) {
@@ -50,6 +52,9 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
       }
     };
     loadSymptoms();
+    return () => {
+      isActive = false;  
+    };
   }, []);
 
   /* ---------------- Map Symptoms ---------------- */
@@ -72,7 +77,7 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
   /* ---------------- Prefill for edit ---------------- */
  useEffect(() => {
     if (!open) return;
-
+    let isActive = true; 
     // ADD MODE
     if (!editPrescriptionId) {
       setDoctorId(undefined);
@@ -102,6 +107,9 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
       });
       setIsEditLoading(false);
     }
+    return () => {
+      isActive = false;   
+    };
   }, [open, editPrescriptionId, prescriptions, masterSymptoms]);
 
 
