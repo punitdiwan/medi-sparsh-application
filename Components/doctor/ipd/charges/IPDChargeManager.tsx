@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PaginationControl } from "@/components/pagination";
+import { useDischarge } from "../DischargeContext";
 interface ChargeRecord {
   id: string;
   chargeName: string | null;
@@ -37,6 +38,7 @@ interface ChargeRecord {
 }
 
 export default function IPDChargesManagerPage() {
+  const { isDischarged } = useDischarge();
   const params = useParams();
   const ipdAdmissionId = params?.id as string;
   const [currentPage, setCurrentPage] = useState(1);
@@ -262,21 +264,25 @@ export default function IPDChargesManagerPage() {
                   Print
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  onClick={() => onEdit(row.original)}
-                  className="cursor-pointer"
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
+                {!isDischarged && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => onEdit(row.original)}
+                      className="cursor-pointer"
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  onClick={() => onDelete(row.original.id)}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(row.original.id)}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -319,12 +325,14 @@ export default function IPDChargesManagerPage() {
               className="sm:w-72"
             />
 
-            <Button
-              onClick={() => setOpenAdd(true)}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" /> Add Charges
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => setOpenAdd(true)}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" /> Add Charges
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>

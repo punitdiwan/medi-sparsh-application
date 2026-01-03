@@ -30,6 +30,7 @@ import {
 } from "@/app/actions/ipdMedicationActions";
 import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
+import { useDischarge } from "../DischargeContext";
 
 /* ================= TYPES ================= */
 
@@ -60,6 +61,7 @@ type Medicine = { id: string; name: string; categoryId: string };
 /* ================= PAGE ================= */
 
 export default function MedicationManagerPage({ ipdId }: { ipdId: string }) {
+  const { isDischarged } = useDischarge();
   const [rows, setRows] = useState<MedicationRow[]>([]);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -246,53 +248,55 @@ export default function MedicationManagerPage({ ipdId }: { ipdId: string }) {
                 <div className="flex flex-row">
                   <p className="text-sm font-medium">Time: {dose.time}</p>
                   {/* Buttons */}
-                  <div className="flex items-end justify-end gap-2 ml-auto">
-                    {/* EDIT */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => {
-                              // Find category ID for the medicine
-                              const medicine = medicines.find(m => m.id === row.original.medicineId);
-                              const categoryId = medicine?.categoryId || "";
+                  {!isDischarged && (
+                    <div className="flex items-end justify-end gap-2 ml-auto">
+                      {/* EDIT */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => {
+                                // Find category ID for the medicine
+                                const medicine = medicines.find(m => m.id === row.original.medicineId);
+                                const categoryId = medicine?.categoryId || "";
 
-                              setEditData({
-                                rowId: row.original.id,
-                                dose,
-                                date: row.original.date,
-                                medicineId: row.original.medicineId,
-                                medicineName: row.original.medicineName || "",
-                                categoryId,
-                                categoryName: row.original.categoryName || "",
-                                note: row.original.note || "",
-                              });
-                              setOpen(true);
-                            }}
-                            className="text-primary hover:opacity-80"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                                setEditData({
+                                  rowId: row.original.id,
+                                  dose,
+                                  date: row.original.date,
+                                  medicineId: row.original.medicineId,
+                                  medicineName: row.original.medicineName || "",
+                                  categoryId,
+                                  categoryName: row.original.categoryName || "",
+                                  note: row.original.note || "",
+                                });
+                                setOpen(true);
+                              }}
+                              className="text-primary hover:opacity-80"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
-                    {/* DELETE */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleDeleteClick(row.original.id, dose.id)}
-                            className="text-destructive hover:opacity-80"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>Delete</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+                      {/* DELETE */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleDeleteClick(row.original.id, dose.id)}
+                              className="text-destructive hover:opacity-80"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm wrap-break-words">{dose.dosage}</p>
               </div>
@@ -330,16 +334,18 @@ export default function MedicationManagerPage({ ipdId }: { ipdId: string }) {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
-            <Button
-              onClick={() => {
-                setEditData(null);
-                setOpen(true);
-              }}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Add Medication
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => {
+                  setEditData(null);
+                  setOpen(true);
+                }}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Add Medication
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>

@@ -31,6 +31,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDischarge } from "../DischargeContext";
 
 /* ---------------- Types ---------------- */
 export interface VitalEntry {
@@ -54,6 +55,7 @@ export interface IPDVitalRecord {
 export default function VitalsPage() {
   const params = useParams();
   const id = params.id as string;
+  const { isDischarged } = useDischarge();
 
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<any[] | null>(null);
@@ -133,13 +135,15 @@ export default function VitalsPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
-            <Button
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Add Vital
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => setOpen(true)}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Add Vital
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -173,56 +177,58 @@ export default function VitalsPage() {
                         <div className="flex flex-col gap-1">
                           {vitals[name].map((v: any) => (
                             <div
-                              key={v.id} 
+                              key={v.id}
                               className="ml-4 flex justify-center gap-2 items-center group"
                             >
                               <span>
                                 {v.value} ({formatTime(v.time)})
                               </span>
 
-                              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() =>
-                                          handleEdit({
-                                            ...v,
-                                            date,
-                                            vitalName: name,
-                                            vitalId: v.vitalId,
-                                          })
-                                        }
-                                        className="text-blue-600 hover:text-blue-800"
-                                      >
-                                        <Pencil size={14} />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Edit Vital</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                              {!isDischarged && (
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            handleEdit({
+                                              ...v,
+                                              date,
+                                              vitalName: name,
+                                              vitalId: v.vitalId,
+                                            })
+                                          }
+                                          className="text-blue-600 hover:text-blue-800"
+                                        >
+                                          <Pencil size={14} />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Edit Vital</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
 
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() =>
-                                          handleDelete({
-                                            ...v,
-                                            date,
-                                            vitalName: name,
-                                            vitalId: v.vitalId,
-                                          })
-                                        }
-                                        className="text-red-600 hover:text-red-800"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Delete Vital</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            handleDelete({
+                                              ...v,
+                                              date,
+                                              vitalName: name,
+                                              vitalId: v.vitalId,
+                                            })
+                                          }
+                                          className="text-red-600 hover:text-red-800"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Delete Vital</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
