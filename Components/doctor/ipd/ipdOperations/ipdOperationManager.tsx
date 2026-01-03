@@ -14,9 +14,10 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { RotateCcw, Trash,AlignJustify } from "lucide-react";
+import { RotateCcw, Trash, AlignJustify } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
 import { ShowOperationDialog } from "./ShowOperationDialog";
+import { useDischarge } from "../DischargeContext";
 
 export type Operation = {
   id: string;
@@ -35,6 +36,7 @@ export type Operation = {
 };
 
 export default function IPdOperationsPage() {
+  const { isDischarged } = useDischarge();
   const params = useParams();
   const ipdAdmissionId = params.id as string;
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -124,7 +126,7 @@ export default function IPdOperationsPage() {
 
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER / SEARCH */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -149,12 +151,14 @@ export default function IPdOperationsPage() {
                 Show Deleted
               </Label>
             </div>
-            <Button
-              onClick={() => { setModalOpen(true); setEditingOperation(null); }}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" /> Add Operation
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => { setModalOpen(true); setEditingOperation(null); }}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" /> Add Operation
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -195,41 +199,49 @@ export default function IPdOperationsPage() {
                                 </TooltipTrigger>
                                 <TooltipContent>Show Details</TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button size="icon" variant="outline" onClick={() => { setEditingOperation(op); setModalOpen(true); }}>
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button size="icon" variant="destructive" onClick={() => handleDeleteClick(op.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete</TooltipContent>
-                              </Tooltip>
+                              {!isDischarged && (
+                                <>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="icon" variant="outline" onClick={() => { setEditingOperation(op); setModalOpen(true); }}>
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit</TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="icon" variant="destructive" onClick={() => handleDeleteClick(op.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete</TooltipContent>
+                                  </Tooltip>
+                                </>
+                              )}
                             </>
                           ) : (
                             <>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button size="icon" variant="outline" className="text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleRestore(op.id)}>
-                                    <RotateCcw className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Restore</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button size="icon" variant="destructive" onClick={() => handleDeleteClick(op.id, true)}>
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Permanent Delete</TooltipContent>
-                              </Tooltip>
+                              {!isDischarged && (
+                                <>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="icon" variant="outline" className="text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleRestore(op.id)}>
+                                        <RotateCcw className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Restore</TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="icon" variant="destructive" onClick={() => handleDeleteClick(op.id, true)}>
+                                        <Trash className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Permanent Delete</TooltipContent>
+                                  </Tooltip>
+                                </>
+                              )}
                             </>
                           )}
                         </div>

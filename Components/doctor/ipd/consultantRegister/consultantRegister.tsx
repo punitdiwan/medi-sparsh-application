@@ -34,6 +34,7 @@ import { PlusCircle, Pencil, Trash2, UserRound, RotateCcw } from "lucide-react";
 import AddConsultantRegisterDialog, {
   ConsultantRegisterInput,
 } from "./addConsultantRegisterDialog";
+import { useDischarge } from "../DischargeContext";
 
 /* ---------------- Types ---------------- */
 export interface ConsultantRegister
@@ -44,6 +45,7 @@ export interface ConsultantRegister
 
 /* ---------------- Page ---------------- */
 export default function ConsultantRegisterPage() {
+  const { isDischarged } = useDischarge();
   const params = useParams();
   const ipdAdmissionId = params?.id as string;
 
@@ -205,7 +207,7 @@ export default function ConsultantRegisterPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="py-2 space-y-6">
       {/* HEADER */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -231,16 +233,18 @@ export default function ConsultantRegisterPage() {
               <Label htmlFor="show-deleted" className="text-sm font-medium text-dialog cursor-pointer">Show Deleted</Label>
             </div>
 
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Add Register
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => {
+                  setEditing(null);
+                  setOpen(true);
+                }}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Add Register
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -293,7 +297,7 @@ export default function ConsultantRegisterPage() {
                     <TableCell>
                       <TooltipProvider>
                         <div className="flex justify-center gap-2">
-                          {!row.isDeleted && (
+                          {!row.isDeleted && !isDischarged && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -311,7 +315,7 @@ export default function ConsultantRegisterPage() {
                             </Tooltip>
                           )}
 
-                          {!row.isDeleted && (
+                          {!row.isDeleted && !isDischarged && (
                             <ConfirmDialog
                               trigger={
                                 <Button
@@ -329,7 +333,7 @@ export default function ConsultantRegisterPage() {
                             />
                           )}
 
-                          {row.isDeleted && (
+                          {row.isDeleted && !isDischarged && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button

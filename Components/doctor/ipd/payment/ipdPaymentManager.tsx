@@ -23,8 +23,10 @@ interface PaymentRecord {
 }
 
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { useDischarge } from "../DischargeContext";
 
 export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
+  const { isDischarged } = useDischarge();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -109,12 +111,14 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
               onChange={e => setSearch(e.target.value)}
               className="sm:w-72"
             />
-            <Button
-              onClick={() => { setModalOpen(true); setEditPayment(null); }}
-              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-            >
-              <PlusCircle className="h-5 w-5" /> Add Payment
-            </Button>
+            {!isDischarged && (
+              <Button
+                onClick={() => { setModalOpen(true); setEditPayment(null); }}
+                className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+              >
+                <PlusCircle className="h-5 w-5" /> Add Payment
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -163,24 +167,26 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
                             <TooltipContent>Edit</TooltipContent>
                           </Tooltip> */}
 
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span>
-                                <ConfirmDialog
-                                  trigger={
-                                    <Button size="icon" variant="destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  }
-                                  title="Delete Payment"
-                                  description="Are you sure you want to delete this payment? This action cannot be undone."
-                                  actionLabel="Delete"
-                                  onConfirm={() => handleDeleteClick(p.id)}
-                                />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
+                          {!isDischarged && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <ConfirmDialog
+                                    trigger={
+                                      <Button size="icon" variant="destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    }
+                                    title="Delete Payment"
+                                    description="Are you sure you want to delete this payment? This action cannot be undone."
+                                    actionLabel="Delete"
+                                    onConfirm={() => handleDeleteClick(p.id)}
+                                  />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete</TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </TooltipProvider>
                     </TableCell>

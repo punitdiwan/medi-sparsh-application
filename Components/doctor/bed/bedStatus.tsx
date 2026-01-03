@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -16,41 +17,36 @@ import { Separator } from "@/components/ui/separator";
 type BedStatus = {
   id: string;
   name: string;
-  bedType: string;
-  bedGroup: string;
-  floor: string;
-  status: "Available" | "Occupied" | "Cleaning" | "Maintenance";
+  bedTypeName: string | null;
+  bedGroupName: string | null;
+  floorName: string | null;
+  isOccupied: boolean;
 };
 
 export default function BedStatusPage() {
   const [search, setSearch] = useState("");
 
-  const [bedStatus, setBedStatus] = useState<BedStatus[]>([
-    {
-      id: "1",
-      name: "Bed-101",
-      bedType: "General",
-      bedGroup: "Group A",
-      floor: "1st Floor",
-      status: "Available",
-    },
-    {
-      id: "2",
-      name: "Bed-102",
-      bedType: "ICU",
-      bedGroup: "Group B",
-      floor: "2nd Floor",
-      status: "Occupied",
-    },
-    {
-      id: "3",
-      name: "Bed-103",
-      bedType: "General",
-      bedGroup: "Group A",
-      floor: "1st Floor",
-      status: "Cleaning",
-    },
-  ]);
+  const [bedStatus, setBedStatus] = useState<BedStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBeds();
+  }, []);
+
+  const fetchBeds = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/beds");
+      if (!response.ok) throw new Error("Failed to fetch beds");
+      const data = await response.json();
+      setBedStatus(data);
+    } catch (error) {
+      console.error("Error fetching beds:", error);
+      toast.error("Failed to load beds");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredData = useMemo(() => {
     return bedStatus.filter((item) =>
@@ -62,15 +58,15 @@ export default function BedStatusPage() {
 
   return (
     <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Bed Status Overview</CardTitle>
-                <CardDescription className="text-muted-foreground mt-1">
-                  Live status of hospital beds across floors, groups, and types.
-                </CardDescription>
-            </div>
-          </CardHeader>
-          <Separator />
+      <CardHeader>
+        <div>
+          <CardTitle className="text-2xl font-bold text-foreground">Bed Status Overview</CardTitle>
+          <CardDescription className="text-muted-foreground mt-1">
+            Live status of hospital beds across floors, groups, and types.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <Separator />
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Search Bar */}
@@ -94,29 +90,31 @@ export default function BedStatusPage() {
             </TableHeader>
 
             <TableBody>
-              {filteredData.map((item) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    Loading beds...
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.bedType}</TableCell>
-                  <TableCell>{item.bedGroup}</TableCell>
-                  <TableCell>{item.floor}</TableCell>
+                  <TableCell>{item.bedTypeName || "-"}</TableCell>
+                  <TableCell>{item.bedGroupName || "-"}</TableCell>
+                  <TableCell>{item.floorName || "-"}</TableCell>
                   <TableCell
                     className={
-                      item.status === "Available"
+                      !item.isOccupied
                         ? "text-green-600"
-                        : item.status === "Occupied"
-                        ? "text-red-600"
-                        : item.status === "Cleaning"
-                        ? "text-yellow-600"
-                        : "text-orange-600"
+                        : "text-red-600"
                     }
                   >
-                    {item.status}
+                    {item.isOccupied ? "Occupied" : "Available"}
                   </TableCell>
                 </TableRow>
               ))}
 
-              {filteredData.length === 0 && (
+              {filteredData.length === 0 && !loading && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                     No beds found.
@@ -127,6 +125,6 @@ export default function BedStatusPage() {
           </Table>
         </div>
       </CardContent>
-    </Card>
+    </Card >
   );
 }

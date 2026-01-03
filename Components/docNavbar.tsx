@@ -1,6 +1,6 @@
 "use client";
 
-import  { useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,11 +43,13 @@ import { toast } from "sonner";
 
 import ProfileImg from "@/public/palceholderImg.jpg";
 import ChangePasswordForm from "./forms/ChangePasswordForm";
-
+import { FaBed } from "react-icons/fa";
+import { Floor } from "./bedNavbar/bedNavType";
+import { BedManagementOverlay } from "./bedNavbar/bedNav";
 export default function Header() {
   const router = useRouter();
   const { user, logout } = useAuth();
-
+  const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
@@ -85,6 +87,15 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-4 pr-3">
+        <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
+          <FaBed size={19} />
+
+        </div>
+        <BedManagementOverlay
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+
         <ModeToggle />
 
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>

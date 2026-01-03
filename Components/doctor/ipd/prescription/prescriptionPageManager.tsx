@@ -1,52 +1,40 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableBody,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
-import {
-  PlusCircle,
-  Pencil,
-  Trash2,
-  Printer,
-  FileText,
-} from "lucide-react";
+import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody, } from "@/components/ui/table";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, } from "@/components/ui/tooltip";
+import { PlusCircle, Pencil, Trash2, FileText, } from "lucide-react";
 import PrescriptionModal from "./prescriptionModelPage";
 import { getIPDPrescriptions, deleteIPDPrescription } from "@/app/actions/ipdPrescriptionActions";
 import { getDoctors } from "@/lib/actions/doctorActions";
 import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
+import { PrescriptionViewDialog } from "./prescriptionViewDialog";
+import { getShortId } from "@/utils/getShortId";
+import { useDischarge } from "../DischargeContext";
 
 /* ---------------- Types ---------------- */
-type Prescription = {
+export type Prescription = {
   id: string;
   prescriptionNo: string;
-  date: string;
+  date: Date;
+  doctorId: string;
+  doctorName: string;
   findings: string;
-  doctorName: string | null;
-  doctorId: string | null;
-  medicines: any;
-  notes: string | null;
+  notes: string;
+  medicines: {
+    name: string;
+    category: string;
+    frequency: string;
+    duration: string;
+    timing: string;
+    instruction?: string;
+  }[];
 };
+
 
 type Doctor = {
   id: string;
@@ -55,12 +43,14 @@ type Doctor = {
 
 /* ---------------- Page ---------------- */
 export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
+  const { isDischarged } = useDischarge();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editPrescriptionId, setEditPrescriptionId] = useState<string | undefined>(undefined);
-
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewPrescription, setViewPrescription] = useState<Prescription | null>(null);
   // Delete Dialog State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -97,6 +87,12 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
     );
   }, [prescriptions, search]);
 
+
+  const handleView = (p: Prescription) => {
+    setViewPrescription(p);
+    setViewOpen(true);
+  };
+
   /* ---------------- Actions ---------------- */
   const handleDelete = (id: string) => {
     setDeleteId(id);
@@ -130,10 +126,6 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
     setOpen(true);
   };
 
-  const handlePrint = (p: Prescription) => {
-    alert(`Print prescription: ${p.prescriptionNo}`);
-  };
-
   return (
     <div className="py-2 space-y-6">
       {/* HEADER */}
@@ -151,11 +143,13 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
-            <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-              onClick={handleAdd}>
-              <PlusCircle className="h-5 w-5" />
-              Add Prescription
-            </Button>
+            {!isDischarged && (
+              <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+                onClick={handleAdd}>
+                <PlusCircle className="h-5 w-5" />
+                Add Prescription
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -176,6 +170,15 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
         description="Are you sure you want to delete this prescription? This action cannot be undone."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
+      />
+
+      <PrescriptionViewDialog
+        open={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setViewPrescription(null);
+        }}
+        data={viewPrescription}
       />
 
       {/* TABLE */}
@@ -200,7 +203,7 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
                 filtered.map((p) => (
                   <TableRow key={p.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
                     <TableCell className="font-medium text-dialog-muted">
-                      {p.prescriptionNo}
+                      {getShortId(p.prescriptionNo)}
                     </TableCell>
                     <TableCell className="text-dialog-muted">
                       {p.date ? new Date(p.date).toLocaleDateString() : "-"}
@@ -216,49 +219,38 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
                               <Button
                                 size="icon"
                                 variant="outline"
-                                onClick={() => handlePrint(p)}
-                              >
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Print</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditPrescriptionId(p.id);
-                                  setOpen(true);
-                                }}
+                                onClick={() => handleView(p)}
                               >
                                 <FileText className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>View</TooltipContent>
                           </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
+                          {!isDischarged && (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit</TooltipContent>
+                              </Tooltip>
 
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="destructive"
-                                onClick={() => handleDelete(p.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    onClick={() => handleDelete(p.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete</TooltipContent>
+                              </Tooltip>
+                            </>
+                          )}
                         </div>
                       </TooltipProvider>
                     </TableCell>

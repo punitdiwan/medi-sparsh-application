@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import TimelineDialog, { TimelineInput } from "./timelineDialog";
+import { useDischarge } from "../DischargeContext";
 
 interface TimelineItem extends TimelineInput {
   id: string;
@@ -51,6 +52,7 @@ const INITIAL_TIMELINE: TimelineItem[] = [
 ];
 
 export default function TimelineManagerPage() {
+  const { isDischarged } = useDischarge();
   const [timeline, setTimeline] =
     useState<TimelineItem[]>(INITIAL_TIMELINE);
 
@@ -100,13 +102,15 @@ export default function TimelineManagerPage() {
             Timeline
           </CardTitle>
 
-          <Button
-            onClick={handleAdd}
-            className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-          >
-            <PlusCircle className="h-5 w-5" />
-            Add Timeline
-          </Button>
+          {!isDischarged && (
+            <Button
+              onClick={handleAdd}
+              className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Add Timeline
+            </Button>
+          )}
         </CardHeader>
       </Card>
 
@@ -145,36 +149,37 @@ export default function TimelineManagerPage() {
                               </p>
                             </div>
 
-                            {/* ACTION ICONS */}
-                            <TooltipProvider>
-                              <div className="flex gap-2">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Pencil
-                                      className="h-4 w-4 cursor-pointer text-green-600"
-                                      onClick={() =>
-                                        handleEdit(item)
-                                      }
-                                    />
-                                  </TooltipTrigger>
-                                  <TooltipContent>Edit</TooltipContent>
-                                </Tooltip>
+                            {!isDischarged && (
+                              <TooltipProvider>
+                                <div className="flex gap-2">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Pencil
+                                        className="h-4 w-4 cursor-pointer text-green-600"
+                                        onClick={() =>
+                                          handleEdit(item)
+                                        }
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit</TooltipContent>
+                                  </Tooltip>
 
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Trash2
-                                      className="h-4 w-4 cursor-pointer text-red-600"
-                                      onClick={() =>
-                                        handleDelete(item.id)
-                                      }
-                                    />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    Delete
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Trash2
+                                        className="h-4 w-4 cursor-pointer text-red-600"
+                                        onClick={() =>
+                                          handleDelete(item.id)
+                                        }
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Delete
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </TooltipProvider>
+                            )}
                           </div>
 
                           <div className="flex flex-wrap items-center gap-4 pt-2">

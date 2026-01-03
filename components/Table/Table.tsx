@@ -63,7 +63,7 @@ export function Table<TData>({
                     key={header.id}
                     className={clsx(
                       "border-b bg-overview-card px-6 py-3 text-left whitespace-nowrap",
-                      isLast && "sticky right-0 bg-muted z-10 shadow-md"
+                      isLast && "sticky right-0 bg-muted z-[1] shadow-md"
                     )}
                   >
                     {header.isPlaceholder
@@ -103,7 +103,7 @@ export function Table<TData>({
                       key={cell.id}
                       className={clsx(
                         "border-b px-6 py-3 capitalize whitespace-nowrap",
-                        isLast && "sticky right-0 bg-background z-10 shadow-md"
+                        isLast && "sticky right-0 bg-background z-[1] shadow-md"
                       )}
                     >
                       {flexRender(
