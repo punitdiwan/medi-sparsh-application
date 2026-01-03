@@ -13,8 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { UserPlus, X } from "lucide-react";
+import { UserPlus, X, Calendar } from "lucide-react";
 import { PaginationControl } from "@/components/pagination";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import AppointmentModal from "./AppointmentModal";
 import { toast } from "sonner";
 import { getShortId } from "@/utils/getShortId";
@@ -155,7 +161,8 @@ export default function AppointmentPage() {
     },
     { accessorKey: "patientName", header: "Patient Name" },
     { accessorKey: "contact", header: "Contact" },
-    { accessorKey: "date",
+    {
+      accessorKey: "date",
       header: "Date",
       cell: ({ row }) => {
         const date = row.original.date;
@@ -178,53 +185,53 @@ export default function AppointmentPage() {
         return (
           <div className="flex items-center gap-2">
             <Can I="update" a="appointment" ability={ability}>
-            {ap.status === "completed" ? (
-              <Link
-                href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                  ap.patientName || ""
-                )}&appointmentId=${ap.id}&mode=edit`}
-              >
-                <Button variant="outline" size="sm">
-                  Edit
-                </Button>
-              </Link>
-            ) : ap.status === "cancelled" ? (
-              <Button variant="outline" size="sm" disabled>
-                Visit
-              </Button>
-            ) : (
-              <Link
-                href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                  ap.patientName || ""
-                )}&appointmentId=${ap.id}`}
-              >
-                <Button variant="outline" size="sm">
+              {ap.status === "completed" ? (
+                <Link
+                  href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                    ap.patientName || ""
+                  )}&appointmentId=${ap.id}&mode=edit`}
+                >
+                  <Button variant="outline" size="sm">
+                    Edit
+                  </Button>
+                </Link>
+              ) : ap.status === "cancelled" ? (
+                <Button variant="outline" size="sm" disabled>
                   Visit
                 </Button>
-              </Link>
-            )}
+              ) : (
+                <Link
+                  href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                    ap.patientName || ""
+                  )}&appointmentId=${ap.id}`}
+                >
+                  <Button variant="outline" size="sm">
+                    Visit
+                  </Button>
+                </Link>
+              )}
             </Can>
             <Can I="delete" a="appointment" ability={ability}>
-            <ConfirmDialog
-              title="Cancel Appointment"
-              description="Are you sure you want to cancel this appointment?"
-              actionLabel="Yes, Cancel"
-              onConfirm={() => handleCancelAppointment(ap.id)}
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={
-                    ap.status === "cancelled" ||
-                    ap.status === "completed" ||
-                    cancellingId === ap.id
-                  }
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              }
-            />
+              <ConfirmDialog
+                title="Cancel Appointment"
+                description="Are you sure you want to cancel this appointment?"
+                actionLabel="Yes, Cancel"
+                onConfirm={() => handleCancelAppointment(ap.id)}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={
+                      ap.status === "cancelled" ||
+                      ap.status === "completed" ||
+                      cancellingId === ap.id
+                    }
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                }
+              />
             </Can>
           </div>
         );
@@ -242,23 +249,28 @@ export default function AppointmentPage() {
     <div className="bg-background text-foreground min-h-screen p-6">
       <div className="space-y-4 mt-6">
         {/* HEADER */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-2xl font-semibold">My Appointments</h3>
-            <p className="text-sm text-muted-foreground">
-              Manage and view patient appointments
-            </p>
-          </div>
-          <Can I="create" a="appointment" ability={ability}>
-            <Button
-              variant="outline"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              New Appointment
-            </Button>
-          </Can>
-        </div>
+        <Card className="bg-Module-header text-white shadow-lg">
+          <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+            <div>
+              <CardTitle className="text-3xl flex items-center gap-2">
+                <Calendar className="h-7 w-7" />
+                My Appointments
+              </CardTitle>
+              <p className="text-sm text-indigo-100 mt-1">
+                Manage and view patient appointments
+              </p>
+            </div>
+            <Can I="create" a="appointment" ability={ability}>
+              <Button
+                className="bg-white text-indigo-700 hover:bg-indigo-50"
+                onClick={() => setIsModalOpen(true)}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                New Appointment
+              </Button>
+            </Can>
+          </CardHeader>
+        </Card>
 
         {/* FILTER BAR */}
         <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-sm border bg-card">
