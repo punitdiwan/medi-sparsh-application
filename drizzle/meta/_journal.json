@@ -211,6 +211,13 @@
       "when": 1767358183788,
       "tag": "0029_careful_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1767437702274,
+      "tag": "0030_pale_toad_men",
+      "breakpoints": true
     }
   ]
 }

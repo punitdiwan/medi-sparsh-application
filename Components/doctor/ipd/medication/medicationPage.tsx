@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -16,217 +16,185 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Pill, Pencil, Trash2 } from "lucide-react";
-import { MedicationDialog } from "./medicationDialog";
+import { MedicationDialog, MedicationInput } from "./medicationDialog";
 import clsx from "clsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  getIPDMedications,
+  addIPDMedication,
+  updateIPDMedication,
+  deleteIPDMedication,
+  getMedicines,
+  getMedicineCategories,
+  Dose,
+} from "@/app/actions/ipdMedicationActions";
+import { toast } from "sonner";
+import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
 
 /* ================= TYPES ================= */
-
-export type Dose = {
-  id: string;
-  time: string;
-  dosage: string;
-  createdBy: string;
-};
 
 export type MedicationRow = {
   id: string;
   date: string;
-  categoryName: string;
-  medicineName: string;
+  categoryName: string | null;
+  medicineId: string;
+  medicineName: string | null;
   doses: Dose[];
+  note: string | null;
 };
 
 type EditPayload = {
   rowId: string;
   dose: Dose;
+  date: string;
+  medicineId: string;
+  categoryId: string;
+  categoryName: string;
+  medicineName: string;
+  note: string;
 };
-/* ================= PAGE ================= */
-const dummyMedicationData: MedicationRow[] = [
-  {
-    id: "row-1",
-    date: "2026-01-02",
-    categoryName: "Antibiotic",
-    medicineName: "Amoxicillin",
-    doses: [
-      {
-        id: "dose-1",
-        time: "08:00 AM",
-        dosage: "500 mg",
-        createdBy: "Dr. Sharma (1001)",
-      },
-      {
-        id: "dose-2",
-        time: "08:00 PM",
-        dosage: "500 mg",
-        createdBy: "Dr. Sharma (1001)",
-      },
-    ],
-  },
-  {
-    id: "row-2",
-    date: "2026-01-02",
-    categoryName: "Pain Killer",
-    medicineName: "Paracetamol",
-    doses: [
-      {
-        id: "dose-3",
-        time: "09:00 AM",
-        dosage: "650 mg",
-        createdBy: "Nurse Anita (2003)",
-      },
-    ],
-  },
-  {
-    id: "row-3",
-    date: "2026-01-03",
-    categoryName: "Diabetes",
-    medicineName: "Metformin",
-    doses: [
-      {
-        id: "dose-4",
-        time: "07:30 AM",
-        dosage: "500 mg",
-        createdBy: "Dr. Mehta (1007)",
-      },
-      {
-        id: "dose-5",
-        time: "07:30 PM",
-        dosage: "500 mg",
-        createdBy: "Dr. Mehta (1007)",
-      },
-      {
-        id: "dose-6",
-        time: "11:00 PM",
-        dosage: "250 mg",
-        createdBy: "Dr. Mehta (1007)",
-      },
-    ],
-  },
-  {
-    id: "row-4",
-    date: "2026-01-03",
-    categoryName: "Cardiac",
-    medicineName: "Amlodipine",
-    doses: [
-      {
-        id: "dose-7",
-        time: "08:30 AM",
-        dosage: "5 mg",
-        createdBy: "Super Admin (9001)",
-      },
-    ],
-  },
-];
 
-export default function MedicationManagerPage() {
-  const [rows, setRows] = useState<MedicationRow[]>(dummyMedicationData);
+type Category = { id: string; name: string };
+type Medicine = { id: string; name: string; categoryId: string };
+
+/* ================= PAGE ================= */
+
+export default function MedicationManagerPage({ ipdId }: { ipdId: string }) {
+  const [rows, setRows] = useState<MedicationRow[]>([]);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<EditPayload | null>(null);
-  /* ================= ADD DOSE ================= */
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (data: {
-    date: string;
-    categoryName: string;
-    medicineName: string;
-    time: string;
-    dosage: string;
-  }) => {
-    if (editData) {
-      // EDIT MODE
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === editData.rowId
-            ? {
-                ...r,
-                doses: r.doses.map((d) =>
-                  d.id === editData.dose.id
-                    ? {
-                        ...d,
-                        time: data.time,
-                        dosage: data.dosage,
-                      }
-                    : d
-                ),
-              }
-            : r
-        )
-      );
-      setEditData(null);
-      return;
+  // Delete Dialog State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteInfo, setDeleteInfo] = useState<{ rowId: string; doseId: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  /* ================= FETCH DATA ================= */
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [medRes, medicinesRes, categoriesRes] = await Promise.all([
+        getIPDMedications(ipdId),
+        getMedicines(),
+        getMedicineCategories(),
+      ]);
+
+      if (medRes.success && medRes.data) {
+        // Transform data if needed, but it should match mostly
+        // @ts-ignore
+        setRows(medRes.data.map(item => ({
+          ...item,
+          doses: item.dose as Dose[]
+        })));
+      }
+      if (medicinesRes.success && medicinesRes.data) {
+        setMedicines(medicinesRes.data);
+      }
+      if (categoriesRes.success && categoriesRes.data) {
+        setCategories(categoriesRes.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // ADD MODE
-    setRows((prev) => {
-      const existing = prev.find(
-        (r) =>
-          r.date === data.date &&
-          r.medicineName === data.medicineName
-      );
+  useEffect(() => {
+    if (ipdId) {
+      fetchData();
+    }
+  }, [ipdId]);
 
-      if (existing) {
-        return prev.map((r) =>
-          r.id === existing.id
-            ? {
-                ...r,
-                doses: [
-                  ...r.doses,
-                  {
-                    id: crypto.randomUUID(),
-                    time: data.time,
-                    dosage: data.dosage,
-                    createdBy: "Super Admin (9001)",
-                  },
-                ],
-              }
-            : r
-        );
+  /* ================= ADD / EDIT DOSE ================= */
+
+  const handleSubmit = async (data: MedicationInput) => {
+    try {
+      if (editData) {
+        // EDIT MODE
+        const res = await updateIPDMedication({
+          rowId: editData.rowId,
+          doseId: editData.dose.id,
+          ipdAdmissionId: ipdId,
+          date: data.date,
+          medicineId: data.medicineId,
+          time: data.time,
+          dosage: data.dosage,
+          note: data.remarks,
+        });
+
+        if (res.success) {
+          toast.success("Medication updated successfully");
+          setEditData(null);
+          setOpen(false);
+          fetchData();
+        } else {
+          toast.error(res.error || "Failed to update medication");
+        }
+        return;
       }
 
-      return [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          date: data.date,
-          categoryName: data.categoryName,
-          medicineName: data.medicineName,
-          doses: [
-            {
-              id: crypto.randomUUID(),
-              time: data.time,
-              dosage: data.dosage,
-              createdBy: "Super Admin (9001)",
-            },
-          ],
-        },
-      ];
-    });
+      // ADD MODE
+      const res = await addIPDMedication({
+        ipdAdmissionId: ipdId,
+        date: data.date,
+        medicineId: data.medicineId,
+        time: data.time,
+        dosage: data.dosage,
+        note: data.remarks,
+      });
+
+      if (res.success) {
+        toast.success("Medication added successfully");
+        setOpen(false);
+        fetchData();
+      } else {
+        toast.error(res.error || "Failed to add medication");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    }
   };
 
   /* ================= DELETE ================= */
 
-  const deleteDose = (rowId: string, doseId: string) => {
-    setRows((prev) =>
-      prev
-        .map((r) =>
-          r.id === rowId
-            ? {
-                ...r,
-                doses: r.doses.filter((d) => d.id !== doseId),
-              }
-            : r
-        )
-        .filter((r) => r.doses.length > 0)
-    );
+  const handleDeleteClick = (rowId: string, doseId: string) => {
+    setDeleteInfo({ rowId, doseId });
+    setDeleteDialogOpen(true);
   };
+
+  const confirmDelete = async () => {
+    if (!deleteInfo) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await deleteIPDMedication(deleteInfo.rowId, deleteInfo.doseId, ipdId);
+      if (res.success) {
+        toast.success("Dose deleted successfully");
+        fetchData();
+        setDeleteDialogOpen(false);
+        setDeleteInfo(null);
+      } else {
+        toast.error(res.error || "Failed to delete dose");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   /* ================= FILTER ================= */
 
   const filteredRows = useMemo(() => {
     if (!search) return rows;
     return rows.filter(
       (r) =>
-        r.medicineName.toLowerCase().includes(search.toLowerCase()) ||
+        (r.medicineName && r.medicineName.toLowerCase().includes(search.toLowerCase())) ||
         r.date.includes(search)
     );
   }, [rows, search]);
@@ -255,6 +223,15 @@ export default function MedicationManagerPage() {
       {
         header: "Medicine",
         accessorKey: "medicineName",
+        cell: ({ row }) => (
+          <div>
+            <div className="font-medium">{row.original.medicineName}</div>
+            <div className="text-xs text-muted-foreground">{row.original.categoryName}</div>
+            {row.original.note && (
+              <div className="text-xs text-blue-500 mt-1">Note: {row.original.note}</div>
+            )}
+          </div>
+        )
       },
       ...Array.from({ length: maxDoseCount }).map((_, i) => ({
         header: `Dose ${i + 1}`,
@@ -263,7 +240,7 @@ export default function MedicationManagerPage() {
           if (!dose) return "—";
 
           return (
-           <div className="w-[180px] rounded-md bg-[#eeeeee] dark:bg-gray-700 border-overview-strong shadow-lg  p-2 flex flex-col justify-between">
+            <div className="w-[180px] rounded-md bg-[#eeeeee] dark:bg-gray-700 border-overview-strong shadow-lg  p-2 flex flex-col justify-between">
               {/* Dose info */}
               <div className="space-y-1 wrap-break-words">
                 <div className="flex flex-row">
@@ -276,9 +253,19 @@ export default function MedicationManagerPage() {
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => {
+                              // Find category ID for the medicine
+                              const medicine = medicines.find(m => m.id === row.original.medicineId);
+                              const categoryId = medicine?.categoryId || "";
+
                               setEditData({
                                 rowId: row.original.id,
                                 dose,
+                                date: row.original.date,
+                                medicineId: row.original.medicineId,
+                                medicineName: row.original.medicineName || "",
+                                categoryId,
+                                categoryName: row.original.categoryName || "",
+                                note: row.original.note || "",
                               });
                               setOpen(true);
                             }}
@@ -296,7 +283,7 @@ export default function MedicationManagerPage() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
-                            onClick={() => deleteDose(row.original.id, dose.id)}
+                            onClick={() => handleDeleteClick(row.original.id, dose.id)}
                             className="text-destructive hover:opacity-80"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -310,13 +297,13 @@ export default function MedicationManagerPage() {
                 <p className="text-sm wrap-break-words">{dose.dosage}</p>
               </div>
 
-              
+
             </div>
           );
         },
       })),
     ];
-  }, [maxDoseCount]);
+  }, [maxDoseCount, medicines]);
 
   const table = useReactTable({
     data: filteredRows,
@@ -332,7 +319,7 @@ export default function MedicationManagerPage() {
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-2xl font-bold">
-            <Pill className="bg-dialog-header text-dialog-icon"/>
+            <Pill className="bg-dialog-header text-dialog-icon" />
             Medication
           </CardTitle>
 
@@ -344,7 +331,10 @@ export default function MedicationManagerPage() {
               className="sm:w-72"
             />
             <Button
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setEditData(null);
+                setOpen(true);
+              }}
               className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
             >
               <PlusCircle className="h-5 w-5" />
@@ -380,38 +370,42 @@ export default function MedicationManagerPage() {
 
               {/* BODY */}
               <tbody>
-              {table.getRowModel().rows.map((row, idx) => (
-                <tr
-                  key={row.id}
+                {loading ? (
+                  <tr>
+                    <td colSpan={columns.length} className="text-center py-10">Loading...</td>
+                  </tr>
+                ) : table.getRowModel().rows.map((row, idx) => (
+                  <tr
+                    key={row.id}
                   // className={clsx(
                   //   idx % 2 === 0 ? "bg-background" : "bg-muted/30"
                   // )}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 border-b align-top"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-
-              {table.getRowModel().rows.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="text-center py-10 text-muted-foreground"
                   >
-                    No medication data
-                  </td>
-                </tr>
-              )}
-            </tbody>
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 border-b align-top"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {!loading && table.getRowModel().rows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      className="text-center py-10 text-muted-foreground"
+                    >
+                      No medication data
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
         </CardContent>
@@ -426,9 +420,30 @@ export default function MedicationManagerPage() {
             setEditData(null);
           }}
           onSubmit={handleSubmit}
-          defaultValues={editData ?? undefined}
+          defaultValues={editData ? {
+            date: editData.date,
+            time: editData.dose.time,
+            categoryId: editData.categoryId,
+            categoryName: editData.categoryName,
+            medicineId: editData.medicineId,
+            medicineName: editData.medicineName,
+            dosage: editData.dose.dosage,
+            remarks: editData.note
+          } : undefined}
+          medicines={medicines}
+          categories={categories}
         />
       )}
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Dose"
+        description="Are you sure you want to delete this dose? This action cannot be undone."
+        onConfirm={confirmDelete}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

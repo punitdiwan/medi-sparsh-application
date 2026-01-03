@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Pill, PlusCircle } from "lucide-react";
-import { Dose } from "./medicationPage";
+import { Dose } from "@/app/actions/ipdMedicationActions";
+import { toast } from "sonner";
 
 export type MedicationInput = {
   date: string;
@@ -34,8 +35,8 @@ export type MedicationInput = {
 };
 
 type Medication = MedicationInput & {
-  id: string;
-  dose: Dose;
+  id?: string;
+  dose?: Dose;
 };
 
 
@@ -47,22 +48,9 @@ type Props = {
   onClose: () => void;
   onSubmit: (data: MedicationInput) => void;
   defaultValues?: Partial<Medication>;
+  medicines: Medicine[];
+  categories: Category[];
 };
-
-/* ---------------- Static Demo Data ---------------- */
-const CATEGORIES: Category[] = [
-  { id: "1", name: "Antibiotic" },
-  { id: "2", name: "Painkiller" },
-  { id: "3", name: "Vitamin" },
-];
-
-const MEDICINES: Medicine[] = [
-  { id: "m1", name: "Amoxicillin", categoryId: "1" },
-  { id: "m2", name: "Cefixime", categoryId: "1" },
-  { id: "m3", name: "Paracetamol", categoryId: "2" },
-  { id: "m4", name: "Ibuprofen", categoryId: "2" },
-  { id: "m5", name: "Vitamin C", categoryId: "3" },
-];
 
 /* ---------------- Component ---------------- */
 export function MedicationDialog({
@@ -70,6 +58,8 @@ export function MedicationDialog({
   onClose,
   onSubmit,
   defaultValues,
+  medicines,
+  categories,
 }: Props) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -78,7 +68,7 @@ export function MedicationDialog({
   const [dosage, setDosage] = useState("");
   const [remarks, setRemarks] = useState("");
 
-  const filteredMedicines = MEDICINES.filter(
+  const filteredMedicines = medicines.filter(
     (m) => m.categoryId === category
   );
 
@@ -108,14 +98,14 @@ export function MedicationDialog({
   /* ---------------- Submit ---------------- */
   const handleSubmit = () => {
     if (!date || !time || !category || !medicine || !dosage) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
     const categoryName =
-      CATEGORIES.find((c) => c.id === category)?.name || "";
+      categories.find((c) => c.id === category)?.name || "";
     const medicineName =
-      MEDICINES.find((m) => m.id === medicine)?.name || "";
+      medicines.find((m) => m.id === medicine)?.name || "";
 
     onSubmit({
       date,
@@ -136,14 +126,14 @@ export function MedicationDialog({
       <DialogContent className="sm:max-w-xl p-0 border border-dialog bg-dialog-surface overflow-hidden rounded-xl">
         {/* HEADER */}
         <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog flex flex-row items-center justify-between">
-            <div className="flex items-center gap-3">
-                <div className="rounded-lg flex items-center justify-center">
-                <Pill className="bg-dialog-header text-dialog-icon" />
-                </div>
-                <DialogTitle className="text-lg font-semibold">
-                {defaultValues ? "Edit Medication" : "Add Medication"}
-                </DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg flex items-center justify-center">
+              <Pill className="bg-dialog-header text-dialog-icon" />
             </div>
+            <DialogTitle className="text-lg font-semibold">
+              {defaultValues ? "Edit Medication" : "Add Medication"}
+            </DialogTitle>
+          </div>
         </DialogHeader>
 
 
@@ -151,11 +141,11 @@ export function MedicationDialog({
         <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto bg-dialog-surface text-dialog">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Date *">
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary" />
             </Field>
 
             <Field label="Time *">
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary"/>
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary" />
             </Field>
 
             <Field label="Category *">
@@ -167,7 +157,7 @@ export function MedicationDialog({
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="select-dialog-content">
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id} className="select-dialog-item">
                       {c.name}
                     </SelectItem>
@@ -205,6 +195,8 @@ export function MedicationDialog({
                   <SelectItem value="2 Tablet" className="select-dialog-item">2 Tablet</SelectItem>
                   <SelectItem value="1 ml" className="select-dialog-item">1 ml</SelectItem>
                   <SelectItem value="2 ml" className="select-dialog-item">2 ml</SelectItem>
+                  <SelectItem value="5 ml" className="select-dialog-item">5 ml</SelectItem>
+                  <SelectItem value="10 ml" className="select-dialog-item">10 ml</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
