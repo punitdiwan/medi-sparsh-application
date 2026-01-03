@@ -14,6 +14,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Bed = {
   id: string;
@@ -25,6 +31,7 @@ type Bed = {
   floorName: string | null;
   hospitalId: string;
   isDeleted: boolean;
+  isOccupied: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -141,7 +148,7 @@ export default function BedManager() {
 
   const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
     const bed = beds.find((b) => b.id === id);
-    
+
     // If bed is already soft deleted and user is owner, offer permanent deletion
     if (isAlreadyDeleted && userRole === "owner") {
       // Use ConfirmDialog for permanent deletion
@@ -166,7 +173,7 @@ export default function BedManager() {
           const error = await response.json();
           throw new Error(error.error || "Failed to permanently delete bed");
         }
-        
+
         setBeds((prev) => prev.filter((b) => b.id !== id));
         toast.success("Bed permanently deleted");
       } else {
@@ -187,15 +194,15 @@ export default function BedManager() {
 
   return (
     <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Hospital Bed Manager</CardTitle>
-                <CardDescription className="text-muted-foreground mt-1">
-                  Add, edit, remove and organize beds across groups and floors.
-                </CardDescription>
-            </div>
-          </CardHeader>
-          <Separator />
+      <CardHeader>
+        <div>
+          <CardTitle className="text-2xl font-bold text-foreground">Hospital Bed Manager</CardTitle>
+          <CardDescription className="text-muted-foreground mt-1">
+            Add, edit, remove and organize beds across groups and floors.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <Separator />
       <CardContent>
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center gap-4">
@@ -247,24 +254,37 @@ export default function BedManager() {
 
                     <TableCell className="text-right space-x-2">
                       {!b.isDeleted && <Can I="update" a="bed" ability={ability}><BedModal initialData={b} onSave={handleSave} /></Can>}
-                    <Can I="delete" a="bed" ability={ability}>
-                      <ConfirmDialog
-                        trigger={
-                          <Button size="sm" variant="destructive">
-                            {b.isDeleted ? "Permanently Delete" : "Delete"}
-                          </Button>
-                        }
-                        title={b.isDeleted ? "Permanently Delete Bed?" : "Delete Bed?"}
-                        description={
-                          b.isDeleted
-                            ? "This bed is already deleted. Click confirm to permanently delete it."
-                            : "Are you sure you want to delete this bed?"
-                        }
-                        actionLabel={b.isDeleted ? "Permanently Delete" : "Delete"}
-                        cancelLabel="Cancel"
-                        onConfirm={() => performDelete(b.id, b.isDeleted)}
-                      />
-                     </Can> 
+                      <Can I="delete" a="bed" ability={ability}>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={b.isOccupied ? "cursor-not-allowed" : ""}>
+                                <ConfirmDialog
+                                  trigger={
+                                    <Button size="sm" variant="destructive" disabled={b.isOccupied}>
+                                      {b.isDeleted ? "Permanently Delete" : "Delete"}
+                                    </Button>
+                                  }
+                                  title={b.isDeleted ? "Permanently Delete Bed?" : "Delete Bed?"}
+                                  description={
+                                    b.isDeleted
+                                      ? "This bed is already deleted. Click confirm to permanently delete it."
+                                      : "Are you sure you want to delete this bed?"
+                                  }
+                                  actionLabel={b.isDeleted ? "Permanently Delete" : "Delete"}
+                                  cancelLabel="Cancel"
+                                  onConfirm={() => performDelete(b.id, b.isDeleted)}
+                                />
+                              </span>
+                            </TooltipTrigger>
+                            {b.isOccupied && (
+                              <TooltipContent>
+                                <p>Bed is occupied by the patient and cannot be deleted.</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))
