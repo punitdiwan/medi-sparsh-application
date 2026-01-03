@@ -1,6 +1,6 @@
 "use client";
 
-import  { useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -77,81 +77,6 @@ export default function Header() {
       toast.error("Failed to logout");
     }
   };
-const floorsData: Floor[] = [
-  {
-    id: "floor-1",
-    floorName: "Ground Floor",
-    wards: [
-      {
-        id: "ward-icu",
-        name: "ICU",
-        beds: [
-          {
-            id: "bed-1",
-            bedNo: "ICU-01",
-            status: "OCCUPIED",
-            patient: {
-              patientId: "P1001",
-              name: "Rahul Verma",
-              gender: "Male",
-              phone: "9876543210",
-              guardianName: "Amit Verma",
-              admissionDate: "01 Jan 2026",
-              consultant: "Dr. Sharma",
-            },
-          },
-          {
-            id: "bed-2",
-            bedNo: "ICU-02",
-            status: "EMPTY",
-          },
-        ],
-      },
-      {
-        id: "ward-general",
-        name: "GENERAL",
-        beds: [
-          {
-            id: "bed-3",
-            bedNo: "G-01",
-            status: "CLEANING",
-          },
-          {
-            id: "bed-4",
-            bedNo: "G-02",
-            status: "EMPTY",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "floor-2",
-    floorName: "First Floor",
-    wards: [
-      {
-        id: "ward-vip",
-        name: "VIP",
-        beds: [
-          {
-            id: "bed-5",
-            bedNo: "VIP-01",
-            status: "OCCUPIED",
-            patient: {
-              patientId: "P2001",
-              name: "Sita Rao",
-              gender: "Female",
-              phone: "9123456789",
-              guardianName: "Ramesh Rao",
-              admissionDate: "02 Jan 2026",
-              consultant: "Dr. Mehta",
-            },
-          },
-        ],
-      },
-    ],
-  },
-];
 
   return (
     <header className="sticky top-0 z-[9] flex h-16 items-center justify-between bg-background px-2">
@@ -163,14 +88,13 @@ const floorsData: Floor[] = [
 
       <div className="flex items-center gap-4 pr-3">
         <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
-          <FaBed size={19}/>
-          
+          <FaBed size={19} />
+
         </div>
-          <BedManagementOverlay
-            open={open}
-            onClose={() => setOpen(false)}
-            floors={floorsData}
-          />
+        <BedManagementOverlay
+          open={open}
+          onClose={() => setOpen(false)}
+        />
 
         <ModeToggle />
 

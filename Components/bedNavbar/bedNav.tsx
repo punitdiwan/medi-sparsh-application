@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { FloorSection } from "./bedFloor";
 import { Floor } from "./bedNavType";
 import { Portal } from "@/components/ui/Portal";
+import { getBedManagementData } from "@/lib/actions/bedActions";
+import { toast } from "sonner";
 
 export const zIndex = {
     sidebar: 10,
@@ -17,12 +19,12 @@ export const zIndex = {
 export function BedManagementOverlay({
     open,
     onClose,
-    floors,
 }: {
     open: boolean;
     onClose: () => void;
-    floors: Floor[];
 }) {
+    const [floors, setFloors] = useState<Floor[]>([]);
+
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
@@ -31,6 +33,16 @@ export function BedManagementOverlay({
         if (open) {
             window.addEventListener("keydown", handler);
             document.body.style.overflow = "hidden"; // 🔒 stop background scroll
+
+            const fetchData = async () => {
+                const res = await getBedManagementData();
+                if (res.data) {
+                    setFloors(res.data as Floor[]);
+                } else if (res.error) {
+                    toast.error(res.error);
+                }
+            };
+            fetchData();
         }
 
         return () => {

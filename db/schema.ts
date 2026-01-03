@@ -1,7 +1,7 @@
 import { batched } from "better-auth/react";
 import { create } from "domain";
 import { desc, relations, sql } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey, pgEnum } from "drizzle-orm/pg-core";
 
 const useUUIDv4 = sql`uuid_generate_v4()`;
 
@@ -1051,6 +1051,8 @@ export const operations = pgTable("operations", {
 });
 
 // table ipd admission table
+export const dischargeStatusEnum = pgEnum("discharge_status", ["pending", "normal", "referal", "death"]);
+
 export const ipdAdmission = pgTable("ipd_admission", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
@@ -1073,6 +1075,8 @@ export const ipdAdmission = pgTable("ipd_admission", {
 	medicalHistory: text("medical_history"),
 	admissionDate: timestamp("admission_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	dischargeDate: timestamp("discharge_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	dischargeStatus: dischargeStatusEnum("discharge_status").default("pending"),
+	dischargeInfo: jsonb("discharge_info"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	isDeleted: boolean("is_deleted").default(false),

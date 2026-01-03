@@ -1,11 +1,10 @@
 "use server";
 
 import { db } from "@/db/index";
-import { ipdAdmission, beds, doctors, staff, user, ipdConsultation } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges } from "@/db/schema";
+import { eq, and, ne } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
-import { patients, ipdCharges } from "@/drizzle/schema";
 import { createIPDChargesBatch, getIPDChargesByAdmission } from "@/db/queries";
 
 export async function createIPDAdmission(data: any) {
@@ -116,6 +115,7 @@ export async function getIPDAdmissionDetails(id: string) {
             medicalHistory: ipdAdmission.medicalHistory,
             notes: ipdAdmission.notes,
             diagnosis: ipdAdmission.diagnosis,
+            dischargeStatus: ipdAdmission.dischargeStatus,
         })
             .from(ipdAdmission)
             .leftJoin(patients, eq(ipdAdmission.patientId, patients.id))
@@ -386,5 +386,91 @@ export async function updateIPDCharge(id: string, data: any, ipdAdmissionId: str
     } catch (error) {
         console.error("Error updating IPD charge:", error);
         return { error: "Failed to update IPD charge" };
+    }
+}
+
+export async function dischargePatient(ipdAdmissionId: string, data: any) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const admission = await db.query.ipdAdmission.findFirst({
+            where: eq(ipdAdmission.id, ipdAdmissionId)
+        });
+
+        if (!admission) {
+            return { error: "Admission not found" };
+        }
+
+        await db.transaction(async (tx) => {
+            // Update IPD Admission
+            await tx.update(ipdAdmission)
+                .set({
+                    dischargeDate: new Date(data.dischargeDate),
+                    dischargeStatus: data.dischargeStatus.toLowerCase() === "referral" ? "referal" : data.dischargeStatus.toLowerCase() as any,
+                    notes: data.note,
+                    dischargeInfo: data,
+                })
+                .where(eq(ipdAdmission.id, ipdAdmissionId));
+
+            // Update Bed Status
+            if (admission.bedId) {
+                await tx.update(beds)
+                    .set({ isOccupied: false })
+                    .where(eq(beds.id, admission.bedId));
+            }
+
+            // Update Patient Status
+            await tx.update(patients)
+                .set({ isAdmitted: false })
+                .where(eq(patients.id, admission.patientId));
+        });
+
+        revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd`);
+        revalidatePath("/doctor/IPD");
+        return { success: true };
+    } catch (error) {
+        console.error("Error discharging patient:", error);
+        return { error: "Failed to discharge patient" };
+    }
+}
+
+export async function getDischargedPatients() {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await db.select({
+            id: ipdAdmission.id,
+            name: patients.name,
+            patientId: patients.id,
+            caseId: ipdAdmission.caseId,
+            gender: patients.gender,
+            phone: patients.mobileNumber,
+            consultantDoctor: user.name,
+            admissionDate: ipdAdmission.admissionDate,
+            dischargedDate: ipdAdmission.dischargeDate,
+            dischargeStatus: ipdAdmission.dischargeStatus,
+        })
+            .from(ipdAdmission)
+            .leftJoin(patients, eq(ipdAdmission.patientId, patients.id))
+            .leftJoin(doctors, eq(ipdAdmission.doctorId, doctors.id))
+            .leftJoin(staff, eq(doctors.staffId, staff.id))
+            .leftJoin(user, eq(staff.userId, user.id))
+            .where(
+                and(
+                    eq(ipdAdmission.hospitalId, org.id),
+                    ne(ipdAdmission.dischargeStatus, "pending")
+                )
+            );
+
+        return { data };
+    } catch (error) {
+        console.error("Error fetching discharged patients:", error);
+        return { error: "Failed to fetch discharged patients" };
     }
 }
