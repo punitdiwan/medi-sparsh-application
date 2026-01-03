@@ -6,6 +6,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from '@/components/ui/button';
 import { useAbility } from '@/components/providers/AbilityProvider';
 import { Can } from '@casl/react';
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { FlaskConical } from "lucide-react";
 
 type Patient = {
   id: number;
@@ -86,18 +88,29 @@ export default function ReportsPage() {
   const ability = useAbility();
   return (
     <div className='p-6'>
-    <div className="mb-3 flex  justify-between">
-      <h1 className="text-xl font-semibold mb-4">Lab Reports</h1>
-      <Can I="create" a="reports" ability={ability}>
-        <Link href="/doctor/reports/uploadReport">
-            <Button>upload reports</Button>     
-        </Link>
-      </Can>
-      </div>
+      <Card className="bg-Module-header text-white shadow-lg mb-6">
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <FlaskConical className="h-7 w-7" />
+              Lab Reports
+            </CardTitle>
+            <p className="text-sm text-indigo-100 mt-1">
+              Manage and view lab reports
+            </p>
+          </div>
+
+          <Can I="create" a="reports" ability={ability}>
+            <Link href="/doctor/reports/uploadReport">
+              <Button className="bg-white text-indigo-700 hover:bg-indigo-50">upload reports</Button>
+            </Link>
+          </Can>
+        </CardHeader>
+      </Card>
 
       <div>
-      <Table data={initialData} columns={columns} fallback={"No reports found"}/>
-    </div>
+        <Table data={initialData} columns={columns} fallback={"No reports found"}/>
+      </div>
     </div>
   );
 }

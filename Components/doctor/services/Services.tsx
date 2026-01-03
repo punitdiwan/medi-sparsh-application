@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Stethoscope } from "lucide-react";
 import AddServicePage from "./AddServicePage";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -115,11 +115,27 @@ export default function Services() {
 
   return (
     <div className="p-5">
-      <Card className="p-4 mb-4">
-        <CardHeader className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Our Services</h2>
+      <Card className="bg-Module-header text-white shadow-lg mb-4">
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <Stethoscope className="h-7 w-7" />
+              Our Services
+            </CardTitle>
+            <p className="text-sm text-indigo-100 mt-1">
+              Manage and maintain your services list
+            </p>
+          </div>
+
           <Can I="create" a="services" ability={ability}>
-            <Button variant="outline" onClick={() => { setEditService(undefined); setOpenModal(true); }}>
+            <Button
+              variant="outline"
+              className="bg-white text-indigo-700 hover:bg-indigo-50"
+              onClick={() => {
+                setEditService(undefined);
+                setOpenModal(true);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" /> Add Service
             </Button>
           </Can>
