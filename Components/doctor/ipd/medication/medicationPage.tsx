@@ -42,9 +42,85 @@ type EditPayload = {
   dose: Dose;
 };
 /* ================= PAGE ================= */
+const dummyMedicationData: MedicationRow[] = [
+  {
+    id: "row-1",
+    date: "2026-01-02",
+    categoryName: "Antibiotic",
+    medicineName: "Amoxicillin",
+    doses: [
+      {
+        id: "dose-1",
+        time: "08:00 AM",
+        dosage: "500 mg",
+        createdBy: "Dr. Sharma (1001)",
+      },
+      {
+        id: "dose-2",
+        time: "08:00 PM",
+        dosage: "500 mg",
+        createdBy: "Dr. Sharma (1001)",
+      },
+    ],
+  },
+  {
+    id: "row-2",
+    date: "2026-01-02",
+    categoryName: "Pain Killer",
+    medicineName: "Paracetamol",
+    doses: [
+      {
+        id: "dose-3",
+        time: "09:00 AM",
+        dosage: "650 mg",
+        createdBy: "Nurse Anita (2003)",
+      },
+    ],
+  },
+  {
+    id: "row-3",
+    date: "2026-01-03",
+    categoryName: "Diabetes",
+    medicineName: "Metformin",
+    doses: [
+      {
+        id: "dose-4",
+        time: "07:30 AM",
+        dosage: "500 mg",
+        createdBy: "Dr. Mehta (1007)",
+      },
+      {
+        id: "dose-5",
+        time: "07:30 PM",
+        dosage: "500 mg",
+        createdBy: "Dr. Mehta (1007)",
+      },
+      {
+        id: "dose-6",
+        time: "11:00 PM",
+        dosage: "250 mg",
+        createdBy: "Dr. Mehta (1007)",
+      },
+    ],
+  },
+  {
+    id: "row-4",
+    date: "2026-01-03",
+    categoryName: "Cardiac",
+    medicineName: "Amlodipine",
+    doses: [
+      {
+        id: "dose-7",
+        time: "08:30 AM",
+        dosage: "5 mg",
+        createdBy: "Super Admin (9001)",
+      },
+    ],
+  },
+];
 
 export default function MedicationManagerPage() {
-  const [rows, setRows] = useState<MedicationRow[]>([]);
+  const [rows, setRows] = useState<MedicationRow[]>(dummyMedicationData);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editData, setEditData] = useState<EditPayload | null>(null);
@@ -187,51 +263,54 @@ export default function MedicationManagerPage() {
           if (!dose) return "—";
 
           return (
-           <div className="min-w-[220px] max-w-[280px] max-h-[150px] rounded-md bg-overview-card border-overview-strong shadow-lg  p-2 flex flex-col justify-between">
+           <div className="w-[180px] rounded-md bg-[#eeeeee] dark:bg-gray-700 border-overview-strong shadow-lg  p-2 flex flex-col justify-between">
               {/* Dose info */}
               <div className="space-y-1 wrap-break-words">
-                <p className="text-sm font-medium">Time: {dose.time}</p>
+                <div className="flex flex-row">
+                  <p className="text-sm font-medium">Time: {dose.time}</p>
+                  {/* Buttons */}
+                  <div className="flex items-end justify-end gap-2 ml-auto">
+                    {/* EDIT */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => {
+                              setEditData({
+                                rowId: row.original.id,
+                                dose,
+                              });
+                              setOpen(true);
+                            }}
+                            className="text-primary hover:opacity-80"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    {/* DELETE */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => deleteDose(row.original.id, dose.id)}
+                            className="text-destructive hover:opacity-80"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
                 <p className="text-sm wrap-break-words">{dose.dosage}</p>
               </div>
 
-              {/* Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-2">
-                {/* EDIT */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => {
-                          setEditData({
-                            rowId: row.original.id,
-                            dose,
-                          });
-                          setOpen(true);
-                        }}
-                        className="text-primary hover:opacity-80"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                {/* DELETE */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => deleteDose(row.original.id, dose.id)}
-                        className="text-destructive hover:opacity-80"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              
             </div>
           );
         },
@@ -304,9 +383,9 @@ export default function MedicationManagerPage() {
               {table.getRowModel().rows.map((row, idx) => (
                 <tr
                   key={row.id}
-                  className={clsx(
-                    idx % 2 === 0 ? "bg-background" : "bg-muted/30"
-                  )}
+                  // className={clsx(
+                  //   idx % 2 === 0 ? "bg-background" : "bg-muted/30"
+                  // )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td

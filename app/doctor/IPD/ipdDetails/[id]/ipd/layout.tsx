@@ -13,7 +13,7 @@ import { getIPDAdmissionDetails } from "@/lib/actions/ipdActions";
 
 const TAB_ITEMS = [
   { label: "Overview", path: "" },
-  { label: "Nurse Notes", path: "nurseNote" },
+  // { label: "Nurse Notes", path: "nurseNote" },
   { label: "Medication", path: "medication" },
   { label: "Prescription", path: "prescription" },
   { label: "Consultant Register", path: "consultantRegister" },
