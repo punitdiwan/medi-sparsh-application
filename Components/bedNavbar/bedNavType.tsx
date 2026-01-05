@@ -19,7 +19,7 @@ export type Bed = {
 
 export type Ward = {
   id: string;
-  name: "ICU" | "NCU" | "VIP" | "GENERAL";
+  name: string;
   beds: Bed[];
 };
 

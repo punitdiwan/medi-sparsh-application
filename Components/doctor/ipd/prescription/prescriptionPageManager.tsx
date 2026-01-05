@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import {Card,CardHeader,CardTitle,CardContent,} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableHeader,  TableRow,  TableHead,  TableCell,  TableBody,} from "@/components/ui/table";
-import {  Tooltip,  TooltipTrigger,  TooltipContent,  TooltipProvider,} from "@/components/ui/tooltip";
-import {  PlusCircle,  Pencil,  Trash2,   FileText,} from "lucide-react";
+import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody, } from "@/components/ui/table";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, } from "@/components/ui/tooltip";
+import { PlusCircle, Pencil, Trash2, FileText, } from "lucide-react";
 import PrescriptionModal from "./prescriptionModelPage";
 import { getIPDPrescriptions, deleteIPDPrescription } from "@/app/actions/ipdPrescriptionActions";
 import { getDoctors } from "@/lib/actions/doctorActions";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { DeleteConfirmationDialog } from "@/Components/doctor/medicine/deleteConfirmationDialog";
 import { PrescriptionViewDialog } from "./prescriptionViewDialog";
 import { getShortId } from "@/utils/getShortId";
+import { useDischarge } from "../DischargeContext";
 
 /* ---------------- Types ---------------- */
 export type Prescription = {
@@ -42,6 +43,7 @@ type Doctor = {
 
 /* ---------------- Page ---------------- */
 export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
+  const { isDischarged } = useDischarge();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [search, setSearch] = useState("");
@@ -141,11 +143,13 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
               onChange={(e) => setSearch(e.target.value)}
               className="sm:w-72"
             />
-            <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-              onClick={handleAdd}>
-              <PlusCircle className="h-5 w-5" />
-              Add Prescription
-            </Button>
+            {!isDischarged && (
+              <Button className="flex items-center gap-2 bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+                onClick={handleAdd}>
+                <PlusCircle className="h-5 w-5" />
+                Add Prescription
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -222,27 +226,31 @@ export default function IPDPrescriptionPage({ ipdId }: { ipdId: string }) {
                             </TooltipTrigger>
                             <TooltipContent>View</TooltipContent>
                           </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
+                          {!isDischarged && (
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button size="icon" variant="outline" onClick={() => handleEdit(p.id)}>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit</TooltipContent>
+                              </Tooltip>
 
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="destructive"
-                                onClick={() => handleDelete(p.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="destructive"
+                                    onClick={() => handleDelete(p.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete</TooltipContent>
+                              </Tooltip>
+                            </>
+                          )}
                         </div>
                       </TooltipProvider>
                     </TableCell>

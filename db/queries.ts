@@ -891,6 +891,7 @@ export async function getBedsByHospital(hospitalId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
     })
@@ -915,6 +916,7 @@ export async function getDeletedBedsByHospital(hospitalId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
     })
@@ -939,6 +941,7 @@ export async function getBedById(bedId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
     })

@@ -1,4 +1,4 @@
-import { updateBed, deleteBed, permanentlyDeleteBed, getUserRole } from "@/db/queries";
+import { updateBed, deleteBed, permanentlyDeleteBed, getUserRole, getBedById } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -66,6 +66,15 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json(
         { error: "Bed ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if bed is occupied
+    const bed = await getBedById(id);
+    if (bed && bed.isOccupied) {
+      return NextResponse.json(
+        { error: "Bed is occupied by a patient and cannot be deleted" },
         { status: 400 }
       );
     }
