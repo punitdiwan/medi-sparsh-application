@@ -130,13 +130,17 @@ export default function MedicineGroupManager() {
   };
 
   return (
-    <Card className="p-4 shadow-sm">
-      <CardHeader>
-        <CardTitle>Medicine Groups</CardTitle>
-        <CardDescription>Manage all medicine groups.</CardDescription>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Medicine Group Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Organize medicines into functional groups.
+          </CardDescription>
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-5">
+      <CardContent className="p-4 space-y-5">
         <div className="flex justify-between items-center flex-wrap gap-3">
           <Input
             placeholder="Search group..."
@@ -168,7 +172,7 @@ export default function MedicineGroupManager() {
           open={openMg}
           setOpen={setOpenMg}
           entity="medicineGroup"
-          />
+        />
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
             <TableHeader className="bg-muted/40">

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface ChargeCategoryItem {
   id: string;
@@ -187,164 +188,176 @@ export default function ChargeCategoryManager() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-
-      {/* Top Controls */}
-      <div className="flex items-center justify-between gap-4">
-        <Input
-          placeholder="Search category..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="deleted-filter"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="deleted-filter">Show Deleted Only</Label>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Charge Category Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Organize charges into specific categories.
+          </CardDescription>
         </div>
-        <Can I="create" a="ChargesCategory" ability={ability}>
-          <Button
-            onClick={() => {
-              setEditItem(null);
-              setModalOpen(true);
-            }}
-          >
-            + Add Category
-          </Button>
-        </Can>
-      </div>
+      </CardHeader>
+      <CardContent>
+        <div className="p-4 space-y-4">
 
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+          {/* Top Controls */}
+          <div className="flex items-center justify-between gap-4">
+            <Input
+              placeholder="Search category..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
 
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-4">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : paginated.length > 0 ? (
-              paginated.map((item) => (
-                <TableRow
-                  key={item.id}
-                  className={item.isDeleted ? "opacity-50" : ""}
-                >
-                  <TableCell>{item.categoryType || "N/A"}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell className="max-w-[300px] wrap-break-words whitespace-normal">{item.description || "-"}</TableCell>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="deleted-filter"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="deleted-filter">Show Deleted Only</Label>
+            </div>
+            <Can I="create" a="ChargesCategory" ability={ability}>
+              <Button
+                onClick={() => {
+                  setEditItem(null);
+                  setModalOpen(true);
+                }}
+              >
+                + Add Category
+              </Button>
+            </Can>
+          </div>
 
-                  <TableCell className="text-right space-x-2">
-                    {!item.isDeleted ? (
-                      <>
-                      <Can I="update" a="ChargesCategory" ability={ability}>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditItem(item);
-                            setModalOpen(true);
-                          }}
-                        >
-                          <MdEdit />
-                        </Button>
-                      </Can>
-                      <Can I="delete" a="ChargesCategory" ability={ability}>
-                        <ConfirmDialog
-                          title="Delete Category?"
-                          description="This will soft delete the category."
-                          onConfirm={() => handleSoftDelete(item.id)}
-                          trigger={
-                            <Button size="sm" variant="destructive">
-                              Delete
-                            </Button>
-                          }
-                        />
-                        </Can>
-                      </>
-                    ) : (
-                      <>
-                      <Can I="delete" a="ChargesCategory" ability={ability}>
-                        <ConfirmDialog
-                          title="Restore Category?"
-                          description="This will reactivate the category."
-                          onConfirm={() => handleReactivate(item.id)}
-                          trigger={
-                            <Button size="sm" variant="outline">
-                              Restore
-                            </Button>
-                          }
-                        />
-                      
-                        <ConfirmDialog
-                          title="Delete Permanently?"
-                          description="This cannot be undone."
-                          onConfirm={() => handleHardDelete(item.id)}
-                          trigger={
-                            <Button size="sm" variant="destructive">
-                              Delete Forever
-                            </Button>
-                          }
-                        />
-                      </Can>
-                      </>
-                    )}
-                  </TableCell>
+          {/* Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-4 text-center text-muted-foreground"
-                >
-                  No categories found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end gap-2 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : paginated.length > 0 ? (
+                  paginated.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className={item.isDeleted ? "opacity-50" : ""}
+                    >
+                      <TableCell>{item.categoryType || "N/A"}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell className="max-w-[300px] wrap-break-words whitespace-normal">{item.description || "-"}</TableCell>
 
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
+                      <TableCell className="text-right space-x-2">
+                        {!item.isDeleted ? (
+                          <>
+                            <Can I="update" a="ChargesCategory" ability={ability}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditItem(item);
+                                  setModalOpen(true);
+                                }}
+                              >
+                                <MdEdit />
+                              </Button>
+                            </Can>
+                            <Can I="delete" a="ChargesCategory" ability={ability}>
+                              <ConfirmDialog
+                                title="Delete Category?"
+                                description="This will soft delete the category."
+                                onConfirm={() => handleSoftDelete(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="destructive">
+                                    Delete
+                                  </Button>
+                                }
+                              />
+                            </Can>
+                          </>
+                        ) : (
+                          <>
+                            <Can I="delete" a="ChargesCategory" ability={ability}>
+                              <ConfirmDialog
+                                title="Restore Category?"
+                                description="This will reactivate the category."
+                                onConfirm={() => handleReactivate(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="outline">
+                                    Restore
+                                  </Button>
+                                }
+                              />
 
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Next
-          </Button>
+                              <ConfirmDialog
+                                title="Delete Permanently?"
+                                description="This cannot be undone."
+                                onConfirm={() => handleHardDelete(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="destructive">
+                                    Delete Forever
+                                  </Button>
+                                }
+                              />
+                            </Can>
+                          </>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-4 text-center text-muted-foreground"
+                    >
+                      No categories found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-end gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </CardContent>
 
       {/* Modal */}
       <ChargeCategoryModal
@@ -357,7 +370,7 @@ export default function ChargeCategoryManager() {
         defaultData={editItem}
         chargeTypes={chargeTypes}
       />
-    </div>
+    </Card>
   );
 }
 

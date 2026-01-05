@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Upload } from "lucide-react";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 // ---------------- Types ----------------
 interface Tax {
   id: string;
@@ -192,180 +193,192 @@ export default function TaxManager() {
 
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Top Controls */}
-      <div className="flex items-center justify-between gap-4">
-        <Input
-          placeholder="Search tax..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="show-deleted"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="show-deleted">Show Deleted Only</Label>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Tax Category Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage tax categories and percentages.
+          </CardDescription>
         </div>
-        <div className="flex flex-row flex-wrap items-center gap-3">
-          <Can I="create" a="TaxCategory" ability={ability}>
-            <Button
-              onClick={() => {
-                setEditData(null);
-                setModalOpen(true);
-              }}
-            >
-              Add Tax
-            </Button>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  onClick={() => setOpen(true)}
-                  className="p-2"
-                >
-                  <Upload className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Upload Tax Category Excel</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          </Can>
-        </div>
-      </div>
-            <ExcelUploadModal
-              open={open}
-              setOpen={setOpen}
-              entity="hospitalChargeTaxCategory"
+      </CardHeader>
+      <CardContent>
+        <div className="p-4 space-y-4">
+          {/* Top Controls */}
+          <div className="flex items-center justify-between gap-4">
+            <Input
+              placeholder="Search tax..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
             />
-      {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Percentage</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
 
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center">
-                Loading...
-              </TableCell>
-            </TableRow>
-          ) : paginated.length > 0 ? (
-            paginated.map((tax) => (
-              <TableRow key={tax.id} className={tax.isDeleted ? "opacity-60" : ""}>
-                <TableCell>{tax.name}</TableCell>
-                <TableCell>{tax.percent}%</TableCell>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-deleted"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="show-deleted">Show Deleted Only</Label>
+            </div>
+            <div className="flex flex-row flex-wrap items-center gap-3">
+              <Can I="create" a="TaxCategory" ability={ability}>
+                <Button
+                  onClick={() => {
+                    setEditData(null);
+                    setModalOpen(true);
+                  }}
+                >
+                  Add Tax
+                </Button>
 
-                <TableCell className="text-right space-x-2">
-                  {!tax.isDeleted && (
-                     <Can I="update" a="TaxCategory" ability={ability}>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditData(tax);
-                          setModalOpen(true);
-                        }}
+                        onClick={() => setOpen(true)}
+                        className="p-2"
                       >
-                        Edit
+                        <Upload className="w-5 h-5" />
                       </Button>
-                     </Can>
-                  )}
-
-                  {tax.isDeleted ? (
-                    <>
-                    <Can I="delete" a="TaxCategory" ability={ability}>
-                      {/* Reactivate with confirmation */}
-                      <ConfirmDialog
-                        title="Reactivate Tax?"
-                        description="This will restore the tax back to active list."
-                        onConfirm={() => handleReactivate(tax.id)}
-                        trigger={
-                          <Button variant="outline" size="sm">
-                            Reactivate
-                          </Button>
-                        }
-                      />
-
-                      {/* Permanent Delete */}
-                      <ConfirmDialog
-                        title="Permanently delete?"
-                        description="This action cannot be undone."
-                        onConfirm={() => handlePermanentDelete(tax.id)}
-                        trigger={
-                          <Button variant="destructive" size="sm">
-                            Permanent Delete
-                          </Button>
-                        }
-                      />
-                      </Can>
-                    </>
-                  ) : (
-                    <Can I="delete" a="TaxCategory" ability={ability}>
-                    <ConfirmDialog
-                      title="Delete Tax?"
-                      description="This will soft delete the tax."
-                      onConfirm={() => handleDelete(tax.id)}
-                      trigger={
-                        <Button variant="destructive" size="sm">
-                          Delete
-                        </Button>
-                      }
-                    />
-                    </Can>
-                  )}
-                </TableCell>
-
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upload Tax Category Excel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Can>
+            </div>
+          </div>
+          <ExcelUploadModal
+            open={open}
+            setOpen={setOpen}
+            entity="hospitalChargeTaxCategory"
+          />
+          {/* Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Percentage</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
-                No tax records found.
-              </TableCell>
-            </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : paginated.length > 0 ? (
+                paginated.map((tax) => (
+                  <TableRow key={tax.id} className={tax.isDeleted ? "opacity-60" : ""}>
+                    <TableCell>{tax.name}</TableCell>
+                    <TableCell>{tax.percent}%</TableCell>
+
+                    <TableCell className="text-right space-x-2">
+                      {!tax.isDeleted && (
+                        <Can I="update" a="TaxCategory" ability={ability}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditData(tax);
+                              setModalOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Can>
+                      )}
+
+                      {tax.isDeleted ? (
+                        <>
+                          <Can I="delete" a="TaxCategory" ability={ability}>
+                            {/* Reactivate with confirmation */}
+                            <ConfirmDialog
+                              title="Reactivate Tax?"
+                              description="This will restore the tax back to active list."
+                              onConfirm={() => handleReactivate(tax.id)}
+                              trigger={
+                                <Button variant="outline" size="sm">
+                                  Reactivate
+                                </Button>
+                              }
+                            />
+
+                            {/* Permanent Delete */}
+                            <ConfirmDialog
+                              title="Permanently delete?"
+                              description="This action cannot be undone."
+                              onConfirm={() => handlePermanentDelete(tax.id)}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  Permanent Delete
+                                </Button>
+                              }
+                            />
+                          </Can>
+                        </>
+                      ) : (
+                        <Can I="delete" a="TaxCategory" ability={ability}>
+                          <ConfirmDialog
+                            title="Delete Tax?"
+                            description="This will soft delete the tax."
+                            onConfirm={() => handleDelete(tax.id)}
+                            trigger={
+                              <Button variant="destructive" size="sm">
+                                Delete
+                              </Button>
+                            }
+                          />
+                        </Can>
+                      )}
+                    </TableCell>
+
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No tax records found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-end gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
           )}
-        </TableBody>
-      </Table>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end gap-2 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
-
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Next
-          </Button>
         </div>
-      )}
+      </CardContent>
 
       {/* Modal */}
       <TaxModal
@@ -381,6 +394,6 @@ export default function TaxManager() {
             : null
         }
       />
-    </div>
+    </Card>
   );
 }

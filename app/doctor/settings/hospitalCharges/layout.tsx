@@ -9,18 +9,28 @@ export default function HospitalChargesLayout({ children }: { children: React.Re
   const pathname = usePathname();
   const ability = useAbility();
   const tabs = [
-    { name: "Charges", href: "/doctor/settings/hospitalCharges",action: "read",
-    subject: "hospitalCharger" },
-    { name: "Charges Category", href: "/doctor/settings/hospitalCharges/chargeCategory" ,action: "read",
-    subject: "ChargesCategory" },
-    { name: "Charge Type", href: "/doctor/settings/hospitalCharges/chargeType",action: "read",
-    subject: "ChargesType"  },
-    { name: "Tax Category", href: "/doctor/settings/hospitalCharges/taxCategory" ,action: "read",
-    subject: "TaxCategory" },
-    { name: "Unit Type", href: "/doctor/settings/hospitalCharges/unitType",action: "read",
-    subject: "ChargesUnit"  },
+    {
+      name: "Charges", href: "/doctor/settings/hospitalCharges", action: "read",
+      subject: "hospitalCharger"
+    },
+    {
+      name: "Charges Category", href: "/doctor/settings/hospitalCharges/chargeCategory", action: "read",
+      subject: "ChargesCategory"
+    },
+    {
+      name: "Charge Type", href: "/doctor/settings/hospitalCharges/chargeType", action: "read",
+      subject: "ChargesType"
+    },
+    {
+      name: "Tax Category", href: "/doctor/settings/hospitalCharges/taxCategory", action: "read",
+      subject: "TaxCategory"
+    },
+    {
+      name: "Unit Type", href: "/doctor/settings/hospitalCharges/unitType", action: "read",
+      subject: "ChargesUnit"
+    },
   ];
-const visibleTabs = tabs.filter((tab) =>
+  const visibleTabs = tabs.filter((tab) =>
     ability.can(tab.action, tab.subject)
   );
 
@@ -43,7 +53,7 @@ const visibleTabs = tabs.filter((tab) =>
       </Tabs>
 
       {/* Content */}
-      <div className="bg-background text-foreground p-4 rounded-md shadow-sm">
+      <div className="bg-background text-foreground rounded-md shadow-sm">
         {children}
       </div>
     </div>

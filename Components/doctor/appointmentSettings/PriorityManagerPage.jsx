@@ -104,16 +104,16 @@ export function PriorityManagerPage() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <div>
-          <CardTitle className="text-2xl font-bold text-foreground">Apponitment priority Management</CardTitle>
-            <CardDescription className="text-muted-foreground mt-1">
-              Manage appointments priorities here.
-            </CardDescription>
+          <CardTitle className="text-2xl font-bold">Appointment Priority Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage appointments priorities here.
+          </CardDescription>
         </div>
       </CardHeader>
-      <Separator />
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-6 space-y-6">
 

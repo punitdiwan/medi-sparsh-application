@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { ChargeModal, ChargeItem } from "./chargeModal";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Types for auxiliary data
 interface Option {
@@ -185,174 +186,186 @@ export default function ChargeManager() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-
-      <div className="flex items-center justify-between gap-4">
-
-        <Input
-          placeholder="Search charge..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-
-        <div className="flex items-center gap-2">
-          <Switch
-            id="deleted-filter"
-            checked={showDeleted}
-            onCheckedChange={setShowDeleted}
-          />
-          <Label htmlFor="deleted-filter">Show Deleted Only</Label>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Hospital Charges Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage all hospital charges and rates.
+          </CardDescription>
         </div>
-      <Can I="create" a="hospitalCharger" ability={ability}>
-        <Button
-          onClick={() => {
-            setEditData(null);
-            setModalOpen(true);
-          }}
-        >
-          + Add Charge
-        </Button>
-        </Can>
-      </div>
+      </CardHeader>
+      <CardContent>
+        <div className="p-4 space-y-4">
+
+          <div className="flex items-center justify-between gap-4">
+
+            <Input
+              placeholder="Search charge..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="deleted-filter"
+                checked={showDeleted}
+                onCheckedChange={setShowDeleted}
+              />
+              <Label htmlFor="deleted-filter">Show Deleted Only</Label>
+            </div>
+            <Can I="create" a="hospitalCharger" ability={ability}>
+              <Button
+                onClick={() => {
+                  setEditData(null);
+                  setModalOpen(true);
+                }}
+              >
+                + Add Charge
+              </Button>
+            </Can>
+          </div>
 
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Unit</TableHead>
-              <TableHead>Tax</TableHead>
-              <TableHead>Charge</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : paginated.length > 0 ? (
-              paginated.map((item) => (
-                <TableRow
-                  key={item.id}
-                  className={item.isDeleted ? "opacity-50" : ""}
-                >
-                  <TableCell>{item.chargeTypeName || "N/A"}</TableCell>
-                  <TableCell>{item.chargeCategoryName || "N/A"}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.unitName || "N/A"}</TableCell>
-                  <TableCell>
-                    {item.taxCategoryName || "N/A"} ({item.taxPercent}%)
-                  </TableCell>
-                  <TableCell>₹{item.amount}</TableCell>
-
-                  <TableCell className="text-right space-x-2">
-
-                    {!item.isDeleted ? (
-                      <>
-                      <Can I="update" a="hospitalCharger" ability={ability}>
-                        {/* Edit */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditData(item);
-                            setModalOpen(true);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      </Can>
-                      <Can I="delete" a="hospitalCharger" ability={ability}>
-                        <ConfirmDialog
-                          title="Delete Charge?"
-                          description="This will soft-delete the charge."
-                          onConfirm={() => handleDelete(item.id)}
-                          trigger={
-                            <Button size="sm" variant="destructive">
-                              Delete
-                            </Button>
-                          }
-                        />
-                      </Can>
-                      </>
-                    ) : (
-                      <>
-                      <Can I="delete" a="hospitalCharger" ability={ability}>
-                        <ConfirmDialog
-                          title="Restore Charge?"
-                          description="This will reactivate the charge."
-                          onConfirm={() => handleReactivate(item.id)}
-                          trigger={
-                            <Button size="sm" variant="outline">
-                              Restore
-                            </Button>
-                          }
-                        />
-
-                        <ConfirmDialog
-                          title="Permanently Delete?"
-                          description="This cannot be undone."
-                          onConfirm={() => handlePermanentDelete(item.id)}
-                          trigger={
-                            <Button size="sm" variant="destructive">
-                              Delete Forever
-                            </Button>
-                          }
-                        />
-                        </Can>
-                      </>
-                    )}
-
-                  </TableCell>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Tax</TableHead>
+                  <TableHead>Charge</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center text-muted-foreground py-4"
-                >
-                  No charges found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
 
-      {totalPages > 1 && (
-        <div className="flex justify-end gap-2 items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : paginated.length > 0 ? (
+                  paginated.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className={item.isDeleted ? "opacity-50" : ""}
+                    >
+                      <TableCell>{item.chargeTypeName || "N/A"}</TableCell>
+                      <TableCell>{item.chargeCategoryName || "N/A"}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.unitName || "N/A"}</TableCell>
+                      <TableCell>
+                        {item.taxCategoryName || "N/A"} ({item.taxPercent}%)
+                      </TableCell>
+                      <TableCell>₹{item.amount}</TableCell>
 
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
+                      <TableCell className="text-right space-x-2">
 
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Next
-          </Button>
+                        {!item.isDeleted ? (
+                          <>
+                            <Can I="update" a="hospitalCharger" ability={ability}>
+                              {/* Edit */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditData(item);
+                                  setModalOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </Can>
+                            <Can I="delete" a="hospitalCharger" ability={ability}>
+                              <ConfirmDialog
+                                title="Delete Charge?"
+                                description="This will soft-delete the charge."
+                                onConfirm={() => handleDelete(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="destructive">
+                                    Delete
+                                  </Button>
+                                }
+                              />
+                            </Can>
+                          </>
+                        ) : (
+                          <>
+                            <Can I="delete" a="hospitalCharger" ability={ability}>
+                              <ConfirmDialog
+                                title="Restore Charge?"
+                                description="This will reactivate the charge."
+                                onConfirm={() => handleReactivate(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="outline">
+                                    Restore
+                                  </Button>
+                                }
+                              />
+
+                              <ConfirmDialog
+                                title="Permanently Delete?"
+                                description="This cannot be undone."
+                                onConfirm={() => handlePermanentDelete(item.id)}
+                                trigger={
+                                  <Button size="sm" variant="destructive">
+                                    Delete Forever
+                                  </Button>
+                                }
+                              />
+                            </Can>
+                          </>
+                        )}
+
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-muted-foreground py-4"
+                    >
+                      No charges found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-end gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                Prev
+              </Button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+      </CardContent>
       <ChargeModal
         open={modalOpen}
         onClose={() => {
@@ -366,6 +379,6 @@ export default function ChargeManager() {
         units={units}
         taxCategories={taxCategories}
       />
-    </div>
+    </Card>
   );
 }
