@@ -4,14 +4,14 @@ import React, { useMemo, useState, useEffect } from "react";
 import { getVitals, createVital, updateVital, deleteVital } from "@/lib/actions/vitals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +42,7 @@ import ExcelUploadModal from "@/Components/HospitalExcel";
 import { TooltipProvider ,TooltipContent,  TooltipTrigger, Tooltip } from "@/components/ui/tooltip";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ColumnDef, Table } from "@/components/Table/Table";
 
 
 
@@ -162,16 +163,81 @@ export default function VitalsManager() {
     }
   };
 
+  const columns = useMemo<ColumnDef<Vital>[]>(() => [
+  {
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => row.original.name,
+  },
+  {
+    accessorKey: "from",
+    header: "From",
+    cell: ({ row }) => row.original.from,
+  },
+  {
+    accessorKey: "to",
+    header: "To",
+    cell: ({ row }) => row.original.to ?? "-",
+  },
+  {
+    accessorKey: "unit",
+    header: "Unit",
+    cell: ({ row }) => row.original.unit,
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-center">Action</div>,
+    cell: ({ row }) => {
+      const v = row.original;
+
+      return (
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end">
+              <Can I="update" a="vitals" ability={ability}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditing(v);
+                    setOpen(true);
+                  }}
+                >
+                  Edit
+                </DropdownMenuItem>
+              </Can>
+
+              <Can I="delete" a="vitals" ability={ability}>
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => handleDeleteClick(v.id)}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </Can>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+  },
+], [ability]);
+
   return (
-    <Card className="p-4 m-4 shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle>Vitals</CardTitle>
-        <CardDescription>
+    <>
+    <Card className="p-0 m-4 shadow-sm bg-dialog-surface">
+      <CardHeader className="bg-Module-header p-4 rounded-t-lg  text-white">
+        <CardTitle className="text-2xl font-semibold">Vitals</CardTitle>
+        <CardDescription className="mt-1 text-indigo-100">
           Manage vitals with their range and unit type.
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-2 pb-4">
         {/* Search + Add */}
         <div className="flex justify-between items-center flex-wrap gap-3 mb-5">
           <Input
@@ -209,79 +275,18 @@ export default function VitalsManager() {
               />
         {/* Table */}
         <div className="border rounded-xl overflow-hidden bg-card">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>From</TableHead>
-                <TableHead>To</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead className="w-[60px] text-center">Action</TableHead>
-              </TableRow>
-            </TableHeader>
+          <Table
+            data={filtered}
+            columns={columns}
+            fallback={
+              loading
+                ? "Loading vitals..."
+                : "No vitals found"
+            }
+            headerTextClassName="text-muted-foreground"
+            bodyTextClassName="text-foreground"
+          />
 
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-7 text-muted-foreground"
-                  >
-                    Loading vitals...
-                  </TableCell>
-                </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-7 text-muted-foreground"
-                  >
-                    No vitals found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((v) => (
-                  <TableRow key={v.id}>
-                    <TableCell>{v.name}</TableCell>
-                    <TableCell>{v.from}</TableCell>
-                    <TableCell>{v.to ?? "-"}</TableCell>
-                    <TableCell>{v.unit}</TableCell>
-
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <Can I="update" a="vitals" ability={ability}>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditing(v);
-                                setOpen(true);
-                              }}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                          </Can>
-                          <Can I="delete" a="vitals" ability={ability}>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDeleteClick(v.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </Can>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
         </div>
       </CardContent>
 
@@ -314,5 +319,6 @@ export default function VitalsManager() {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+    </>
   );
 }

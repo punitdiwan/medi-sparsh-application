@@ -36,7 +36,6 @@ import { Can } from "@casl/react";
 import { getSymptomTypes, createSymptomType, updateSymptomType, deleteSymptomType } from "@/lib/actions/symptomTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ExcelUploadModal from "@/Components/HospitalExcel";
-import { Separator } from "@/components/ui/separator";
 
 type SymptomType = {
   id: string;
@@ -155,12 +154,11 @@ export default function SymptomTypeManager() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <CardTitle className="text-2xl font-bold">Symptom Types</CardTitle>
-        <CardDescription className="mt-1">Manage all symptom types.</CardDescription>
+        <CardDescription className="mt-1 text-indigo-100">Manage all symptom types.</CardDescription>
       </CardHeader>
-      <Separator />
       <CardContent className="space-y-4 p-4">
         <div className="flex justify-between items-center gap-4">
           <Input
