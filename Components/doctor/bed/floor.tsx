@@ -125,13 +125,13 @@ export default function FloorManager() {
 
   const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
     const floor = floors.find((f) => f.id === id);
-    
+
     // If floor is already soft deleted and user is owner, offer permanent deletion
     if (isAlreadyDeleted && userRole === "owner") {
       const confirmPermanent = confirm(
         "This floor is already deleted. Click OK to permanently delete it, or Cancel to keep it."
       );
-      
+
       if (confirmPermanent) {
         try {
           const response = await fetch(`/api/floors/${id}?permanent=true`, {
@@ -142,7 +142,7 @@ export default function FloorManager() {
             const error = await response.json();
             throw new Error(error.error || "Failed to permanently delete floor");
           }
-          
+
           setFloors((prev) => prev.filter((f) => f.id !== id));
           toast.success("Floor permanently deleted");
         } catch (error) {
@@ -176,16 +176,16 @@ export default function FloorManager() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Floor Management</CardTitle>
-                <CardDescription className="text-muted-foreground mt-1">
-                  Add, update, delete and organize hospital floors.
-                </CardDescription>
-            </div>
-          </CardHeader>
-          <Separator />
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Floor Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Add, update, delete and organize hospital floors.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Top bar: Search + Switch + Add */}
@@ -196,7 +196,7 @@ export default function FloorManager() {
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-sm"
             />
-            
+
             <div className="flex items-center gap-2">
               <Switch
                 id="show-deleted"
@@ -236,9 +236,9 @@ export default function FloorManager() {
                     <TableCell className="text-right space-x-2">
                       {!floor.isDeleted && <Can I="update" a="floor" ability={ability}><FloorModal floor={floor} onSave={handleSave} /></Can>}
                       <Can I="delete" a="floor" ability={ability}>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
+                        <Button
+                          variant="destructive"
+                          size="sm"
                           onClick={() => handleDelete(floor.id, floor.isDeleted)}
                         >
                           {floor.isDeleted ? "Permanently Delete" : "Delete"}

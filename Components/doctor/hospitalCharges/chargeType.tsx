@@ -7,6 +7,7 @@ import { ChargeTypeModal } from "./ChargeTypeModal";
 import { toast } from "sonner";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Types
 interface Module {
@@ -174,127 +175,139 @@ export default function ChargeTypeManager() {
   };
 
   return (
-    <div className="p-6 bg-background space-y-4">
-      <div className="flex justify-end items-center">
-        <Can I="create" a="ChargesType" ability={ability}>
-          <Button
-            onClick={() => {
-              setEditItem(null);
-              setModalOpen(true);
-            }}
-          >
-            + Add Charge Type
-          </Button>
-        </Can>
-      </div>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Charge Type Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Define and manage different types of charges.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="p-4 space-y-4">
+          <div className="flex justify-end items-center">
+            <Can I="create" a="ChargesType" ability={ability}>
+              <Button
+                onClick={() => {
+                  setEditItem(null);
+                  setModalOpen(true);
+                }}
+              >
+                + Add Charge Type
+              </Button>
+            </Can>
+          </div>
 
-      <div className="overflow-auto border rounded-md max-h-[430px]">
-        <table className="w-full table-auto border-collapse">
-          <thead className="sticky top-0 bg-muted z-10">
-            <tr>
-              <th className="border p-2 text-left sticky left-0 bg-muted z-20">
-                Charge Name
-              </th>
-
-              {modules.map((mod) => (
-                <th key={mod.id} className="border p-2 text-center">
-                  {mod.name.toUpperCase()}
-                </th>
-              ))}
-
-              <th className="border p-2 text-center sticky right-0 bg-muted z-20">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={modules.length + 2} className="text-center p-4">
-                  Loading...
-                </td>
-              </tr>
-            ) : paginated.length > 0 ? (
-              paginated.map((item) => (
-                <tr key={item.id}>
-                  <td className="border p-2 sticky left-0 bg-background z-10">
-                    {item.name}
-                  </td>
+          <div className="overflow-auto border rounded-md max-h-[430px]">
+            <table className="w-full table-auto border-collapse">
+              <thead className="sticky top-0 bg-muted z-10">
+                <tr>
+                  <th className="border p-2 text-left sticky left-0 bg-muted z-20">
+                    Charge Name
+                  </th>
 
                   {modules.map((mod) => (
-                    <td key={mod.id} className="border p-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={(item.modules || []).includes(mod.id)}
-                        onChange={() => toggleFlag(item.id, mod.id)}
-                      />
-                    </td>
+                    <th key={mod.id} className="border p-2 text-center">
+                      {mod.name.toUpperCase()}
+                    </th>
                   ))}
 
-                  <td className="border p-2 sticky right-0 bg-background z-10">
-                    <div className="flex gap-2 justify-center">
-                      <Can I="update" a="ChargesType" ability={ability}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditItem(item);
-                            setModalOpen(true);
-                          }}
-                        >
-                          <MdEdit />
-                        </Button>
-                      </Can>
-                      <Can I="delete" a="ChargesType" ability={ability}>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          <MdDelete />
-                        </Button>
-                      </Can>
-                    </div>
-                  </td>
+                  <th className="border p-2 text-center sticky right-0 bg-muted z-20">
+                    Actions
+                  </th>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={modules.length + 2} className="text-center p-4">
-                  No charge types found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
 
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-4">
-          <p className="text-sm">
-            Page {currentPage} of {totalPages}
-          </p>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={modules.length + 2} className="text-center p-4">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : paginated.length > 0 ? (
+                  paginated.map((item) => (
+                    <tr key={item.id}>
+                      <td className="border p-2 sticky left-0 bg-background z-10">
+                        {item.name}
+                      </td>
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-            >
-              Prev
-            </Button>
+                      {modules.map((mod) => (
+                        <td key={mod.id} className="border p-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={(item.modules || []).includes(mod.id)}
+                            onChange={() => toggleFlag(item.id, mod.id)}
+                          />
+                        </td>
+                      ))}
 
-            <Button
-              variant="outline"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-            >
-              Next
-            </Button>
+                      <td className="border p-2 sticky right-0 bg-background z-10">
+                        <div className="flex gap-2 justify-center">
+                          <Can I="update" a="ChargesType" ability={ability}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditItem(item);
+                                setModalOpen(true);
+                              }}
+                            >
+                              <MdEdit />
+                            </Button>
+                          </Can>
+                          <Can I="delete" a="ChargesType" ability={ability}>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              <MdDelete />
+                            </Button>
+                          </Can>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={modules.length + 2} className="text-center p-4">
+                      No charge types found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <p className="text-sm">
+                Page {currentPage} of {totalPages}
+              </p>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  Prev
+                </Button>
+
+                <Button
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </CardContent>
 
       <ChargeTypeModal
         open={modalOpen}
@@ -311,6 +324,6 @@ export default function ChargeTypeManager() {
         }
         modules={modules}
       />
-    </div>
+    </Card>
   );
 }

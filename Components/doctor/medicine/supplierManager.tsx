@@ -169,13 +169,17 @@ export default function SupplierManager() {
   };
 
   return (
-    <Card className="w-full p-4 shadow-sm">
-      <CardHeader>
-        <CardTitle>Supplier Manager</CardTitle>
-        <CardDescription>Manage medicine suppliers here.</CardDescription>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Supplier Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage medicine suppliers and their information.
+          </CardDescription>
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="p-4 space-y-6">
         {/* Top Bar */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           <Input

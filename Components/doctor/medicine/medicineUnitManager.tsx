@@ -128,13 +128,17 @@ export default function MedicineUnitManager() {
   };
 
   return (
-    <Card className="w-full p-4 shadow-sm">
-      <CardHeader>
-        <CardTitle>Medicine Units</CardTitle>
-        <CardDescription>Manage Units here.</CardDescription>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Medicine Unit Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage measurement units for medicines.
+          </CardDescription>
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="p-4 space-y-6">
 
         {/* Search + Add */}
         <div className="flex items-center justify-between">

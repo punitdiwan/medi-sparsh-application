@@ -125,13 +125,13 @@ export default function BedTypeManager() {
 
   const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
     const bedType = bedTypes.find((b) => b.id === id);
-    
+
     // If bed type is already soft deleted and user is owner, offer permanent deletion
     if (isAlreadyDeleted && userRole === "owner") {
       const confirmPermanent = confirm(
         "This bed type is already deleted. Click OK to permanently delete it, or Cancel to keep it."
       );
-      
+
       if (confirmPermanent) {
         try {
           const response = await fetch(`/api/bed-types/${id}?permanent=true`, {
@@ -142,7 +142,7 @@ export default function BedTypeManager() {
             const error = await response.json();
             throw new Error(error.error || "Failed to permanently delete bed type");
           }
-          
+
           setBedTypes((prev) => prev.filter((b) => b.id !== id));
           toast.success("Bed Type permanently deleted");
         } catch (error) {
@@ -176,16 +176,16 @@ export default function BedTypeManager() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Bed Type Management</CardTitle>
-                <CardDescription className="text-muted-foreground mt-1">
-                  Add, update, delete and organize all hospital bed types.
-                </CardDescription>
-            </div>
-          </CardHeader>
-          <Separator />
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Bed Type Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Add, update, delete and organize all hospital bed types.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Top bar: Search + Switch + Add */}
@@ -196,7 +196,7 @@ export default function BedTypeManager() {
               onChange={(e) => setSearch(e.target.value)}
               className="max-w-sm"
             />
-            
+
             <div className="flex items-center gap-2">
               <Switch
                 id="show-deleted"
@@ -236,9 +236,9 @@ export default function BedTypeManager() {
                     <TableCell className="text-right space-x-2">
                       {!b.isDeleted && <Can I="update" a="bedType" ability={ability}> <BedTypeModal bedType={b} onSave={handleSave} /></Can>}
                       <Can I="delete" a="bedType" ability={ability}>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
+                        <Button
+                          variant="destructive"
+                          size="sm"
                           onClick={() => handleDelete(b.id, b.isDeleted)}
                         >
                           {b.isDeleted ? "Permanently Delete" : "Delete"}
