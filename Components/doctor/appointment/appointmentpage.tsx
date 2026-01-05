@@ -13,7 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { UserPlus, X, Calendar } from "lucide-react";
+import { Eye, Pencil,UserPlus, X, Calendar } from "lucide-react";
+import { FaShareSquare } from "react-icons/fa";
+import { FaPrescription } from "react-icons/fa6";
 import { PaginationControl } from "@/components/pagination";
 import {
   Card,
@@ -28,8 +30,10 @@ import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 import { Can } from "@casl/react";
 import { useAbility } from "@/components/providers/AbilityProvider";
-
-type Appointment = {
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AppointmentCard } from "./AppointmentCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+export type Appointment = {
   id: number;
   patient_id: string;
   doctor_id: string;
@@ -38,6 +42,7 @@ type Appointment = {
   status: string;
   patientName?: string;
   contact?: string;
+  purpose?: string;
 };
 
 export default function AppointmentPage() {
@@ -47,7 +52,7 @@ export default function AppointmentPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
-
+  const [viewAppointment, setViewAppointment] = useState<Appointment | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
@@ -62,7 +67,7 @@ export default function AppointmentPage() {
       setLoading(true);
       const response = await fetch("/api/appointments");
       const result = await response.json();
-
+      console.log("Appointments fetched:", result);
       if (result.success) {
         setAllData(result.data || []);
       } else {
@@ -178,40 +183,93 @@ export default function AppointmentPage() {
 
     {
       id: "action",
-      header: "Action",
+      header: () => <div className="text-center">Action</div>,
       cell: ({ row }) => {
         const ap = row.original;
 
+        const isCancelled = ap.status === "cancelled";
+        const isCompleted = ap.status === "completed";
+
         return (
-          <div className="flex items-center gap-2">
-            <Can I="update" a="appointment" ability={ability}>
-              {ap.status === "completed" ? (
-                <Link
-                  href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                    ap.patientName || ""
-                  )}&appointmentId=${ap.id}&mode=edit`}
-                >
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </Link>
-              ) : ap.status === "cancelled" ? (
-                <Button variant="outline" size="sm" disabled>
-                  Visit
-                </Button>
-              ) : (
-                <Link
-                  href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                    ap.patientName || ""
-                  )}&appointmentId=${ap.id}`}
-                >
-                  <Button variant="outline" size="sm">
-                    Visit
-                  </Button>
-                </Link>
-              )}
-            </Can>
-            <Can I="delete" a="appointment" ability={ability}>
+          <div className="flex justify-end items-center gap-1">
+            <TooltipProvider>
+              <Can I="update" a="appointment" ability={ability}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setViewAppointment(ap)}
+                          >
+                          <Eye size={16} />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>View Appointment</p>
+                    </TooltipContent>
+                  </Tooltip>
+                {isCompleted && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                          ap.patientName || ""
+                        )}&appointmentId=${ap.id}&mode=edit`}
+                      >
+                        <Button 
+                          variant="ghost"
+                          size="icon"
+                          >
+                          <Pencil size={16} />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Edit Prescription</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {!isCompleted && !isCancelled && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                          ap.patientName || ""
+                        )}&appointmentId=${ap.id}`}
+                      >
+                        <Button 
+                          variant="ghost"
+                          size="icon"
+                          >
+                          <FaPrescription size={16} />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Add Prescription</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
+                {!isCompleted && !isCancelled && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost"
+                        size="icon"
+                      >
+                        <FaShareSquare size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Move to IPD</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </Can>
+
+              <Can I="delete" a="appointment" ability={ability}>
               <ConfirmDialog
                 title="Cancel Appointment"
                 description="Are you sure you want to cancel this appointment?"
@@ -233,10 +291,11 @@ export default function AppointmentPage() {
                 }
               />
             </Can>
+            </TooltipProvider>
           </div>
         );
       },
-    },
+    }
   ];
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -344,6 +403,21 @@ export default function AppointmentPage() {
         onOpenChange={setIsModalOpen}
         onSuccess={fetchAppointments}
       />
+
+      <Dialog
+        open={!!viewAppointment}
+        onOpenChange={() => setViewAppointment(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[65vh] overflow-scroll border-overview-base bg-overview-base">
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+          </DialogHeader>
+
+          {viewAppointment && (
+            <AppointmentCard data={viewAppointment} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
