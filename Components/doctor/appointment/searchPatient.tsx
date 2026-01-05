@@ -26,19 +26,27 @@ type PatientSearchBoxProps = {
   is_IPD_Patient?: boolean;
   onSelect: (patient: Patient) => void;
   onAddPatient?: () => void;
+  defaultSearchTerm?: string;
 };
 
 export default function PatientSearchBox({
   is_IPD_Patient,
   onSelect,
   onAddPatient,
+  defaultSearchTerm = "",
 }: PatientSearchBoxProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(defaultSearchTerm);
   const [patientResults, setPatientResults] = useState<PatientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (defaultSearchTerm) {
+      setSearchTerm(defaultSearchTerm);
+    }
+  }, [defaultSearchTerm]);
 
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);

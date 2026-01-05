@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { getCurrentHospital } from "@/lib/tenant";
-import { createAppointment, getAppointmentsByHospital, getAppointmentsByDoctor, getUserRole } from "@/db/queries";
-import { cookies } from "next/headers";
+import { createAppointment, getAppointmentsByHospital, getAppointmentsByDoctor, getUserRole, updateAppointment } from "@/db/queries";
 
 // GET /api/appointments - Get all appointments for the current hospital
 export async function GET(request: NextRequest) {
   try {
-
     const user = await getCurrentUser();
     const hospital = await getCurrentHospital();
 
@@ -16,14 +14,9 @@ export async function GET(request: NextRequest) {
 
     let appointments;
 
-    // If user is a doctor (but not admin), show only their appointments
-    // If user is admin (even if they're also a doctor), show all appointments
-    // If user is any other role, show all appointments
     if (userRole === "doctor") {
-      // Only filter for doctor role, not admin
       appointments = await getAppointmentsByDoctor(user.id, hospital.hospitalId);
     } else {
-      // For admin, receptionist, or any other role, show all appointments
       appointments = await getAppointmentsByHospital(hospital.hospitalId);
     }
 
@@ -62,7 +55,7 @@ export async function POST(request: NextRequest) {
       isFollowUp: body.isFollowUp || false,
       previousAppointmentId: body.previousAppointmentId || null,
       scheduledBy: user.id,
-      services:body.services,
+      services: body.services,
     });
 
     return NextResponse.json({
@@ -75,6 +68,37 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : "Failed to create appointment",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/appointments - Update an existing appointment
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...data } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Appointment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const updatedAppointment = await updateAppointment(id, data);
+
+    return NextResponse.json({
+      success: true,
+      data: updatedAppointment,
+    });
+  } catch (error) {
+    console.error("Error updating appointment:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update appointment",
       },
       { status: 500 }
     );

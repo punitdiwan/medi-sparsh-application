@@ -59,12 +59,14 @@ interface AppointmentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  appointment?: any;
 }
 
 export default function AppointmentModal({
   open,
   onOpenChange,
   onSuccess,
+  appointment,
 }: AppointmentModalProps) {
   const form = useForm<AppointmentFormType>({
     resolver: zodResolver(formSchema),
@@ -111,8 +113,21 @@ export default function AppointmentModal({
 
     if (open) {
       fetchDoctorsAndServices();
+      if (appointment) {
+        form.reset({
+          patientName: appointment.patientName || "",
+          mobile_number: appointment.contact || "",
+          doctorUserId: appointment.doctor_id || "",
+          appointmentDate: appointment.date || "",
+          appointmentTime: appointment.time || "",
+          reason: appointment.purpose || "",
+          notes: appointment.notes || "",
+          patientId: appointment.patient_id || "",
+          services: appointment.services?.map((s: any) => s.id) || [],
+        });
+      }
     }
-  }, [open]);
+  }, [open, appointment]);
 
   const handlePatientSelect = (patient: any) => {
     form.setValue("patientName", patient.name || "");
@@ -133,10 +148,10 @@ export default function AppointmentModal({
 
       const selectedServices = dbServices.filter((service) =>
         values.services.includes(service.id)
-      ).map((item)=>{
-        return{
+      ).map((item) => {
+        return {
           ...item,
-          is_paid:true,
+          is_paid: true,
         }
       });
       const appointmentData = {
@@ -147,37 +162,39 @@ export default function AppointmentModal({
         reason: values.reason || "",
         notes: values.notes || "",
         isFollowUp: false,
-        services: selectedServices|| [],
+        services: selectedServices || [],
       };
       const response = await fetch("/api/appointments", {
-        method: "POST",
+        method: appointment ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(appointmentData),
+        body: JSON.stringify(appointment ? { ...appointmentData, id: appointment.id } : appointmentData),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Appointment booked successfully!");
-        try {
-          console.log("appointment success data",result);
+        toast.success(appointment ? "Appointment updated successfully!" : "Appointment booked successfully!");
+        if (!appointment) {
+          try {
+            console.log("appointment success data", result);
             await fetch("/api/transaction", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                appointment: result.data, 
+                appointment: result.data,
               }),
             });
           } catch (err) {
             console.error("Transaction create error:", err);
             toast.error("Transaction create failed!");
           }
+        }
 
-          form.reset();
-          onOpenChange(false);
-          if (onSuccess) onSuccess();
+        form.reset();
+        onOpenChange(false);
+        if (onSuccess) onSuccess();
       } else {
         toast.error(result.error || "Failed to book appointment");
       }
@@ -194,7 +211,7 @@ export default function AppointmentModal({
   return (
     <Dialog open={open} onOpenChange={(val) => {
       if (!val) {
-        form.reset(); 
+        form.reset();
         setDoctorSearch("");
         setShowDoctorDropdown(false);
         setServiceSearch("");
@@ -202,14 +219,14 @@ export default function AppointmentModal({
       }
       onOpenChange(val);
     }}
-    
+
     >
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto"
-        onInteractOutside={(e) => e.preventDefault()}  
-        onEscapeKeyDown={(e) => e.preventDefault()}    
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Book Appointment</DialogTitle>
+          <DialogTitle>{appointment ? "Edit Appointment" : "Book Appointment"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -539,7 +556,7 @@ export default function AppointmentModal({
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? "Booking..." : "Book Appointment"}
+                  {submitting ? (appointment ? "Updating..." : "Booking...") : (appointment ? "Update Appointment" : "Book Appointment")}
                 </Button>
               </div>
             </form>

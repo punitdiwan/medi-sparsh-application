@@ -317,9 +317,15 @@ export async function getAppointmentsByDoctor(doctorUserId: string, hospitalId: 
     id: item.appointments.id,
     patient_id: item.appointments.patientId,
     doctor_id: item.appointments.doctorUserId,
+    doctorName: item.user.name,
     patientName: item.patients.name,
     contact: item.patients.mobileNumber,
+    email: item.patients.email,
+    gender: item.patients.gender,
+    dob: item.patients.dob,
     purpose: item.appointments.reason || "General Consultation",
+    notes: item.appointments.notes,
+    services: item.appointments.services,
     date: item.appointments.appointmentDate,
     time: item.appointments.appointmentTime,
     status: item.appointments.status,
@@ -339,9 +345,15 @@ export async function getAppointmentsByHospital(hospitalId: string) {
     id: item.appointments.id,
     patient_id: item.appointments.patientId,
     doctor_id: item.appointments.doctorUserId,
+    doctorName: item.user.name,
     patientName: item.patients.name,
     contact: item.patients.mobileNumber,
+    email: item.patients.email,
+    gender: item.patients.gender,
+    dob: item.patients.dob,
     purpose: item.appointments.reason || "General Consultation",
+    notes: item.appointments.notes,
+    services: item.appointments.services,
     date: item.appointments.appointmentDate,
     time: item.appointments.appointmentTime,
     status: item.appointments.status,
@@ -357,6 +369,31 @@ export async function updateAppointmentStatus(appointmentId: string, status: str
   const result = await db
     .update(appointments)
     .set({ status, updatedAt: new Date().toISOString() })
+    .where(eq(appointments.id, appointmentId))
+    .returning();
+  return result[0];
+}
+
+export async function getAppointmentByIdWithDetails(appointmentId: string) {
+  const result = await db
+    .select({
+      appointment: appointments,
+      patient: patients,
+      doctor: doctors,
+    })
+    .from(appointments)
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(staff, eq(appointments.doctorUserId, staff.userId))
+    .innerJoin(doctors, eq(staff.id, doctors.staffId))
+    .where(eq(appointments.id, appointmentId))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function updateAppointment(appointmentId: string, data: Partial<typeof appointments.$inferInsert>) {
+  const result = await db
+    .update(appointments)
+    .set({ ...data, updatedAt: new Date().toISOString() })
     .where(eq(appointments.id, appointmentId))
     .returning();
   return result[0];

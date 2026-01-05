@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,23 +58,17 @@ interface IPDAdmissionPageProps {
   doctors: any[];
   bedGroups: any[];
   beds: Bed[];
+  appointmentData?: any;
+  opdId?: string;
 }
 
 
-export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, bedGroups, beds }: IPDAdmissionPageProps) {
+export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, bedGroups, beds, appointmentData, opdId }: IPDAdmissionPageProps) {
   const [availableBeds, setAvailableBeds] = useState<Bed[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [notes, setNotes] = useState("");
   const [previousMedicalIssue, setPreviousMedicalIssue] = useState("");
   const router = useRouter();
-
-  const [symptoms, setSymptoms] = useState<SymptomRow[]>([
-    { type: "", title: "", description: "" },
-  ]);
-  const handlePatientSelect = (patient: any) => {
-    form.setValue("patientId", patient.id?.toString());
-    setSelectedPatient(patient);
-  };
 
   const form = useForm<IPDFormValues>({
     resolver: zodResolver(ipdSchema),
@@ -83,6 +77,42 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       liveConsultation: "no",
     },
   });
+
+  const [symptoms, setSymptoms] = useState<SymptomRow[]>([
+    { type: "", title: "", description: "" },
+  ]);
+
+  const calculateAge = (dob: string | null) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  useEffect(() => {
+    if (appointmentData) {
+      if (appointmentData.patient) {
+        const patient = {
+          ...appointmentData.patient,
+          age: calculateAge(appointmentData.patient.dob)
+        };
+        handlePatientSelect(patient);
+      }
+      if (appointmentData.doctor) {
+        form.setValue("consultantDoctor", appointmentData.doctor.id);
+      }
+    }
+  }, [appointmentData]);
+
+  const handlePatientSelect = (patient: any) => {
+    form.setValue("patientId", patient.id?.toString());
+    setSelectedPatient(patient);
+  };
 
   const onBedGroupChange = (value: string) => {
     form.setValue("bedGroup", value);
@@ -118,6 +148,7 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
 
       notes,
       previousMedicalIssue,
+      opdId,
     };
 
     const result = await createIPDAdmission(payload);
@@ -305,7 +336,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
       <Card className="bg-overview-card border-overview-strong">
         <CardContent className="flex flex-col gap-1 px-4">
           <Label className="text-lg">Search Patient *</Label>
-          <PatientSearchBox is_IPD_Patient={true} onSelect={handlePatientSelect} />
+          <PatientSearchBox
+            is_IPD_Patient={true}
+            onSelect={handlePatientSelect}
+          />
           {!form.watch("patientId") && (
             <p className="text-xs text-muted-foreground">
               Please select patient from list
@@ -372,7 +406,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Casualty</Label>
-                  <Select onValueChange={(v) => form.setValue("casualty", v as any)}>
+                  <Select
+                    value={form.watch("casualty")}
+                    onValueChange={(v) => form.setValue("casualty", v as any)}
+                  >
                     <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
@@ -398,7 +435,10 @@ export default function IPDAdmissionPage({ symptomTypes, symptomsList, doctors, 
                 </div>
                 <div className="flex flex-col gap-1 w-full">
                   <Label>Consultant Doctor *</Label>
-                  <Select onValueChange={(v) => form.setValue("consultantDoctor", v)}>
+                  <Select
+                    value={form.watch("consultantDoctor")}
+                    onValueChange={(v) => form.setValue("consultantDoctor", v)}
+                  >
                     <SelectTrigger className="flex-1 w-full bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
                       <SelectValue placeholder="Search doctor" />
                     </SelectTrigger>

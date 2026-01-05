@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/index";
-import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges } from "@/db/schema";
+import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
@@ -41,6 +41,27 @@ export async function createIPDAdmission(data: any) {
             await tx.update(patients)
                 .set({ isAdmitted: true })
                 .where(eq(patients.id, data.patientId));
+
+            // Update Appointment if opdId is provided
+            if (data.opdId) {
+                const appointment = await tx.query.appointments.findFirst({
+                    where: eq(appointments.id, data.opdId)
+                });
+
+                if (appointment) {
+                    const updatedNotes = appointment.notes
+                        ? `${appointment.notes}\nPatient has been moved to IPD.`
+                        : "Patient has been moved to IPD.";
+
+                    await tx.update(appointments)
+                        .set({
+                            status: "completed",
+                            notes: updatedNotes,
+                            updatedAt: new Date().toISOString()
+                        })
+                        .where(eq(appointments.id, data.opdId));
+                }
+            }
         });
 
 
