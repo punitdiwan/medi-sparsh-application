@@ -13,7 +13,7 @@ export function WardCard({ ward }: { ward: Ward }) {
   return (
     <div className="rounded-2xl shadow-lg border border-border-surface bg-card p-4 hover:shadow-2xl transition-all duration-200">
        <div className="flex items-center justify-between mb-4">
-        <h4 className=" text-foreground">
+        <h4 className="text-foreground">
           {ward.name}
         </h4>
         <span className="text-sm font-medium text-muted-foreground">
@@ -52,7 +52,6 @@ export function BedIcon({ bed }: { bed: Bed }) {
           onClick={() => {
             if (isEmpty) {
               // redirect or open admit modal
-              console.log("Assign patient to", bed.bedNo);
             }
           }}
           className={`h-20 w-20 rounded-xl flex flex-col items-center justify-center shadow-md

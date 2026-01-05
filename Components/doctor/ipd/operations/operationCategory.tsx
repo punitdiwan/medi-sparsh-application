@@ -102,12 +102,10 @@ export default function OperationCategoryManager() {
           const counts: Record<string, number> = {};
           for (const category of result.data) {
             const countResult = await getOperationCountByCategory(category.id);
-            console.log(`Category ${category.name} (${category.id}): ${countResult.data} operations`);
             if (countResult.data !== undefined) {
               counts[category.id] = Number(countResult.data);
             }
           }
-          console.log("Final operation counts:", counts);
           setOperationCounts(counts);
           setCountsLoaded(true);
         } else {

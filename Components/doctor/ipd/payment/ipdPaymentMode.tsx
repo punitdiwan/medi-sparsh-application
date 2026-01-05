@@ -48,7 +48,6 @@ export default function AddIPDPaymentModal({
 
   // Summary State
   const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number; balance: number } | null>(null);
-  console.log("IPD ID :", ipdId);
   // Populate fields if editing
   useEffect(() => {
     if (paymentToEdit) {
@@ -71,9 +70,7 @@ export default function AddIPDPaymentModal({
   }, [paymentToEdit, open, ipdId]);
 
   const fetchSummary = async () => {
-    console.log("Fetching summary for IPD ID:", ipdId);
     const res = await getIPDPaymentSummary(ipdId);
-    console.log("Summary response:", res);
     if (res.success && res.data) {
       setSummary(res.data);
       if (!paymentToEdit) {

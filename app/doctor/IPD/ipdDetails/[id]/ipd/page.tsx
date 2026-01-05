@@ -155,9 +155,7 @@ export default function IPDOverviewPage() {
                 <DischargePatientModal
                   open={openDischarge}
                   onClose={() => setOpenDischarge(false)}
-                  onSubmit={(data) => {
-                    console.log("Discharge Data:", data);
-                  }}
+                  onSubmit={(data) => { }}
                 />
               </div>
             </div>

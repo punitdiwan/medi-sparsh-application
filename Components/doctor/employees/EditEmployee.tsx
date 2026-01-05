@@ -141,7 +141,6 @@ export function EditEmployeeModal({
   // Fetch employee by staffId
   useEffect(() => {
     if (!employeeId) return;
-    console.log("Employee staffId", employeeId);
     const fetchEmployee = async () => {
       setInitialLoading(true);
       try {
@@ -270,7 +269,6 @@ export function EditEmployeeModal({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                console.log("🔥 Native form submit triggered!");
                 form.handleSubmit(onSubmit)(e);
               }}
             >

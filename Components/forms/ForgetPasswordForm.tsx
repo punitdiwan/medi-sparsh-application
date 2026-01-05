@@ -18,7 +18,6 @@ function ForgetPasswordForm() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Here add your password reset logic
-    console.log("Password reset link sent to: ",email);
     setEmail("");
   };
 

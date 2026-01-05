@@ -80,17 +80,6 @@ export async function POST(req: Request) {
       const group = groups.find(g => g.name === groupName);
 
       if (!category || !company || !unit || !group) {
-        console.log({
-          rowNumber,
-          categoryName,
-          companyName,
-          unitName,
-          groupName,
-          categoryFound: !!category,
-          companyFound: !!company,
-          unitFound: !!unit,
-          groupFound: !!group,
-        });
         errors.push({ row: rowNumber, error: "Invalid category / company / unit / group name" });
         continue;
       }

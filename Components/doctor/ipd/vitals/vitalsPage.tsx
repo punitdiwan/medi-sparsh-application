@@ -83,7 +83,6 @@ export default function VitalsPage() {
 
   const handleEdit = (vital: any) => {
     const headerInfo = headers.find(([name]) => name === vital.vitalName)?.[1] || {};
-    // console.log("Editing vital:", vital, "with header info:", headerInfo);
     setEditData([{
       id: vital.id,
       vitalId: vital.vitalId,

@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     const hospital = await getCurrentHospital();
 
     const userRole = await getUserRole(user.id, hospital.hospitalId);
-    console.log("user data:",user,",hospital:",hospital,",memebrs:",userRole);
     return NextResponse.json({
       success: true,
       data: {

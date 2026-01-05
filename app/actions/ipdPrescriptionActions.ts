@@ -35,7 +35,6 @@ export async function getIPDPrescriptions(ipdAdmissionId: string) {
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 
 export async function createIPDPrescription(data: any) {
-    console.log("createIPDPrescription received data:", data);
     try {
         const org = await getActiveOrganization();
         if (!org) {

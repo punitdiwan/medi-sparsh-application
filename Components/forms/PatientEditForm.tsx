@@ -78,7 +78,6 @@ export default function PatientEditForm({ patientId, initialData }: PatientEditF
 
   const onSubmit = async (data: PatientFormData) => {
     setIsSubmitting(true);
-    console.log("Edit Patient data",data)
     try {
 
       // const response = await fetch(`/api/patients/${patientId}`, {

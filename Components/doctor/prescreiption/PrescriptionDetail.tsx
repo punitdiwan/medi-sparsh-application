@@ -230,8 +230,6 @@ export default function PrescriptionDetail() {
       if (orgMode !== undefined) {
         const isHospital = orgMode === "true";
         setOrg(isHospital);
-
-        console.log("Organization Mode:", isHospital ? "Hospital" : "Clinic");
       }
 
     } catch (error) {

@@ -362,7 +362,7 @@ export default function Employee() {
                   actionLabel="Activate"
                   cancelLabel="Cancel"
                   onConfirm={() => handleActivate(row.original.staff_id)}
-                  onCancel={() => console.log("Activation cancelled")}
+                  onCancel={() => {}}
                 />
               </Can>
             ) : (
@@ -389,7 +389,7 @@ export default function Employee() {
                     actionLabel="Delete"
                     cancelLabel="Cancel"
                     onConfirm={() => handleDelete(row.original.staff_id)}
-                    onCancel={() => console.log("Delete cancelled")}
+                    onCancel={() => {}}
                   />
                 </Can>
               </>
