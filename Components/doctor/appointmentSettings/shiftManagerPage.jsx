@@ -20,7 +20,7 @@ export function ShiftManagerPage() {
   const [loading, setLoading] = useState(true);
   const [showDeleted, setShowDeleted] = useState(false);
   const [filtered, setFiltered] = useState([]);
-  const ability =  useAbility();
+  const ability = useAbility();
   // modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState(null);
@@ -148,16 +148,16 @@ export function ShiftManagerPage() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <div>
-          <CardTitle className="text-2xl font-bold text-foreground">Shifts Management</CardTitle>
-            <CardDescription className="text-muted-foreground mt-1">
-              Create Shifts here.
-            </CardDescription>
+          <CardTitle className="text-2xl font-bold">Shifts Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Create Shifts here.
+          </CardDescription>
         </div>
       </CardHeader>
-      <Separator />
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-6 space-y-6">
 
