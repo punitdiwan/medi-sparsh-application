@@ -250,10 +250,10 @@ export default function VitalsModal({
                   disabled={!!initialData?.length}
                 >
                   <SelectTrigger className="bg-dialog-input border border-dialog-input text-dialog focus-visible:ring-primary">
-  <SelectValue>
-    {definitions.find(d => d.id === v.vitalId)?.name || "Select Vital"}
-  </SelectValue>
-</SelectTrigger>
+                    <SelectValue>
+                      {definitions.find(d => d.id === v.vitalId)?.name || "Select Vital"}
+                    </SelectValue>
+                  </SelectTrigger>
                   <SelectContent className="select-dialog-content">
                     {definitions.map((def) => (
                       <SelectItem

@@ -193,16 +193,16 @@ export default function BedManager() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <div>
-          <CardTitle className="text-2xl font-bold text-foreground">Hospital Bed Manager</CardTitle>
-          <CardDescription className="text-muted-foreground mt-1">
+          <CardTitle className="text-2xl font-bold">Hospital Bed Manager</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
             Add, edit, remove and organize beds across groups and floors.
           </CardDescription>
         </div>
       </CardHeader>
-      <Separator />
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center gap-4">

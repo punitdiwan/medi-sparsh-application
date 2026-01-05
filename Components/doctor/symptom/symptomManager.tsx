@@ -4,7 +4,6 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
@@ -157,13 +156,12 @@ export default function SymptomManager() {
   };
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <CardTitle className="text-2xl font-bold">Symptoms List</CardTitle>
-        <CardDescription className="mt-1">Add, edit and manage patient symptoms.</CardDescription>
+        <CardDescription className="mt-1 text-indigo-100">Add, edit and manage patient symptoms.</CardDescription>
       </CardHeader>
-      <Separator />
-      <CardContent className="space-y-4 p-4">
+      <CardContent className="space-y-4 px-4 pb-4">
         <div className="flex justify-between items-center gap-4">
           <Input
             placeholder="Search symptoms..."

@@ -6,7 +6,7 @@ import FilterBar from "@/features/filterbar/FilterBar";
 import { patientFilters } from "@/features/filterbar/configs/patientFilter";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Can } from "@casl/react"
 import { MdDelete } from "react-icons/md";
@@ -22,9 +22,9 @@ import { getShortId } from "@/utils/getShortId";
 import AddPatientDialog from "./AddPatientDialog";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Upload } from "lucide-react";
 // import { AbilityContext } from "@/lib/casl/AbilityContext";
 import { useAbility } from "@/components/providers/AbilityProvider";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 type Patient = {
   id: string;
   name: string;
@@ -224,49 +224,54 @@ useEffect(() => {
 
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
-      <div className="flex justify-between items-center gap-4 flex-wrap">
-        <div className="mb-6">
-          <h3 className="text-2xl font-semibold">Patients</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage and view patients 
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Total Patients: <span className="font-medium">({patients.length})</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <FieldSelectorDropdown
-            columns={allColumns as TypedColumn<Patient>[]}
-            visibleFields={visibleFields}
-            onToggle={(key, checked) => {
-              setVisibleFields((prev) =>
-                checked ? [...prev, key] : prev.filter((f) => f !== key)
-              );
-            }}
-          />
-          <Can I="create" a="patient" ability={ability}>
-            <AddPatientDialog onPatientAdded={fetchPatients} />
-          
-          
-           <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  onClick={() => setOpen(true)}
-                  className="p-2"
-                >
-                  <Upload className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Upload Patients Excel</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          </Can>
-        </div>
-      </div>
+      <Card className="bg-Module-header text-white shadow-lg mb-6">
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <Users className="h-7 w-7" />
+              Patients
+            </CardTitle>
+            <p className="text-sm text-indigo-100 mt-1">
+              Manage and view patients
+            </p>
+            <p className="text-sm text-indigo-100 mt-1">
+              Total Patients: <span className="font-medium">({patients.length})</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <FieldSelectorDropdown
+              columns={allColumns as TypedColumn<Patient>[]}
+              visibleFields={visibleFields}
+              onToggle={(key, checked) => {
+                setVisibleFields((prev) =>
+                  checked ? [...prev, key] : prev.filter((f) => f !== key)
+                );
+              }}
+            />
+            <Can I="create" a="patient" ability={ability}>
+              <AddPatientDialog onPatientAdded={fetchPatients} />
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpen(true)}
+                      className="p-2 bg-white text-indigo-700 hover:bg-indigo-50"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Patients Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Can>
+          </div>
+        </CardHeader>
+      </Card>
       <div className="mt-2">
         <FilterBar fields={patientFilters} onFilter={setFilters} />
       </div>

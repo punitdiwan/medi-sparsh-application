@@ -19,6 +19,7 @@ import { Upload } from "lucide-react";
 import { Can } from "@casl/react";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { PermissionButton } from "@/Components/role/PermissionButton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 interface UnitItem {
   id: string;
   name: string;
@@ -132,131 +133,143 @@ export default function UnitManager(): JSX.Element {
   };
 
   return (
-    <div className="p-6 space-y-5">
-
-      <div className="flex items-center justify-between gap-4">
-        <Input
-          placeholder="Search unit..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        <div className="flex flex-row flex-wrap items-center gap-3">
-          <Can I="create" a="ChargesUnit" ability={ability}>
-            <Button
-              onClick={() => {
-                setEditingData(null);
-                setOpenModal(true);
-              }}
-            >
-              + Add Unit
-            </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpen(true)}
-                    className="p-2"
-                  >
-                    <Upload className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Unit Excel</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </Can>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Unit Type Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Manage measurement units for charges.
+          </CardDescription>
         </div>
-      </div>
-      <ExcelUploadModal
-        open={open}
-        setOpen={setOpen}
-        entity="hopitalChargeUnit"
+      </CardHeader>
+      <CardContent>
+        <div className="p-4 space-y-4">
+
+          <div className="flex items-center justify-between gap-4">
+            <Input
+              placeholder="Search unit..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <div className="flex flex-row flex-wrap items-center gap-3">
+              <Can I="create" a="ChargesUnit" ability={ability}>
+                <Button
+                  onClick={() => {
+                    setEditingData(null);
+                    setOpenModal(true);
+                  }}
+                >
+                  + Add Unit
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpen(true)}
+                        className="p-2"
+                      >
+                        <Upload className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Upload Unit Excel</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Can>
+            </div>
+          </div>
+          <ExcelUploadModal
+            open={open}
+            setOpen={setOpen}
+            entity="hopitalChargeUnit"
           />
-      <Table>
-        <TableHeader className="sticky top-0 items-center z-10">
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right w-40">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={2} className="text-center py-5 text-muted-foreground">
-                Loading units...
-              </TableCell>
-            </TableRow>
-          ) : paginated.length > 0 ? (
-            paginated.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Can I="update" a="ChargesUnit" ability={ability}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingData(item);
-                        setOpenModal(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </Can>
-                  <Can I="delete" a="ChargesUnit" ability={ability}>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Can>
-                </TableCell>
+          <Table>
+            <TableHeader className="sticky top-0 items-center z-10">
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead className="text-right w-40">Actions</TableHead>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={2}
-                className="text-center py-5 text-muted-foreground"
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center py-5 text-muted-foreground">
+                    Loading units...
+                  </TableCell>
+                </TableRow>
+              ) : paginated.length > 0 ? (
+                paginated.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Can I="update" a="ChargesUnit" ability={ability}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingData(item);
+                            setOpenModal(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="ChargesUnit" ability={ability}>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Delete
+                        </Button>
+                      </Can>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={2}
+                    className="text-center py-5 text-muted-foreground"
+                  >
+                    No units found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="flex justify-end items-center gap-3">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
               >
-                No units found
-              </TableCell>
-            </TableRow>
+                Prev
+              </Button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
           )}
-        </TableBody>
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="flex justify-end items-center gap-3">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={currentPage <= 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
-
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            Next
-          </Button>
         </div>
-      )}
+      </CardContent>
 
       <UnitModal
         open={openModal}
@@ -264,7 +277,7 @@ export default function UnitManager(): JSX.Element {
         onClose={() => setOpenModal(false)}
         onSubmit={handleAddEdit}
       />
-    </div>
+    </Card>
   );
 }
 

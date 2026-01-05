@@ -196,10 +196,10 @@ export default function OperationManager() {
 
   return (
     <>
-      <Card className="border-muted/40 shadow-sm">
-        <CardHeader>
+      <Card className=" border-dialog shadow-sm py-0">
+        <CardHeader className="bg-Module-header p-4 rounded-t-lg text-white">
             <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ">
                 <ClipboardList className="h-5 w-5" />
             </div>
 
@@ -207,15 +207,13 @@ export default function OperationManager() {
                 <CardTitle className="text-2xl font-semibold">
                 Operation List
                 </CardTitle>
-                <CardDescription className="mt-1 text-muted-foreground">
+                <CardDescription className="mt-1 text-indigo-100">
                 Manage all hospital operations in one place. Add, edit, search, and
                 organize operations by category for quick and efficient access.
                 </CardDescription>
             </div>
             </div>
         </CardHeader>
-
-        <Separator />
 
         <div className="flex flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:gap-3">
@@ -244,7 +242,7 @@ export default function OperationManager() {
             </div>
 
             <Button
-                className="flex gap-2 bg-brand-gradient text-white hover:opacity-90"
+                variant="default"
                 onClick={() => {
                     setEditing(null);  
                     setDialogOpen(true);

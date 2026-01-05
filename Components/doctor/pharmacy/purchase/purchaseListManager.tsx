@@ -12,6 +12,7 @@ import PurchaseDetailsModal from "./PurchaseDetailsModal";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PiMagnifyingGlassDuotone } from "react-icons/pi";
+import { Card } from "@/components/ui/card";
 type Purchase = {
   id: string;
   billNumber: string;
@@ -101,10 +102,19 @@ export default function MedicinePurchaseListPage() {
   };
 
   return (
-    <div className="p-6 mt-4">
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-3xl font-bold">Medicine Purchase List</h1>
-      </div>
+    <div className="p-6">
+     <Card className="bg-Module-header text-white shadow-lg mb-6 px-6 py-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Pharmacy Medicine Purchases
+          </h1>
+          <p className="text-sm text-white/80 max-w-2xl">
+            Manage and track medicine purchases from suppliers. Review purchase bills,
+            supplier details, and filter records by date to maintain accurate inventory.
+          </p>
+        </div>
+      </Card>
+
 
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">

@@ -18,6 +18,7 @@ import { PharmacyMedicineModal, PharmacyMedicine } from "./PharmacyMedicineModal
 import { PiMagnifyingGlassDuotone } from "react-icons/pi";
 import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
 type MedicineDisplay = {
   id: string;
   name: string;
@@ -167,10 +168,17 @@ export default function MedicineStockManagerPage() {
 
   return (
     <div className="p-6">
-      {/* TITLE SECTION WITH BUTTONS */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-3xl font-bold">Medicine Stock Manager</h1>
-      </div>
+      <Card className="bg-Module-header text-white shadow-lg mb-6 px-6 py-5">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Pharmacy Medicine Management
+          </h1>
+          <p className="text-sm text-white/80 max-w-2xl">
+            Manage pharmacy medicines, stock quantity, categories, and suppliers.
+            Add, edit, or upload medicines to keep inventory organized and up to date.
+          </p>
+        </div>
+      </Card>
 
       {/* Search + Buttons */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">

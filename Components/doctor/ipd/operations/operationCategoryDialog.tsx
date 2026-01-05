@@ -38,9 +38,9 @@ export function OperationCategoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md rounded-xl border-muted/40 bg-background p-0 overflow-hidden shadow-lg">
+      <DialogContent className="sm:max-w-md rounded-xl border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg">
 
-        <DialogHeader className="px-6 py-4 text-white bg-brand-gradient">
+        <DialogHeader className="px-6 py-4 text-white bg-dialog-header border-b border-dialog">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
               {isEdit ? (
@@ -74,8 +74,9 @@ export function OperationCategoryDialog({
           </p>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-          <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+        <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}
+          className="text-dialog-muted">
             Cancel
           </Button>
 
@@ -84,7 +85,7 @@ export function OperationCategoryDialog({
               onSubmit(category.trim());
             }}
             disabled={!category.trim() || isLoading}
-            className="flex items-center gap-2 bg-brand-gradient text-white hover:opacity-90"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-4 w-4" />
             {isLoading ? "Saving..." : (isEdit ? "Update Category" : "Save Category")}

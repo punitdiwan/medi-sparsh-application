@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card } from "@/components/ui/card";
 
 
 type Bill = {
@@ -132,9 +133,17 @@ export default function PharmacyBillPage() {
 
   return (
     <div className="p-6">
-
-      <h1 className="text-3xl font-bold mb-4">Pharmacy Bill</h1>
-
+      <Card className="bg-Module-header text-white shadow-lg mb-4 px-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Pharmacy Billing
+          </h1>
+          <p className="text-sm text-white/80 max-w-2xl">
+            Generate and manage pharmacy bills for customers. View bill history,
+            payment modes, and print invoices seamlessly.
+          </p>
+        </div>
+      </Card>
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
         <Input
           placeholder="Search Bill / Patient / Case ID"

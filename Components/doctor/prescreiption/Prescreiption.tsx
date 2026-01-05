@@ -14,6 +14,8 @@ import { FaFileDownload } from "react-icons/fa";
 import { MdLocalPrintshop } from "react-icons/md";
 import { useAuth } from "@/context/AuthContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText } from "lucide-react";
 
 type Prescription = {
   id: string;
@@ -215,41 +217,43 @@ export default function PrescriptionPage() {
 
   return (
     <div className="p-6 mt-2 min-h-screen bg-background text-foreground">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h3 className="text-2xl font-semibold">
-            Prescriptions ({activeCount})
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Manage and view patient prescriptions
-          </p>
-        </div>
+      <Card className="bg-Module-header text-white shadow-lg mb-6">
+        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <CardTitle className="text-3xl flex items-center gap-2">
+              <FileText className="h-7 w-7" />
+              Prescriptions ({activeCount})
+            </CardTitle>
+            <p className="text-sm text-indigo-100 mt-1">
+              Manage and view patient prescriptions
+            </p>
+          </div>
 
-        <div className="flex gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={() => generatePDF("download")}>
-                <FaFileDownload />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download {getButtonLabel()}</p>
-            </TooltipContent>
-          </Tooltip>
+          <div className="flex gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={() => generatePDF("download")} className="bg-white text-indigo-700 hover:bg-indigo-50">
+                  <FaFileDownload />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download {getButtonLabel()}</p>
+              </TooltipContent>
+            </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={() => generatePDF("print")}>
-                <MdLocalPrintshop />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Print {getButtonLabel()}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-      </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={() => generatePDF("print")} className="bg-white text-indigo-700 hover:bg-indigo-50">
+                  <MdLocalPrintshop />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Print {getButtonLabel()}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Tabs
         value={activeTab}

@@ -108,118 +108,118 @@ export default function DoctorShiftManagerPage() {
   const totalPages = Math.ceil(filteredDoctors.length / rowsPerPage);
 
   return (
-      <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <div>
-            <CardTitle className="text-2xl font-bold text-foreground">Doctor Shift Management</CardTitle>
-            <CardDescription className="text-muted-foreground mt-1">
-              Assign shifts to doctors.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <Separator />
-        <CardContent className="pt-6 space-y-6">
-          {/* Search */}
-          <div className="relative w-full md:w-1/3">
-            <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search by doctor name..."
-              className="pl-9 bg-background/50 border-muted focus:border-primary transition-colors"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+        <div>
+          <CardTitle className="text-2xl font-bold">Doctor Shift Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Assign shifts to doctors.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      {/* <Separator /> */}
+      <CardContent className="pt-6 space-y-6">
+        {/* Search */}
+        <div className="relative w-full md:w-1/3">
+          <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search by doctor name..."
+            className="pl-9 bg-background/50 border-muted focus:border-primary transition-colors"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
 
-          {/* Table */}
-          <div className="rounded-lg border border-border/50 overflow-hidden shadow-sm bg-background">
-            <table className="w-full border-collapse">
-              <thead className="bg-muted/40">
+        {/* Table */}
+        <div className="rounded-lg border border-border/50 overflow-hidden shadow-sm bg-background">
+          <table className="w-full border-collapse">
+            <thead className="bg-muted/40">
+              <tr>
+                <th className="p-3 border-b text-left font-semibold text-muted-foreground">Doctor</th>
+                {shifts.map((shift) => (
+                  <th key={shift.id} className="p-3 border-b text-center font-semibold text-muted-foreground">
+                    <div className="flex flex-col items-center">
+                      <span>{shift.name}</span>
+                      <span className="text-[10px] font-normal text-muted-foreground/70">
+                        {shift.startTime} - {shift.endTime}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th className="p-3 border-b text-left font-semibold text-muted-foreground">Doctor</th>
-                  {shifts.map((shift) => (
-                    <th key={shift.id} className="p-3 border-b text-center font-semibold text-muted-foreground">
-                      <div className="flex flex-col items-center">
-                        <span>{shift.name}</span>
-                        <span className="text-[10px] font-normal text-muted-foreground/70">
-                          {shift.startTime} - {shift.endTime}
-                        </span>
-                      </div>
-                    </th>
-                  ))}
+                  <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground animate-pulse">
+                    Loading data...
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground animate-pulse">
-                      Loading data...
-                    </td>
+              ) : paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground">
+                    No doctors found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((doc) => (
+                  <tr key={doc.doctorId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="p-3 font-medium">{doc.doctorName}</td>
+                    {shifts.map((shift) => (
+                      <td key={shift.id} className="p-3 text-center">
+                        <Checkbox
+                          disabled={!ability.can("update", "doctorShift")}
+                          className="border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          checked={!!doc.shifts[shift.id]}
+                          onCheckedChange={() =>
+                            toggleDoctorShift(doc.doctorId, shift.id, !!doc.shifts[shift.id])
+                          }
+                        />
+                      </td>
+                    ))}
                   </tr>
-                ) : paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={1 + shifts.length} className="p-8 text-center text-muted-foreground">
-                      No doctors found.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((doc) => (
-                    <tr key={doc.doctorId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="p-3 font-medium">{doc.doctorName}</td>
-                      {shifts.map((shift) => (
-                        <td key={shift.id} className="p-3 text-center">
-                            <Checkbox
-                              disabled={!ability.can("update","doctorShift")}
-                              className="border-muted-foreground/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                              checked={!!doc.shifts[shift.id]}
-                              onCheckedChange={() =>
-                                toggleDoctorShift(doc.doctorId, shift.id, !!doc.shifts[shift.id])
-                              }
-                            />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center pt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{paginatedData.length}</span> of <span className="font-medium">{filteredDoctors.length}</span> doctors
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="h-8"
+            >
+              Previous
+            </Button>
 
-          {/* Pagination */}
-          <div className="flex justify-between items-center pt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium">{paginatedData.length}</span> of <span className="font-medium">{filteredDoctors.length}</span> doctors
+            <div className="text-sm font-medium px-2">
+              Page {page} of {totalPages || 1}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                className="h-8"
-              >
-                Previous
-              </Button>
 
-              <div className="text-sm font-medium px-2">
-                Page {page} of {totalPages || 1}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                className="h-8"
-              >
-                Next
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+              className="h-8"
+            >
+              Next
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

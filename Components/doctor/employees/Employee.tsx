@@ -21,6 +21,7 @@ import AddEmployeeForm from "@/Components/doctor/employees/AddEmployee";
 import FilterBar, { FilterField } from "@/features/filterbar/FilterBar";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { Card } from "@/components/ui/card";
 
 type Employee = {
   user_id: string;
@@ -411,11 +412,11 @@ export default function Employee() {
   return (
     <div className="p-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4 flex-wrap">
+      <Card className="bg-Module-header flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 mb-2 gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary" />
+          <Users className="w-6 h-6 text-white" />
           {/* <h1 className="text-2xl font-semibold">Employees</h1> */}
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-2xl text-white font-semibold">
             Employees ({employees.length})
           </h1>
         </div>
@@ -475,7 +476,12 @@ export default function Employee() {
             </Button>
           </Can>
         </div>
-      </div>
+        <p className="text-sm text-indigo-100 leading-relaxed max-w-4xl">
+          Manage hospital employees and doctors, including roles, departments,
+          specializations, and availability. Add, update, activate, or deactivate
+          staff members from this section.
+        </p>
+      </Card>
       <div className="mb-2">
         <FilterBar fields={employeeFilterFields} onFilter={setFilters} />
       </div>

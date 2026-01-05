@@ -5,11 +5,13 @@ import { z } from "zod";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { HeartPulse } from "lucide-react";
 
 const vitalSchema = z.object({
   name: z.string().min(2, "Vital name is required"),
@@ -73,12 +75,17 @@ export function VitalModal({ open, onOpenChange, vital, onSave }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{vital ? "Edit Vital" : "Add Vital"}</DialogTitle>
+      <DialogContent className="sm:max-w-lg border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-lg ">
+                <HeartPulse className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <DialogTitle>{vital ? "Edit Vital" : "Add Vital"}</DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="grid gap-4 mt-2">
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto ">
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
@@ -125,18 +132,20 @@ export function VitalModal({ open, onOpenChange, vital, onSave }: Props) {
               placeholder="e.g. mmHg"
             />
           </div>
+        </div>
+        <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
 
-          {/* Actions */}
-          <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}
+              className="text-dialog-muted">
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>
+            <Button onClick={handleSubmit}
+             className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
               {vital ? "Save Changes" : "Add Vital"}
             </Button>
-          </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
+        
     </Dialog>
   );
 }

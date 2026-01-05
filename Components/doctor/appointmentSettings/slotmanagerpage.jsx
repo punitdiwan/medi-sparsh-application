@@ -262,16 +262,16 @@ export default function SlotManagerPage() {
   const selectedShift = shifts.find(s => s.id === shiftId);
 
   return (
-    <Card className="shadow-md border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+      <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
         <div>
-          <CardTitle className="text-2xl font-bold text-foreground">Doctor Slots Management</CardTitle>
-            <CardDescription className="text-muted-foreground mt-1">
-              Assign slots to doctors.
-            </CardDescription>
+          <CardTitle className="text-2xl font-bold">Doctor Slots Management</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Assign slots to doctors.
+          </CardDescription>
         </div>
       </CardHeader>
-      <Separator />
+      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-6">
           <div className="grid grid-cols-12 gap-4 items-end">
