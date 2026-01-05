@@ -129,7 +129,7 @@ export default function Services() {
 
           <Can I="create" a="services" ability={ability}>
             <Button
-              variant="outline"
+              variant="default"
               className="bg-white text-indigo-700 hover:bg-indigo-50"
               onClick={() => {
                 setEditService(undefined);
@@ -142,6 +142,12 @@ export default function Services() {
         </CardHeader>
 
         <CardContent>
+          
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>

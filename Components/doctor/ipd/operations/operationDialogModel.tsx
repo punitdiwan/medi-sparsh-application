@@ -58,8 +58,8 @@ export function OperationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-        <DialogHeader className="bg-brand-gradient px-6 py-4 text-white">
+      <DialogContent className="sm:max-w-md p-0 border-dialog bg-dialog-surface overflow-hidden">
+        <DialogHeader className="bg-dialog-header border-b border-dialog px-6 py-4 text-white">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <ClipboardList className="h-5 w-5" />
             {isEdit ? "Edit Operation" : "Add Operation"}
@@ -112,8 +112,9 @@ export function OperationDialog({
           </div>
         </div>
 
-        <DialogFooter className="bg-muted/40 px-6 py-4">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+        <DialogFooter className="bg-dialog-header border-t border-dialog text-dialog-muted px-6 py-4">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}
+          className="text-dialog-muted">
             Cancel
           </Button>
           <Button
@@ -127,7 +128,7 @@ export function OperationDialog({
               });
               onClose();
             }}
-            className="bg-brand-gradient text-white hover:opacity-90"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             {isLoading ? "Saving..." : isEdit ? "Update" : "Save"}
           </Button>

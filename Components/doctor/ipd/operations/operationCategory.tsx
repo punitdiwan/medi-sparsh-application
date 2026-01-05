@@ -213,10 +213,10 @@ export default function OperationCategoryManager() {
 
   return (
     <>
-    <Card className="border-muted/40 shadow-sm">
-        <CardHeader >
+    <Card className="border-dialog shadow-sm py-0">
+        <CardHeader className="bg-Module-header p-4 rounded-t-lg text-white">
             <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ">
                 <Layers className="h-5 w-5" />
             </div>
 
@@ -224,14 +224,13 @@ export default function OperationCategoryManager() {
                 <CardTitle className="text-2xl font-semibold">
                 Operation Category List
                 </CardTitle>
-                <CardDescription className="mt-1">
+                <CardDescription className="mt-1 text-indigo-100">
                 Organize and manage operation categories used across hospital services.
                 </CardDescription>
             </div>
             </div>
         </CardHeader>
 
-        <Separator />
 
         <div className="flex flex-col gap-3 px-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:gap-3">
@@ -259,7 +258,8 @@ export default function OperationCategoryManager() {
 
             </div>
 
-            <Button className="flex gap-2 bg-brand-gradient text-white hover:opacity-90"
+            <Button 
+                variant="default"
                 onClick={() => {setEditingCategory(null);setDialogOpen(true);}}
                 disabled={loading || showDeleted}>
                 <Plus className="h-4 w-4" />
