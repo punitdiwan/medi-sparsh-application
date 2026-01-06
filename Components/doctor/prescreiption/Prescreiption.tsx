@@ -218,7 +218,7 @@ export default function PrescriptionPage() {
   return (
     <div className="p-6 mt-2 min-h-screen bg-background text-foreground">
       <Card className="bg-Module-header text-white shadow-lg mb-6">
-        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <CardTitle className="text-3xl flex items-center gap-2">
               <FileText className="h-7 w-7" />

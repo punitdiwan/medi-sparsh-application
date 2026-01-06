@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateUserProfile } from "@/lib/actions/updateUserProfile";
-
+import { Pencil ,CirclePlus} from 'lucide-react';
 // ------- TYPES -------
 interface HospitalMetadata {
   email: string;
@@ -188,17 +188,30 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
         <CardHeader className="flex flex-col items-center gap-4">
           
           {/* Hospital Logo */}
-          {hospital.logo ? (
-            <img
-              src={hospital.logo}
-              alt="Hospital Logo"
-              className="w-24 h-24 object-cover rounded-full shadow"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 shadow">
-              No Logo
-            </div>
-          )}
+         <div className="relative w-24 h-24 rounded-full shadow flex items-center justify-center overflow-visible">
+            {hospital.logo ? (
+              <img
+                src={"/palceholderImg.jpg"}
+                alt="Hospital Logo"
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <span className="text-sm text-primary bg-gray-300 dark:bg-gray-700 border border-white/70 w-24 h-24 rounded-full flex justify-center items-center text-center p-4">
+                Hospital Logo
+              </span>
+            )}
+
+            {/* Half inside / half outside icon */}
+            <Button
+              variant="secondary"
+              type="button"
+              className="absolute -bottom-2 -right-2 p-0 shadow bg-background rounded-full w-8 h-8">
+              {hospital.logo ? <Pencil size={18} className="p-0 w-4 h-4 text-indigo-800 dark:text-white"/> : <CirclePlus size={18} className="p-0 w-4 h-4 text-indigo-800 dark:text-white"/>}
+            </Button>
+          </div>
+
+
+
 
           <CardTitle className="text-xl font-bold border-b pb-2 w-full text-center">
             Admin Profile

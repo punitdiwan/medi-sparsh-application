@@ -48,7 +48,7 @@ export default function FilterBar({ fields, onFilter }: FilterBarProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-sm border bg-card">
+    <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-lg border border-dialog bg-dialog-surface">
       {fields.map((field) => {
         switch (field.type) {
           case "text":

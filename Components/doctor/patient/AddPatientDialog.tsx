@@ -19,18 +19,18 @@ const AddPatientDialog: React.FC<AddPatientDialogProps> = ({ onPatientAdded }) =
   return (
     <>
       {/* Trigger button */}
-      <Button onClick={() => setIsRegistrationOpen(true)} className="btn-theme">
+      <Button onClick={() => setIsRegistrationOpen(true)} className="bg-white text-indigo-700 hover:bg-indigo-50">
         <UserPlus className="mr-2 h-4 w-4 text-current" />
         New Patient
       </Button>
 
       {/* Patient Registration Dialog */}
       <Dialog open={isRegistrationOpen} onOpenChange={setIsRegistrationOpen}>
-        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto"
+        <DialogContent className="max-w-6xl max-h-[80vh] border border-dialog bg-dialog-surface overflow-y-auto p-0"
           onInteractOutside={(e) => e.preventDefault()}  
           onEscapeKeyDown={(e) => e.preventDefault()}   
         >
-          <DialogHeader>
+          <DialogHeader className="bg-dialog-header border-b border-dialog p-4">
             <DialogTitle>Add New Patient</DialogTitle>
           </DialogHeader>
           <PatientRegistrationForm

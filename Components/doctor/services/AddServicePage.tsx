@@ -26,24 +26,25 @@ interface ServiceForm {
   description: string;
   isDeleted: boolean;
 }
-export default function AddServicePage({ initialData, onSuccess }: AddServicePageProps) {
+export default function AddServicePage({
+  initialData,
+  onSuccess,
+}: AddServicePageProps) {
   const [service, setService] = useState<ServiceForm>({
-  id: undefined,
-  name: "",
-  // category: "",
-  amount: "",
-  description: "",
-  isDeleted: false,   
-});
-
+    id: undefined,
+    name: "",
+    amount: "",
+    description: "",
+    isDeleted: false,
+  });
 
   useEffect(() => {
     if (initialData) {
-    setService({
-      ...initialData,
-      isDeleted: initialData.isDeleted ?? false,
-    });
-  }
+      setService({
+        ...initialData,
+        isDeleted: initialData.isDeleted ?? false,
+      });
+    }
   }, [initialData]);
 
   const handleChange = (field: string, value: string) => {
@@ -56,63 +57,43 @@ export default function AddServicePage({ initialData, onSuccess }: AddServicePag
   };
 
   return (
-    <Card>
-      <CardHeader>
-        {/* <h2 className="text-2xl font-semibold">
-          {service.id ? "Edit Service" : "Add Service"}
-        </h2> */}
-        <p className="text-muted-foreground text-sm">{!service.id ? "Create a new service offered at your clinic." : "Make changes on your service from here."}</p>
-      </CardHeader>
+    <form onSubmit={handleSubmit} className="space-y-4 mt-4 px-6 pb-6">
+      <div className="flex flex-col gap-1">
+        <Label>Service Name</Label>
+        <Input
+          value={service.name}
+          onChange={(e) => handleChange("name", e.target.value)}
+          required
+          placeholder="e.g., General Consultation"
+        />
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+      <div className="flex flex-col gap-1">
+        <Label>Amount (₹)</Label>
+        <Input
+          type="number"
+          value={service.amount}
+          onChange={(e) => handleChange("amount", e.target.value)}
+          required
+          placeholder="e.g., 500"
+        />
+      </div>
 
-          <div className="flex flex-col gap-1">
-            <Label>Service Name</Label>
-            <Input
-              value={service.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              required
-              placeholder="e.g., General Consultation"
-            />
-          </div>
+      <div className="flex flex-col gap-1">
+        <Label>Description</Label>
+        <Textarea
+          value={service.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+          placeholder="Short description about this service..."
+        />
+      </div>
 
-          {/* <div>
-            <Label>Category</Label>
-            <Input
-              value={service.category}
-              onChange={(e) => handleChange("category", e.target.value)}
-              required
-            />
-          </div> */}
-
-          <div className="flex flex-col gap-1"> 
-            <Label>Amount (₹)</Label>
-            <Input
-              type="number"
-              value={service.amount}
-              onChange={(e) => handleChange("amount", e.target.value)}
-              required
-              placeholder="e.g., 500"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <Label>Description</Label>
-            <Textarea
-              value={service.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Short description about this service..."
-            />
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex justify-end gap-3 mt-4">
-          <Button type="submit">
-            {service.id ? "Update" : "Save"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="submit"
+          className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2">
+          {service.id ? "Update" : "Save"}
+        </Button>
+      </div>
+    </form>
   );
 }

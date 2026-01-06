@@ -156,7 +156,7 @@ export default function IPDPatientListPage() {
     <div className="p-6 space-y-6">
       {/* ---------- HEADER CARD ---------- */}
       <Card className="bg-Module-header text-white shadow-lg">
-        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <CardTitle className="text-3xl flex items-center gap-2">
               <Users className="h-7 w-7" />

@@ -24,7 +24,7 @@ export function BedManagementOverlay({
     onClose: () => void;
 }) {
     const [floors, setFloors] = useState<Floor[]>([]);
-
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
@@ -32,14 +32,22 @@ export function BedManagementOverlay({
 
         if (open) {
             window.addEventListener("keydown", handler);
-            document.body.style.overflow = "hidden"; // 🔒 stop background scroll
+            document.body.style.overflow = "hidden"; //stop background scroll
 
             const fetchData = async () => {
-                const res = await getBedManagementData();
-                if (res.data) {
+                try {
+                    setLoading(true);              
+                    const res = await getBedManagementData();
+
+                    if (res.data) {
                     setFloors(res.data as Floor[]);
-                } else if (res.error) {
+                    } else if (res.error) {
                     toast.error(res.error);
+                    }
+                } catch (err) {
+                    toast.error("Failed to load bed data");
+                } finally {
+                    setLoading(false);             
                 }
             };
             fetchData();
@@ -129,11 +137,20 @@ export function BedManagementOverlay({
 
                     {/* body */}
                     <div className="p-6 h-[calc(95vh-64px)] overflow-y-auto">
-                        <div className="space-y-8 ">
-                            {floors.map((floor) => (
-                                <FloorSection key={floor.id} floor={floor} />
-                            ))}
-                        </div>
+                         {loading ? (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
+                                        <p className="text-sm text-muted-foreground">
+                                            Loading bed status...
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (<div className="space-y-8 ">
+                                {floors.map((floor) => (
+                                    <FloorSection key={floor.id} floor={floor} />
+                                ))}
+                            </div>)}
                     </div>
                 </div>
             </div>

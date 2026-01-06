@@ -325,7 +325,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-2 gap-4 p-6"
+          className="grid grid-cols-2 gap-4 px-6"
         >
           {/* Name */}
           <FormField
@@ -550,7 +550,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
 
 
           {/* Buttons */}
-          <div className="col-span-2 flex justify-end space-x-4">
+          <div className="border-t border-dialog text-dialog-muted p-4 col-span-2 flex flex-col sm:flex-row gap-2 justify-end">
             <Button
               type="button"
               variant="outline"
@@ -566,7 +566,8 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
               Cancel
             </Button>
 
-            <Button variant="outline" type="submit">
+            <Button type="submit"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90 gap-2">
               Add Patient
             </Button>
           </div>

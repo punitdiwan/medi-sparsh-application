@@ -324,7 +324,7 @@ export default function AppointmentPage() {
       <div className="space-y-4 mt-6">
         {/* HEADER */}
         <Card className="bg-Module-header text-white shadow-lg">
-          <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
               <CardTitle className="text-3xl flex items-center gap-2">
                 <Calendar className="h-7 w-7" />
@@ -347,7 +347,7 @@ export default function AppointmentPage() {
         </Card>
 
         {/* FILTER BAR */}
-        <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-sm border bg-card">
+        <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-lg border border-dialog bg-dialog-surface">
           <Input
             placeholder="Search"
             className="w-52"

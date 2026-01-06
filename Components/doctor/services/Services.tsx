@@ -11,7 +11,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
-import { Plus, Pencil, Stethoscope } from "lucide-react";
+import { Plus, Pencil, Stethoscope ,CreditCard} from "lucide-react";
 import AddServicePage from "./AddServicePage";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -116,7 +116,7 @@ export default function Services() {
   return (
     <div className="p-5">
       <Card className="bg-Module-header text-white shadow-lg mb-4">
-        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <CardTitle className="text-3xl flex items-center gap-2">
               <Stethoscope className="h-7 w-7" />
@@ -140,10 +140,6 @@ export default function Services() {
             </Button>
           </Can>
         </CardHeader>
-
-        <CardContent>
-          
-        </CardContent>
       </Card>
 
       <Card>
@@ -212,12 +208,17 @@ export default function Services() {
       )}
 
       <Dialog open={openModal} onOpenChange={setOpenModal}>
-        <DialogContent className="max-w-lg"
+        <DialogContent className="max-w-lg border border-dialog bg-dialog-surface p-0"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader>
-            <DialogTitle>{editService ? "Edit Service" : "Add New Service"}</DialogTitle>
+          <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog rounded-t-lg flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg flex items-center justify-center">
+                <CreditCard size={20} className="bg-dialog-header text-dialog-icon"/>
+              </div>
+              <DialogTitle>{editService ? "Edit Service" : "Add New Service"}</DialogTitle>
+            </div>
           </DialogHeader>
           <AddServicePage initialData={editService} onSuccess={handleSave} />
         </DialogContent>
