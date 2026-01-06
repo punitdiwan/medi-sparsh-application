@@ -214,9 +214,6 @@ useEffect(() => {
 
   if (loading)
     return (
-      // <p className="h-screen flex justify-center items-center text-lg font-medium animate-pulse">
-      //   Getting patients...
-      // </p>
       <div className="flex justify-center items-center h-screen">
               <HoneycombLoader />
       </div>
@@ -225,7 +222,7 @@ useEffect(() => {
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
       <Card className="bg-Module-header text-white shadow-lg mb-6">
-        <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <CardTitle className="text-3xl flex items-center gap-2">
               <Users className="h-7 w-7" />
@@ -258,7 +255,7 @@ useEffect(() => {
                     <Button
                       variant="outline"
                       onClick={() => setOpen(true)}
-                      className="p-2 bg-white text-indigo-700 hover:bg-indigo-50"
+                      className="p-2 bg-white/20 border-white/20 text-gray-300 hover:bg-indigo-50"
                     >
                       <Upload className="w-5 h-5" />
                     </Button>

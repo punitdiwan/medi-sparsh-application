@@ -221,15 +221,15 @@ export default function AppointmentModal({
     }}
 
     >
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto"
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto p-0 border border-dialog bg-dialog-surface"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog">
           <DialogTitle>{appointment ? "Edit Appointment" : "Book Appointment"}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 px-6">
           {/* Patient Search Box */}
           <PatientSearchBox onSelect={handlePatientSelect} />
 
@@ -547,7 +547,7 @@ export default function AppointmentModal({
                 )}
               />
 
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-2  py-3 border-t border-dialog text-dialog-muted ">
                 <Button
                   type="button"
                   variant="outline"
@@ -555,7 +555,8 @@ export default function AppointmentModal({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" disabled={submitting}
+                  className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2">
                   {submitting ? (appointment ? "Updating..." : "Booking...") : (appointment ? "Update Appointment" : "Book Appointment")}
                 </Button>
               </div>

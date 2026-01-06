@@ -192,7 +192,32 @@ export default function AppointmentPage() {
       },
     },
     { accessorKey: "time", header: "Time" },
-    { accessorKey: "status", header: "Status" },
+    {
+        accessorKey: "status",
+        header: () => (
+          <div className="text-center font-semibold text-muted-foreground">
+            Status
+          </div>
+        ),
+        cell: ({ row }) => {
+          const status = row.original.status;
+          const style = statusStyles[status] ?? {
+            label: status,
+            className: "bg-gray-100 text-gray-700",
+          };
+
+          return (
+            <div className="flex justify-center">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${style.className}`}
+              >
+                {style.label}
+              </span>
+            </div>
+          );
+        },
+      },
+
 
     {
       id: "action",
@@ -242,46 +267,68 @@ export default function AppointmentPage() {
                     </TooltipContent>
                   </Tooltip>
                 )}
+                {!isCompleted && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          {isCancelled ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              className="cursor-pointer"
+                            >
+                              <FaPrescription size={16} />
+                            </Button>
+                          ) : (
+                            <Link
+                              href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                                ap.patientName || ""
+                              )}&appointmentId=${ap.id}`}
+                            >
+                              <Button variant="ghost" size="icon">
+                                <FaPrescription size={16} />
+                              </Button>
+                            </Link>
+                          )}
+                        </span>
+                      </TooltipTrigger>
 
-                {!isCompleted && !isCancelled && (
+                      <TooltipContent side="top">
+                        <p>
+                          {isCancelled
+                            ? "Not Allowed"
+                            : "Add Prescription"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                          ap.patientName || ""
-                        )}&appointmentId=${ap.id}`}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                        >
-                          <FaPrescription size={16} />
-                        </Button>
-                      </Link>
+                      <span className="inline-flex">
+                        {isCancelled ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled
+                          >
+                            <FaShareSquare size={16} />
+                          </Button>
+                        ) : (
+                          <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
+                            <Button variant="ghost" size="icon">
+                              <FaShareSquare size={16} />
+                            </Button>
+                          </Link>
+                        )}
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      <p>Add Prescription</p>
+                      <p>
+                        {isCancelled ? "Not Allowed" : "Move to IPD"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
-                )}
-
-                {!isCompleted && !isCancelled && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                        >
-                          <FaShareSquare size={16} />
-                        </Button>
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Move to IPD</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
               </Can>
 
               <Can I="delete" a="appointment" ability={ability}>
@@ -319,12 +366,36 @@ export default function AppointmentPage() {
     currentPage * rowsPerPage
   );
 
+ const statusStyles: Record<
+    string,
+    { label: string; className: string }
+  > = {
+    scheduled: {
+      label: "Scheduled",
+      className: "bg-blue-100 text-indigo-700",
+    },
+    pending: {
+      label: "Pending",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    completed: {
+      label: "Completed",
+      className: "bg-green-100 text-green-700",
+    },
+    cancelled: {
+      label: "Cancelled",
+      className: "bg-red-100 text-red-700",
+    },
+  };
+
+
+
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
       <div className="space-y-4 mt-6">
         {/* HEADER */}
         <Card className="bg-Module-header text-white shadow-lg">
-          <CardHeader className="flex flex-col sm:flex-row justify-between gap-4">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
               <CardTitle className="text-3xl flex items-center gap-2">
                 <Calendar className="h-7 w-7" />
@@ -347,7 +418,7 @@ export default function AppointmentPage() {
         </Card>
 
         {/* FILTER BAR */}
-        <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-sm border bg-card">
+        <div className="flex flex-wrap gap-2 items-center p-4 rounded-xl shadow-lg border border-dialog bg-dialog-surface">
           <Input
             placeholder="Search"
             className="w-52"

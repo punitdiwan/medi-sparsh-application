@@ -198,6 +198,25 @@ export async function getSpecializationById(id: number) {
   return result[0] || null;
 }
 
+export async function createSpecialization(data: { name: string; description?: string }) {
+  const result = await db.insert(specializations).values(data).returning();
+  return result[0];
+}
+
+export async function updateSpecialization(id: number, data: { name?: string; description?: string }) {
+  const result = await db
+    .update(specializations)
+    .set(data)
+    .where(eq(specializations.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteSpecialization(id: number) {
+  const result = await db.delete(specializations).where(eq(specializations.id, id)).returning();
+  return result[0];
+}
+
 export async function getStaffWithDoctorDetails(hospitalId: string) {
   const staffList = await db
     .select()

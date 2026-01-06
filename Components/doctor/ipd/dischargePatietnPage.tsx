@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getShortId } from "@/utils/getShortId";
 /* ---------------- Types ---------------- */
 interface DischargedPatient {
   id: string;
@@ -91,7 +92,13 @@ export default function IPDDischargedPatientManager() {
         <span className="font-medium">{row.original.name}</span>
       ),
     },
-    { accessorKey: "patientId", header: "Patient ID" },
+    { 
+      accessorKey: "patientId", header: "Patient ID",
+      cell: ({ row }) => (
+        <span className="font-medium">{getShortId(row.original.patientId)}</span>
+      ),
+
+     },
     { accessorKey: "caseId", header: "Case ID" },
     { accessorKey: "gender", header: "Gender" },
     { accessorKey: "phone", header: "Phone" },
@@ -132,15 +139,15 @@ export default function IPDDischargedPatientManager() {
     <div className="p-6 space-y-6 mt-4">
       <BackButton />
       {/* HEADER */}
-      <Card>
+      <Card className="bg-Module-header text-white shadow-lg">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-indigo-700 dark:text-white flex items-center gap-2">
-            <List className="h-6 w-6 text-indigo-600" />
+          <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
+            <List className="h-6 w-6 text-white" />
             IPD Discharged Patient
           </CardTitle>
 
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground " />
             <Input
               placeholder="Search discharged patient..."
               value={search}

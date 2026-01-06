@@ -79,7 +79,7 @@ export async function getIPDOperations(ipdAdmissionId: string, showDeleted: bool
         return { error: "Failed to fetch IPD operations" };
     }
 }
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 

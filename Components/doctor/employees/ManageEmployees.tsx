@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Table } from "@/components/Table/Table";
@@ -16,16 +17,27 @@ import BackButton from "@/Components/BackButton";
 import AddDataModal from "@/Components/doctor/employees/AddSpecializationModel";
 import { ColumnDef } from "@tanstack/react-table";
 
+import {
+  getSpecializationsAction,
+  updateSpecializationAction,
+  deleteSpecializationAction
+} from "@/lib/actions/specializationActions";
+import { toast } from "sonner";
+import { Stethoscope, Trash2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+
 export type Specialization = {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
 };
 
 export default function SpecializationsManager() {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [editSpec, setEditSpec] = useState<Specialization | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
@@ -33,78 +45,73 @@ export default function SpecializationsManager() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // ✅ Demo data for testing
-  const demoData: Specialization[] = [
-    {
-      id: 1,
-      name: "Cardiology",
-      description: "Heart and cardiovascular system related treatments.",
-    },
-    {
-      id: 2,
-      name: "Dermatology",
-      description: "Skin, hair, and nail care and disorders.",
-    },
-    {
-      id: 3,
-      name: "Neurology",
-      description: "Nervous system and brain-related issues.",
-    },
-    {
-      id: 4,
-      name: "Orthopedics",
-      description: "Bones, joints, and muscular system problems.",
-    },
-    {
-      id: 5,
-      name: "Pediatrics",
-      description: "Healthcare for infants and children.",
-    },
-    {
-      id: 6,
-      name: "Ophthalmology",
-      description: "Eye diseases and vision correction.",
-    },
-    {
-      id: 7,
-      name: "Gynecology",
-      description: "Women’s reproductive system and health.",
-    },
-    {
-      id: 8,
-      name: "Psychiatry",
-      description: "Mental health, mood, and behavioral issues.",
-    },
-  ];
-
-  // ✅ Fetch mock data
+  // ✅ Fetch real data
   const fetchSpecializations = useCallback(async () => {
-    // Simulate API delay
-    setTimeout(() => {
-      let filtered = demoData;
-      if (searchTerm) {
-        filtered = demoData.filter((item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      setTotalCount(filtered.length);
+    setLoading(true);
+    try {
+      const result = await getSpecializationsAction();
+      if (result.data) {
+        let filtered = result.data as Specialization[];
+        if (searchTerm) {
+          filtered = filtered.filter((item) =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+        setTotalCount(filtered.length);
 
-      // Pagination
-      const start = (currentPage - 1) * pageSize;
-      const end = start + pageSize;
-      setSpecializations(filtered.slice(start, end));
-    }, 500);
+        // Pagination
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        setSpecializations(filtered.slice(start, end));
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching specializations:", error);
+      toast.error("Failed to fetch specializations");
+    } finally {
+      setLoading(false);
+    }
   }, [currentPage, searchTerm]);
 
-  // ✅ Update specialization (mock edit)
+  // ✅ Update specialization
   const updateSpecialization = useCallback(async () => {
     if (!editSpec) return;
-    const updatedList = specializations.map((item) =>
-      item.id === editSpec.id ? editSpec : item
-    );
-    setSpecializations(updatedList);
-    setIsEditOpen(false);
-  }, [editSpec, specializations]);
+    try {
+      const result = await updateSpecializationAction(editSpec.id, {
+        name: editSpec.name,
+        description: editSpec.description || undefined,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Specialization updated successfully");
+        setIsEditOpen(false);
+        fetchSpecializations();
+      }
+    } catch (error) {
+      console.error("Error updating specialization:", error);
+      toast.error("Failed to update specialization");
+    }
+  }, [editSpec, fetchSpecializations]);
+
+  // ✅ Delete specialization
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this specialization?")) return;
+    try {
+      const result = await deleteSpecializationAction(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Specialization deleted successfully");
+        fetchSpecializations();
+      }
+    } catch (error) {
+      console.error("Error deleting specialization:", error);
+      toast.error("Failed to delete specialization");
+    }
+  };
 
   // ✅ Define columns
   const columns: ColumnDef<Specialization>[] = [
@@ -115,16 +122,30 @@ export default function SpecializationsManager() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setEditSpec(row.original);
-            setIsEditOpen(true);
-          }}
-        >
-          Edit
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setEditSpec(row.original);
+              setIsEditOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button size="sm" variant="destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            }
+            title={`Delete Specialization ${row.original.name}?`}
+            description="This action cannot be undone. Are you sure you want to delete this specialization?"
+            actionLabel="Delete"
+            cancelLabel="Cancel"
+            onConfirm={() => handleDelete(row.original.id)}
+          />
+        </div>
       ),
     },
   ];
@@ -136,11 +157,31 @@ export default function SpecializationsManager() {
   }, [fetchSpecializations]);
 
   return (
-    <div className="p-6 my-4 space-y-6">
+    <div className="p-6 my-4 space-y-4">
       <BackButton />
-      <h2 className="text-2xl font-bold">Manage Specializations</h2>
+      <Card className="bg-Module-header text-white shadow-lg mb-4 px-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Manage Specializations
+          </h1>
+          <p className="text-sm text-white/80 max-w-2xl">
+            Create, update, and organize hospital specializations to ensure accurate
+            doctor mapping, streamlined appointments, and better patient care management.
+          </p>
+        </div>
+      </Card>
 
-      <div className="flex flex-wrap gap-3 items-center ">
+
+      <div className="flex flex-wrap gap-3 items-center justify-between ">
+        <Input
+          placeholder="Search specialization..."
+          className="max-w-xs"
+          value={searchTerm}
+          onChange={(e) => {
+            setCurrentPage(1);
+            setSearchTerm(e.target.value);
+          }}
+        />
         <AddDataModal
           title="Add Specialization"
           table="specializations"
@@ -151,15 +192,7 @@ export default function SpecializationsManager() {
           onSuccess={fetchSpecializations}
         />
 
-        <Input
-          placeholder="Search specialization..."
-          className="max-w-xs"
-          value={searchTerm}
-          onChange={(e) => {
-            setCurrentPage(1);
-            setSearchTerm(e.target.value);
-          }}
-        />
+
       </div>
 
       <Table columns={columns} data={specializations} />
@@ -190,14 +223,24 @@ export default function SpecializationsManager() {
       </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent 
-          onInteractOutside={(e) => e.preventDefault()}  
-          onEscapeKeyDown={(e) => e.preventDefault()}   
+        <DialogContent className="sm:max-w-md z-[10000] border border-dialog bg-dialog-surface overflow-hidden rounded-lg p-0"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader>
-            <DialogTitle>Edit Specialization</DialogTitle>
+          <DialogHeader className="px-6 py-2 bg-dialog-header border-b border-dialog ">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg flex items-center justify-center">
+                        <Stethoscope className="bg-dialog-header text-dialog-icon" />
+                      </div>
+                      <DialogTitle className="text-lg font-semibold">
+                        Edit Specialization
+                      </DialogTitle>
+                    </div>
+                    <DialogDescription className="text-sm p-0">
+                      Fill in the details to edit record.
+                    </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-3 py-3">
+          <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
             <Input
               value={editSpec?.name || ""}
               onChange={(e) =>
@@ -217,8 +260,12 @@ export default function SpecializationsManager() {
               placeholder="Description"
             />
           </div>
-          <DialogFooter>
-            <Button onClick={updateSpecialization}>Save Changes</Button>
+          <DialogFooter className="px-6 py-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
+            <Button onClick={updateSpecialization}
+              className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2"
+              disabled={loading || !editSpec?.name.trim()}>
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

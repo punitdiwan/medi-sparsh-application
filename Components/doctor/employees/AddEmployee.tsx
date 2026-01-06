@@ -289,10 +289,10 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto shadow-lg my-6 overflow-hidden relative z-[9999] h-[90vh] flex flex-col">
+    <Card className="max-w-2xl mx-auto shadow-lg my-6 overflow-hidden relative z-[9999] h-[90vh] flex flex-col border border-dialog bg-dialog-surface p-0">
 
-      <CardHeader className="flex items-center justify-between border-b pb-2 flex-shrink-0 bg-transparent sticky top-0 z-10">
-        <CardTitle className="text-xl font-semibold text-center flex-1 text-foreground pl-8">
+      <CardHeader className="flex items-center justify-between px-4 pt-4 pb-0 bg-dialog-header border-b border-dialog rounded-t-lg sticky top-0 z-10">
+        <CardTitle className="text-xl font-semibold flex-1 text-foreground ">
           Add New Employee
         </CardTitle>
 
@@ -305,7 +305,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
         </Button>
       </CardHeader>
 
-      <CardContent className="overflow-y-auto p-6 flex-1">
+      <CardContent className="overflow-y-auto px-6 pb-6 flex-1">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -659,7 +659,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="relative flex items-center justify-center min-w-[130px]"
+                className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2"
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

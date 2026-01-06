@@ -13,9 +13,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus ,Stethoscope} from "lucide-react";
 
 import { toast } from "sonner";
+
+import { createSpecializationAction } from "@/lib/actions/specializationActions";
 
 interface AddDataModalProps {
   title: string; // e.g. "Add Specialization"
@@ -43,30 +45,57 @@ export default function AddDataModal({
   }
 
   async function handleSubmit() {
-    
+    setLoading(true);
+    try {
+      const result = await createSpecializationAction({
+        name: formValues.name,
+        description: formValues.description,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Specialization added successfully");
+        setFormValues({});
+        setOpen(false);
+        if (onSuccess) onSuccess();
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="default" size="sm" className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add Specialization
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background " 
-        onInteractOutside={(e) => e.preventDefault()}  
-        onEscapeKeyDown={(e) => e.preventDefault()}   
+      <DialogContent className="sm:max-w-md z-[10000] border border-dialog bg-dialog-surface overflow-hidden rounded-lg p-0"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="px-6 py-2 bg-dialog-header border-b border-dialog ">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg flex items-center justify-center">
+              <Stethoscope className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              {title}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-sm p-0">
             Fill in the details to create a new record.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-3">
+        <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>{field.label}</Label>
@@ -81,8 +110,9 @@ export default function AddDataModal({
           ))}
         </div>
 
-        <DialogFooter>
-          <Button onClick={handleSubmit} disabled={loading}>
+        <DialogFooter className="px-6 py-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
+          <Button onClick={handleSubmit} disabled={loading}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2">
             {loading ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>

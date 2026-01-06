@@ -47,6 +47,8 @@ import {
 } from "@/lib/actions/operations";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 interface Category {
   id: string;
@@ -77,7 +79,7 @@ export default function OperationManager() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [operationToDelete, setOperationToDelete] = useState<Operation | null>(null);
-
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     fetchData();
   }, [showDeleted]);
@@ -240,21 +242,29 @@ export default function OperationManager() {
               </div>
 
             </div>
-
-            <Button
-                variant="default"
-                onClick={() => {
-                    setEditing(null);  
-                    setDialogOpen(true);
-                }}
-                disabled={loading || showDeleted}
-                >
-                <Plus className="h-4 w-4" />
-                Add Operation
-            </Button>
-
+            <div className="flex gap-2">
+              <Button
+                  variant="default"
+                  onClick={() => {
+                      setEditing(null);  
+                      setDialogOpen(true);
+                  }}
+                  disabled={loading || showDeleted}
+                  >
+                  <Plus className="h-4 w-4" />
+                  Add Operation
+              </Button>
+              <ExcelUploadButton
+                onClick={() => setOpen(true)}
+                tooltip="Upload Operation Excel"
+              />
+            </div>
         </div>
-
+        <ExcelUploadModal
+          open={open}
+          setOpen={setOpen}
+          entity="operations"
+          />
         <Separator />
 
         <CardContent>

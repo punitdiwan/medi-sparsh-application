@@ -32,7 +32,9 @@ export function FieldSelectorDropdown<TData>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={buttonVariant}>{buttonLabel}</Button>
+        <Button variant={buttonVariant}
+          className="bg-white/20 border border-white/20 text-gray-300"
+        >{buttonLabel}</Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">

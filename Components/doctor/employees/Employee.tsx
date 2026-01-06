@@ -135,7 +135,7 @@ export default function Employee() {
 
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
-  const [filter, setFilter] = useState<"active" | "Inactive" | "all">("active");
+  const [filter, setFilter] = useState<"active" | "Inactive" | "all">("all");
   const [filters, setFilters] = useState<PatientFilters>({});
   const handleFilterChange = (value: "active" | "Inactive" | "all") => {
     setFilter(value);
@@ -424,7 +424,7 @@ export default function Employee() {
         <div className="flex flex-wrap items-center justify-start sm:justify-end gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2 bg-white/20 border-white/20 text-gray-300 hover:bg-indigo-50">
                 <Filter className="w-4 h-4" />
                 {filter === "active"
                   ? "Active Employees"
@@ -461,7 +461,7 @@ export default function Employee() {
             onClick={() =>
               router.push("/doctor/employees/manageSpecialization")
             }
-            className="flex items-center gap-2 "
+            className="flex items-center gap-2 bg-white/20 border-white/20 text-gray-300 hover:bg-indigo-50"
           >
             <Plus className="w-4 h-4" />
             Manage Specializations
@@ -469,7 +469,7 @@ export default function Employee() {
           <Can I="create" a="members" ability={ability}>
             <Button
               onClick={() => setShowAddEmployee(true)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-white text-indigo-700 hover:bg-indigo-50"
             >
               <Plus className="w-4 h-4" />
               Add Employee
