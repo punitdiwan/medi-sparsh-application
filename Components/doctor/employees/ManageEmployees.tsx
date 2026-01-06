@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Table } from "@/components/Table/Table";
@@ -22,7 +23,7 @@ import {
   deleteSpecializationAction
 } from "@/lib/actions/specializationActions";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Stethoscope, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
@@ -226,10 +227,20 @@ export default function SpecializationsManager() {
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog ">
-            <DialogTitle>Edit Specialization</DialogTitle>
+          <DialogHeader className="px-6 py-2 bg-dialog-header border-b border-dialog ">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg flex items-center justify-center">
+                        <Stethoscope className="bg-dialog-header text-dialog-icon" />
+                      </div>
+                      <DialogTitle className="text-lg font-semibold">
+                        Edit Specialization
+                      </DialogTitle>
+                    </div>
+                    <DialogDescription className="text-sm p-0">
+                      Fill in the details to edit record.
+                    </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 px-6 py-5 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
+          <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
             <Input
               value={editSpec?.name || ""}
               onChange={(e) =>

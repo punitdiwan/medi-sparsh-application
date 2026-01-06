@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus ,Stethoscope} from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -81,14 +81,21 @@ export default function AddDataModal({
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog ">
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="px-6 py-2 bg-dialog-header border-b border-dialog ">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg flex items-center justify-center">
+              <Stethoscope className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <DialogTitle className="text-lg font-semibold">
+              {title}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-sm p-0">
             Fill in the details to create a new record.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 px-6 py-5 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
+        <div className="space-y-4 px-6 py-4 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>{field.label}</Label>
