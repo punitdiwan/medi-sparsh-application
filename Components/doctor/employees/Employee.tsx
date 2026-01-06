@@ -135,7 +135,7 @@ export default function Employee() {
 
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
-  const [filter, setFilter] = useState<"active" | "Inactive" | "all">("active");
+  const [filter, setFilter] = useState<"active" | "Inactive" | "all">("all");
   const [filters, setFilters] = useState<PatientFilters>({});
   const handleFilterChange = (value: "active" | "Inactive" | "all") => {
     setFilter(value);

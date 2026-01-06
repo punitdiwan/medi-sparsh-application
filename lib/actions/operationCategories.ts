@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db/index";
-import { operationCategories } from "@/drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { operationCategories, operations } from "@/drizzle/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 
@@ -156,22 +156,38 @@ export async function restoreOperationCategory(id: string) {
     }
 }
 
-export async function getAllOperationCategories() {
-    try {
-        const org = await getActiveOrganization();
-        if (!org) {
-            return { error: "Unauthorized" };
-        }
 
-        const categories = await db
-            .select()
-            .from(operationCategories)
-            .where(eq(operationCategories.hospitalId, org.id))
-            .orderBy(desc(operationCategories.createdAt));
+export async function getOperationCategoriesWithCounts(showDeleted = false) {
+  const org = await getActiveOrganization();
+  if (!org) return { error: "Unauthorized" };
 
-        return { data: categories };
-    } catch (error) {
-        console.error("Error fetching all operation categories:", error);
-        return { error: "Failed to fetch operation categories" };
-    }
+  const whereCondition = showDeleted
+    ? eq(operationCategories.hospitalId, org.id)
+    : and(
+        eq(operationCategories.hospitalId, org.id),
+        eq(operationCategories.isDeleted, false)
+      );
+
+  const result = await db
+    .select({
+      id: operationCategories.id,
+      name: operationCategories.name,
+      hospitalId: operationCategories.hospitalId,
+      isDeleted: operationCategories.isDeleted,
+      createdAt: operationCategories.createdAt,
+      operationCount: sql<number>`count(${operations.id})`,
+    })
+    .from(operationCategories)
+    .leftJoin(
+      operations,
+      and(
+        eq(operations.operationCategoryId, operationCategories.id),
+        eq(operations.isDeleted, false)
+      )
+    )
+    .where(whereCondition)
+    .groupBy(operationCategories.id)
+    .orderBy(desc(operationCategories.createdAt));
+
+  return { data: result };
 }

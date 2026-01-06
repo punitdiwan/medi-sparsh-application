@@ -49,16 +49,17 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import {
-  getOperationCategories,
   createOperationCategory,
   updateOperationCategory,
   deleteOperationCategory,
   restoreOperationCategory,
-  getAllOperationCategories,
+  getOperationCategoriesWithCounts,
 } from "@/lib/actions/operationCategories";
-import { getOperationCountByCategory } from "@/lib/actions/operations";
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 interface Category {
   id: string;
@@ -66,6 +67,7 @@ interface Category {
   hospitalId: string;
   isDeleted: boolean | null;
   createdAt: Date;
+  operationCount: number;
 }
 
 export default function OperationCategoryManager() {
@@ -78,51 +80,28 @@ export default function OperationCategoryManager() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [operationCounts, setOperationCounts] = useState<Record<string, number>>({});
-  const [countsLoaded, setCountsLoaded] = useState(false);
-
+  const [open, setOpen] = useState(false);
+  
   useEffect(() => {
     fetchCategories();
   }, [showDeleted]);
 
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setCountsLoaded(false);
-      const result = showDeleted
-        ? await getAllOperationCategories()
-        : await getOperationCategories();
+      const result = await getOperationCategoriesWithCounts(showDeleted);
       if (result.error) {
         toast.error(result.error);
-      } else if (result.data) {
-        setCategories(result.data);
-        
-        // Fetch operation counts for each category (only for non-deleted categories)
-        if (!showDeleted) {
-          const counts: Record<string, number> = {};
-          for (const category of result.data) {
-            const countResult = await getOperationCountByCategory(category.id);
-            console.log(`Category ${category.name} (${category.id}): ${countResult.data} operations`);
-            if (countResult.data !== undefined) {
-              counts[category.id] = Number(countResult.data);
-            }
-          }
-          console.log("Final operation counts:", counts);
-          setOperationCounts(counts);
-          setCountsLoaded(true);
-        } else {
-          // Clear counts when showing deleted
-          setOperationCounts({});
-          setCountsLoaded(true);
-        }
+      } else {
+        setCategories(result.data ?? []);
       }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
+    } catch {
       toast.error("Failed to fetch operation categories");
     } finally {
       setLoading(false);
     }
   };
+
 
   const filteredCategories = useMemo(() => {
     return categories.filter((cat) => {
@@ -137,35 +116,57 @@ export default function OperationCategoryManager() {
   const handleAddOrEdit = async (name: string) => {
     try {
       setIsSubmitting(true);
+
       if (editingCategory) {
         const result = await updateOperationCategory(editingCategory.id, { name });
-        if (result.error) {
+
+        if (result?.error) {
           toast.error(result.error);
-        } else if (result.data) {
+          return;
+        }
+
+        if (result?.data) {
           setCategories((prev) =>
-            prev.map((c) => (c.id === editingCategory.id ? result.data : c))
+            prev.map((c) =>
+              c.id === editingCategory.id
+                ? { ...c, name: result.data.name }
+                : c
+            )
           );
+
           toast.success("Operation category updated successfully");
-          setDialogOpen(false);
-          setEditingCategory(null);
         }
       } else {
         const result = await createOperationCategory({ name });
-        if (result.error) {
+
+        if (result?.error) {
           toast.error(result.error);
-        } else if (result.data) {
-          setCategories((prev) => [...prev, result.data]);
+          return;
+        }
+
+        if (result?.data) {
+          setCategories((prev) => [
+            {
+              ...result.data,
+              operationCount: 0, // 👈 important
+            },
+            ...prev,
+          ]);
+
           toast.success("Operation category created successfully");
-          setDialogOpen(false);
         }
       }
-    } catch (error) {
-      console.error("Error saving category:", error);
-      toast.error("Failed to save operation category");
+
+      setDialogOpen(false);
+      setEditingCategory(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save category");
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const handleDeleteClick = (category: Category) => {
     setCategoryToDelete(category);
@@ -177,39 +178,57 @@ export default function OperationCategoryManager() {
 
     try {
       const result = await deleteOperationCategory(categoryToDelete.id);
-      if (result.error) {
+
+      if (result?.error) {
         toast.error(result.error);
-      } else if (result.data) {
+        return;
+      }
+
+      if (result?.data) {
         setCategories((prev) =>
-          prev.map((c) => (c.id === categoryToDelete.id ? result.data : c))
+          prev.map((c) =>
+            c.id === categoryToDelete.id
+              ? { ...c, isDeleted: true }
+              : c
+          )
         );
+
         toast.success("Operation category deleted successfully");
       }
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      toast.error("Failed to delete operation category");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete category");
     } finally {
       setDeleteConfirmOpen(false);
       setCategoryToDelete(null);
     }
   };
 
+
   const handleRestore = async (id: string) => {
     try {
       const result = await restoreOperationCategory(id);
-      if (result.error) {
+
+      if (result?.error) {
         toast.error(result.error);
-      } else if (result.data) {
+        return;
+      }
+
+      if (result?.data) {
         setCategories((prev) =>
-          prev.map((c) => (c.id === id ? result.data : c))
+          prev.map((c) =>
+            c.id === id ? { ...c, isDeleted: false } : c
+          )
         );
+
         toast.success("Operation category restored successfully");
       }
-    } catch (error) {
-      console.error("Error restoring category:", error);
-      toast.error("Failed to restore operation category");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to restore category");
     }
   };
+
 
   return (
     <>
@@ -257,16 +276,25 @@ export default function OperationCategoryManager() {
               </div>
 
             </div>
-
-            <Button 
-                variant="default"
-                onClick={() => {setEditingCategory(null);setDialogOpen(true);}}
-                disabled={loading || showDeleted}>
-                <Plus className="h-4 w-4" />
-                Add Category
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                  variant="default"
+                  onClick={() => {setEditingCategory(null);setDialogOpen(true);}}
+                  disabled={loading || showDeleted}>
+                  <Plus className="h-4 w-4" />
+                  Add Category
+              </Button>
+              <ExcelUploadButton
+                onClick={() => setOpen(true)}
+                tooltip="Upload Operation Category Excel"
+              />
+            </div>
         </div>
-
+        <ExcelUploadModal
+          open={open}
+          setOpen={setOpen}
+          entity="operationCategories"
+        />
         <Separator />
 
         <CardContent>
@@ -324,20 +352,15 @@ export default function OperationCategoryManager() {
                                   variant="destructive"
                                   className="hover:bg-destructive/90"
                                   onClick={() => handleDeleteClick(category)}
-                                  disabled={isSubmitting || !countsLoaded || (operationCounts[category.id] || 0) > 0}
-                                  title={!countsLoaded ? "Loading..." : `Count: ${operationCounts[category.id] || 0}`}
+                                  disabled={category.operationCount > 0}
+                                  // title={!countsLoaded ? "Loading..." : `Count: ${operationCounts[category.id] || 0}`}
                               >
                                   <Trash2 className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
-                            {!countsLoaded && (
-                              <TooltipContent className="bg-muted text-foreground">
-                                Loading dependency info...
-                              </TooltipContent>
-                            )}
-                            {countsLoaded && (operationCounts[category.id] || 0) > 0 && (
+                            {category.operationCount > 0 && (
                               <TooltipContent className="bg-destructive text-destructive-foreground">
-                                Cannot delete: {operationCounts[category.id]} operation(s) using this category
+                                Cannot delete: {category.operationCount} operation(s) using this category
                               </TooltipContent>
                             )}
                           </Tooltip>

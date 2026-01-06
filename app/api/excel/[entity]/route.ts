@@ -129,6 +129,33 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
       url:"/api/excel/symptom/upload",
       accept:[".xlsx"]
     }
+  },
+  operationCategories:{
+    title:"Operation Categories",
+     template:{
+      filename:"operation_categories_template.xlsx",
+      columns:[
+        { key:"name", label:"Category Name"}
+      ],
+      downloadUrl:""
+    },
+    upload:{
+      url:"/api/excel/operationCategory/upload",
+      accept:[".xlsx"]
+    }
+  },
+  operations:{
+    title:"Operations",
+     template:{
+      filename:"operations_template.xlsx",
+      columns:[
+      ],
+      downloadUrl:"/api/excel/operation/template"
+    },
+    upload:{
+      url:"/api/excel/operation/upload",
+      accept:[".xlsx"]
+    }
   }
 };
 

@@ -192,7 +192,32 @@ export default function AppointmentPage() {
       },
     },
     { accessorKey: "time", header: "Time" },
-    { accessorKey: "status", header: "Status" },
+    {
+        accessorKey: "status",
+        header: () => (
+          <div className="text-center font-semibold text-muted-foreground">
+            Status
+          </div>
+        ),
+        cell: ({ row }) => {
+          const status = row.original.status;
+          const style = statusStyles[status] ?? {
+            label: status,
+            className: "bg-gray-100 text-gray-700",
+          };
+
+          return (
+            <div className="flex justify-center">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${style.className}`}
+              >
+                {style.label}
+              </span>
+            </div>
+          );
+        },
+      },
+
 
     {
       id: "action",
@@ -318,6 +343,30 @@ export default function AppointmentPage() {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+ const statusStyles: Record<
+    string,
+    { label: string; className: string }
+  > = {
+    scheduled: {
+      label: "Scheduled",
+      className: "bg-blue-100 text-indigo-700",
+    },
+    pending: {
+      label: "Pending",
+      className: "bg-yellow-100 text-yellow-700",
+    },
+    completed: {
+      label: "Completed",
+      className: "bg-green-100 text-green-700",
+    },
+    cancelled: {
+      label: "Cancelled",
+      className: "bg-red-100 text-red-700",
+    },
+  };
+
+
 
   return (
     <div className="bg-background text-foreground min-h-screen p-6">
