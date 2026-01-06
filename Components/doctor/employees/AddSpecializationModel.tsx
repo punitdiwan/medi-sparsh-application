@@ -77,18 +77,18 @@ export default function AddDataModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background "
+      <DialogContent className="sm:max-w-md z-[10000] border border-dialog bg-dialog-surface overflow-hidden rounded-lg p-0"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog ">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Fill in the details to create a new record.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-3">
+        <div className="space-y-4 px-6 py-5 max-h-[60vh] overflow-y-auto bg-dialog-surface text-dialog">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>{field.label}</Label>
@@ -103,8 +103,9 @@ export default function AddDataModal({
           ))}
         </div>
 
-        <DialogFooter>
-          <Button onClick={handleSubmit} disabled={loading}>
+        <DialogFooter className="px-6 py-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
+          <Button onClick={handleSubmit} disabled={loading}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2">
             {loading ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>

@@ -267,46 +267,68 @@ export default function AppointmentPage() {
                     </TooltipContent>
                   </Tooltip>
                 )}
+                {!isCompleted && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          {isCancelled ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled
+                              className="cursor-pointer"
+                            >
+                              <FaPrescription size={16} />
+                            </Button>
+                          ) : (
+                            <Link
+                              href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                                ap.patientName || ""
+                              )}&appointmentId=${ap.id}`}
+                            >
+                              <Button variant="ghost" size="icon">
+                                <FaPrescription size={16} />
+                              </Button>
+                            </Link>
+                          )}
+                        </span>
+                      </TooltipTrigger>
 
-                {!isCompleted && !isCancelled && (
+                      <TooltipContent side="top">
+                        <p>
+                          {isCancelled
+                            ? "Not Allowed"
+                            : "Add Prescription"}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                          ap.patientName || ""
-                        )}&appointmentId=${ap.id}`}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                        >
-                          <FaPrescription size={16} />
-                        </Button>
-                      </Link>
+                      <span className="inline-flex">
+                        {isCancelled ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled
+                          >
+                            <FaShareSquare size={16} />
+                          </Button>
+                        ) : (
+                          <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
+                            <Button variant="ghost" size="icon">
+                              <FaShareSquare size={16} />
+                            </Button>
+                          </Link>
+                        )}
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      <p>Add Prescription</p>
+                      <p>
+                        {isCancelled ? "Not Allowed" : "Move to IPD"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
-                )}
-
-                {!isCompleted && !isCancelled && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                        >
-                          <FaShareSquare size={16} />
-                        </Button>
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Move to IPD</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
               </Can>
 
               <Can I="delete" a="appointment" ability={ability}>
