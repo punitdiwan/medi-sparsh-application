@@ -17,6 +17,8 @@ import { Plus } from "lucide-react";
 
 import { toast } from "sonner";
 
+import { createSpecializationAction } from "@/lib/actions/specializationActions";
+
 interface AddDataModalProps {
   title: string; // e.g. "Add Specialization"
   table: string; // e.g. "specializations"
@@ -43,21 +45,41 @@ export default function AddDataModal({
   }
 
   async function handleSubmit() {
-    
+    setLoading(true);
+    try {
+      const result = await createSpecializationAction({
+        name: formValues.name,
+        description: formValues.description,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Specialization added successfully");
+        setFormValues({});
+        setOpen(false);
+        if (onSuccess) onSuccess();
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="default" size="sm" className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add Specialization
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background " 
-        onInteractOutside={(e) => e.preventDefault()}  
-        onEscapeKeyDown={(e) => e.preventDefault()}   
+      <DialogContent className="sm:max-w-md z-[10000] bg-blur bg-background "
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
