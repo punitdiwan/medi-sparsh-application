@@ -36,6 +36,7 @@ import { Can } from "@casl/react";
 import { getSymptomTypes, createSymptomType, updateSymptomType, deleteSymptomType } from "@/lib/actions/symptomTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ExcelUploadModal from "@/Components/HospitalExcel";
+import { SymptomTypeModal } from "./symptomTypeModal";
 
 type SymptomType = {
   id: string;
@@ -54,7 +55,6 @@ export default function SymptomTypeManager() {
   const [editing, setEditing] = useState<SymptomType | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
-  const [name, setName] = useState("");
 
   const ability = useAbility();
 
@@ -85,7 +85,7 @@ export default function SymptomTypeManager() {
     return symptomTypes.filter((t) => t.name.toLowerCase().includes(q));
   }, [search, symptomTypes]);
 
-  const handleSave = async () => {
+  const handleSave = async (name: string) => {
     try {
       if (!name.trim()) {
         toast.error("Symptom type name is required");
@@ -108,7 +108,6 @@ export default function SymptomTypeManager() {
       fetchSymptomTypes();
       setOpen(false);
       setEditing(null);
-      setName("");
     } catch (error) {
       console.error("Error saving symptom type:", error);
       toast.error("Failed to save symptom type");
@@ -145,10 +144,8 @@ export default function SymptomTypeManager() {
   const handleOpenModal = (type?: SymptomType) => {
     if (type) {
       setEditing(type);
-      setName(type.name);
     } else {
       setEditing(null);
-      setName("");
     }
     setOpen(true);
   };
@@ -171,21 +168,21 @@ export default function SymptomTypeManager() {
             <Can I="create" a="symptomsType" ability={ability}>
               <Button onClick={() => handleOpenModal()}>Add Symptom Type</Button>
               <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpenEx(true)}
-                    className="p-2"
-                  >
-                    <Upload className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Symptom Type Excel</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenEx(true)}
+                      className="p-2"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Symptom Type Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </Can>
           </div>
         </div>
@@ -261,41 +258,18 @@ export default function SymptomTypeManager() {
             </TableBody>
           </Table>
         </div>
-      </CardContent>
 
-      {/* Add/Edit Modal */}
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {editing ? "Edit Symptom Type" : "Add Symptom Type"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {editing ? "Update the symptom type name." : "Enter a new symptom type name."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Symptom type name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSave();
-                }
-              }}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setOpen(false); setEditing(null); setName(""); }}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleSave}>
-              {editing ? "Update" : "Add"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Add/Edit Modal */}
+        <SymptomTypeModal
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o);
+            if (!o) setEditing(null);
+          }}
+          initialValue={editing?.name}
+          onSubmit={handleSave}
+        />
+      </CardContent>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

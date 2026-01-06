@@ -18,24 +18,14 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CompanyModal, Company } from "./medicineCompanyModal";
 import { getMedicineCompanies, createMedicineCompany, updateMedicineCompany, deleteMedicineCompany } from "@/lib/actions/medicineCompanies";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 export default function CompanyManager() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -43,9 +33,8 @@ export default function CompanyManager() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [companyToDelete, setCompanyToDelete] = useState<string | null>(null);
   const ability = useAbility();
+
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -104,30 +93,20 @@ export default function CompanyManager() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setCompanyToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!companyToDelete) return;
-
+  const handleDeleteConfirm = async (id: string) => {
     try {
-      const result = await deleteMedicineCompany(companyToDelete);
+      const result = await deleteMedicineCompany(id);
 
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      setCompanies((prev) => prev.filter((c) => c.id !== companyToDelete));
+      setCompanies((prev) => prev.filter((c) => c.id !== id));
       toast.success("Company deleted");
     } catch (error) {
       console.error("Error deleting company:", error);
       toast.error("Failed to delete company");
-    } finally {
-      setDeleteDialogOpen(false);
-      setCompanyToDelete(null);
     }
   };
 
@@ -143,7 +122,6 @@ export default function CompanyManager() {
       </CardHeader>
 
       <CardContent className="p-4 space-y-5">
-
         {/* Search + Add */}
         <div className="flex justify-between items-center flex-wrap gap-3">
           <Input
@@ -160,10 +138,10 @@ export default function CompanyManager() {
         {/* Table */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
                 <TableHead>Company Name</TableHead>
-                <TableHead className="w-[60px] text-center">Action</TableHead>
+                <TableHead className="w-[100px] text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -190,36 +168,31 @@ export default function CompanyManager() {
                 filtered.map((company) => (
                   <TableRow key={company.id}>
                     <TableCell>{company.name}</TableCell>
-
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <Can I="update" a="medicineCompany" ability={ability}>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditing(company);
-                                setOpen(true);
-                              }}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                          </Can>
-                          <Can I="delete" a="medicineCompany" ability={ability}>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDeleteClick(company.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </Can>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="text-right space-x-2">
+                      <Can I="update" a="medicineCompany" ability={ability}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditing(company);
+                            setOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="medicineCompany" ability={ability}>
+                        <ConfirmDialog
+                          title="Delete Company"
+                          description="Are you sure you want to permanently delete this medicine company? This action cannot be undone."
+                          onConfirm={() => handleDeleteConfirm(company.id)}
+                          trigger={
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          }
+                        />
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))
@@ -239,24 +212,6 @@ export default function CompanyManager() {
         company={editing ?? undefined}
         onSave={handleSave}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the medicine company.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
   );
 }

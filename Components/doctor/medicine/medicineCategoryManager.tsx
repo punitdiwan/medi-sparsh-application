@@ -18,24 +18,15 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { MedicineCategoryModal, MedicineCategory } from "./medicineCategoryModel";
 import { getMedicineCategories, createMedicineCategory, updateMedicineCategory, deleteMedicineCategory } from "../../../lib/actions/medicineCategories";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 export default function CategoryManager() {
   const [categories, setCategories] = useState<MedicineCategory[]>([]);
@@ -43,8 +34,6 @@ export default function CategoryManager() {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MedicineCategory | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
   const ability = useAbility();
 
@@ -100,30 +89,20 @@ export default function CategoryManager() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setCategoryToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!categoryToDelete) return;
-
+  const handleDeleteConfirm = async (id: string) => {
     try {
-      const result = await deleteMedicineCategory(categoryToDelete);
+      const result = await deleteMedicineCategory(id);
 
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete));
+      setCategories((prev) => prev.filter((c) => c.id !== id));
       toast.success("Category deleted");
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error("Failed to delete category");
-    } finally {
-      setDeleteDialogOpen(false);
-      setCategoryToDelete(null);
     }
   };
 
@@ -153,10 +132,10 @@ export default function CategoryManager() {
 
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
                 <TableHead>Category Name</TableHead>
-                <TableHead className="w-[60px] text-center">Action</TableHead>
+                <TableHead className="w-[100px] text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -177,26 +156,24 @@ export default function CategoryManager() {
                 filtered.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell>{category.name}</TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <Can I="update" a="medicineCategory" ability={ability}>
-                            <DropdownMenuItem onClick={() => { setEditing(category); setOpen(true); }}>
-                              Edit
-                            </DropdownMenuItem>
-                          </Can>
-                          <Can I="delete" a="medicineCategory" ability={ability}>
-                            <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(category.id)}>
-                              Delete
-                            </DropdownMenuItem>
-                          </Can>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="text-right space-x-2">
+                      <Can I="update" a="medicineCategory" ability={ability}>
+                        <Button variant="ghost" size="icon" onClick={() => { setEditing(category); setOpen(true); }}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="medicineCategory" ability={ability}>
+                        <ConfirmDialog
+                          title="Delete Category"
+                          description="Are you sure you want to permanently delete this medicine category? This action cannot be undone."
+                          onConfirm={() => handleDeleteConfirm(category.id)}
+                          trigger={
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          }
+                        />
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))
@@ -212,23 +189,6 @@ export default function CategoryManager() {
         category={editing ?? undefined}
         onSave={handleSave}
       />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the medicine category.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
   );
 }

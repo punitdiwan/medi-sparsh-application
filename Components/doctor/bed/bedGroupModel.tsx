@@ -7,10 +7,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Layers } from "lucide-react";
 
 type Floor = {
   id: string;
@@ -27,12 +28,13 @@ type Floor = {
 };
 
 type BedGroupModalProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   bedGroup?: { id?: string; name: string; floorId: string; floorName?: string | null; description: string | null };
   onSave: (bedGroup: { name: string; floorId: string; description?: string; id?: string }) => void;
 };
 
-export function BedGroupModal({ bedGroup, onSave }: BedGroupModalProps) {
-  const [open, setOpen] = useState(false);
+export function BedGroupModal({ open, onOpenChange, bedGroup, onSave }: BedGroupModalProps) {
   const [name, setName] = useState("");
   const [floorId, setFloorId] = useState("");
   const [description, setDescription] = useState("");
@@ -63,8 +65,8 @@ export function BedGroupModal({ bedGroup, onSave }: BedGroupModalProps) {
   useEffect(() => {
     if (open) {
       if (bedGroup) {
-        setName(bedGroup.name);
-        setFloorId(bedGroup.floorId);
+        setName(bedGroup.name || "");
+        setFloorId(bedGroup.floorId || "");
         setDescription(bedGroup.description || "");
       } else {
         setName("");
@@ -86,40 +88,43 @@ export function BedGroupModal({ bedGroup, onSave }: BedGroupModalProps) {
     }
 
     onSave({ id: bedGroup?.id, name, floorId, description });
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant={bedGroup ? "outline" : "default"}>
-          {bedGroup ? "Edit Bed Group" : "Add Bed Group"}
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent className="sm:max-w-[400px]"
-        onInteractOutside={(e) => e.preventDefault()}  
-        onEscapeKeyDown={(e) => e.preventDefault()}   
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>{bedGroup ? "Update Bed Group" : "Create Bed Group"}</DialogTitle>
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-lg ">
+              <Layers className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle>{bedGroup ? "Update Bed Group" : "Create Bed Group"}</DialogTitle>
+              <DialogDescription className="text-dialog-muted text-xs">
+                {bedGroup ? "Update existing bed group details." : "Create a new bed group to organize beds."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-1">
-            <Label htmlFor="bed-group-name">Bed Group Name</Label>
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Bed Group Name *</label>
             <Input
-              id="bed-group-name"
               placeholder="Enter bed group name"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          <div className="grid gap-1">
-            <Label htmlFor="floor-select">Floor</Label>
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Floor *</label>
             <Select value={floorId} onValueChange={setFloorId}>
-              <SelectTrigger id="floor-select">
+              <SelectTrigger>
                 <SelectValue placeholder={loadingFloors ? "Loading floors..." : "Select a floor"} />
               </SelectTrigger>
               <SelectContent>
@@ -132,20 +137,28 @@ export function BedGroupModal({ bedGroup, onSave }: BedGroupModalProps) {
             </Select>
           </div>
 
-          <div className="grid gap-1">
-            <Label htmlFor="bed-group-description">Description</Label>
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Description</label>
             <Textarea
-              id="bed-group-description"
               placeholder="Enter description (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[100px]"
             />
           </div>
+        </div>
 
-          <Button onClick={handleSubmit}>
+        <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="text-dialog-muted">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+          >
             {bedGroup ? "Update Bed Group" : "Create Bed Group"}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

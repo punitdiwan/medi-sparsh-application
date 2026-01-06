@@ -47,6 +47,8 @@ export default function SymptomManager() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [symptomToDelete, setSymptomToDelete] = useState<string | null>(null);
   const [openEx, setOpenEx] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingSymptom, setEditingSymptom] = useState<Symptom | null>(null);
   const ability = useAbility();
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function SymptomManager() {
       if (symptomsResult.error) {
         toast.error(symptomsResult.error);
       } else {
-        console.log("symptomsResult",symptomsResult)
+        console.log("symptomsResult", symptomsResult)
         setSymptoms(symptomsResult.data || []);
       }
 
@@ -120,6 +122,7 @@ export default function SymptomManager() {
       }
 
       toast.success(payload.id ? "Symptom updated" : "Symptom added");
+      setEditingSymptom(null);
       fetchData(); // Refresh the list
     } catch (error) {
       console.error("Error saving symptom:", error);
@@ -171,23 +174,23 @@ export default function SymptomManager() {
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
             <Can I="create" a="symptoms" ability={ability}>
-              <SymptomModal symptomTypes={symptomTypes} onSubmit={handleSave} />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpenEx(true)}
-                        className="p-2"
-                      >
-                        <Upload className="w-5 h-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Upload Symptom Excel</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              <Button onClick={() => setOpen(true)}>Add Symptom</Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenEx(true)}
+                      className="p-2"
+                    >
+                      <Upload className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload Symptom Excel</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </Can>
           </div>
         </div>
@@ -230,17 +233,13 @@ export default function SymptomManager() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <Can I="update" a="symptoms" ability={ability}>
-                            <DropdownMenuItem asChild>
-                              <SymptomModal
-                                symptomTypes={symptomTypes}
-                                initialData={{
-                                  id: s.id,
-                                  name: s.name,
-                                  symptomTypeId: s.symptomTypeId,
-                                  description: s.description,
-                                }}
-                                onSubmit={handleSave}
-                              />
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingSymptom(s);
+                                setOpen(true);
+                              }}
+                            >
+                              Edit
                             </DropdownMenuItem>
                           </Can>
                           <Can I="delete" a="symptoms" ability={ability}>
@@ -266,6 +265,23 @@ export default function SymptomManager() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Modal */}
+        <SymptomModal
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o);
+            if (!o) setEditingSymptom(null);
+          }}
+          symptomTypes={symptomTypes}
+          initialData={editingSymptom ? {
+            id: editingSymptom.id,
+            name: editingSymptom.name,
+            symptomTypeId: editingSymptom.symptomTypeId,
+            description: editingSymptom.description,
+          } : null}
+          onSubmit={handleSave}
+        />
       </CardContent>
 
       {/* Delete Confirmation Dialog */}

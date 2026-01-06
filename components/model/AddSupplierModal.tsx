@@ -1,11 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Building2, Phone, User, MapPin, Award, Sparkles } from "lucide-react";
+import { Truck } from "lucide-react";
 import { z } from "zod";
 
 // Zod validation schema
@@ -72,26 +78,28 @@ export default function AddSupplierModal({
 
   // Load existing value when editing
   useEffect(() => {
-    if (supplier) {
-      setForm({
-        supplierName: supplier.supplierName,
-        contactNumber: supplier.contactNumber,
-        address: supplier.address,
-        contactPerson: supplier.contactPerson,
-        contactPersonNumber: supplier.contactPersonNumber,
-        drugLicenseNumber: supplier.drugLicenseNumber,
-      });
-      setErrors({});
-    } else {
-      setForm({
-        supplierName: "",
-        contactNumber: "",
-        address: "",
-        contactPerson: "",
-        contactPersonNumber: "",
-        drugLicenseNumber: "",
-      });
-      setErrors({});
+    if (open) {
+      if (supplier) {
+        setForm({
+          supplierName: supplier.supplierName,
+          contactNumber: supplier.contactNumber,
+          address: supplier.address,
+          contactPerson: supplier.contactPerson,
+          contactPersonNumber: supplier.contactPersonNumber,
+          drugLicenseNumber: supplier.drugLicenseNumber,
+        });
+        setErrors({});
+      } else {
+        setForm({
+          supplierName: "",
+          contactNumber: "",
+          address: "",
+          contactPerson: "",
+          contactPersonNumber: "",
+          drugLicenseNumber: "",
+        });
+        setErrors({});
+      }
     }
   }, [supplier, open]);
 
@@ -130,174 +138,128 @@ export default function AddSupplierModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden">
-        {/* Header - Colorful in light mode, simple in dark mode */}
-        <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-800 p-6 text-white">
+      <DialogContent className="sm:max-w-2xl border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm p-3 rounded-lg">
-              <Building2 className="w-6 h-6" />
+            <div className="flex items-center justify-center rounded-lg ">
+              <Truck className="bg-dialog-header text-dialog-icon" />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                {supplier ? "Edit Supplier" : "Add New Supplier"}
-                <Sparkles className="w-5 h-5 text-yellow-300 dark:hidden" />
-              </h2>
-              <p className="text-blue-100 dark:text-gray-400 text-sm mt-1">
-                {supplier ? "Update supplier information" : "Fill in the details to add a new supplier"}
-              </p>
+            <div className="flex flex-col text-left">
+              <DialogTitle>{supplier ? "Edit Supplier" : "Add Supplier"}</DialogTitle>
+              <DialogDescription className="text-dialog-muted text-xs">
+                {supplier ? "Update existing supplier details." : "Add a new supplier to the system."}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Supplier Name */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Supplier Name *</label>
+              <Input
+                name="supplierName"
+                placeholder="Enter supplier name"
+                value={form.supplierName}
+                onChange={handleChange}
+                className={errors.supplierName ? "border-red-500" : ""}
+              />
+              {errors.supplierName && (
+                <p className="text-red-500 text-xs mt-1">{errors.supplierName}</p>
+              )}
+            </div>
+
+            {/* Supplier Contact */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Supplier Contact *</label>
+              <Input
+                name="contactNumber"
+                placeholder="10-digit phone number"
+                value={form.contactNumber}
+                onChange={handleChange}
+                maxLength={10}
+                className={errors.contactNumber ? "border-red-500" : ""}
+              />
+              {errors.contactNumber && (
+                <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>
+              )}
+            </div>
+
+            {/* Contact Person Name */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Contact Person Name *</label>
+              <Input
+                name="contactPerson"
+                placeholder="Person name"
+                value={form.contactPerson}
+                onChange={handleChange}
+                className={errors.contactPerson ? "border-red-500" : ""}
+              />
+              {errors.contactPerson && (
+                <p className="text-red-500 text-xs mt-1">{errors.contactPerson}</p>
+              )}
+            </div>
+
+            {/* Contact Person Phone */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Contact Person Phone *</label>
+              <Input
+                name="contactPersonNumber"
+                placeholder="10-digit phone number"
+                value={form.contactPersonNumber}
+                onChange={handleChange}
+                maxLength={10}
+                className={errors.contactPersonNumber ? "border-red-500" : ""}
+              />
+              {errors.contactPersonNumber && (
+                <p className="text-red-500 text-xs mt-1">{errors.contactPersonNumber}</p>
+              )}
+            </div>
+
+            {/* Drug License Number */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Drug License Number *</label>
+              <Input
+                name="drugLicenseNumber"
+                placeholder="Enter license number"
+                value={form.drugLicenseNumber}
+                onChange={handleChange}
+                className={errors.drugLicenseNumber ? "border-red-500" : ""}
+              />
+              {errors.drugLicenseNumber && (
+                <p className="text-red-500 text-xs mt-1">{errors.drugLicenseNumber}</p>
+              )}
+            </div>
+
+            {/* Address */}
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Address *</label>
+              <Input
+                name="address"
+                placeholder="Enter supplier address"
+                value={form.address}
+                onChange={handleChange}
+                className={errors.address ? "border-red-500" : ""}
+              />
+              {errors.address && (
+                <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Form Content - Colorful background in light mode, simple in dark mode */}
-        <div className="p-6 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50 dark:bg-gray-900 max-h-[calc(100vh-300px)] overflow-y-auto">
-          <div className="grid grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* Supplier Name */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-blue-100 dark:bg-transparent rounded-md group-hover:bg-blue-200 dark:group-hover:bg-transparent transition-colors">
-                    <Building2 className="w-4 h-4 text-blue-600 dark:text-gray-400" />
-                  </div>
-                  Supplier Name *
-                </Label>
-                <Input
-                  name="supplierName"
-                  placeholder="Enter supplier name"
-                  value={form.supplierName}
-                  onChange={handleChange}
-                  className={`border-2 ${errors.supplierName ? 'border-red-400 focus:border-red-500' : 'border-blue-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-gray-600'} focus:ring-blue-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.supplierName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.supplierName}</p>
-                )}
-              </div>
-
-              {/* Supplier Contact */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-green-100 dark:bg-transparent rounded-md group-hover:bg-green-200 dark:group-hover:bg-transparent transition-colors">
-                    <Phone className="w-4 h-4 text-green-600 dark:text-gray-400" />
-                  </div>
-                  Supplier Contact *
-                </Label>
-                <Input
-                  name="contactNumber"
-                  placeholder="10-digit phone number"
-                  value={form.contactNumber}
-                  onChange={handleChange}
-                  maxLength={10}
-                  className={`border-2 ${errors.contactNumber ? 'border-red-400 focus:border-red-500' : 'border-green-200 dark:border-gray-700 focus:border-green-400 dark:focus:border-gray-600'} focus:ring-green-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.contactNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>
-                )}
-              </div>
-
-              {/* Contact Person Name */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-purple-100 dark:bg-transparent rounded-md group-hover:bg-purple-200 dark:group-hover:bg-transparent transition-colors">
-                    <User className="w-4 h-4 text-purple-600 dark:text-gray-400" />
-                  </div>
-                  Contact Person Name *
-                </Label>
-                <Input
-                  name="contactPerson"
-                  placeholder="Person name"
-                  value={form.contactPerson}
-                  onChange={handleChange}
-                  className={`border-2 ${errors.contactPerson ? 'border-red-400 focus:border-red-500' : 'border-purple-200 dark:border-gray-700 focus:border-purple-400 dark:focus:border-gray-600'} focus:ring-purple-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.contactPerson && (
-                  <p className="text-red-500 text-xs mt-1">{errors.contactPerson}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-4">
-              {/* Contact Person Phone */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-orange-100 dark:bg-transparent rounded-md group-hover:bg-orange-200 dark:group-hover:bg-transparent transition-colors">
-                    <Phone className="w-4 h-4 text-orange-600 dark:text-gray-400" />
-                  </div>
-                  Contact Person Phone *
-                </Label>
-                <Input
-                  name="contactPersonNumber"
-                  placeholder="10-digit phone number"
-                  value={form.contactPersonNumber}
-                  onChange={handleChange}
-                  maxLength={10}
-                  className={`border-2 ${errors.contactPersonNumber ? 'border-red-400 focus:border-red-500' : 'border-orange-200 dark:border-gray-700 focus:border-orange-400 dark:focus:border-gray-600'} focus:ring-orange-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.contactPersonNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.contactPersonNumber}</p>
-                )}
-              </div>
-
-              {/* Drug License Number */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-pink-100 dark:bg-transparent rounded-md group-hover:bg-pink-200 dark:group-hover:bg-transparent transition-colors">
-                    <Award className="w-4 h-4 text-pink-600 dark:text-gray-400" />
-                  </div>
-                  Drug License Number *
-                </Label>
-                <Input
-                  name="drugLicenseNumber"
-                  placeholder="Enter license number"
-                  value={form.drugLicenseNumber}
-                  onChange={handleChange}
-                  className={`border-2 ${errors.drugLicenseNumber ? 'border-red-400 focus:border-red-500' : 'border-pink-200 dark:border-gray-700 focus:border-pink-400 dark:focus:border-gray-600'} focus:ring-pink-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.drugLicenseNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.drugLicenseNumber}</p>
-                )}
-              </div>
-
-              {/* Address */}
-              <div className="group">
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
-                  <div className="p-1.5 bg-indigo-100 dark:bg-transparent rounded-md group-hover:bg-indigo-200 dark:group-hover:bg-transparent transition-colors">
-                    <MapPin className="w-4 h-4 text-indigo-600 dark:text-gray-400" />
-                  </div>
-                  Address *
-                </Label>
-                <Input
-                  name="address"
-                  placeholder="Enter supplier address"
-                  value={form.address}
-                  onChange={handleChange}
-                  className={`border-2 ${errors.address ? 'border-red-400 focus:border-red-500' : 'border-indigo-200 dark:border-gray-700 focus:border-indigo-400 dark:focus:border-gray-600'} focus:ring-indigo-200 dark:focus:ring-gray-700 bg-white dark:bg-gray-800`}
-                />
-                {errors.address && (
-                  <p className="text-red-500 text-xs mt-1">{errors.address}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer - Simple in both modes */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 flex justify-end gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            className="border-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
+        <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={() => setOpen(false)} className="text-dialog-muted">
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 dark:bg-primary dark:hover:bg-primary/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
-            {supplier ? "💾 Save Changes" : "✨ Add Supplier"}
+            {supplier ? "Update Supplier" : "Add Supplier"}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

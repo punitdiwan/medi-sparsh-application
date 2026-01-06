@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { BedTypeModal } from "./bedTypeModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type BedType = {
   id: string;
@@ -31,6 +31,9 @@ export default function BedTypeManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const [open, setOpen] = useState(false);
+  const [editingBedType, setEditingBedType] = useState<BedType | null>(null);
 
   const ability = useAbility();
   const rowsPerPage = 20;
@@ -123,55 +126,40 @@ export default function BedTypeManager() {
     }
   };
 
-  const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
-    const bedType = bedTypes.find((b) => b.id === id);
+  const handleSoftDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/bed-types/${id}`, {
+        method: "DELETE",
+      });
 
-    // If bed type is already soft deleted and user is owner, offer permanent deletion
-    if (isAlreadyDeleted && userRole === "owner") {
-      const confirmPermanent = confirm(
-        "This bed type is already deleted. Click OK to permanently delete it, or Cancel to keep it."
-      );
-
-      if (confirmPermanent) {
-        try {
-          const response = await fetch(`/api/bed-types/${id}?permanent=true`, {
-            method: "DELETE",
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to permanently delete bed type");
-          }
-
-          setBedTypes((prev) => prev.filter((b) => b.id !== id));
-          toast.success("Bed Type permanently deleted");
-        } catch (error) {
-          console.error("Error permanently deleting bed type:", error);
-          toast.error(error instanceof Error ? error.message : "Failed to permanently delete bed type");
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete bed type");
       }
-    } else if (isAlreadyDeleted && userRole !== "owner") {
-      toast.error("Only owner can permanently delete bed types");
-    } else {
-      // Soft delete
-      const confirmDelete = confirm("Are you sure you want to delete this bed type?");
-      if (confirmDelete) {
-        try {
-          const response = await fetch(`/api/bed-types/${id}`, {
-            method: "DELETE",
-          });
+      setBedTypes((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Bed Type deleted successfully");
+    } catch (error) {
+      console.error("Error deleting bed type:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete bed type");
+    }
+  };
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to delete bed type");
-          }
-          setBedTypes((prev) => prev.filter((b) => b.id !== id));
-          toast.success("Bed Type deleted successfully");
-        } catch (error) {
-          console.error("Error deleting bed type:", error);
-          toast.error(error instanceof Error ? error.message : "Failed to delete bed type");
-        }
+  const handlePermanentDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/bed-types/${id}?permanent=true`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to permanently delete bed type");
       }
+
+      setBedTypes((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Bed Type permanently deleted");
+    } catch (error) {
+      console.error("Error permanently deleting bed type:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to permanently delete bed type");
     }
   };
 
@@ -185,7 +173,6 @@ export default function BedTypeManager() {
           </CardDescription>
         </div>
       </CardHeader>
-      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Top bar: Search + Switch + Add */}
@@ -208,7 +195,12 @@ export default function BedTypeManager() {
               </Label>
             </div>
             <Can I="create" a="bedType" ability={ability}>
-              <BedTypeModal onSave={handleSave} />
+              <Button onClick={() => {
+                setEditingBedType(null);
+                setOpen(true);
+              }}>
+                Add Bed Type
+              </Button>
             </Can>
           </div>
 
@@ -234,15 +226,55 @@ export default function BedTypeManager() {
                     <TableCell>{b.name}</TableCell>
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <Can I="update" a="bedType" ability={ability}> <BedTypeModal bedType={b} onSave={handleSave} /></Can>}
+                      {!b.isDeleted && (
+                        <Can I="update" a="bedType" ability={ability}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingBedType(b);
+                              setOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Can>
+                      )}
                       <Can I="delete" a="bedType" ability={ability}>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(b.id, b.isDeleted)}
-                        >
-                          {b.isDeleted ? "Permanently Delete" : "Delete"}
-                        </Button>
+                        {b.isDeleted ? (
+                          userRole === "owner" ? (
+                            <ConfirmDialog
+                              title="Permanently Delete Bed Type?"
+                              description="This action cannot be undone. This bed type will be permanently removed."
+                              onConfirm={() => handlePermanentDelete(b.id)}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  Permanently Delete
+                                </Button>
+                              }
+                            />
+                          ) : (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled
+                              title="Only owner can permanently delete"
+                            >
+                              Permanently Delete
+                            </Button>
+                          )
+                        ) : (
+                          <ConfirmDialog
+                            title="Delete Bed Type?"
+                            description="Are you sure you want to delete this bed type? It will be soft deleted."
+                            onConfirm={() => handleSoftDelete(b.id)}
+                            trigger={
+                              <Button variant="destructive" size="sm">
+                                Delete
+                              </Button>
+                            }
+                          />
+                        )}
                       </Can>
                     </TableCell>
                   </TableRow>
@@ -281,6 +313,16 @@ export default function BedTypeManager() {
               </Button>
             </div>
           )}
+
+          <BedTypeModal
+            open={open}
+            onOpenChange={(o) => {
+              setOpen(o);
+              if (!o) setEditingBedType(null);
+            }}
+            bedType={editingBedType || undefined}
+            onSave={handleSave}
+          />
         </div>
       </CardContent>
     </Card>

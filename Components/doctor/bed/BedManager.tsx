@@ -44,6 +44,9 @@ export default function BedManager() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
+  const [open, setOpen] = useState(false);
+  const [editingBed, setEditingBed] = useState<Bed | null>(null);
+
   const ability = useAbility();
   const rowsPerPage = 20;
 
@@ -222,7 +225,12 @@ export default function BedManager() {
               <Label htmlFor="deleted">Show deleted</Label>
             </div>
             <Can I="create" a="bed" ability={ability}>
-              <BedModal onSave={handleSave} />
+              <Button onClick={() => {
+                setEditingBed(null);
+                setOpen(true);
+              }}>
+                Add Bed
+              </Button>
             </Can>
           </div>
 
@@ -253,7 +261,20 @@ export default function BedManager() {
                     <TableCell>{b.floorName || "-"}</TableCell>
 
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <Can I="update" a="bed" ability={ability}><BedModal initialData={b} onSave={handleSave} /></Can>}
+                      {!b.isDeleted && (
+                        <Can I="update" a="bed" ability={ability}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingBed(b);
+                              setOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Can>
+                      )}
                       <Can I="delete" a="bed" ability={ability}>
                         <TooltipProvider>
                           <Tooltip>
@@ -321,6 +342,16 @@ export default function BedManager() {
               </Button>
             </div>
           )}
+
+          <BedModal
+            open={open}
+            onOpenChange={(o) => {
+              setOpen(o);
+              if (!o) setEditingBed(null);
+            }}
+            initialData={editingBed}
+            onSave={handleSave}
+          />
         </div>
       </CardContent>
     </Card>

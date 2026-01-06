@@ -11,26 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MdEdit, MdDelete } from "react-icons/md";
+import { Edit, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { UnitModal, Unit } from "./medicineUnit";
 import { getMedicineUnits, createMedicineUnit, updateMedicineUnit, deleteMedicineUnit } from "@/lib/actions/medicineUnits";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Upload } from "lucide-react";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 export default function MedicineUnitManager() {
   const [units, setUnits] = useState<Unit[]>([]);
@@ -38,10 +28,9 @@ export default function MedicineUnitManager() {
   const [search, setSearch] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | undefined>(undefined);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [unitToDelete, setUnitToDelete] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const ability = useAbility();
+
   useEffect(() => {
     fetchUnits();
   }, []);
@@ -100,30 +89,20 @@ export default function MedicineUnitManager() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setUnitToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!unitToDelete) return;
-
+  const handleDeleteConfirm = async (id: string) => {
     try {
-      const result = await deleteMedicineUnit(unitToDelete);
+      const result = await deleteMedicineUnit(id);
 
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      setUnits((prev) => prev.filter((u) => u.id !== unitToDelete));
+      setUnits((prev) => prev.filter((u) => u.id !== id));
       toast.success("Unit deleted");
     } catch (error) {
       console.error("Error deleting unit:", error);
       toast.error("Failed to delete unit");
-    } finally {
-      setDeleteDialogOpen(false);
-      setUnitToDelete(null);
     }
   };
 
@@ -139,7 +118,6 @@ export default function MedicineUnitManager() {
       </CardHeader>
 
       <CardContent className="p-4 space-y-6">
-
         {/* Search + Add */}
         <div className="flex items-center justify-between">
           <Input
@@ -179,13 +157,13 @@ export default function MedicineUnitManager() {
           entity="medicineUnit"
         />
         {/* Table */}
-        <div className="rounded-xl border">
+        <div className="rounded-xl border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[70px]">S.No</TableHead>
                 <TableHead>Unit Name</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -201,8 +179,7 @@ export default function MedicineUnitManager() {
                   <TableRow key={unit.id}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{unit.unitName}</TableCell>
-
-                    <TableCell className="text-right space-x-3">
+                    <TableCell className="text-right space-x-2">
                       <Can I="update" a="medicineUnit" ability={ability}>
                         <Button
                           variant="ghost"
@@ -212,17 +189,20 @@ export default function MedicineUnitManager() {
                             setOpenModal(true);
                           }}
                         >
-                          <MdEdit size={18} />
+                          <Edit className="w-4 h-4" />
                         </Button>
                       </Can>
                       <Can I="delete" a="medicineUnit" ability={ability}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(unit.id)}
-                        >
-                          <MdDelete size={18} className="text-red-500" />
-                        </Button>
+                        <ConfirmDialog
+                          title="Delete Unit"
+                          description="Are you sure you want to permanently delete this medicine unit? This action cannot be undone."
+                          onConfirm={() => handleDeleteConfirm(unit.id)}
+                          trigger={
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          }
+                        />
                       </Can>
                     </TableCell>
                   </TableRow>
@@ -237,7 +217,6 @@ export default function MedicineUnitManager() {
             </TableBody>
           </Table>
         </div>
-
       </CardContent>
 
       {/* Modal */}
@@ -247,24 +226,6 @@ export default function MedicineUnitManager() {
         unit={editingUnit}
         onSave={handleSave}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the medicine unit.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
   );
 }

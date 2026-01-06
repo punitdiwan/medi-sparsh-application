@@ -18,18 +18,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Upload } from "lucide-react";
+import { Edit, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import MedicineGroupModal, { MedicineGroup } from "./medicineGroupModel";
@@ -38,6 +27,7 @@ import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 export default function MedicineGroupManager() {
   const [groups, setGroups] = useState<MedicineGroup[]>([]);
@@ -46,8 +36,6 @@ export default function MedicineGroupManager() {
   const [open, setOpen] = useState(false);
   const [openMg, setOpenMg] = useState(false);
   const [editing, setEditing] = useState<MedicineGroup | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
 
   const ability = useAbility();
   useEffect(() => {
@@ -102,30 +90,20 @@ export default function MedicineGroupManager() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setGroupToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!groupToDelete) return;
-
+  const handleDeleteConfirm = async (id: string) => {
     try {
-      const result = await deleteMedicineGroup(groupToDelete);
+      const result = await deleteMedicineGroup(id);
 
       if (result.error) {
         toast.error(result.error);
         return;
       }
 
-      setGroups((prev) => prev.filter((g) => g.id !== groupToDelete));
+      setGroups((prev) => prev.filter((g) => g.id !== id));
       toast.success("Group deleted");
     } catch (error) {
       console.error("Error deleting group:", error);
       toast.error("Failed to delete medicine group");
-    } finally {
-      setDeleteDialogOpen(false);
-      setGroupToDelete(null);
     }
   };
 
@@ -166,7 +144,6 @@ export default function MedicineGroupManager() {
             </Can>
           </div>
         </div>
-        {/* openMg */}
 
         <ExcelUploadModal
           open={openMg}
@@ -175,11 +152,11 @@ export default function MedicineGroupManager() {
         />
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
                 <TableHead>Group Name</TableHead>
                 <TableHead className="w-[120px]">Usage</TableHead>
-                <TableHead className="w-[60px] text-center">Action</TableHead>
+                <TableHead className="w-[100px] text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -209,30 +186,31 @@ export default function MedicineGroupManager() {
                         <span className="text-sm text-muted-foreground">Not used</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <Can I="update" a="medicineGroup" ability={ability}>
-                            <DropdownMenuItem onClick={() => { setEditing(group); setOpen(true); }}>
-                              Edit
-                            </DropdownMenuItem>
-                          </Can>
-                          <Can I="delete" a="medicineGroup" ability={ability}>
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => handleDeleteClick(group.id)}
-                              disabled={group.isUsed}
-                            >
-                              {group.isUsed ? "Delete (In Use)" : "Delete"}
-                            </DropdownMenuItem>
-                          </Can>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <TableCell className="text-right space-x-2">
+                      <Can I="update" a="medicineGroup" ability={ability}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditing(group);
+                            setOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </Can>
+                      <Can I="delete" a="medicineGroup" ability={ability}>
+                        <ConfirmDialog
+                          title="Delete Group"
+                          description="Are you sure you want to permanently delete this medicine group? This action cannot be undone."
+                          onConfirm={() => handleDeleteConfirm(group.id)}
+                          trigger={
+                            <Button variant="ghost" size="icon" disabled={group.isUsed}>
+                              <Trash2 className={`w-4 h-4 ${group.isUsed ? "text-gray-400" : "text-red-500"}`} />
+                            </Button>
+                          }
+                        />
+                      </Can>
                     </TableCell>
                   </TableRow>
                 ))
@@ -248,23 +226,6 @@ export default function MedicineGroupManager() {
         group={editing ?? undefined}
         onSave={handleSave}
       />
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the medicine group.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
   );
 }

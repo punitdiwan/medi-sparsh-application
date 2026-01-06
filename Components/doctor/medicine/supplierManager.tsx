@@ -21,24 +21,14 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Plus } from "lucide-react";
+import { Edit, Trash2, RotateCcw, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import AddSupplierModal, { Supplier } from "@/components/model/AddSupplierModal";
 import { getMedicineSuppliers, createMedicineSupplier, updateMedicineSupplier, deleteMedicineSupplier, restoreMedicineSupplier } from "@/lib/actions/medicineSuppliers";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 export default function SupplierManager() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -47,8 +37,6 @@ export default function SupplierManager() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
 
   const ability = useAbility();
 
@@ -124,16 +112,9 @@ export default function SupplierManager() {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setSupplierToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!supplierToDelete) return;
-
+  const handleDeleteConfirm = async (id: string) => {
     try {
-      const result = await deleteMedicineSupplier(supplierToDelete);
+      const result = await deleteMedicineSupplier(id);
 
       if (result.error) {
         toast.error(result.error);
@@ -145,9 +126,6 @@ export default function SupplierManager() {
     } catch (error) {
       console.error("Error deleting supplier:", error);
       toast.error("Failed to delete supplier");
-    } finally {
-      setDeleteDialogOpen(false);
-      setSupplierToDelete(null);
     }
   };
 
@@ -218,7 +196,7 @@ export default function SupplierManager() {
         {/* TABLE */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
                 <TableHead>Supplier Name</TableHead>
                 <TableHead>Contact</TableHead>
@@ -227,7 +205,7 @@ export default function SupplierManager() {
                 <TableHead>License No.</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[60px] text-center">Action</TableHead>
+                <TableHead className="w-[100px] text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -260,43 +238,34 @@ export default function SupplierManager() {
                         <Badge variant="default">Active</Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
+                    <TableCell className="text-right space-x-2">
+                      {!supplier.isDeleted ? (
+                        <>
+                          <Can I="update" a="medicineSupplier" ability={ability}>
+                            <Button variant="ghost" size="icon" onClick={() => { setEditing(supplier); setOpen(true); }}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </Can>
+                          <Can I="delete" a="medicineSupplier" ability={ability}>
+                            <ConfirmDialog
+                              title="Delete Supplier"
+                              description="Are you sure you want to delete this supplier? You can restore it later."
+                              onConfirm={() => handleDeleteConfirm(supplier.id)}
+                              trigger={
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="w-4 h-4 text-red-500" />
+                                </Button>
+                              }
+                            />
+                          </Can>
+                        </>
+                      ) : (
+                        <Can I="delete" a="medicineSupplier" ability={ability}>
+                          <Button variant="ghost" size="icon" onClick={() => handleRestore(supplier.id)}>
+                            <RotateCcw className="w-4 h-4 text-green-500" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {!supplier.isDeleted && (
-                            <>
-                              <Can I="update" a="medicineSupplier" ability={ability}>
-                                <DropdownMenuItem onClick={() => { setEditing(supplier); setOpen(true); }}>
-                                  Edit
-                                </DropdownMenuItem>
-                              </Can>
-                              <Can I="delete" a="medicineSupplier" ability={ability}>
-                                <DropdownMenuItem
-                                  className="text-red-600"
-                                  onClick={() => handleDeleteClick(supplier.id)}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </Can>
-                            </>
-                          )}
-                          {supplier.isDeleted && (
-                            <Can I="delete" a="medicineSupplier" ability={ability}>
-                              <DropdownMenuItem
-                                className="text-green-600"
-                                onClick={() => handleRestore(supplier.id)}
-                              >
-                                Restore
-                              </DropdownMenuItem>
-                            </Can>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </Can>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -313,24 +282,6 @@ export default function SupplierManager() {
         supplier={editing ?? undefined}
         onSave={handleSave}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the supplier as deleted. You can restore it later using the "Show Deleted" filter.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Card>
   );
 }
