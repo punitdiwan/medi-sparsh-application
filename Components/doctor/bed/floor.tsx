@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { FloorModal } from "./floorModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Can } from "@casl/react";
 import { useAbility } from "@/components/providers/AbilityProvider";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type Floor = {
   id: string;
@@ -31,6 +31,9 @@ export default function FloorManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const [open, setOpen] = useState(false);
+  const [editingFloor, setEditingFloor] = useState<Floor | null>(null);
 
   const ability = useAbility();
   const rowsPerPage = 20;
@@ -123,55 +126,40 @@ export default function FloorManager() {
     }
   };
 
-  const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
-    const floor = floors.find((f) => f.id === id);
+  const handleSoftDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/floors/${id}`, {
+        method: "DELETE",
+      });
 
-    // If floor is already soft deleted and user is owner, offer permanent deletion
-    if (isAlreadyDeleted && userRole === "owner") {
-      const confirmPermanent = confirm(
-        "This floor is already deleted. Click OK to permanently delete it, or Cancel to keep it."
-      );
-
-      if (confirmPermanent) {
-        try {
-          const response = await fetch(`/api/floors/${id}?permanent=true`, {
-            method: "DELETE",
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to permanently delete floor");
-          }
-
-          setFloors((prev) => prev.filter((f) => f.id !== id));
-          toast.success("Floor permanently deleted");
-        } catch (error) {
-          console.error("Error permanently deleting floor:", error);
-          toast.error(error instanceof Error ? error.message : "Failed to permanently delete floor");
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete floor");
       }
-    } else if (isAlreadyDeleted && userRole !== "owner") {
-      toast.error("Only owner can permanently delete floors");
-    } else {
-      // Soft delete
-      const confirmDelete = confirm("Are you sure you want to delete this floor?");
-      if (confirmDelete) {
-        try {
-          const response = await fetch(`/api/floors/${id}`, {
-            method: "DELETE",
-          });
+      setFloors((prev) => prev.filter((f) => f.id !== id));
+      toast.success("Floor deleted successfully");
+    } catch (error) {
+      console.error("Error deleting floor:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete floor");
+    }
+  };
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to delete floor");
-          }
-          setFloors((prev) => prev.filter((f) => f.id !== id));
-          toast.success("Floor deleted successfully");
-        } catch (error) {
-          console.error("Error deleting floor:", error);
-          toast.error(error instanceof Error ? error.message : "Failed to delete floor");
-        }
+  const handlePermanentDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/floors/${id}?permanent=true`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to permanently delete floor");
       }
+
+      setFloors((prev) => prev.filter((f) => f.id !== id));
+      toast.success("Floor permanently deleted");
+    } catch (error) {
+      console.error("Error permanently deleting floor:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to permanently delete floor");
     }
   };
 
@@ -185,7 +173,6 @@ export default function FloorManager() {
           </CardDescription>
         </div>
       </CardHeader>
-      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Top bar: Search + Switch + Add */}
@@ -208,7 +195,12 @@ export default function FloorManager() {
               </Label>
             </div>
             <Can I="create" a="floor" ability={ability}>
-              <FloorModal onSave={handleSave} />
+              <Button onClick={() => {
+                setEditingFloor(null);
+                setOpen(true);
+              }}>
+                Add Floor
+              </Button>
             </Can>
           </div>
 
@@ -234,15 +226,55 @@ export default function FloorManager() {
                     <TableCell>{floor.name}</TableCell>
                     <TableCell>{floor.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!floor.isDeleted && <Can I="update" a="floor" ability={ability}><FloorModal floor={floor} onSave={handleSave} /></Can>}
+                      {!floor.isDeleted && (
+                        <Can I="update" a="floor" ability={ability}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingFloor(floor);
+                              setOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Can>
+                      )}
                       <Can I="delete" a="floor" ability={ability}>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(floor.id, floor.isDeleted)}
-                        >
-                          {floor.isDeleted ? "Permanently Delete" : "Delete"}
-                        </Button>
+                        {floor.isDeleted ? (
+                          userRole === "owner" ? (
+                            <ConfirmDialog
+                              title="Permanently Delete Floor?"
+                              description="This action cannot be undone. This floor will be permanently removed."
+                              onConfirm={() => handlePermanentDelete(floor.id)}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  Permanently Delete
+                                </Button>
+                              }
+                            />
+                          ) : (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled
+                              title="Only owner can permanently delete"
+                            >
+                              Permanently Delete
+                            </Button>
+                          )
+                        ) : (
+                          <ConfirmDialog
+                            title="Delete Floor?"
+                            description="Are you sure you want to delete this floor? It will be soft deleted."
+                            onConfirm={() => handleSoftDelete(floor.id)}
+                            trigger={
+                              <Button variant="destructive" size="sm">
+                                Delete
+                              </Button>
+                            }
+                          />
+                        )}
                       </Can>
                     </TableCell>
                   </TableRow>
@@ -279,6 +311,16 @@ export default function FloorManager() {
               </Button>
             </div>
           )}
+
+          <FloorModal
+            open={open}
+            onOpenChange={(o) => {
+              setOpen(o);
+              if (!o) setEditingFloor(null);
+            }}
+            floor={editingFloor || undefined}
+            onSave={handleSave}
+          />
         </div>
       </CardContent>
     </Card>

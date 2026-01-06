@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
-import { PiUploadBold } from "react-icons/pi";
+import { Edit, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPharmacyMedicines,
@@ -19,6 +17,8 @@ import { PiMagnifyingGlassDuotone } from "react-icons/pi";
 import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+
 type MedicineDisplay = {
   id: string;
   name: string;
@@ -51,8 +51,6 @@ export default function MedicineStockManagerPage() {
     units: [],
     groups: [],
   });
-
-  const route = useRouter();
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -121,13 +119,20 @@ export default function MedicineStockManagerPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)}>
-            Edit
+          <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
+            <Edit className="w-4 h-4" />
           </Button>
 
-          <Button size="sm" variant="destructive" onClick={() => handleDelete(row.original)}>
-            Delete
-          </Button>
+          <ConfirmDialog
+            title="Delete Medicine"
+            description={`Are you sure you want to permanently delete \"${row.original.name}\"? This action cannot be undone.`}
+            onConfirm={() => handleDelete(row.original)}
+            trigger={
+              <Button variant="ghost" size="icon">
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            }
+          />
         </div>
       ),
     },
@@ -151,14 +156,12 @@ export default function MedicineStockManagerPage() {
   };
 
   const handleDelete = async (med: MedicineDisplay) => {
-    if (confirm(`Are you sure you want to delete ${med.name}?`)) {
-      const result = await deletePharmacyMedicine(med.id);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Medicine deleted successfully");
-        fetchData(); // Refresh list
-      }
+    const result = await deletePharmacyMedicine(med.id);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Medicine deleted successfully");
+      fetchData(); // Refresh list
     }
   };
 
@@ -205,9 +208,9 @@ export default function MedicineStockManagerPage() {
                   <Upload className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upload Patients Excel</p>
-                </TooltipContent>
+              <TooltipContent>
+                <p>Upload Patients Excel</p>
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

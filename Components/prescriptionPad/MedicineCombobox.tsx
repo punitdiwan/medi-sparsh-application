@@ -23,6 +23,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ import { toast } from "sonner";
 import { createMedicine } from "@/lib/actions/medicines";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
+import { Pill } from "lucide-react";
 
 interface MedicineData {
     id: string;
@@ -160,7 +162,7 @@ export default function MedicineCombobox({
                 categoryId: newMedicineForm.categoryId,
                 companyName: newMedicineForm.companyName,
                 unitId: newMedicineForm.unitId,
-                groupId: 'g1', 
+                groupId: 'g1',
                 notes: newMedicineForm.notes || null,
             });
 
@@ -261,108 +263,119 @@ export default function MedicineCombobox({
 
             {/* Add New Medicine Dialog */}
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle>Add New Medicine</DialogTitle>
+                <DialogContent className="sm:max-w-lg border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+                    <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center rounded-lg ">
+                                <Pill className="bg-dialog-header text-dialog-icon" />
+                            </div>
+                            <div className="flex flex-col text-left">
+                                <DialogTitle>Add New Medicine</DialogTitle>
+                                <DialogDescription className="text-dialog-muted text-xs">
+                                    Create a new medicine entry for the prescription.
+                                </DialogDescription>
+                            </div>
+                        </div>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="medicine-name">
-                                Medicine Name <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="medicine-name"
-                                value={newMedicineForm.name}
-                                onChange={(e) =>
-                                    setNewMedicineForm((prev) => ({
-                                        ...prev,
-                                        name: e.target.value,
-                                    }))
-                                }
-                                placeholder="Enter medicine name"
-                            />
+
+                    <div className="px-6 py-5 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Medicine Name *</label>
+                                <Input
+                                    id="medicine-name"
+                                    value={newMedicineForm.name}
+                                    onChange={(e) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Enter medicine name"
+                                    disabled={loading}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Category *</label>
+                                <Select
+                                    value={newMedicineForm.categoryId}
+                                    onValueChange={(value) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            categoryId: value,
+                                        }))
+                                    }
+                                    disabled={loading}
+                                >
+                                    <SelectTrigger id="category">
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.id}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="category">
-                                Category <span className="text-destructive">*</span>
-                            </Label>
-                            <Select
-                                value={newMedicineForm.categoryId}
-                                onValueChange={(value) =>
-                                    setNewMedicineForm((prev) => ({
-                                        ...prev,
-                                        categoryId: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger id="category">
-                                    <SelectValue placeholder="Select category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((cat) => (
-                                        <SelectItem key={cat.id} value={cat.id}>
-                                            {cat.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Company *</label>
+                                <Select
+                                    value={newMedicineForm.companyName}
+                                    onValueChange={(value) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            companyName: value,
+                                        }))
+                                    }
+                                    disabled={loading}
+                                >
+                                    <SelectTrigger id="company">
+                                        <SelectValue placeholder="Select company" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {companies.map((company) => (
+                                            <SelectItem key={company.id} value={company.id}>
+                                                {company.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Unit *</label>
+                                <Select
+                                    value={newMedicineForm.unitId}
+                                    onValueChange={(value) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            unitId: value,
+                                        }))
+                                    }
+                                    disabled={loading}
+                                >
+                                    <SelectTrigger id="unit">
+                                        <SelectValue placeholder="Select unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {units.map((unit) => (
+                                            <SelectItem key={unit.id} value={unit.id}>
+                                                {unit.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="company">
-                                Company <span className="text-destructive">*</span>
-                            </Label>
-                            <Select
-                                value={newMedicineForm.companyName}
-                                onValueChange={(value) =>
-                                    setNewMedicineForm((prev) => ({
-                                        ...prev,
-                                        companyName: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger id="company">
-                                    <SelectValue placeholder="Select company" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {companies.map((company) => (
-                                        <SelectItem key={company.id} value={company.id}>
-                                            {company.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="unit">
-                                Unit <span className="text-destructive">*</span>
-                            </Label>
-                            <Select
-                                value={newMedicineForm.unitId}
-                                onValueChange={(value) =>
-                                    setNewMedicineForm((prev) => ({
-                                        ...prev,
-                                        unitId: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger id="unit">
-                                    <SelectValue placeholder="Select unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {units.map((unit) => (
-                                        <SelectItem key={unit.id} value={unit.id}>
-                                            {unit.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="notes">Notes</Label>
+                        <div className="space-y-1">
+                            <label className="text-sm mb-1 block">Notes</label>
                             <Input
                                 id="notes"
                                 value={newMedicineForm.notes}
@@ -373,18 +386,25 @@ export default function MedicineCombobox({
                                     }))
                                 }
                                 placeholder="Optional notes"
+                                disabled={loading}
                             />
                         </div>
                     </div>
-                    <DialogFooter>
+
+                    <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
                         <Button
                             variant="outline"
                             onClick={() => setShowAddDialog(false)}
                             disabled={loading}
+                            className="text-dialog-muted"
                         >
                             Cancel
                         </Button>
-                        <Button onClick={handleCreateMedicine} disabled={loading}>
+                        <Button
+                            onClick={handleCreateMedicine}
+                            disabled={loading}
+                            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+                        >
                             {loading ? "Adding..." : "Add Medicine"}
                         </Button>
                     </DialogFooter>

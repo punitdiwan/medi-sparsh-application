@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { BedGroupModal } from "./bedGroupModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type BedGroup = {
   id: string;
@@ -33,6 +33,9 @@ export default function BedGroupManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const [open, setOpen] = useState(false);
+  const [editingBedGroup, setEditingBedGroup] = useState<BedGroup | null>(null);
 
   const ability = useAbility();
 
@@ -136,52 +139,37 @@ export default function BedGroupManager() {
     }
   };
 
-  const handleDelete = async (id: string, isAlreadyDeleted: boolean = false) => {
-    const bedGroup = bedGroups.find((b) => b.id === id);
+  const handleSoftDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/bed-groups/${id}`, {
+        method: "DELETE",
+      });
 
-    // If bed group is already soft deleted and user is owner, offer permanent deletion
-    if (isAlreadyDeleted && userRole === "owner") {
-      const confirmPermanent = confirm(
-        "This bed group is already deleted. Click OK to permanently delete it, or Cancel to keep it."
-      );
+      if (!response.ok) throw new Error("Failed to delete bed group");
+      setBedGroups((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Bed Group deleted successfully");
+    } catch (error) {
+      console.error("Error deleting bed group:", error);
+      toast.error("Failed to delete bed group");
+    }
+  };
 
-      if (confirmPermanent) {
-        try {
-          const response = await fetch(`/api/bed-groups/${id}?permanent=true`, {
-            method: "DELETE",
-          });
+  const handlePermanentDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/bed-groups/${id}?permanent=true`, {
+        method: "DELETE",
+      });
 
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to permanently delete bed group");
-          }
-
-          setBedGroups((prev) => prev.filter((b) => b.id !== id));
-          toast.success("Bed Group permanently deleted");
-        } catch (error) {
-          console.error("Error permanently deleting bed group:", error);
-          toast.error(error instanceof Error ? error.message : "Failed to permanently delete bed group");
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to permanently delete bed group");
       }
-    } else if (isAlreadyDeleted && userRole !== "owner") {
-      toast.error("Only owner can permanently delete bed groups");
-    } else {
-      // Soft delete
-      const confirmDelete = confirm("Are you sure you want to delete this bed group?");
-      if (confirmDelete) {
-        try {
-          const response = await fetch(`/api/bed-groups/${id}`, {
-            method: "DELETE",
-          });
 
-          if (!response.ok) throw new Error("Failed to delete bed group");
-          setBedGroups((prev) => prev.filter((b) => b.id !== id));
-          toast.success("Bed Group deleted successfully");
-        } catch (error) {
-          console.error("Error deleting bed group:", error);
-          toast.error("Failed to delete bed group");
-        }
-      }
+      setBedGroups((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Bed Group permanently deleted");
+    } catch (error) {
+      console.error("Error permanently deleting bed group:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to permanently delete bed group");
     }
   };
 
@@ -195,7 +183,6 @@ export default function BedGroupManager() {
           </CardDescription>
         </div>
       </CardHeader>
-      {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
           {/* Top bar: Search + Switch + Add */}
@@ -218,7 +205,12 @@ export default function BedGroupManager() {
               </Label>
             </div>
             <Can I="create" a="bedGroups" ability={ability}>
-              <BedGroupModal onSave={handleSave} />
+              <Button onClick={() => {
+                setEditingBedGroup(null);
+                setOpen(true);
+              }}>
+                Add Bed Group
+              </Button>
             </Can>
           </div>
 
@@ -246,15 +238,55 @@ export default function BedGroupManager() {
                     <TableCell>{b.floorName || "-"}</TableCell>
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && <Can I="update" a="bedGroups" ability={ability}><BedGroupModal bedGroup={b} onSave={handleSave} /></Can>}
+                      {!b.isDeleted && (
+                        <Can I="update" a="bedGroups" ability={ability}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingBedGroup(b);
+                              setOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Can>
+                      )}
                       <Can I="delete" a="bedGroups" ability={ability}>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(b.id, b.isDeleted)}
-                        >
-                          {b.isDeleted ? "Permanently Delete" : "Delete"}
-                        </Button>
+                        {b.isDeleted ? (
+                          userRole === "owner" ? (
+                            <ConfirmDialog
+                              title="Permanently Delete Bed Group?"
+                              description="This action cannot be undone. This bed group will be permanently removed."
+                              onConfirm={() => handlePermanentDelete(b.id)}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  Permanently Delete
+                                </Button>
+                              }
+                            />
+                          ) : (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled
+                              title="Only owner can permanently delete"
+                            >
+                              Permanently Delete
+                            </Button>
+                          )
+                        ) : (
+                          <ConfirmDialog
+                            title="Delete Bed Group?"
+                            description="Are you sure you want to delete this bed group? It will be soft deleted."
+                            onConfirm={() => handleSoftDelete(b.id)}
+                            trigger={
+                              <Button variant="destructive" size="sm">
+                                Delete
+                              </Button>
+                            }
+                          />
+                        )}
                       </Can>
                     </TableCell>
                   </TableRow>
@@ -293,6 +325,16 @@ export default function BedGroupManager() {
               </Button>
             </div>
           )}
+
+          <BedGroupModal
+            open={open}
+            onOpenChange={(o) => {
+              setOpen(o);
+              if (!o) setEditingBedGroup(null);
+            }}
+            bedGroup={editingBedGroup || undefined}
+            onSave={handleSave}
+          />
         </div>
       </CardContent>
     </Card>

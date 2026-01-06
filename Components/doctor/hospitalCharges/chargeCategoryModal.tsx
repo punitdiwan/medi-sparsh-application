@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Layers } from "lucide-react";
 
 export interface ChargeCategoryItem {
   id?: string;
@@ -51,7 +58,6 @@ export function ChargeCategoryModal({
     }
   }, [defaultData, open]);
 
-
   // Submit Handler
   const handleSubmit = () => {
     if (!chargeTypeId) return toast.error("Please select charge type");
@@ -69,23 +75,27 @@ export function ChargeCategoryModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[500px] rounded-xl">
-        <DialogHeader>
-          <DialogTitle>
-            {defaultData ? "Edit Charge Category" : "Add Charge Category"}
-          </DialogTitle>
+      <DialogContent className="sm:max-w-lg border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-lg ">
+              <Layers className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle>{defaultData ? "Edit Charge Category" : "Add Charge Category"}</DialogTitle>
+              <DialogDescription className="text-dialog-muted text-xs">
+                {defaultData ? "Update existing charge category details." : "Add a new charge category to the hospital system."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
           {/* Charge Type Dropdown */}
-          <div className="flex flex-col gap-2">
-            <Label>
-              Charge Type <span className="text-red-500">*</span>
-            </Label>
-
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Charge Type *</label>
             <select
-              className="border rounded-md p-2 bg-background"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={chargeTypeId}
               onChange={(e) => setChargeTypeId(e.target.value)}
             >
@@ -96,14 +106,11 @@ export function ChargeCategoryModal({
                 </option>
               ))}
             </select>
-
           </div>
 
           {/* Name Input */}
-          <div className="flex flex-col gap-2">
-            <Label>
-              Name <span className="text-red-500">*</span>
-            </Label>
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Name *</label>
             <Input
               placeholder="Enter category name"
               value={name}
@@ -112,25 +119,28 @@ export function ChargeCategoryModal({
           </div>
 
           {/* Description */}
-          <div className="flex flex-col gap-2">
-            <Label>Description</Label>
+          <div className="space-y-1">
+            <label className="text-sm mb-1 block">Description</label>
             <Textarea
               placeholder="Enter description (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[100px]"
             />
           </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit}>
-              {defaultData ? "Update" : "Add"}
-            </Button>
-          </div>
         </div>
+
+        <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={onClose} className="text-dialog-muted">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+          >
+            {defaultData ? "Update Category" : "Add Category"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

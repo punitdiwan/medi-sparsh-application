@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { CreditCard } from "lucide-react";
 
 export interface ChargeItem {
   id?: string;
@@ -64,29 +71,28 @@ export function ChargeModal({
   const [description, setDescription] = useState("");
 
   useEffect(() => {
-  if (defaultData && open) {
-    setChargeTypeId(defaultData.chargeTypeId || "");
-    setChargeCategoryId(defaultData.chargeCategoryId || "");
-    setUnitId(defaultData.unitId || "");
-    setName(defaultData.name || "");
-    setTaxCategoryId(defaultData.taxCategoryId || "");
-    setAmount(defaultData.amount || "");
-    setDescription(defaultData.description || "");
+    if (defaultData && open) {
+      setChargeTypeId(defaultData.chargeTypeId || "");
+      setChargeCategoryId(defaultData.chargeCategoryId || "");
+      setUnitId(defaultData.unitId || "");
+      setName(defaultData.name || "");
+      setTaxCategoryId(defaultData.taxCategoryId || "");
+      setAmount(defaultData.amount || "");
+      setDescription(defaultData.description || "");
 
-    const tax = taxCategories.find(t => t.id === defaultData.taxCategoryId);
-    setTaxPercentage(tax ? tax.percent : "");
-  } else if (open) {
-    setChargeTypeId("");
-    setChargeCategoryId("");
-    setUnitId("");
-    setName("");
-    setTaxCategoryId("");
-    setTaxPercentage("");
-    setAmount("");
-    setDescription("");
-  }
-}, [defaultData, taxCategories, open]);
-
+      const tax = taxCategories.find((t) => t.id === defaultData.taxCategoryId);
+      setTaxPercentage(tax ? tax.percent : "");
+    } else if (open) {
+      setChargeTypeId("");
+      setChargeCategoryId("");
+      setUnitId("");
+      setName("");
+      setTaxCategoryId("");
+      setTaxPercentage("");
+      setAmount("");
+      setDescription("");
+    }
+  }, [defaultData, taxCategories, open]);
 
   // When chargeType changes → reset category
   const handleChargeTypeChange = (value: string) => {
@@ -121,69 +127,79 @@ export function ChargeModal({
 
   // Filter categories based on selected charge type
   const filteredCategories = chargeTypeId
-    ? chargeCategories.filter(c => c.chargeTypeId === chargeTypeId)
+    ? chargeCategories.filter((c) => c.chargeTypeId === chargeTypeId)
     : [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-3xl p-6 rounded-xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
-            {defaultData ? "Edit Charge" : "Add Charge"}
-          </DialogTitle>
+      <DialogContent className="sm:max-w-2xl border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+        <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-lg ">
+              <CreditCard className="bg-dialog-header text-dialog-icon" />
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle>{defaultData ? "Edit Charge" : "Add Charge"}</DialogTitle>
+              <DialogDescription className="text-dialog-muted text-xs">
+                {defaultData ? "Update existing hospital charge details." : "Add a new charge to the hospital system."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-
+        <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 max-h-[65vh] overflow-y-auto">
           <div className="space-y-4">
-            <div className="flex flex-col gap-1">
-              <Label>Charge Type <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Charge Type *</label>
               <select
-                className="border p-2 rounded-md w-full bg-background"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={chargeTypeId}
                 onChange={(e) => handleChargeTypeChange(e.target.value)}
               >
                 <option value="">Select Type</option>
                 {chargeTypes.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Charge Category <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Charge Category *</label>
               <select
-                className="border p-2 rounded-md w-full bg-background"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={chargeCategoryId}
                 onChange={(e) => setChargeCategoryId(e.target.value)}
                 disabled={!chargeTypeId}
               >
-                <option value="">
-                  {chargeTypeId ? "Select Category" : "Select Charge Type First"}
-                </option>
-
+                <option value="">{chargeTypeId ? "Select Category" : "Select Charge Type First"}</option>
                 {filteredCategories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Unit Type <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Unit Type *</label>
               <select
-                className="border p-2 rounded-md w-full bg-background"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={unitId}
                 onChange={(e) => setUnitId(e.target.value)}
               >
                 <option value="">Select Unit</option>
                 {units.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Charge Name <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Charge Name *</label>
               <Input
                 placeholder="Enter charge name"
                 value={name}
@@ -193,27 +209,29 @@ export function ChargeModal({
           </div>
 
           <div className="space-y-4">
-            <div className="flex flex-col gap-1">
-              <Label>Tax Category <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Tax Category *</label>
               <select
-                className="border p-2 rounded-md w-full bg-background"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={taxCategoryId}
                 onChange={(e) => handleTaxCategoryChange(e.target.value)}
               >
                 <option value="">Select Tax</option>
                 {taxCategories.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Tax Percentage</Label>
-              <Input readOnly value={taxPercentage ? `${taxPercentage}%` : ""} placeholder="0%" />
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Tax Percentage</label>
+              <Input readOnly value={taxPercentage ? `${taxPercentage}%` : ""} placeholder="0%" className="bg-muted" />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Standard Charge <span className="text-red-500">*</span></Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Standard Charge *</label>
               <Input
                 type="number"
                 placeholder="Enter amount"
@@ -222,23 +240,29 @@ export function ChargeModal({
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <Label>Description</Label>
+            <div className="space-y-1">
+              <label className="text-sm mb-1 block">Description</label>
               <Textarea
                 placeholder="Optional description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                className="min-h-[80px]"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>
-            {defaultData ? "Update" : "Add"}
+        <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+          <Button variant="outline" onClick={onClose} className="text-dialog-muted">
+            Cancel
           </Button>
-        </div>
+          <Button
+            onClick={handleSubmit}
+            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+          >
+            {defaultData ? "Update Charge" : "Add Charge"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

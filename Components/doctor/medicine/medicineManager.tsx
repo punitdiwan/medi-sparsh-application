@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MdEdit, MdDelete } from "react-icons/md";
 import { toast } from "sonner";
 import { MedicineModal, Medicine } from "./medicineModal";
 import { getMedicines, deleteMedicine } from "@/lib/actions/medicines";
@@ -20,9 +19,9 @@ import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
 import { getMedicineGroups } from "@/lib/actions/medicineGroups";
-import { DeleteConfirmationDialog } from "./deleteConfirmationDialog";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import MedicineExcelModal from "./medicineExcelUploadModel";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Edit, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function MedicineManager() {
@@ -35,9 +34,6 @@ export default function MedicineManager() {
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
   const [units, setUnits] = useState<Array<{ id: string; name: string }>>([]);
   const [groups, setGroups] = useState<Array<{ id: string; name: string }>>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [open, setOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -86,28 +82,17 @@ export default function MedicineManager() {
     setEditing(undefined);
   };
 
-  const handleDeleteClick = (medicine: Medicine) => {
-    setMedicineToDelete(medicine);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!medicineToDelete) return;
+  const handleConfirmDelete = async (id: string) => {
     try {
-      setIsDeleting(true);
-      const result = await deleteMedicine(medicineToDelete.id);
+      const result = await deleteMedicine(id);
       if (result.error) toast.error(result.error);
       else {
-        setData(prev => prev.filter(x => x.id !== medicineToDelete.id));
+        setData(prev => prev.filter(x => x.id !== id));
         toast.success("Medicine deleted successfully");
       }
     } catch (error) {
       console.error("Error deleting medicine:", error);
       toast.error("Failed to delete medicine");
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setMedicineToDelete(null);
     }
   };
 
@@ -201,11 +186,18 @@ export default function MedicineManager() {
                   <TableCell>{item.notes || "-"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(item); setOpenModal(true); }}>
-                      <MdEdit size={18} />
+                      <Edit size={18} />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(item)}>
-                      <MdDelete size={18} className="text-red-500" />
-                    </Button>
+                    <ConfirmDialog
+                      title="Delete Medicine"
+                      description={`Are you sure you want to permanently delete "${item.name}"? This action cannot be undone.`}
+                      onConfirm={() => handleConfirmDelete(item.id)}
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <Trash2 size={18} className="text-red-500" />
+                        </Button>
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               )) : (
@@ -226,15 +218,6 @@ export default function MedicineManager() {
           units={units}
           groups={groups}
           onSave={handleSave}
-        />
-
-        <DeleteConfirmationDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title="Delete Medicine"
-          description={`Are you sure you want to permanently delete "${medicineToDelete?.name}"? This action cannot be undone.`}
-          onConfirm={handleConfirmDelete}
-          isLoading={isDeleting}
         />
       </CardContent>
     </Card>
