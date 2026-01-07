@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 // Types
 interface Module {
@@ -258,13 +259,20 @@ export default function ChargeTypeManager() {
                             </Button>
                           </Can>
                           <Can I="delete" a="ChargesType" ability={ability}>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <MdDelete />
-                            </Button>
+                            <ConfirmDialog
+                              title={`Delete Charge Type "${item.name}"?`}
+                              description="This action cannot be undone. Are you sure you want to permanently delete this charge type?"
+                              actionLabel="Yes, Delete"
+                              onConfirm={() => handleDelete(item.id)}
+                              trigger={
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                >
+                                <MdDelete />
+                              </Button>
+                              }
+                            />                        
                           </Can>
                         </div>
                       </td>

@@ -225,6 +225,34 @@
       "when": 1767443065218,
       "tag": "0031_light_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1767764465134,
+      "tag": "0032_lame_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1767765007369,
+      "tag": "0033_swift_wendell_vaughn",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1767767013368,
+      "tag": "0034_redundant_toro",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1767767423936,
+      "tag": "0035_chilly_iron_fist",
+      "breakpoints": true
     }
   ]
 }

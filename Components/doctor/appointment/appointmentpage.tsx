@@ -193,30 +193,30 @@ export default function AppointmentPage() {
     },
     { accessorKey: "time", header: "Time" },
     {
-        accessorKey: "status",
-        header: () => (
-          <div className="text-center font-semibold text-muted-foreground">
-            Status
-          </div>
-        ),
-        cell: ({ row }) => {
-          const status = row.original.status;
-          const style = statusStyles[status] ?? {
-            label: status,
-            className: "bg-gray-100 text-gray-700",
-          };
+      accessorKey: "status",
+      header: () => (
+        <div className="text-center font-semibold text-muted-foreground">
+          Status
+        </div>
+      ),
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const style = statusStyles[status] ?? {
+          label: status,
+          className: "bg-gray-100 text-gray-700",
+        };
 
-          return (
-            <div className="flex justify-center">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${style.className}`}
-              >
-                {style.label}
-              </span>
-            </div>
-          );
-        },
+        return (
+          <div className="flex justify-center">
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${style.className}`}
+            >
+              {style.label}
+            </span>
+          </div>
+        );
       },
+    },
 
 
     {
@@ -268,41 +268,6 @@ export default function AppointmentPage() {
                   </Tooltip>
                 )}
                 {!isCompleted && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="inline-flex">
-                          {isCancelled ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled
-                              className="cursor-pointer"
-                            >
-                              <FaPrescription size={16} />
-                            </Button>
-                          ) : (
-                            <Link
-                              href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
-                                ap.patientName || ""
-                              )}&appointmentId=${ap.id}`}
-                            >
-                              <Button variant="ghost" size="icon">
-                                <FaPrescription size={16} />
-                              </Button>
-                            </Link>
-                          )}
-                        </span>
-                      </TooltipTrigger>
-
-                      <TooltipContent side="top">
-                        <p>
-                          {isCancelled
-                            ? "Not Allowed"
-                            : "Add Prescription"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="inline-flex">
@@ -310,25 +275,59 @@ export default function AppointmentPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            disabled
+                            className="cursor-not-allowed opacity-50"
                           >
-                            <FaShareSquare size={16} />
+                            <FaPrescription size={16} />
                           </Button>
                         ) : (
-                          <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
+                          <Link
+                            href={`/doctor/appointment/vistiPatient/${ap.patient_id}?name=${encodeURIComponent(
+                              ap.patientName || ""
+                            )}&appointmentId=${ap.id}`}
+                          >
                             <Button variant="ghost" size="icon">
-                              <FaShareSquare size={16} />
+                              <FaPrescription size={16} />
                             </Button>
                           </Link>
                         )}
                       </span>
                     </TooltipTrigger>
+
                     <TooltipContent side="top">
                       <p>
-                        {isCancelled ? "Not Allowed" : "Move to IPD"}
+                        {isCancelled
+                          ? "Not Allowed"
+                          : "Add Prescription"}
                       </p>
                     </TooltipContent>
                   </Tooltip>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      {isCancelled ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="cursor-not-allowed opacity-50"
+                        >
+                          <FaShareSquare size={16} />
+                        </Button>
+                      ) : (
+                        <Link href={`/doctor/IPD/registration?opdId=${ap.id}`}>
+                          <Button variant="ghost" size="icon">
+                            <FaShareSquare size={16} />
+                          </Button>
+                        </Link>
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>
+                      {isCancelled ? "Not Allowed" : "Move to IPD"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </Can>
 
               <Can I="delete" a="appointment" ability={ability}>
@@ -340,15 +339,12 @@ export default function AppointmentPage() {
                   trigger={
                     <Button
                       variant="ghost"
-                      size="sm"
-                      disabled={
-                        ap.status === "cancelled" ||
+                      size="icon"
+                      className={`${ap.status === "cancelled" ||
                         ap.status === "completed" ||
-                        cancellingId === ap.id
-                      }
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <X className="h-4 w-4" />
+                        cancellingId === ap.id ? "cursor-not-allowed opacity-50" : "cursor-pointer"} text-destructive hover:text-destructive hover:bg-destructive/10`}
+                      >
+                      <X size={16} />
                     </Button>
                   }
                 />
@@ -366,7 +362,7 @@ export default function AppointmentPage() {
     currentPage * rowsPerPage
   );
 
- const statusStyles: Record<
+  const statusStyles: Record<
     string,
     { label: string; className: string }
   > = {

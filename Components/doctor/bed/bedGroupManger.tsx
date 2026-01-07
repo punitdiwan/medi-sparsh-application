@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
-
+import { RotateCcw } from 'lucide-react';
 type BedGroup = {
   id: string;
   name: string;
@@ -154,6 +154,10 @@ export default function BedGroupManager() {
     }
   };
 
+  const handleRestore = async (id: string) => {
+    
+  };
+
   const handlePermanentDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/bed-groups/${id}?permanent=true`, {
@@ -253,11 +257,26 @@ export default function BedGroupManager() {
                         </Can>
                       )}
                       <Can I="delete" a="bedGroups" ability={ability}>
-                        {b.isDeleted ? (
-                          userRole === "owner" ? (
+                      {b.isDeleted ? (
+                        <div className="inline-flex gap-2">
+                          <ConfirmDialog
+                            title="Restore Bed Group?"
+                            description="This bed group will be restored and become active again."
+                            onConfirm={() => handleRestore(b.id)}
+                            trigger={
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-green-500 text-green-600 hover:bg-green-50"
+                              >
+                                <RotateCcw />
+                              </Button>
+                            }
+                          />
+                          {userRole === "owner" ? (
                             <ConfirmDialog
                               title="Permanently Delete Bed Group?"
-                              description="This action cannot be undone. This bed group will be permanently removed."
+                              description="This action cannot be undone."
                               onConfirm={() => handlePermanentDelete(b.id)}
                               trigger={
                                 <Button variant="destructive" size="sm">
@@ -274,20 +293,21 @@ export default function BedGroupManager() {
                             >
                               Permanently Delete
                             </Button>
-                          )
-                        ) : (
-                          <ConfirmDialog
-                            title="Delete Bed Group?"
-                            description="Are you sure you want to delete this bed group? It will be soft deleted."
-                            onConfirm={() => handleSoftDelete(b.id)}
-                            trigger={
-                              <Button variant="destructive" size="sm">
-                                Delete
-                              </Button>
-                            }
-                          />
-                        )}
-                      </Can>
+                          )}
+                        </div>
+                      ) : (
+                        <ConfirmDialog
+                          title="Delete Bed Group?"
+                          description="Are you sure you want to delete this bed group?"
+                          onConfirm={() => handleSoftDelete(b.id)}
+                          trigger={
+                            <Button variant="destructive" size="sm">
+                              Delete
+                            </Button>
+                          }
+                        />
+                      )}
+                    </Can>
                     </TableCell>
                   </TableRow>
                 ))

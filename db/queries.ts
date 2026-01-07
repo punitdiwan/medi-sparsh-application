@@ -1293,8 +1293,7 @@ export async function updateChargeType(id: string, data: {
 
 export async function deleteChargeType(id: string) {
   const result = await db
-    .update(chargeTypes)
-    .set({ isDeleted: true })
+    .delete(chargeTypes)
     .where(eq(chargeTypes.id, id))
     .returning();
 
