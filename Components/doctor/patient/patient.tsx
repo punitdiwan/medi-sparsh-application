@@ -9,7 +9,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UserPlus, Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Can } from "@casl/react"
-import { MdDelete } from "react-icons/md";
+import { MdDelete,MdRestore } from "react-icons/md";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { PaginationControl } from "@/components/pagination";
@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 // import { AbilityContext } from "@/lib/casl/AbilityContext";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteConfirmationDialog } from "../medicine/deleteConfirmationDialog";
 type Patient = {
   id: string;
   name: string;
@@ -40,6 +41,7 @@ type PatientFilters = {
   dateCheckIn?: string;
   visitPurpose?: "Consultation" | "Follow-up" | "Emergency";
   frequency?: "Daily" | "Weekly" | "Monthly";
+  isDeleted?: string;
 };
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
@@ -50,6 +52,7 @@ function PatientPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [open, setOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
   const ability = useAbility();
 
@@ -76,7 +79,7 @@ const fetchPatients = async () => {
     if (!response.ok || !result.success) {
       throw new Error(result.error || "Failed to fetch patients");
     }
-
+    console.log("Fetched patients:", result.data);
     setPatients(result.data);
   } catch (err) {
     console.error("Error fetching patients:", err);
@@ -108,8 +111,9 @@ useEffect(() => {
 
         const today = new Date();
         const checkInDate = new Date(item.createdAt);
-        const diffTime = today.getTime() - checkInDate.getTime();
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffDays =
+          (today.getTime() - checkInDate.getTime()) /
+          (1000 * 60 * 60 * 24);
 
         if (filters.frequency === "Daily") return diffDays <= 1;
         if (filters.frequency === "Weekly") return diffDays <= 7;
@@ -118,9 +122,17 @@ useEffect(() => {
         return true;
       })();
 
-      return matchesSearch && matchesDate && matchesFrequency;
+      const matchesDeleted =
+        filters.isDeleted === "true"
+          ? item.isDeleted === true
+          : filters.isDeleted === "false"
+          ? item.isDeleted !== true
+          : true;
+
+      return matchesSearch && matchesDate && matchesFrequency && matchesDeleted;
     });
   }, [filters, patients]);
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
@@ -168,37 +180,56 @@ useEffect(() => {
             </Button>
           </Link>
           <Can I="delete" a="patient" ability={ability}>
-          <ConfirmDialog
-            trigger={
-              <Button variant="destructive" size="sm">
-                <MdDelete />
-              </Button>
-            }
-            title="Are you absolutely sure?"
-            description="This will soft delete this patient."
-            actionLabel="Delete"
-            cancelLabel="Cancel"
-            onConfirm={async () => {
-              try {
-                const response = await fetch(`/api/patients/${row.original.id}`, {
-                  method: "DELETE",
-                });
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                  throw new Error(result.error || "Failed to delete patient");
+          {row.original.isDeleted !== true ?
+            (<ConfirmDialog
+                trigger={
+                  <Button variant="destructive" size="icon">
+                    <MdDelete />
+                  </Button>
                 }
+                title="Are you absolutely sure?"
+                description="This will soft delete this patient."
+                actionLabel="Delete"
+                cancelLabel="Cancel"
+                onConfirm={async () => {
+                  try {
+                    const response = await fetch(`/api/patients/${row.original.id}`, {
+                      method: "DELETE",
+                    });
+                    const result = await response.json();
 
-                setPatients((prev) =>
-                  prev.filter((p) => p.id !== row.original.id)
-                );
-                toast.success("Patient deleted successfully!");
-              } catch (err) {
-                console.error("Error deleting patient:", err);
-                toast.error(err instanceof Error ? err.message : "Failed to delete patient");
-              }
-            }}
-          />
+                    if (!response.ok || !result.success) {
+                      throw new Error(result.error || "Failed to delete patient");
+                    }
+
+                    setPatients((prev) =>
+                      prev.filter((p) => p.id !== row.original.id)
+                    );
+                    toast.success("Patient deleted successfully!");
+                  } catch (err) {
+                    console.error("Error deleting patient:", err);
+                    toast.error(err instanceof Error ? err.message : "Failed to delete patient");
+                  }
+                }}
+              />
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setRestoreDialogOpen(true)}
+                      >
+                        <MdRestore className="text-green-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Restore Patient</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>)
+            }
           </Can>
         </div>
       ),
@@ -292,6 +323,19 @@ useEffect(() => {
             setCurrentPage(1);
           }}
         />
+
+        <DeleteConfirmationDialog
+          open={restoreDialogOpen}
+          onOpenChange={setRestoreDialogOpen}
+          title="Restore Patient"
+          description="Are you sure you want to restore this patient? This action cannot be undone."
+          onConfirm={()=>{
+            console.log("Restore action confirmed");
+            setRestoreDialogOpen(false);
+          }}
+          isLoading={loading}
+        />
+
       </div>
 
     </div>

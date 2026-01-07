@@ -67,7 +67,7 @@ export async function getPatientsByHospital(hospitalId: string, is_IPD_Patient?:
   return await db
     .select()
     .from(patients)
-    .where(and(eq(patients.hospitalId, hospitalId), eq(patients.isDeleted, false)))
+    .where(and(eq(patients.hospitalId, hospitalId)))
     .orderBy(desc(patients.createdAt));
 }
 

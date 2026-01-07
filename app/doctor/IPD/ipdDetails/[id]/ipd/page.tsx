@@ -494,7 +494,7 @@ export default function IPDOverviewPage() {
         </Card>
 
         {/* NURSE NOTES */}
-        <Card className="bg-overview-card border-overview-strong">
+        {/* <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
             <CardTitle className="text-overview-label">
               Nurse Notes
@@ -503,7 +503,7 @@ export default function IPDOverviewPage() {
           <CardContent className="text-sm text-slate-600">
             Patient stable, medication administered on time.
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* ================= RIGHT PANEL ================= */}
@@ -567,7 +567,7 @@ export default function IPDOverviewPage() {
               {section}
             </h3>
             <Separator className="mb-4" />
-            <Card className="bg-overview-card border-overview-strong">
+            <Card className="bg-overview-card border-overview-strong max-h-[50vh] overflow-y-auto">
               <CardContent className="py-4">
                 {renderSectionContent(section)}
               </CardContent>

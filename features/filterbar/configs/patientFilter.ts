@@ -12,6 +12,12 @@ export const patientFilters: FilterField[] = [
     label: "Date Check-In",
     type: "date",
   },
+  {
+    key: "isDeleted",
+    label: "Show Deleted",
+    type: "switch",
+  }
+
   
   // {
   //   key: "visitPurpose",

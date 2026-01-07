@@ -11,7 +11,6 @@ import { MdEdit, MdDelete, MdRestore } from "react-icons/md";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 export function ShiftManagerPage() {
