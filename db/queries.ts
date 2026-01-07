@@ -1067,6 +1067,16 @@ export async function permanentlyDeleteBed(bedId: string) {
   return result[0];
 }
 
+export async function restoreBed(bedId: string) {
+  const result = await db
+    .update(beds)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(beds.id, bedId))
+    .returning();
+
+  return result[0];
+}
+
 // ===================================================
 // Unit Queries
 // ===================================================
