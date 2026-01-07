@@ -1,4 +1,4 @@
-import { updateBedGroup, deleteBedGroup, permanentlyDeleteBedGroup, getUserRole } from "@/db/queries";
+import { updateBedGroup, deleteBedGroup, permanentlyDeleteBedGroup, getUserRole, restoreBedGroup } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -88,6 +88,31 @@ export async function DELETE(
     console.error("DELETE Error:", error);
     return NextResponse.json(
       { error: "Failed to delete bed group" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Bed Group ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const restoredBedGroup = await restoreBedGroup(id);
+    return NextResponse.json(restoredBedGroup, { status: 200 });
+  } catch (error) {
+    console.error("PATCH Error:", error);
+    return NextResponse.json(
+      { error: "Failed to restore bed group" },
       { status: 500 }
     );
   }

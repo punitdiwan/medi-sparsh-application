@@ -919,6 +919,16 @@ export async function permanentlyDeleteBedGroup(bedGroupId: string) {
   return result[0];
 }
 
+export async function restoreBedGroup(bedGroupId: string) {
+  const result = await db
+    .update(bedGroups)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
 // Check if bed groups exist for a floor
 export async function getBedGroupCountByFloor(floorId: string) {
   const result = await db
