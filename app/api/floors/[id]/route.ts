@@ -1,4 +1,4 @@
-import { updateFloor, deleteFloor, permanentlyDeleteFloor, getUserRole, getBedGroupCountByFloor } from "@/db/queries";
+import { updateFloor, deleteFloor, permanentlyDeleteFloor, getUserRole, getBedGroupCountByFloor, restoreFloor } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -89,6 +89,31 @@ export async function DELETE(
     console.error("DELETE Error:", error);
     return NextResponse.json(
       { error: "Failed to delete floor" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Floor ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const restoredFloor = await restoreFloor(id);
+    return NextResponse.json(restoredFloor, { status: 200 });
+  } catch (error) {
+    console.error("PATCH Error:", error);
+    return NextResponse.json(
+      { error: "Failed to restore floor" },
       { status: 500 }
     );
   }

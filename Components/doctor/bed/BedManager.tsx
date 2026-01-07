@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { RotateCcw } from "lucide-react";
 
 type Bed = {
   id: string;
@@ -195,6 +196,22 @@ export default function BedManager() {
     }
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      const response = await fetch(`/api/beds/${id}`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) throw new Error("Failed to restore bed");
+
+      toast.success("Bed restored successfully");
+      fetchBeds();
+    } catch (error) {
+      console.error("Error restoring bed:", error);
+      toast.error("Failed to restore bed");
+    }
+  };
+
   return (
     <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
       <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
@@ -261,7 +278,19 @@ export default function BedManager() {
                     <TableCell>{b.floorName || "-"}</TableCell>
 
                     <TableCell className="text-right space-x-2">
-                      {!b.isDeleted && (
+                      {b.isDeleted ? (
+                        <Can I="delete" a="bed" ability={ability}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                            onClick={() => handleRestore(b.id)}
+                          >
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Restore
+                          </Button>
+                        </Can>
+                      ) : (
                         <Can I="update" a="bed" ability={ability}>
                           <Button
                             size="sm"

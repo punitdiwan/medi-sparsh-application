@@ -707,6 +707,16 @@ export async function permanentlyDeleteFloor(floorId: string) {
   return result[0];
 }
 
+export async function restoreFloor(floorId: string) {
+  const result = await db
+    .update(floors)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
 // ===================================================
 // Bed Type Queries
 // ===================================================
@@ -919,6 +929,16 @@ export async function permanentlyDeleteBedGroup(bedGroupId: string) {
   return result[0];
 }
 
+export async function restoreBedGroup(bedGroupId: string) {
+  const result = await db
+    .update(bedGroups)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(bedGroups.id, bedGroupId))
+    .returning();
+
+  return result[0];
+}
+
 // Check if bed groups exist for a floor
 export async function getBedGroupCountByFloor(floorId: string) {
   const result = await db
@@ -1061,6 +1081,16 @@ export async function deleteBed(bedId: string) {
 export async function permanentlyDeleteBed(bedId: string) {
   const result = await db
     .delete(beds)
+    .where(eq(beds.id, bedId))
+    .returning();
+
+  return result[0];
+}
+
+export async function restoreBed(bedId: string) {
+  const result = await db
+    .update(beds)
+    .set({ isDeleted: false, updatedAt: new Date() })
     .where(eq(beds.id, bedId))
     .returning();
 
