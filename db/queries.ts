@@ -707,6 +707,16 @@ export async function permanentlyDeleteFloor(floorId: string) {
   return result[0];
 }
 
+export async function restoreFloor(floorId: string) {
+  const result = await db
+    .update(floors)
+    .set({ isDeleted: false, updatedAt: new Date() })
+    .where(eq(floors.id, floorId))
+    .returning();
+
+  return result[0];
+}
+
 // ===================================================
 // Bed Type Queries
 // ===================================================

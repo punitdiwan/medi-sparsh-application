@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Can } from "@casl/react";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { RotateCcw } from "lucide-react";
 
 type Floor = {
   id: string;
@@ -163,6 +164,22 @@ export default function FloorManager() {
     }
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      const response = await fetch(`/api/floors/${id}`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) throw new Error("Failed to restore floor");
+
+      toast.success("Floor restored successfully");
+      fetchFloors();
+    } catch (error) {
+      console.error("Error restoring floor:", error);
+      toast.error("Failed to restore floor");
+    }
+  };
+
   return (
     <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
       <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
@@ -242,27 +259,38 @@ export default function FloorManager() {
                       )}
                       <Can I="delete" a="floor" ability={ability}>
                         {floor.isDeleted ? (
-                          userRole === "owner" ? (
-                            <ConfirmDialog
-                              title="Permanently Delete Floor?"
-                              description="This action cannot be undone. This floor will be permanently removed."
-                              onConfirm={() => handlePermanentDelete(floor.id)}
-                              trigger={
-                                <Button variant="destructive" size="sm">
-                                  Permanently Delete
-                                </Button>
-                              }
-                            />
-                          ) : (
+                          <div className="inline-flex gap-2">
                             <Button
-                              variant="destructive"
                               size="sm"
-                              disabled
-                              title="Only owner can permanently delete"
+                              variant="outline"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                              onClick={() => handleRestore(floor.id)}
                             >
-                              Permanently Delete
+                              <RotateCcw className="h-4 w-4 mr-1" />
+                              Restore
                             </Button>
-                          )
+                            {userRole === "owner" ? (
+                              <ConfirmDialog
+                                title="Permanently Delete Floor?"
+                                description="This action cannot be undone. This floor will be permanently removed."
+                                onConfirm={() => handlePermanentDelete(floor.id)}
+                                trigger={
+                                  <Button variant="destructive" size="sm">
+                                    Permanently Delete
+                                  </Button>
+                                }
+                              />
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                disabled
+                                title="Only owner can permanently delete"
+                              >
+                                Permanently Delete
+                              </Button>
+                            )}
+                          </div>
                         ) : (
                           <ConfirmDialog
                             title="Delete Floor?"
