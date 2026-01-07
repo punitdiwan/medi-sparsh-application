@@ -411,7 +411,7 @@ export const floors = pgTable("floors", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "floors_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const bedGroups = pgTable("bed_groups", {
@@ -428,12 +428,12 @@ export const bedGroups = pgTable("bed_groups", {
 		columns: [table.floorId],
 		foreignColumns: [floors.id],
 		name: "bed_groups_floor_id_floors_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "bed_groups_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const bedsTypes = pgTable("beds_types", {
@@ -449,7 +449,7 @@ export const bedsTypes = pgTable("beds_types", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "beds_types_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const beds = pgTable("beds", {
@@ -467,17 +467,17 @@ export const beds = pgTable("beds", {
 		columns: [table.bedGroupId],
 		foreignColumns: [bedGroups.id],
 		name: "beds_bed_group_id_bed_groups_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.bedTypeId],
 		foreignColumns: [bedsTypes.id],
 		name: "beds_bed_type_id_beds_types_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "beds_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const chargeTypes = pgTable("charge_types", {
@@ -493,7 +493,7 @@ export const chargeTypes = pgTable("charge_types", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "charge_types_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const chargeCategories = pgTable("charge_categories", {
@@ -510,12 +510,12 @@ export const chargeCategories = pgTable("charge_categories", {
 		columns: [table.chargeTypeId],
 		foreignColumns: [chargeTypes.id],
 		name: "charge_categories_charge_type_id_charge_types_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "charge_categories_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const charges = pgTable("charges", {
@@ -536,27 +536,27 @@ export const charges = pgTable("charges", {
 		columns: [table.chargeCategoryId],
 		foreignColumns: [chargeCategories.id],
 		name: "charges_charge_category_id_charge_categories_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.chargeTypeId],
 		foreignColumns: [chargeTypes.id],
 		name: "charges_charge_type_id_charge_types_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "charges_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.taxCategoryId],
 		foreignColumns: [taxCategories.id],
 		name: "charges_tax_category_id_tax_categories_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.unitId],
 		foreignColumns: [units.id],
 		name: "charges_unit_id_units_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const units = pgTable("units", {
@@ -577,7 +577,7 @@ export const taxCategories = pgTable("tax_categories", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "tax_categories_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const medicineCompanies = pgTable("medicine_companies", {
@@ -972,7 +972,7 @@ export const settings = pgTable("settings", {
 export const symptomTypes = pgTable("symptom_types", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	name: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -983,9 +983,9 @@ export const symptomTypes = pgTable("symptom_types", {
 export const symptoms = pgTable("symptoms", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	symptomTypeId: text("symptom_type_id").notNull()
-		.references(() => symptomTypes.id, { onDelete: "cascade" }),
+		.references(() => symptomTypes.id, { onDelete: "restrict" }),
 	name: text().notNull(),
 	description: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1157,11 +1157,11 @@ export const ipdPayments = pgTable("ipd_payments", {
 export const ipdMedications = pgTable("ipd_medications", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	medicineId: text("medicine_id").notNull()
-		.references(() => medicines.id, { onDelete: "cascade" }),
+		.references(() => medicines.id, { onDelete: "restrict" }),
 	dose: jsonb("dose").notNull(),
 	date: date("date").notNull(),
 	note: text("note"),

@@ -1,4 +1,4 @@
-import { updateBed, deleteBed, permanentlyDeleteBed, getUserRole, getBedById } from "@/db/queries";
+import { updateBed, deleteBed, permanentlyDeleteBed, getUserRole, getBedById, restoreBed } from "@/db/queries";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
@@ -104,6 +104,31 @@ export async function DELETE(
     console.error("DELETE Error:", error);
     return NextResponse.json(
       { error: "Failed to delete bed" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Bed ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const restoredBed = await restoreBed(id);
+    return NextResponse.json(restoredBed, { status: 200 });
+  } catch (error) {
+    console.error("PATCH Error:", error);
+    return NextResponse.json(
+      { error: "Failed to restore bed" },
       { status: 500 }
     );
   }

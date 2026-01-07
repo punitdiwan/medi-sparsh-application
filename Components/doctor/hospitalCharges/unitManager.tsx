@@ -20,6 +20,7 @@ import { Can } from "@casl/react";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { PermissionButton } from "@/Components/role/PermissionButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 interface UnitItem {
   id: string;
   name: string;
@@ -111,8 +112,6 @@ export default function UnitManager(): JSX.Element {
   };
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = confirm("Are you sure you want to delete this unit?");
-    if (!confirmDelete) return;
 
     try {
       const response = await fetch(`/api/units/${id}`, {
@@ -219,13 +218,17 @@ export default function UnitManager(): JSX.Element {
                         </Button>
                       </Can>
                       <Can I="delete" a="ChargesUnit" ability={ability}>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </Button>
+                        <ConfirmDialog
+                          title={`Delete Unit "${item.name}"?`}
+                          description="This action cannot be undone. Are you sure you want to permanently delete this unit?"
+                          actionLabel="Yes, Delete"
+                          onConfirm={() => handleDelete(item.id)}
+                          trigger={
+                            <Button size="sm" variant="destructive">
+                              Delete
+                            </Button>
+                          }
+                        />                        
                       </Can>
                     </TableCell>
                   </TableRow>
