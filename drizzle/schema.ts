@@ -25,7 +25,7 @@ export const appointmentPriorities = pgTable("appointment_priorities", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "appointment_priorities_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const verification = pgTable("verification", {
@@ -131,17 +131,17 @@ export const doctorShifts = pgTable("doctor_shifts", {
 		columns: [table.doctorUserId],
 		foreignColumns: [doctors.id],
 		name: "doctor_shifts_doctor_user_id_doctors_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "doctor_shifts_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.shiftId],
 		foreignColumns: [shifts.id],
 		name: "doctor_shifts_shift_id_shifts_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	unique("doctor_shift_unique").on(table.doctorUserId, table.shiftId),
 ]);
 
@@ -345,22 +345,22 @@ export const doctorSlots = pgTable("doctor_slots", {
 		columns: [table.chargeId],
 		foreignColumns: [charges.id],
 		name: "doctor_slots_charge_id_charges_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.doctorId],
 		foreignColumns: [doctors.id],
 		name: "doctor_slots_doctor_id_doctors_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "doctor_slots_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.shiftId],
 		foreignColumns: [shifts.id],
 		name: "doctor_slots_shift_id_shifts_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const prescriptions = pgTable("prescriptions", {
