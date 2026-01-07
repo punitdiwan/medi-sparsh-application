@@ -94,6 +94,16 @@ export async function deletePatient(patientId: string) {
   return result[0];
 }
 
+export async function restorePatient(patientId: string) {
+  const result = await db
+    .update(patients)
+    .set({ isDeleted: false, updatedAt: new Date().toISOString() })
+    .where(eq(patients.id, patientId))
+    .returning();
+  return result[0];
+}
+
+
 // ============================================
 // Staff & Doctor Queries
 // ============================================
