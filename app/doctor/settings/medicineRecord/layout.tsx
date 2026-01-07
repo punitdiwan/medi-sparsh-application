@@ -45,7 +45,7 @@ export default function AppointmentLayout({ children }: { children: React.ReactN
     visibleTabs[0].href;
 
   return (
-    <div className="p-0 space-y-6">
+    <div className="p-6 space-y-6">
       <Tabs value={activeTab} className="w-full">
         <TabsList className="w-full flex flex-wrap mb-4">
           {visibleTabs.map((tab) => (

@@ -370,7 +370,7 @@ export const medicineCategories = pgTable("medicine_categories", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicine_categories_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const modules = pgTable("modules", {
@@ -400,7 +400,7 @@ export const appointmentPriorities = pgTable("appointment_priorities", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "appointment_priorities_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const shifts = pgTable("shifts", {
@@ -417,7 +417,7 @@ export const shifts = pgTable("shifts", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "shifts_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const specializations = pgTable("specializations", {
@@ -441,17 +441,17 @@ export const doctorShifts = pgTable("doctor_shifts", {
 		columns: [table.doctorUserId],
 		foreignColumns: [doctors.id],
 		name: "doctor_shifts_doctor_user_id_doctors_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.shiftId],
 		foreignColumns: [shifts.id],
 		name: "doctor_shifts_shift_id_shifts_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "doctor_shifts_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	unique("doctor_shift_unique").on(table.doctorUserId, table.shiftId),
 ]);
 
@@ -482,7 +482,7 @@ export const patients = pgTable("patients", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "patients_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const staff = pgTable("staff", {
@@ -504,7 +504,7 @@ export const staff = pgTable("staff", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "staff_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const doctors = pgTable("doctors", {
@@ -524,12 +524,12 @@ export const doctors = pgTable("doctors", {
 		columns: [table.staffId],
 		foreignColumns: [staff.id],
 		name: "doctors_staff_id_staff_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "doctors_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 
@@ -555,17 +555,17 @@ export const prescriptions = pgTable("prescriptions", {
 		columns: [table.appointmentId],
 		foreignColumns: [appointments.id],
 		name: "prescriptions_appointment_id_appointments_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.patientId],
 		foreignColumns: [patients.id],
 		name: "prescriptions_patient_id_patients_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "prescriptions_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const appointments = pgTable("appointments", {
@@ -589,12 +589,12 @@ export const appointments = pgTable("appointments", {
 		columns: [table.patientId],
 		foreignColumns: [patients.id],
 		name: "appointments_patient_id_patients_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "appointments_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const doctorSlots = pgTable("doctor_slots", {
@@ -614,22 +614,22 @@ export const doctorSlots = pgTable("doctor_slots", {
 		columns: [table.doctorId],
 		foreignColumns: [doctors.id],
 		name: "doctor_slots_doctor_id_doctors_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.shiftId],
 		foreignColumns: [shifts.id],
 		name: "doctor_slots_shift_id_shifts_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.chargeId],
 		foreignColumns: [charges.id],
 		name: "doctor_slots_charge_id_charges_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "doctor_slots_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 export const medicineGroups = pgTable("medicine_groups", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
@@ -642,7 +642,7 @@ export const medicineGroups = pgTable("medicine_groups", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicine_groups_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const medicineSuppliers = pgTable("medicine_suppliers", {
@@ -662,7 +662,7 @@ export const medicineSuppliers = pgTable("medicine_suppliers", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicine_suppliers_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const medicines = pgTable("medicines", {
@@ -682,27 +682,27 @@ export const medicines = pgTable("medicines", {
 		columns: [table.groupId],
 		foreignColumns: [medicineGroups.id],
 		name: "medicines_group_id_medicine_groups_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.categoryId],
 		foreignColumns: [medicineCategories.id],
 		name: "medicines_category_id_medicine_categories_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.companyName],
 		foreignColumns: [medicineCompanies.id],
 		name: "medicines_company_name_medicine_companies_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.unitId],
 		foreignColumns: [medicineUnits.id],
 		name: "medicines_unit_id_medicine_units_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicines_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const team = pgTable("team", {
@@ -751,7 +751,7 @@ export const vitals = pgTable("vitals", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "vitals_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const medicineUnits = pgTable("medicine_units", {
@@ -765,7 +765,7 @@ export const medicineUnits = pgTable("medicine_units", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicine_units_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const medicineCompanies = pgTable("medicine_companies", {
@@ -779,7 +779,7 @@ export const medicineCompanies = pgTable("medicine_companies", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "medicine_companies_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const roles = pgTable("roles", {
@@ -811,7 +811,7 @@ export const services = pgTable("services", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "services_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const transactions = pgTable("transactions", {
@@ -831,17 +831,17 @@ export const transactions = pgTable("transactions", {
 		columns: [table.patientId],
 		foreignColumns: [patients.id],
 		name: "transactions_patient_id_patients_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.appointmentId],
 		foreignColumns: [appointments.id],
 		name: "transactions_appointment_id_appointments_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "transactions_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
 ]);
 
 export const settings = pgTable("settings", {
@@ -892,16 +892,16 @@ export const pharmacyMedicines = pgTable("pharmacy_medicines", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	name: text().notNull(),
 	categoryId: text("category_id").notNull()
-		.references(() => medicineCategories.id, { onDelete: "cascade" }),
+		.references(() => medicineCategories.id, { onDelete: "restrict" }),
 	companyId: text("company_id").notNull()
-		.references(() => medicineCompanies.id, { onDelete: "cascade" }),
+		.references(() => medicineCompanies.id, { onDelete: "restrict" }),
 	groupId: text("group_id").notNull()
-		.references(() => medicineGroups.id, { onDelete: "cascade" }),
+		.references(() => medicineGroups.id, { onDelete: "restrict" }),
 	unitId: text("unit_id").notNull()
-		.references(() => medicineUnits.id, { onDelete: "cascade" }),
+		.references(() => medicineUnits.id, { onDelete: "restrict" }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
@@ -911,10 +911,10 @@ export const pharmacyStock = pgTable("pharmacy_stock", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	medicineId: text("medicine_id")
 		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+		.references(() => pharmacyMedicines.id, { onDelete: "restrict" }),
 	batchNumber: text("batch_number").notNull(),
 	quantity: numeric("quantity").default("0").notNull(),
 	lowStockAlert: integer("low_stock_alert").notNull().default(10),
@@ -932,10 +932,10 @@ export const pharmacyPurchase = pgTable("pharmacy_purchase", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	supplierId: text("supplier_id")
 		.notNull()
-		.references(() => medicineSuppliers.id, { onDelete: "cascade" }),
+		.references(() => medicineSuppliers.id, { onDelete: "restrict" }),
 	billNumber: text("bill_number").notNull(),
 	discount: numeric("discount"),
 	gstPercent: numeric("gst_percent"),
@@ -948,13 +948,13 @@ export const pharmacyPurchaseItem = pgTable("pharmacy_purchase_item", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	purchaseId: text("purchase_id")
 		.notNull()
-		.references(() => pharmacyPurchase.id, { onDelete: "cascade" }),
+		.references(() => pharmacyPurchase.id, { onDelete: "restrict" }),
 	medicineId: text("medicine_id")
 		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+		.references(() => pharmacyMedicines.id, { onDelete: "restrict" }),
 	batchNumber: text("batch_number").notNull(),
 	quantity: numeric("quantity").notNull(),
 	costPrice: numeric("cost_price").notNull(),
@@ -971,7 +971,7 @@ export const pharmacySales = pgTable("pharmacy_sales", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	billNumber: text("bill_number").notNull(),
 	customerName: text("customer_name").notNull(),
 	customerPhone: text("customer_phone").notNull(),
@@ -988,13 +988,13 @@ export const pharmacySalesItems = pgTable("pharmacy_sales_items", {
 	id: text("id").default(useUUIDv4).primaryKey(),
 	hospitalId: text("hospital_id")
 		.notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	billId: text("bill_id")
 		.notNull()
-		.references(() => pharmacySales.id, { onDelete: "cascade" }),
+		.references(() => pharmacySales.id, { onDelete: "restrict" }),
 	medicineId: text("medicine_id")
 		.notNull()
-		.references(() => pharmacyMedicines.id, { onDelete: "cascade" }),
+		.references(() => pharmacyMedicines.id, { onDelete: "restrict" }),
 	batchNumber: text("batch_number"),
 	quantity: numeric("quantity").notNull(),
 	unitPrice: numeric("unit_price").notNull(),
@@ -1041,9 +1041,9 @@ export const operationCategories = pgTable("operation_categories", {
 export const operations = pgTable("operations", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	operationCategoryId: text("operation_category_id").notNull()
-		.references(() => operationCategories.id, { onDelete: "cascade" }),
+		.references(() => operationCategories.id, { onDelete: "restrict" }),
 	name: text().notNull(),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1056,9 +1056,9 @@ export const dischargeStatusEnum = pgEnum("discharge_status", ["pending", "norma
 export const ipdAdmission = pgTable("ipd_admission", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	patientId: text("patient_id").notNull()
-		.references(() => patients.id, { onDelete: "cascade" }),
+		.references(() => patients.id, { onDelete: "restrict" }),
 	caseId: text("case_id"),
 	caseDetails: text("case_details"),
 	diagnosis: jsonb("diagnosis"),
@@ -1066,11 +1066,11 @@ export const ipdAdmission = pgTable("ipd_admission", {
 	creditLimit: numeric("credit_limit").default("0").notNull(),
 	refrenceFrom: text("refrence_from"),
 	doctorId: text("doctor_id")
-		.references(() => doctors.id, { onDelete: "cascade" }),
+		.references(() => doctors.id, { onDelete: "restrict" }),
 	bedGroupId: text("bed_group_id")
-		.references(() => bedGroups.id, { onDelete: "cascade" }),
+		.references(() => bedGroups.id, { onDelete: "restrict" }),
 	bedId: text("bed_id")
-		.references(() => beds.id, { onDelete: "cascade" }),
+		.references(() => beds.id, { onDelete: "restrict" }),
 	notes: text("notes"),
 	medicalHistory: text("medical_history"),
 	admissionDate: timestamp("admission_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1086,11 +1086,11 @@ export const ipdAdmission = pgTable("ipd_admission", {
 export const ipdConsultation = pgTable("ipd_consultation", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	doctorId: text("doctor_id")
-		.references(() => doctors.id, { onDelete: "cascade" }),
+		.references(() => doctors.id, { onDelete: "restrict" }),
 	appliedDate: timestamp("applied_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	consultationDate: timestamp("consultation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	consultationTime: timestamp("consultation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1105,11 +1105,11 @@ export const ipdConsultation = pgTable("ipd_consultation", {
 export const ipdOperations = pgTable("ipd_operations", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	operationId: text("operation_id").notNull()
-		.references(() => operations.id, { onDelete: "cascade" }),
+		.references(() => operations.id, { onDelete: "restrict" }),
 	operationDate: timestamp("operation_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	doctors: jsonb("doctors").notNull(),
 	operationTime: timestamp("operation_time", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1126,9 +1126,9 @@ export const ipdOperations = pgTable("ipd_operations", {
 export const ipdVitals = pgTable("ipd_vitals", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	vitals: jsonb("vitals").notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1138,15 +1138,15 @@ export const ipdVitals = pgTable("ipd_vitals", {
 export const ipdCharges = pgTable("ipd_charges", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	chargeTypeId: text("charge_type_id").notNull()
-		.references(() => chargeTypes.id, { onDelete: "cascade" }),
+		.references(() => chargeTypes.id, { onDelete: "restrict" }),
 	chargeCategoryId: text("charge_category_id").notNull()
-		.references(() => chargeCategories.id, { onDelete: "cascade" }),
+		.references(() => chargeCategories.id, { onDelete: "restrict" }),
 	chargeId: text("charge_id").notNull()
-		.references(() => charges.id, { onDelete: "cascade" }),
+		.references(() => charges.id, { onDelete: "restrict" }),
 	qty: integer("qty").notNull(),
 	standardCharge: numeric("standard_charge").notNull(),
 	totalAmount: numeric("total_amount").notNull(),
@@ -1161,15 +1161,15 @@ export const ipdCharges = pgTable("ipd_charges", {
 export const ipdPrescriptions = pgTable("ipd_prescriptions", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	symptoms: text(),
 	note: text(),
 	medicines: jsonb().notNull(),
 	attachments: text(),
 	prescribeBy: text()
-		.references(() => doctors.id, { onDelete: "cascade" }),
+		.references(() => doctors.id, { onDelete: "restrict" }),
 	prescribeDate: timestamp("prescribe_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -1179,9 +1179,9 @@ export const ipdPrescriptions = pgTable("ipd_prescriptions", {
 export const ipdPayments = pgTable("ipd_payments", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "cascade" }),
+		.references(() => organization.id, { onDelete: "restrict" }),
 	ipdAdmissionId: text("ipd_admission_id").notNull()
-		.references(() => ipdAdmission.id, { onDelete: "cascade" }),
+		.references(() => ipdAdmission.id, { onDelete: "restrict" }),
 	paymentDate: timestamp("payment_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	paymentMode: text("payment_mode").notNull(),
 	paymentAmount: numeric("payment_amount").notNull(),

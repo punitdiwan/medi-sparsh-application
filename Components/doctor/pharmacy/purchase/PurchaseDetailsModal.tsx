@@ -52,12 +52,12 @@ export default function PurchaseDetailsModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+            <DialogContent className="p-0 border border-overview-strong  bg-dialog-surface !max-w-3xl max-h-[70vh] overflow-y-auto">
+                <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog flex flex-row items-center justify-between">
                     <DialogTitle>Purchase Details</DialogTitle>
                 </DialogHeader>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 px-6 pt-6">
                     <div>
                         <p className="text-sm text-muted-foreground">Bill Number</p>
                         <p className="font-medium">{purchase.billNumber}</p>
@@ -86,7 +86,7 @@ export default function PurchaseDetailsModal({
                     </div>
                 </div>
 
-                <div className="border rounded-md">
+                <div className="border rounded-md mx-6 mb-6">
                     <Table>
                         <TableHeader>
                             <TableRow>

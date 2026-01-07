@@ -67,7 +67,7 @@ export async function getPatientsByHospital(hospitalId: string, is_IPD_Patient?:
   return await db
     .select()
     .from(patients)
-    .where(and(eq(patients.hospitalId, hospitalId), eq(patients.isDeleted, false)))
+    .where(and(eq(patients.hospitalId, hospitalId)))
     .orderBy(desc(patients.createdAt));
 }
 
@@ -93,6 +93,16 @@ export async function deletePatient(patientId: string) {
     .returning();
   return result[0];
 }
+
+export async function restorePatient(patientId: string) {
+  const result = await db
+    .update(patients)
+    .set({ isDeleted: false, updatedAt: new Date().toISOString() })
+    .where(eq(patients.id, patientId))
+    .returning();
+  return result[0];
+}
+
 
 // ============================================
 // Staff & Doctor Queries

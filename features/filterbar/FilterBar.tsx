@@ -10,6 +10,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export type FilterOption = {
   label: string;
@@ -19,7 +21,7 @@ export type FilterOption = {
 export type FilterField = {
   key: string;
   label: string;
-  type: "text" | "date" | "select";
+  type: "text" | "date" | "select" | "switch";
   placeholder?: string;
   options?: FilterOption[];
 };
@@ -73,6 +75,22 @@ export default function FilterBar({ fields, onFilter }: FilterBarProps) {
               />
             );
 
+            case "switch":
+            return (
+              <div key={field.key} className="flex items-center space-x-2 bg-background/50 p-2 rounded-lg border border-dialog">
+                  <Switch
+                    id="show-deleted"
+                    checked={filters[field.key] === "true"}
+                    onCheckedChange={(checked) =>
+                      {handleChange(field.key, checked ? "true" : "false")}
+                    }
+                    className="toggle toggle-sm"
+                  />
+                  <Label htmlFor="show-deleted" className="text-sm font-medium text-dialog cursor-pointer">
+                    Show Deleted
+                  </Label>
+              </div>
+            );
           // case "select":
           //   return (
           //     <Select

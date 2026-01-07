@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Pill, Pencil, Trash2 } from "lucide-react";
 import { MedicationDialog, MedicationInput } from "./medicationDialog";
-import clsx from "clsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   getIPDMedications,

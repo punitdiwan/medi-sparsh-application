@@ -253,6 +253,55 @@
       "when": 1767767423936,
       "tag": "0035_chilly_iron_fist",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1767772299620,
+      "tag": "0036_dear_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1767773049924,
+      "tag": "0037_slow_snowbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1767773852411,
+      "tag": "0038_complex_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1767777565884,
+      "tag": "0039_blue_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1767778576675,
+      "tag": "0040_misty_shadowcat",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1767779047883,
+      "tag": "0041_right_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1767779531337,
+      "tag": "0042_mean_lilandra",
+      "breakpoints": true
     }
   ]
 }

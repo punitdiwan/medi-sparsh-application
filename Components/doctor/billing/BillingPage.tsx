@@ -212,8 +212,8 @@ export default function BillingPage() {
 
 
   return (
-    <div className={`p-6 min-h-screen w-full mx-auto bg-background text-foreground transition-all duration-200 ${state === "collapsed" ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-280px)]"}`}>
-      <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0">
+    <div className={`p-4 min-h-screen w-full mx-auto bg-background text-foreground transition-all duration-200 ${state === "collapsed" ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-280px)]"}`}>
+      <Card className="shadow-md border border-dialog bg-card/50 backdrop-blur-sm p-0 mb-4">
         <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
           <div>
             <CardTitle className="text-2xl font-bold">Payment History</CardTitle>
@@ -222,7 +222,7 @@ export default function BillingPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="p-4">
+      </Card>
           <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as typeof activeTab); setCurrentPage(1); }}>
             <TabsList className="mb-4">
               <TabsTrigger value="all">All Transactions</TabsTrigger>
@@ -261,8 +261,7 @@ export default function BillingPage() {
               </TabsContent>
             ))}
           </Tabs>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }

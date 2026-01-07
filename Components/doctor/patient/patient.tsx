@@ -9,7 +9,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UserPlus, Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Can } from "@casl/react"
-import { MdDelete } from "react-icons/md";
+import { MdDelete, MdRestore } from "react-icons/md";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { PaginationControl } from "@/components/pagination";
@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 // import { AbilityContext } from "@/lib/casl/AbilityContext";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteConfirmationDialog } from "../medicine/deleteConfirmationDialog";
 type Patient = {
   id: string;
   name: string;
@@ -40,16 +41,20 @@ type PatientFilters = {
   dateCheckIn?: string;
   visitPurpose?: "Consultation" | "Follow-up" | "Emergency";
   frequency?: "Daily" | "Weekly" | "Monthly";
+  isDeleted?: string;
 };
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
 function PatientPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<PatientFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [open, setOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [patientToRestore, setPatientToRestore] = useState<string | null>(null);
 
   const ability = useAbility();
 
@@ -67,36 +72,45 @@ function PatientPage() {
   useEffect(() => {
     localStorage.setItem("visiblePatientFields", JSON.stringify(visibleFields));
   }, [visibleFields]);
-const fetchPatients = async () => {
-  setLoading(true);
-  try {
-    const response = await fetch("/api/patients");
-    const result = await response.json();
 
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || "Failed to fetch patients");
+  const fetchPatients = async (opts?: { initial?: boolean }) => {
+    if (opts?.initial) {
+      setInitialLoading(true);
+    } else {
+      setLoading(true);
     }
+    try {
+      const response = await fetch("/api/patients");
+      const result = await response.json();
 
-    setPatients(result.data);
-  } catch (err) {
-    console.error("Error fetching patients:", err);
-    toast.error("Failed to load patients");
-  } finally {
-    setLoading(false);
-  }
-};
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to fetch patients");
+      }
+      console.log("Fetched patients:", result.data);
+      setPatients(result.data);
+    } catch (err) {
+      console.error("Error fetching patients:", err);
+      toast.error("Failed to load patients");
+    } finally {
+      if (opts?.initial) {
+        setInitialLoading(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
 
-useEffect(() => {
-  fetchPatients();
-}, []);
+  useEffect(() => {
+    fetchPatients({ initial: true });
+  }, []);
 
 
   const filteredData = useMemo(() => {
     return patients.filter((item) => {
       const matchesSearch = filters.search
         ? item.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
-          item.mobileNumber?.toString().includes(filters.search) ||
-          item.id?.toString().includes(filters.search)
+        item.mobileNumber?.toString().includes(filters.search) ||
+        item.id?.toString().includes(filters.search)
         : true;
 
       const matchesDate = filters.dateCheckIn
@@ -108,8 +122,9 @@ useEffect(() => {
 
         const today = new Date();
         const checkInDate = new Date(item.createdAt);
-        const diffTime = today.getTime() - checkInDate.getTime();
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffDays =
+          (today.getTime() - checkInDate.getTime()) /
+          (1000 * 60 * 60 * 24);
 
         if (filters.frequency === "Daily") return diffDays <= 1;
         if (filters.frequency === "Weekly") return diffDays <= 7;
@@ -118,9 +133,17 @@ useEffect(() => {
         return true;
       })();
 
-      return matchesSearch && matchesDate && matchesFrequency;
+      const matchesDeleted =
+        filters.isDeleted === "true"
+          ? item.isDeleted === true
+          : filters.isDeleted === "false"
+            ? item.isDeleted !== true
+            : true;
+
+      return matchesSearch && matchesDate && matchesFrequency && matchesDeleted;
     });
   }, [filters, patients]);
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice(
@@ -130,13 +153,13 @@ useEffect(() => {
 
   const allColumns: ColumnDef<Patient>[] = [
     {
-          accessorKey: "id",
-          header: "ID",
-          cell: ({ row }) => {
-            const id = row.getValue("id") as string;
-            return <span>{getShortId(id)}</span>;
-          },
-        },
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => {
+        const id = row.getValue("id") as string;
+        return <span>{getShortId(id)}</span>;
+      },
+    },
     { accessorKey: "name", header: "Patient Name" },
     { accessorKey: "mobileNumber", header: "Number" },
     { accessorKey: "gender", header: "Gender" },
@@ -159,46 +182,67 @@ useEffect(() => {
       cell: ({ row }) => (
         <div className="flex gap-2 ">
           <Link
-            href={`/doctor/patient/profile/${
-              row.original.id
-            }?name=${encodeURIComponent(row.original.name)}`}
+            href={`/doctor/patient/profile/${row.original.id
+              }?name=${encodeURIComponent(row.original.name)}`}
           >
             <Button variant="outline" size="sm">
               View
             </Button>
           </Link>
           <Can I="delete" a="patient" ability={ability}>
-          <ConfirmDialog
-            trigger={
-              <Button variant="destructive" size="sm">
-                <MdDelete />
-              </Button>
-            }
-            title="Are you absolutely sure?"
-            description="This will soft delete this patient."
-            actionLabel="Delete"
-            cancelLabel="Cancel"
-            onConfirm={async () => {
-              try {
-                const response = await fetch(`/api/patients/${row.original.id}`, {
-                  method: "DELETE",
-                });
-                const result = await response.json();
-
-                if (!response.ok || !result.success) {
-                  throw new Error(result.error || "Failed to delete patient");
+            {row.original.isDeleted !== true ?
+              (<ConfirmDialog
+                trigger={
+                  <Button variant="destructive" size="icon">
+                    <MdDelete />
+                  </Button>
                 }
+                title="Are you absolutely sure?"
+                description="This will soft delete this patient."
+                actionLabel="Delete"
+                cancelLabel="Cancel"
+                onConfirm={async () => {
+                  try {
+                    const response = await fetch(`/api/patients/${row.original.id}`, {
+                      method: "DELETE",
+                    });
+                    const result = await response.json();
 
-                setPatients((prev) =>
-                  prev.filter((p) => p.id !== row.original.id)
-                );
-                toast.success("Patient deleted successfully!");
-              } catch (err) {
-                console.error("Error deleting patient:", err);
-                toast.error(err instanceof Error ? err.message : "Failed to delete patient");
-              }
-            }}
-          />
+                    if (!response.ok || !result.success) {
+                      throw new Error(result.error || "Failed to delete patient");
+                    }
+
+                    // Refresh the patient list to show updated status
+                    await fetchPatients();
+                    toast.success("Patient deleted successfully!");
+                  } catch (err) {
+                    console.error("Error deleting patient:", err);
+                    toast.error(err instanceof Error ? err.message : "Failed to delete patient");
+                  }
+                }}
+              />
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setPatientToRestore(row.original.id);
+                          setRestoreDialogOpen(true);
+                        }}
+                      >
+                        <MdRestore className="text-green-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Restore Patient</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            }
           </Can>
         </div>
       ),
@@ -212,10 +256,10 @@ useEffect(() => {
     );
   });
 
-  if (loading)
+  if (initialLoading)
     return (
       <div className="flex justify-center items-center h-screen">
-              <HoneycombLoader />
+        <HoneycombLoader />
       </div>
     );
 
@@ -279,8 +323,8 @@ useEffect(() => {
       />
 
       <div className="mt-6 text-sm ">
-        
-          <Table data={paginatedData} columns={columns} fallback={"No patient found"}/>
+
+        <Table data={paginatedData} columns={columns} fallback={"No patient found"} />
 
         <PaginationControl
           currentPage={currentPage}
@@ -292,6 +336,43 @@ useEffect(() => {
             setCurrentPage(1);
           }}
         />
+
+        <DeleteConfirmationDialog
+          open={restoreDialogOpen}
+          onOpenChange={setRestoreDialogOpen}
+          title="Restore Patient"
+          description="Are you sure you want to restore this patient? This will make the patient record active again."
+          onConfirm={async () => {
+            if (!patientToRestore) return;
+
+            try {
+              const response = await fetch(`/api/patients/${patientToRestore}`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ isDeleted: false }),
+              });
+              const result = await response.json();
+
+              if (!response.ok || !result.success) {
+                throw new Error(result.error || "Failed to restore patient");
+              }
+
+              // Refresh the patient list
+              await fetchPatients();
+              toast.success("Patient restored successfully!");
+              setRestoreDialogOpen(false);
+              setPatientToRestore(null);
+            } catch (err) {
+              console.error("Error restoring patient:", err);
+              toast.error(err instanceof Error ? err.message : "Failed to restore patient");
+            }
+          }}
+          isLoading={loading}
+        />
+
+
       </div>
 
     </div>
