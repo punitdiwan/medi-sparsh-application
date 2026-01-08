@@ -62,7 +62,6 @@ export default function BedStatusPage() {
       const response = await fetch("/api/beds");
       if (!response.ok) throw new Error("Failed to fetch beds");
       const data = await response.json();
-      console.log("Bed status data:", data);
       setBedStatus(data);
 
       setDraftStatus((prev) => {
