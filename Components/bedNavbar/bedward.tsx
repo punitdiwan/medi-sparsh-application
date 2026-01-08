@@ -30,20 +30,22 @@ export function WardCard({ ward }: { ward: Ward }) {
   );
 }
 const bedStatusStyles: Record<
-  "EMPTY" | "OCCUPIED" | "CLEANING",
+  "active" | "occupied" | "maintenance" | "disabled",
   string
 > = {
-  EMPTY:
+  active:
     "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300",
-  OCCUPIED:
+  occupied:
     "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300",
-  CLEANING:
+  maintenance:
     "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300",
+  disabled:
+    "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-900/30 dark:text-gray-300",
 };
 
 
 export function BedIcon({ bed }: { bed: Bed }) {
-  const isEmpty = bed.status === "EMPTY";
+  const isEmpty = bed.status === "active";
 
   return (
     <Tooltip>
@@ -62,7 +64,7 @@ export function BedIcon({ bed }: { bed: Bed }) {
         </button>
       </TooltipTrigger>
 
-      {bed.status === "OCCUPIED" && bed.patient && (
+      {bed.status === "occupied" && bed.patient && (
         <TooltipContent className="w-72 p-0"
             style={{ zIndex: zIndex.tooltip }}>
           <PatientHoverCard patient={bed.patient} bedNo={bed.bedNo} />

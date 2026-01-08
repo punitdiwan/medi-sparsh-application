@@ -39,10 +39,22 @@ export async function PUT(
       );
     }
 
+    if (body.status !== undefined) {
+      const s = String(body.status).toLowerCase().trim();
+      const allowed = ["active", "occupied", "maintenance", "disabled"];
+      if (!allowed.includes(s)) {
+        return NextResponse.json(
+          { error: "Invalid bed status" },
+          { status: 400 }
+        );
+      }
+    }
+
     const updatedBed = await updateBed(id, {
       name: body.name,
       bedTypeId: body.bedTypeId,
       bedGroupId: body.bedGroupId,
+      status: body.status,
     });
 
     return NextResponse.json(updatedBed, { status: 200 });

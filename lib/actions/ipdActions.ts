@@ -34,7 +34,7 @@ export async function createIPDAdmission(data: any) {
 
             // Update Bed Status
             await tx.update(beds)
-                .set({ isOccupied: true })
+                .set({ isOccupied: true, status: "occupied" })
                 .where(eq(beds.id, data.bedNumber));
 
             // Update Patient Status
@@ -439,7 +439,7 @@ export async function dischargePatient(ipdAdmissionId: string, data: any) {
             // Update Bed Status
             if (admission.bedId) {
                 await tx.update(beds)
-                    .set({ isOccupied: false })
+                    .set({ isOccupied: false, status: "active" })
                     .where(eq(beds.id, admission.bedId));
             }
 

@@ -87,6 +87,7 @@ export async function getBedManagementData() {
                 id: beds.id,
                 name: beds.name,
                 bedGroupId: beds.bedGroupId,
+                status: beds.status,
                 isOccupied: beds.isOccupied,
                 patientId: patients.id,
                 patientName: patients.name,
@@ -118,7 +119,7 @@ export async function getBedManagementData() {
                         .map(bed => ({
                             id: bed.id,
                             bedNo: bed.name,
-                            status: bed.isOccupied ? "OCCUPIED" : "EMPTY",
+                            status: (bed.status ? String(bed.status).toLowerCase() : (bed.isOccupied ? "occupied" : "active")) as any,
                             patient: bed.isOccupied ? {
                                 patientId: bed.patientId,
                                 name: bed.patientName,

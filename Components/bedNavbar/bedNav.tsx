@@ -64,14 +64,14 @@ export function BedManagementOverlay({
             floor.wards.forEach((ward) => {
                 ward.beds.forEach((bed) => {
                     acc.total += 1;
-                    if (bed.status === "OCCUPIED") acc.occupied += 1;
-                    if (bed.status === "EMPTY") acc.empty += 1;
-                    if (bed.status === "CLEANING") acc.cleaning += 1;
+                    if (bed.status === "occupied") acc.occupied += 1;
+                    if (bed.status === "active") acc.active += 1;
+                    if (bed.status === "maintenance") acc.maintenance += 1;
                 });
             });
             return acc;
         },
-        { total: 0, occupied: 0, empty: 0, cleaning: 0 }
+        { total: 0, occupied: 0, active: 0, maintenance: 0 }
     );
 
     const occupancyPercent = bedStats.total
@@ -109,12 +109,12 @@ export function BedManagementOverlay({
                                 />
                                 <StatCard
                                     label="Available"
-                                    value={bedStats.empty}
+                                    value={bedStats.active}
                                     color="bg-green-100 text-green-700"
                                 />
                                 <StatCard
                                     label="Cleaning"
-                                    value={bedStats.cleaning}
+                                    value={bedStats.maintenance}
                                     color="bg-yellow-100 text-yellow-700"
                                 />
                                 <div className="ml-4">
