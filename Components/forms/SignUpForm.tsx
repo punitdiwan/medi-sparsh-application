@@ -38,7 +38,6 @@ function SignUpForm() {
     }
 
     try {
-      console.log("Form submitted:", formData);
 
       setFormData({ name: "", email: "", password: "" });
     } catch (error) {

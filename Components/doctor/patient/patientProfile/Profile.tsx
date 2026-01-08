@@ -74,8 +74,6 @@ function Profile() {
 
   const handleSave = async () => {
     if (!patientInfo?.id) return;
-    console.log("Payload sent to API:", patientData);
-    console.log("Updating ID:", patientInfo.id);
     const payload = {
       ...patientData,
       dob: patientData.dob === "" ? null : patientData.dob,

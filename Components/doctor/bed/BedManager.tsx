@@ -21,6 +21,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RotateCcw } from "lucide-react";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 type Bed = {
   id: string;
@@ -46,6 +48,7 @@ export default function BedManager() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
+  const [openExcelUpload, setOpenExcelUpload] = useState(false);
   const [editingBed, setEditingBed] = useState<Bed | null>(null);
 
   const ability = useAbility();
@@ -242,15 +245,26 @@ export default function BedManager() {
               <Label htmlFor="deleted">Show deleted</Label>
             </div>
             <Can I="create" a="bed" ability={ability}>
-              <Button onClick={() => {
-                setEditingBed(null);
-                setOpen(true);
-              }}>
-                Add Bed
-              </Button>
+              <div className="flex justify-center gap-2 items-center">
+                <Button onClick={() => {
+                  setEditingBed(null);
+                  setOpen(true);
+                }}>
+                  Add Bed
+                </Button>
+
+                <ExcelUploadButton 
+                  onClick={() => setOpenExcelUpload(true)}
+                  tooltip="Upload Bed Excel"/>
+              </div>
             </Can>
           </div>
-
+          
+          <ExcelUploadModal
+            entity="beds"
+            open={openExcelUpload}
+            setOpen={setOpenExcelUpload}
+          />
           <Table>
             <TableHeader>
               <TableRow>

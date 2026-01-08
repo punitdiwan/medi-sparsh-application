@@ -26,6 +26,8 @@ import { getMedicineCompanies, createMedicineCompany, updateMedicineCompany, del
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 export default function CompanyManager() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -34,7 +36,7 @@ export default function CompanyManager() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Company | null>(null);
   const ability = useAbility();
-
+  const [openExcelUpload, setOpenExcelUpload] = useState(false);
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -131,10 +133,20 @@ export default function CompanyManager() {
             className="max-w-xs"
           />
           <Can I="create" a="medicineCompany" ability={ability}>
-            <Button onClick={() => setOpen(true)}>Add Company</Button>
+            <div className="flex justify-center gap-2 items-center">
+              <Button onClick={() => setOpen(true)}>Add Company</Button>
+              <ExcelUploadButton
+                onClick={() => setOpenExcelUpload(true)}
+                tooltip="Upload Charge Category Excel"
+              />
+            </div>
           </Can>
         </div>
-
+        <ExcelUploadModal
+          entity="medicineCompany"
+          open={openExcelUpload}
+          setOpen={setOpenExcelUpload}
+        />
         {/* Table */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>

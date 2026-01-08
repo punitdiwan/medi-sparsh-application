@@ -28,7 +28,6 @@ export async function getCurrentHospital() {
     subdomain = domain.split(".")[0];
   }
 
-  console.log(domain, subdomain);
   
   // Query the database to find the organization by slug (using subdomain as slug)
   const result = await db

@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
       const row = sheet.getRow(rowNumber);
       const groupName = toString(row.getCell(1).value);
 
-      console.log(`Processing row ${rowNumber}: ${groupName}`);
 
       try {
         if (!groupName) throw new Error("Group name is required");
@@ -52,7 +51,6 @@ export async function POST(req: NextRequest) {
         }
 
         successCount++;
-        console.log(`Inserted row ${rowNumber}: ${groupName}`);
       } catch (err: any) {
         console.error(`Row ${rowNumber} error:`, err.message);
         errors.push({

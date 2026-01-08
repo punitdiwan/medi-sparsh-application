@@ -73,7 +73,6 @@ export default function DoctorProfile() {
     const { user } = useAuth();
     const roleLabel =
     user?.memberRole === "owner" ? "Doctor" : user?.memberRole || "Dcotor";
-    // console.log("user data for doctors profile",user);
     const hospital = user?.hospital;
     const canEditClinic = user?.memberRole === "owner";
     
@@ -142,8 +141,7 @@ export default function DoctorProfile() {
                 const result = await response.json();
                 if (result.success && result.data) {
                     setProfileData(result.data);
-                    // Populate form data
-                    console.log("Profile data fetched:", result.data);
+
                     const { staff, doctor, user } = result.data;
                     setFormData({
                         name: user?.name ?? "",

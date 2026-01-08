@@ -51,8 +51,7 @@ export function BedIcon({ bed }: { bed: Bed }) {
         <button
           onClick={() => {
             if (isEmpty) {
-              // redirect or open admit modal
-              console.log("Assign patient to", bed.bedNo);
+
             }
           }}
           className={`h-20 w-20 rounded-xl flex flex-col items-center justify-center shadow-md

@@ -12,6 +12,8 @@ import { ChargeModal, ChargeItem } from "./chargeModal";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 // Types for auxiliary data
 interface Option {
@@ -36,7 +38,7 @@ export default function ChargeManager() {
   const [chargeCategories, setChargeCategories] = useState<ChargeCategoryOption[]>([]);
   const [units, setUnits] = useState<Option[]>([]);
   const [taxCategories, setTaxCategories] = useState<TaxOption[]>([]);
-
+  const [openExcelUpload, setOpenExcelUpload] = useState(false);
   const [search, setSearch] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
 
@@ -216,17 +218,28 @@ export default function ChargeManager() {
               <Label htmlFor="deleted-filter">Show Deleted Only</Label>
             </div>
             <Can I="create" a="hospitalCharger" ability={ability}>
-              <Button
-                onClick={() => {
-                  setEditData(null);
-                  setModalOpen(true);
-                }}
-              >
-                + Add Charge
-              </Button>
+              <div className="flex justify-center gap-2 items-center">
+                <Button
+                  onClick={() => {
+                    setEditData(null);
+                    setModalOpen(true);
+                  }}
+                >
+                  + Add Charge
+                </Button>
+                <ExcelUploadButton
+                  onClick={() => setOpenExcelUpload(true)}
+                  tooltip="Upload Charge Category Excel"
+                  />
+              </div>
             </Can>
           </div>
-
+          
+          <ExcelUploadModal
+            entity="charges"
+            open={openExcelUpload}
+            setOpen={setOpenExcelUpload}
+          />
 
           <div className="rounded-md border">
             <Table>

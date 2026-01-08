@@ -254,7 +254,7 @@ export default function VitalsManager() {
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
-                      onClick={() => { console.log("vitals click"); setOpenEx(true); }}
+                      onClick={() =>  setOpenEx(true)}
                       className="p-2"
                     >
                       <Upload className="w-5 h-5" />

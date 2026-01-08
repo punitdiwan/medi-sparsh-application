@@ -14,7 +14,6 @@ export type PaymentData = {
 
 export async function getIPDPaymentSummary(ipdAdmissionId: string) {
     try {
-        console.log("getIPDPaymentSummary called for:", ipdAdmissionId);
 
         const charges = await db
             .select({
@@ -24,8 +23,6 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             })
             .from(ipdCharges)
             .where(eq(ipdCharges.ipdAdmissionId, ipdAdmissionId));
-
-        console.log("Charges found:", charges.length, charges);
 
         let totalCharges = 0;
         charges.forEach((charge) => {
@@ -38,7 +35,6 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
 
             totalCharges += amount + taxAmount - discountAmount;
         });
-        console.log("Total Charges calculated:", totalCharges);
 
         // Calculate Total Paid
         const payments = await db
@@ -48,13 +44,11 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             .from(ipdPayments)
             .where(eq(ipdPayments.ipdAdmissionId, ipdAdmissionId));
 
-        console.log("Payments found:", payments.length, payments);
 
         let totalPaid = 0;
         payments.forEach((payment) => {
             totalPaid += Number(payment.amount);
         });
-        console.log("Total Paid calculated:", totalPaid);
 
         return {
             success: true,

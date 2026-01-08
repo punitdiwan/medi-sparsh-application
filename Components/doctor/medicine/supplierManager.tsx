@@ -29,6 +29,8 @@ import { getMedicineSuppliers, createMedicineSupplier, updateMedicineSupplier, d
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 export default function SupplierManager() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -37,7 +39,7 @@ export default function SupplierManager() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
-
+  const [openExcelUpload, setOpenExcelUpload] = useState(false);
   const ability = useAbility();
 
   useEffect(() => {
@@ -180,25 +182,36 @@ export default function SupplierManager() {
               </Label>
             </div>
             <Can I="create" a="medicineSupplier" ability={ability}>
-              <Button
-                className="flex gap-2"
-                onClick={() => {
-                  setEditing(null);
-                  setOpen(true);
-                }}
-              >
-                <Plus size={16} /> Add Supplier
-              </Button>
+              <div className="flex justify-center gap-2 items-center">
+                <Button
+                  className="flex gap-2"
+                  onClick={() => {
+                    setEditing(null);
+                    setOpen(true);
+                  }}
+                >
+                  <Plus size={16} /> Add Supplier
+                </Button>
+                <ExcelUploadButton 
+                  onClick={() => setOpenExcelUpload(true)}
+                  tooltip="Upload Bed Excel"/>
+              </div>
             </Can>
           </div>
         </div>
+        
+        <ExcelUploadModal
+            entity="medicineSupplier"
+            open={openExcelUpload}
+            setOpen={setOpenExcelUpload}
+        />
 
         {/* TABLE */}
         <div className="border rounded-xl overflow-hidden bg-card">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Supplier Name</TableHead>
+                <TableHead>Supplier Company Name</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Contact Person</TableHead>
                 <TableHead>Person Phone</TableHead>

@@ -51,7 +51,6 @@ export default function SettingsComponent() {
         setIsLoading(true);
         const response = await fetch("/api/settings/phone-validation");
         const data = await response.json();
-        console.log("settings data", data);
 
         if (!data.success) {
           toast.error("Failed to load settings");

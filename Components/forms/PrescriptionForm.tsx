@@ -207,7 +207,6 @@ function PrescriptionForm() {
       if (isEditMode) {
         payload.prescriptionId = formData.prescriptionId;
       }
-      console.log("prescription data",payload);
 
       const response = await fetch("/api/prescriptions", {
         method: isEditMode ? "PUT" : "POST",

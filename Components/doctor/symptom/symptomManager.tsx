@@ -68,7 +68,6 @@ export default function SymptomManager() {
       if (symptomsResult.error) {
         toast.error(symptomsResult.error);
       } else {
-        console.log("symptomsResult", symptomsResult)
         setSymptoms(symptomsResult.data || []);
       }
 

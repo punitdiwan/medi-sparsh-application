@@ -95,9 +95,6 @@ export async function PUT(request: NextRequest) {
     const currentUser = await getCurrentUser();
     const hospital = await getCurrentHospital();
     const body = await request.json();
-    console.log("Received profile update body:", body);
-    console.log("Current User:", currentUser);
-    console.log("Hospital:", hospital);
     if (!currentUser?.id) {
       return NextResponse.json(
         {

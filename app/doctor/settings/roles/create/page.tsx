@@ -19,12 +19,10 @@ export default function CreateRolePage() {
     name: string
     permissions: Permission[]
   }) {
-    console.log("payload", payload)
 
     const permissionObject = buildPermissionObject(
       payload.permissions
     )
-    console.log("permissionObject",permissionObject)
 
     await authClient.organization.createRole({
       role: payload.name,

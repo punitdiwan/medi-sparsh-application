@@ -183,7 +183,6 @@ export default function PurchaseMedicineModelPage() {
         netAmount,
       },
     };
-    console.log(payload);
     const res = await createPharmacyPurchase(payload);
 
     if (res.error) {
