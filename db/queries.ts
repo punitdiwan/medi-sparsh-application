@@ -977,6 +977,7 @@ export async function getBedsByHospital(hospitalId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      status: beds.status,
       isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
@@ -1002,6 +1003,7 @@ export async function getDeletedBedsByHospital(hospitalId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      status: beds.status,
       isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
@@ -1027,6 +1029,7 @@ export async function getBedById(bedId: string) {
       floorName: floors.name,
       hospitalId: beds.hospitalId,
       isDeleted: beds.isDeleted,
+      status: beds.status,
       isOccupied: beds.isOccupied,
       createdAt: beds.createdAt,
       updatedAt: beds.updatedAt,
@@ -1063,13 +1066,20 @@ export async function updateBed(bedId: string, data: {
   name?: string;
   bedTypeId?: string;
   bedGroupId?: string;
+  status?: string;
 }) {
+  const statusValue = data.status?.toLowerCase();
+  const nextIsOccupied =
+    statusValue !== undefined ? statusValue === "occupied" : undefined;
+
   const result = await db
     .update(beds)
     .set({
       ...(data.name && { name: data.name }),
       ...(data.bedTypeId && { bedTypeId: data.bedTypeId }),
       ...(data.bedGroupId && { bedGroupId: data.bedGroupId }),
+      ...(statusValue && { status: statusValue }),
+      ...(nextIsOccupied !== undefined && { isOccupied: nextIsOccupied }),
       updatedAt: new Date(),
     })
     .where(eq(beds.id, bedId))

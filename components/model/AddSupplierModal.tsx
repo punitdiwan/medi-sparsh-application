@@ -157,7 +157,7 @@ export default function AddSupplierModal({
           <div className="grid grid-cols-2 gap-4">
             {/* Supplier Name */}
             <div className="space-y-1">
-              <label className="text-sm mb-1 block">Supplier Name *</label>
+              <label className="text-sm mb-1 block">Supplier Company Name *</label>
               <Input
                 name="supplierName"
                 placeholder="Enter supplier name"

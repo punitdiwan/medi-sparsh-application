@@ -28,8 +28,7 @@ export default function UploadReportPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // You can later connect this to your backend (e.g., upload to MongoDB or Cloudinary)
-    console.log("Form data:", formData);
+
 
     
     router.push("/doctor/reports");

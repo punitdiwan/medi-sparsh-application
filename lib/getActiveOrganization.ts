@@ -9,7 +9,6 @@ export async function getActiveOrganization() {
       cookieStore.get("__Secure-better-auth.session_token");
 
     if (!token) {
-        console.log("No session cookie found");
         return null;
     }
     const cookieHeader = `${token.name}=${token.value}`;

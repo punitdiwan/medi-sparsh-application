@@ -86,7 +86,6 @@ function PatientPage() {
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Failed to fetch patients");
       }
-      console.log("Fetched patients:", result.data);
       setPatients(result.data);
     } catch (err) {
       console.error("Error fetching patients:", err);

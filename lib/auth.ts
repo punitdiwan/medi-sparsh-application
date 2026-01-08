@@ -121,7 +121,6 @@ export const auth = betterAuth({
 const getOrganisation = async (userId: string) => {
     const result = await db.select().from(schema.member).where(eq(schema.member.userId, userId)).limit(1);
 
-    // console.log("Data from Result of getOrganisation", result);
 
     if (result.length > 0) {
         return result[0].organizationId;

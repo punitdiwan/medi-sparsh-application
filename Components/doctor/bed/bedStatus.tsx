@@ -3,6 +3,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableHeader,
@@ -21,6 +29,18 @@ type BedStatus = {
   bedGroupName: string | null;
   floorName: string | null;
   isOccupied: boolean;
+  status?: string | null;
+};
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "maintenance", label: "Maintenance" },
+] as const;
+
+const normalizeStatus = (status: string | null | undefined, isOccupied: boolean) => {
+  const s = (status ?? "").toLowerCase().trim();
+  if (s === "active" || s === "occupied" || s === "maintenance" || s === "disabled") return s;
+  return isOccupied ? "occupied" : "active";
 };
 
 export default function BedStatusPage() {
@@ -28,6 +48,9 @@ export default function BedStatusPage() {
 
   const [bedStatus, setBedStatus] = useState<BedStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchBeds();
@@ -40,11 +63,67 @@ export default function BedStatusPage() {
       if (!response.ok) throw new Error("Failed to fetch beds");
       const data = await response.json();
       setBedStatus(data);
+
+      setDraftStatus((prev) => {
+        const next: Record<string, string> = { ...prev };
+        for (const b of data as BedStatus[]) {
+          next[b.id] = normalizeStatus(b.status, b.isOccupied);
+        }
+        return next;
+      });
     } catch (error) {
       console.error("Error fetching beds:", error);
       toast.error("Failed to load beds");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleEdit = async () => {
+    if (!editing) {
+      setDraftStatus(() => {
+        const next: Record<string, string> = {};
+        for (const b of bedStatus) {
+          next[b.id] = normalizeStatus(b.status, b.isOccupied);
+        }
+        return next;
+      });
+      setEditing(true);
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const changes = bedStatus
+        .map((b) => {
+          const current = normalizeStatus(b.status, b.isOccupied);
+          const next = draftStatus[b.id] ?? current;
+          return { id: b.id, current, next };
+        })
+        .filter((x) => x.current !== x.next);
+
+      for (const c of changes) {
+        const res = await fetch(`/api/beds/${c.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: c.next }),
+        });
+
+        if (!res.ok) {
+          const payload = await res.json().catch(() => null);
+          throw new Error(payload?.error || "Failed to save bed status");
+        }
+      }
+
+      toast.success("Bed statuses updated");
+      setEditing(false);
+      await fetchBeds();
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Failed to save bed status");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -69,13 +148,22 @@ export default function BedStatusPage() {
       {/* <Separator /> */}
       <CardContent>
         <div className="p-4 space-y-4">
-          {/* Search Bar */}
-          <Input
-            placeholder="Search beds..."
-            className="max-w-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="flex items-center justify-between gap-4">
+            <Input
+              placeholder="Search beds..."
+              className="max-w-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <Button
+              variant={editing ? "default" : "outline"}
+              disabled={loading || saving}
+              onClick={handleToggleEdit}
+            >
+              {editing ? (saving ? "Saving..." : "Save") : "Edit"}
+            </Button>
+          </div>
 
           {/* Table */}
           <Table>
@@ -102,14 +190,28 @@ export default function BedStatusPage() {
                   <TableCell>{item.bedTypeName || "-"}</TableCell>
                   <TableCell>{item.bedGroupName || "-"}</TableCell>
                   <TableCell>{item.floorName || "-"}</TableCell>
-                  <TableCell
-                    className={
-                      !item.isOccupied
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }
-                  >
-                    {item.isOccupied ? "Occupied" : "Available"}
+                  <TableCell>
+                    {editing && !item.isOccupied ? (
+                      <Select
+                        value={draftStatus[item.id] ?? normalizeStatus(item.status, item.isOccupied)}
+                        onValueChange={(v) =>
+                          setDraftStatus((prev) => ({ ...prev, [item.id]: v }))
+                        }
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <span className={item.status == "occupied" ? "text-red-500" : item.status == "maintenance" ? "text-yellow-600" : "text-green-600"}>{item.status == "occupied" ? "Occupied" : item.status == "active" ? "Available" : "Maintenance"}</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

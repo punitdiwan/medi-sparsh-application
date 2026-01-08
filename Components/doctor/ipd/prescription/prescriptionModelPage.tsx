@@ -124,7 +124,6 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
     if (formData.symptoms.length === 0) return toast.error("Please enter symptoms");
     // if (medicines.length === 0) return toast.error("Add at least one medicine");
 
-    console.log("Saving prescription with ipdId:", ipdId);
 
     try {
       setLoading(true);

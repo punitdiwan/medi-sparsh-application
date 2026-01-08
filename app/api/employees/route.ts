@@ -102,10 +102,8 @@ export async function POST(request: NextRequest) {
     // Rollback: Delete the auth user if database operations failed
     if (createdUserId) {
       try {
-        console.log(`Rolling back: Deleting user ${createdUserId} from auth.user`);
         const { deleteAuthUser } = await import("@/db/queries");
         await deleteAuthUser(createdUserId);
-        console.log("Rollback successful: User deleted from auth");
       } catch (rollbackError) {
         console.error("CRITICAL: Failed to rollback user creation:", rollbackError);
         // Log this for manual cleanup

@@ -26,11 +26,6 @@ export default function AddMemberPage() {
     const finalSpecialty =
       role === "doctor" ? (specialty === "other" ? customSpecialty : specialty) : null
 
-    // TODO: call backend API (POST /api/team)
-    console.log("Submitting:", {
-      role,
-      specialty: finalSpecialty,
-    })
 
     alert("Team member added successfully!")
     router.push("/doctor/settings/ourTeam")

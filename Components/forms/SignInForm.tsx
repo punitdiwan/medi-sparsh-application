@@ -48,7 +48,6 @@ export function SignInForm({ Hospitaldata }: any) {
       toast.success("Welcome Doctor")
       // toast.success(`Welcome ${user.role}!`);
     } catch (err: any) {
-      console.log("Login failed:", err);
       toast.error(err.message || "Login failed");
     } finally {
       setIsLoading(false);
@@ -96,7 +95,6 @@ export function SignInForm({ Hospitaldata }: any) {
         provider: "google",
         callbackURL: `/doctor`,
       });
-      console.log("Google sign-in response:", response);
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast.error(error.message || "Failed to sign in with Google");

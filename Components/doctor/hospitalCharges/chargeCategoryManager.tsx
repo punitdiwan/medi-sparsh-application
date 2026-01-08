@@ -21,6 +21,8 @@ import {
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExcelUploadButton } from "@/components/ExcelUploadButton";
+import ExcelUploadModal from "@/Components/HospitalExcel";
 
 export interface ChargeCategoryItem {
   id: string;
@@ -46,7 +48,7 @@ export default function ChargeCategoryManager() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<ChargeCategoryItem | null>(null);
-
+  const [openExcelUpload, setOpenExcelUpload] = useState(false);
   const ability = useAbility();
   const rowsPerPage = 20;
   const [currentPage, setCurrentPage] = useState(1);
@@ -218,16 +220,27 @@ export default function ChargeCategoryManager() {
               <Label htmlFor="deleted-filter">Show Deleted Only</Label>
             </div>
             <Can I="create" a="ChargesCategory" ability={ability}>
-              <Button
-                onClick={() => {
-                  setEditItem(null);
-                  setModalOpen(true);
-                }}
-              >
-                + Add Category
-              </Button>
+              <div className="flex justify-center gap-2 items-center">
+                <Button
+                  onClick={() => {
+                    setEditItem(null);
+                    setModalOpen(true);
+                  }}
+                >
+                  + Add Category
+                </Button>
+                <ExcelUploadButton 
+                  onClick={() => setOpenExcelUpload(true)}
+                  tooltip="Upload Charge Category Excel"/>
+              </div>
             </Can>
           </div>
+
+          <ExcelUploadModal
+            entity="chargesCategories"
+            open={openExcelUpload}
+            setOpen={setOpenExcelUpload}
+          />
 
           {/* Table */}
           <div className="rounded-md border">

@@ -1,4 +1,5 @@
 
+import { charges } from "@/db/schema";
 import { NextResponse } from "next/server";
 
 type ExcelConfig = {
@@ -14,6 +15,8 @@ type ExcelConfig = {
   };
 };
 
+const fileFormate = [".xlsx"];
+
 const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
   patient: {
     title: "Patient",
@@ -25,7 +28,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload: {
         url: "/api/excel/patient/upload",
-        accept: [".xlsx"],
+        accept: fileFormate,
     },
     },
   vital:{
@@ -42,7 +45,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
         url:"/api/excel/vital/upload",
-        accept:[".xlsx"]
+        accept:fileFormate
     }
   },
   hopitalChargeUnit:{
@@ -56,7 +59,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
         url:"/api/excel/hospitalChargeUnit/upload",
-        accept:[".xlsx"]
+        accept:fileFormate
     }
   },
   hospitalChargeTaxCategory:{
@@ -71,7 +74,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
         url:"/api/excel/hospitalChargeTaxCategory/upload",
-        accept:[".xlsx"]
+        accept:fileFormate
     }
   },
   medicineUnit:{
@@ -85,7 +88,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/medicneUnit/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
   },
   medicineGroup:{
@@ -99,7 +102,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/medicineGroup/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
   },
   symptomeType:{
@@ -113,7 +116,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/symptomType/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
 
   },
@@ -127,7 +130,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/symptom/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
   },
   operationCategories:{
@@ -141,7 +144,7 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/operationCategory/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
   },
   operations:{
@@ -154,8 +157,80 @@ const EXCEL_CONFIG_MAP: Record<string, ExcelConfig> = {
     },
     upload:{
       url:"/api/excel/operation/upload",
-      accept:[".xlsx"]
+      accept:fileFormate
     }
+  },
+  beds:{
+    title:"Beds",
+     template:{
+      filename:"beds_template.xlsx",
+      columns:[
+      ],
+      downloadUrl:"/api/excel/bed/template"
+    },
+    upload:{
+      url:"/api/excel/bed/upload",
+      accept:fileFormate
+    }
+  },
+  chargesCategories:{
+    title:"Charges Categories",
+     template:{
+      filename:"charges_categories_template.xlsx",
+      columns:[
+      ],
+      downloadUrl:"/api/excel/chargesCategory/template"
+    },
+    upload:{
+      url:"/api/excel/chargesCategory/upload",
+      accept:fileFormate
+    }
+  },
+  charges:{
+    title:"Charges",
+      template:{
+        filename:"charges_template.xlsx",
+        columns:[
+        ],
+        downloadUrl:"/api/excel/charges/template"
+      },
+      upload:{
+        url:"/api/excel/charges/upload",
+        accept:fileFormate
+      }
+  },
+  medicineCompany :{
+    title:"Medicine Company",
+      template:{
+        filename:"medicine_company_template.xlsx",
+        columns:[
+          { key:"name", label:"Medicine Company Name"}
+        ],
+        downloadUrl:""
+      },
+      upload:{
+        url:"/api/excel/medicineCompany/upload",
+        accept:fileFormate
+      }
+  },
+  medicineSupplier :{
+    title:"Medicine Supplier",
+       template:{
+          filename:"medicine_supplier_template.xlsx",
+          columns: [
+            { key: "supplierName", label: "Supplier Company Name" },
+            { key: "contactNumber", label: "Contact Number" },
+            { key: "address", label: "Address" },
+            { key: "contactPerson", label: "Contact Person" },
+            { key: "contactPersonNumber", label: "Person Phone" },
+            { key: "drugLicenseNumber", label: "Drug License Number" }
+          ],
+          downloadUrl:""
+       },
+       upload:{
+          url:"/api/excel/medicineSuplier/upload",
+          accept:fileFormate
+       }
   }
 };
 

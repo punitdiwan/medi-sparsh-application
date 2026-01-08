@@ -54,7 +54,6 @@ export default function EditRolePage() {
       
       if (result.success && result.data) {
         setRole(mapRoleFromAPI(result.data))
-        // console.log("mapRoleFromAPI(result.data)",mapRoleFromAPI(result.data))
       } else {
         setError("Role not found")
       }
@@ -80,7 +79,6 @@ export default function EditRolePage() {
             permission: permissionObject,
         },
     });
-    console.log("updated data",updatedRole?.success);
      if (updatedRole?.success) {
         toast.success(`Updated ${updatedRole?.roleData?.role} Permissions`)
         router.back()

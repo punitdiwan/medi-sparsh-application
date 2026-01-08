@@ -59,7 +59,6 @@ export default function VitalsModal({
     if (initialData && initialData.length > 0) {
       // EDIT mode → sirf pehla record show karo
       const item = initialData[0];
-      console.log("Inital data on Edit mode",item)
       setEntries([
         {
           id: item.id ?? "",

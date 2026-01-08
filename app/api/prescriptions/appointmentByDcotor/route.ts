@@ -34,7 +34,6 @@ export async function GET(req: NextRequest) {
 
 
     if (!result || result.length === 0) {
-      console.log("⚠️ No prescription found for this appointment.");
       return NextResponse.json({ success: true, data: [] });
     }
 

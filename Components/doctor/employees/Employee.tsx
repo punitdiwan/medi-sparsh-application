@@ -367,7 +367,6 @@ export default function Employee() {
                 />
               </Can>
             ) : (
-              // 🟥 Normal buttons when active
               <>
                 <Can I="update" a="members" ability={ability}>
                   <Button

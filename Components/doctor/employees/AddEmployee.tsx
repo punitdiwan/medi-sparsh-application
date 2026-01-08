@@ -88,7 +88,6 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   const [doctorErrors, setDoctorErrors] = useState<Record<string, string>>({});
 
   const { data } = useSession();
-  // console.log("User Id",data?.user?.id)
 
   const form = useForm<EmployeeFormType>({
     resolver: zodResolver(employeeSchema),
@@ -164,7 +163,6 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   }, [roleValue]);
 
   function handleSupabaseError(error: any, customPrefix?: string) {
-    console.log("🔍 Supabase error details:", error);
 
     let message = "Unexpected error. Please try again.";
 

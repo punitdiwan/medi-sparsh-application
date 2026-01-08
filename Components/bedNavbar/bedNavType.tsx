@@ -1,4 +1,4 @@
-export type BedStatus = "EMPTY" | "OCCUPIED" | "CLEANING";
+export type BedStatus = "active" | "occupied" | "maintenance" | "disabled";
 
 export type PatientInfo = {
   patientId: string;

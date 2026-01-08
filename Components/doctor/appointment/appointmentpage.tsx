@@ -74,7 +74,6 @@ export default function AppointmentPage() {
       setLoading(true);
       const response = await fetch("/api/appointments");
       const result = await response.json();
-      console.log("Appointments fetched:", result);
       if (result.success) {
         setAllData(result.data || []);
       } else {
