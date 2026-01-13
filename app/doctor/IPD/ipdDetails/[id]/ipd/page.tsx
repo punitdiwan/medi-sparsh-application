@@ -23,6 +23,7 @@ import { getIPDOperations } from "@/lib/actions/operations";
 import { getIPDPayments, getIPDPaymentSummary } from "@/app/actions/ipdPaymentActions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { BillingCreditCard } from "@/Components/doctor/ipd/BillingCard";
 
 const sections = [
   "Medication",
@@ -382,7 +383,7 @@ export default function IPDOverviewPage() {
             )}
           </CardContent>
         </Card>
-
+        <BillingCreditCard creditLimit={data.creditLimit} used={totalPending} />
         {/* BILLING STATUS */}
         <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
