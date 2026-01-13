@@ -326,7 +326,7 @@ export default function IPDOverviewPage() {
                           size="icon"
                           onClick={() => setOpenDischarge(true)}
                           className="h-9 w-9"
-                          disabled={totalPending > 0 || data.dischargeStatus !== "pending"}
+                          disabled={totalPending-data.creditLimit > 0 || data.dischargeStatus !== "pending"}
                         >
                           <FaRegHospital className="h-4 w-4" />
                         </Button>
@@ -337,8 +337,8 @@ export default function IPDOverviewPage() {
                       <p>
                         {data.dischargeStatus !== "pending"
                           ? "Patient already discharged"
-                          : totalPending > 0
-                            ? `Cannot discharge: Pending balance ₹${totalPending}`
+                          : totalPending-data.creditLimit > 0
+                            ? `Cannot discharge: Pending balance ₹${totalPending-data.creditLimit}`
                             : "Discharge Patient"}
                       </p>
                     </TooltipContent>
@@ -400,16 +400,16 @@ export default function IPDOverviewPage() {
             />
 
             <div className="flex justify-between text-sm">
-              <span className="text-overview-success">Paid</span>
-              <span className="font-semibold text-overview-success">
-                ₹{totalPaid}
+              <span className="text-black dark:text-white">Total</span>
+              <span className="font-medium ">
+                ₹{totalAmount}
               </span>
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-black dark:text-white">Total</span>
-              <span className="font-medium ">
-                ₹{totalAmount}
+              <span className="text-overview-success">Paid</span>
+              <span className="font-semibold text-overview-success">
+                ₹{totalPaid}
               </span>
             </div>
 
@@ -429,7 +429,7 @@ export default function IPDOverviewPage() {
                 Partially Paid
               </Badge>
             ) : (
-              <Badge className="bg-rose-600 text-overview-danger">
+              <Badge className="bg-gray-300 dark:bg-rose-700 text-overview-danger">
                 Payment Due
               </Badge>
             )}
