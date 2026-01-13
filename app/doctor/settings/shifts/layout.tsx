@@ -10,13 +10,13 @@ export default function AppointmentLayout({ children }: { children: React.ReactN
   const ability = useAbility();
 
   const tabs = [
-    { name: "Doctor Shift", href: "/doctor/settings/appointment",action: "read",
+    { name: "Doctor Shift", href: "/doctor/settings/shifts",action: "read",
     subject: "doctorShift" },
-    { name: "Slots", href: "/doctor/settings/appointment/slots",action: "read",
+    { name: "Slots", href: "/doctor/settings/shifts/slots",action: "read",
     subject: "doctorSlots" },
-    { name: "Shift", href: "/doctor/settings/appointment/shifts",action: "read",
+    { name: "Shift", href: "/doctor/settings/shifts/shifts",action: "read",
     subject: "hospitalShift" },
-    { name: "Appointment Priority", href: "/doctor/settings/appointment/appointmentPriority" ,action: "read",
+    { name: "Appointment Priority", href: "/doctor/settings/shifts/appointmentPriority" ,action: "read",
     subject: "appointmentPriority"},
   ];
 
