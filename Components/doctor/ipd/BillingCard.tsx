@@ -33,7 +33,7 @@ export const BillingCreditCard = ({
         {/* Info */}
         <div className="w-full space-y-2 text-sm">
           <div className="flex justify-between text-black dark:text-gray-300 ">
-            <span>Credit Limit</span>
+            <span>Credit</span>
             <span>₹{creditLimit.toLocaleString()}</span>
           </div>
 

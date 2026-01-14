@@ -24,6 +24,7 @@ import { getIPDPayments, getIPDPaymentSummary } from "@/app/actions/ipdPaymentAc
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { BillingCreditCard } from "@/Components/doctor/ipd/BillingCard";
+import { BillingSingleSummaryCard } from "@/Components/doctor/ipd/BillingOverviewCard";
 
 const sections = [
   "Medication",
@@ -326,7 +327,7 @@ export default function IPDOverviewPage() {
                           size="icon"
                           onClick={() => setOpenDischarge(true)}
                           className="h-9 w-9"
-                          disabled={totalPending-data.creditLimit > 0 || data.dischargeStatus !== "pending"}
+                          disabled={totalPending - data.creditLimit > 0 || data.dischargeStatus !== "pending"}
                         >
                           <FaRegHospital className="h-4 w-4" />
                         </Button>
@@ -337,8 +338,8 @@ export default function IPDOverviewPage() {
                       <p>
                         {data.dischargeStatus !== "pending"
                           ? "Patient already discharged"
-                          : totalPending-data.creditLimit > 0
-                            ? `Cannot discharge: Pending balance ₹${totalPending-data.creditLimit}`
+                          : totalPending - data.creditLimit > 0
+                            ? `Cannot discharge: Pending balance ₹${totalPending - data.creditLimit}`
                             : "Discharge Patient"}
                       </p>
                     </TooltipContent>
@@ -384,8 +385,8 @@ export default function IPDOverviewPage() {
           </CardContent>
         </Card>
         <BillingCreditCard creditLimit={data.creditLimit} used={totalPending} />
-        {/* BILLING STATUS */}
-        <Card className="bg-overview-card border-overview-strong">
+
+        {/* <Card className="bg-overview-card border-overview-strong">
           <CardHeader>
             <CardTitle className="text-overview-label">
               Billing Status
@@ -434,7 +435,14 @@ export default function IPDOverviewPage() {
               </Badge>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
+
+        {/* <BillingSingleSummaryCard
+          totalAmount={totalAmount}
+          totalPaid={totalPaid}
+          // totalPending={totalPending}
+          creditLimit={data.creditLimit}
+        /> */}
 
         {/* VITALS */}
         <Card className="bg-overview-card border-overview-strong">
@@ -521,9 +529,10 @@ export default function IPDOverviewPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departmentBilling.map((dept) => {
-                const remaining = dept.total - dept.paid;
-                const percentage = dept.total ? Math.round((dept.paid / dept.total) * 100) : 0;
-
+                const deptPendingBeforeCredit = Math.max(dept.total - dept.paid, 0);
+                const creditUsed = Math.min(deptPendingBeforeCredit, data.creditLimit);
+                const remaining = Math.max(dept.total - (dept.paid + creditUsed),0);
+                const percentage = dept.total? Math.round(((dept.paid + creditUsed) / dept.total) * 100): 0;
                 return (
                   <div
                     key={dept.name}
@@ -551,7 +560,7 @@ export default function IPDOverviewPage() {
                             : "text-rose-600 font-medium"
                         }
                       >
-                        Remaining: ₹{remaining}
+                        Remaining: ₹{remaining.toFixed(2)}
                       </span>
                     </div>
                   </div>

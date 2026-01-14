@@ -8,7 +8,7 @@ import {
     medicineSuppliers,
     pharmacyStock,
 } from "@/drizzle/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq,gte,gt, and, desc, sql } from "drizzle-orm";
 
 // Types
 export type NewPharmacyMedicine = typeof pharmacyMedicines.$inferInsert;
@@ -18,42 +18,51 @@ export type NewPharmacyMedicine = typeof pharmacyMedicines.$inferInsert;
 // ============================================
 
 export async function getPharmacyMedicinesByHospital(hospitalId: string) {
-    const stockSq = db
-        .select({
-            medicineId: pharmacyStock.medicineId,
-            totalQuantity: sql<number>`sum(${pharmacyStock.quantity})`.as("total_quantity"),
-        })
-        .from(pharmacyStock)
-        .where(eq(pharmacyStock.hospitalId, hospitalId))
-        .groupBy(pharmacyStock.medicineId)
-        .as("stock_sq");
+  const stockSq = db
+    .select({
+      medicineId: pharmacyStock.medicineId,
+      totalQuantity: sql<number>`sum(${pharmacyStock.quantity})`.as("total_quantity"),
+    })
+    .from(pharmacyStock)
+    .where(
+      and(
+        eq(pharmacyStock.hospitalId, hospitalId),
+        gte(pharmacyStock.expiryDate, sql`CURRENT_DATE`), // expired excluded               // zero qty excluded
+      )
+    )
+    .groupBy(pharmacyStock.medicineId)
+    .as("stock_sq");
 
-    return await db
-        .select({
-            id: pharmacyMedicines.id,
-            name: pharmacyMedicines.name,
-            categoryId: pharmacyMedicines.categoryId,
-            categoryName: medicineCategories.name,
-            companyId: pharmacyMedicines.companyId,
-            companyName: medicineCompanies.name,
-            groupId: pharmacyMedicines.groupId,
-            groupName: medicineGroups.name,
-            unitId: pharmacyMedicines.unitId,
-            unitName: medicineUnits.name,
-            quantity: sql<number>`coalesce(${stockSq.totalQuantity}, 0)`,
-            hospitalId: pharmacyMedicines.hospitalId,
-            createdAt: pharmacyMedicines.createdAt,
-            updatedAt: pharmacyMedicines.updatedAt,
-        })
-        .from(pharmacyMedicines)
-        .leftJoin(medicineCategories, eq(pharmacyMedicines.categoryId, medicineCategories.id))
-        .leftJoin(medicineCompanies, eq(pharmacyMedicines.companyId, medicineCompanies.id))
-        .leftJoin(medicineGroups, eq(pharmacyMedicines.groupId, medicineGroups.id))
-        .leftJoin(medicineUnits, eq(pharmacyMedicines.unitId, medicineUnits.id))
-        .leftJoin(stockSq, eq(pharmacyMedicines.id, stockSq.medicineId))
-        .where(eq(pharmacyMedicines.hospitalId, hospitalId))
-        .orderBy(desc(pharmacyMedicines.createdAt));
+  return await db
+    .select({
+      id: pharmacyMedicines.id,
+      name: pharmacyMedicines.name,
+      categoryId: pharmacyMedicines.categoryId,
+      categoryName: medicineCategories.name,
+      companyId: pharmacyMedicines.companyId,
+      companyName: medicineCompanies.name,
+      groupId: pharmacyMedicines.groupId,
+      groupName: medicineGroups.name,
+      unitId: pharmacyMedicines.unitId,
+      unitName: medicineUnits.name,
+      quantity: stockSq.totalQuantity, // no coalesce needed now
+      hospitalId: pharmacyMedicines.hospitalId,
+      createdAt: pharmacyMedicines.createdAt,
+      updatedAt: pharmacyMedicines.updatedAt,
+    })
+    .from(pharmacyMedicines)
+
+    .innerJoin(stockSq, eq(pharmacyMedicines.id, stockSq.medicineId))
+
+    .leftJoin(medicineCategories, eq(pharmacyMedicines.categoryId, medicineCategories.id))
+    .leftJoin(medicineCompanies, eq(pharmacyMedicines.companyId, medicineCompanies.id))
+    .leftJoin(medicineGroups, eq(pharmacyMedicines.groupId, medicineGroups.id))
+    .leftJoin(medicineUnits, eq(pharmacyMedicines.unitId, medicineUnits.id))
+
+    .where(eq(pharmacyMedicines.hospitalId, hospitalId))
+    .orderBy(desc(pharmacyMedicines.createdAt));
 }
+
 
 export async function createPharmacyMedicine(data: NewPharmacyMedicine) {
     const result = await db.insert(pharmacyMedicines).values(data).returning();
@@ -149,7 +158,8 @@ export async function getPharmacyStockByMedicineId(hospitalId: string, medicineI
             and(
                 eq(pharmacyStock.hospitalId, hospitalId),
                 eq(pharmacyStock.medicineId, medicineId),
-                sql`${pharmacyStock.quantity} > 0`
+                gte(pharmacyStock.expiryDate, sql`CURRENT_DATE`),
+                gt(pharmacyStock.quantity, sql`0`)
             )
         )
         .orderBy(pharmacyStock.expiryDate);

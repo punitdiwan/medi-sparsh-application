@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
-import MedicineDialog, { Medicine } from "./pharmacyDialogContent";
+import MedicineDialog from "./pharmacyDialogContent";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BackButton from "@/Components/BackButton";
 
@@ -27,7 +27,22 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 
 // ... (keep categories if needed, or fetch them too)
+type BatchAllocation = {
+  batchNumber: string;
+  qty: number;
+  sellingPrice: number;
+  expiryDate: string;
+};
 
+type Medicine = {
+  id: string;
+  medicineId: string;
+  medicineName: string;
+  medicineCategory: string;
+  quantity: number;
+  batches: BatchAllocation[]; // MUST
+  amount: number;
+};
 export default function PharmacyBillingForm() {
   // Customer + Billing Fields
   const [customerName, setCustomerName] = useState("");
@@ -170,19 +185,11 @@ export default function PharmacyBillingForm() {
       updatedList.push(medicine);
     }
 
-    // Recalculate with current discount/tax settings
-    // We'll use the current percentage states as the source of truth for simplicity, 
-    // or we could track which mode is active. 
-    // For now, let's assume percentage is the driver if > 0, else amount.
-    // Actually, let's just use the current values in state.
-    // But wait, updateBilling takes specific values. 
-    // Let's just re-run the calculation using current state values.
-
-    // To simplify, let's just call a specialized update that uses current state
+    // recalc totals
     const { total, discount, tax, net } = recalcBilling(
       updatedList,
       discountPercentage,
-      "percentage", // Defaulting to percentage based calc for updates
+      "percentage",
       taxPercentage,
       "percentage"
     );
@@ -194,6 +201,7 @@ export default function PharmacyBillingForm() {
     setNetAmount(net);
     setEditMedicine(null);
   };
+
 
   const handleDeleteMedicine = (id: string) => {
     const updatedList = medicines.filter((m) => m.id !== id);
@@ -256,17 +264,30 @@ export default function PharmacyBillingForm() {
       toast.error("Please fill all required fields");
       return;
     }
+    const saleItems = medicines
+      .filter((m) => m.batches && m.batches.length > 0)
+      .flatMap((m) =>
+        m.batches.map((b) => ({
+          medicineId: m.medicineId || m.id,
+          batchNumber: b.batchNumber,
+          quantity: Number(b.qty),
+          sellingPrice: Number(b.sellingPrice),
+          expiryDate: b.expiryDate,
+          amount: Number(b.qty * b.sellingPrice),
+        }))
+      );
+
+
+    if (saleItems.length === 0) {
+      toast.error("No valid batches selected");
+      return;
+    }
+
 
     const billingData = {
       customerName,
       customerPhone,
-      medicines: medicines.map(m => ({
-        id: m.medicineId || m.id, // Ensure correct ID is sent
-        batchNumber: m.batchNumber,
-        quantity: Number(m.quantity),
-        sellingPrice: Number(m.sellingPrice || 0), // Changed from unitPrice to sellingPrice
-        amount: Number(m.amount)
-      })),
+      medicines: saleItems,
       totalAmount,
       discountAmount,
       taxAmount,
@@ -275,27 +296,41 @@ export default function PharmacyBillingForm() {
       note,
     };
 
-    const res = await createPharmacySale(billingData);
+    console.log("💊 Billing Data:", {
+      customerName,
+      customerPhone,
+      medicines: saleItems,
+      totalAmount,
+      discountAmount,
+      taxAmount,
+      netAmount,
+      paymentMode,
+      note,
+    });
 
-    if (res.error) {
-      toast.error(res.error);
-    } else {
-      toast.success("Billing saved successfully");
-      // Reset form
-      setCustomerName("");
-      setCustomerPhone("");
-      setNote("");
-      setMedicines([]);
-      setTotalAmount(0);
-      setDiscountAmount(0);
-      setDiscountPercentage(0);
-      setTaxAmount(0);
-      setTaxPercentage(0);
-      setNetAmount(0);
-      setPaymentMode("");
-      setPaymentAmount(0);
-    }
+    // const res = await createPharmacySale(billingData);
+
+    // if (res.error) {
+    //   toast.error(res.error);
+    // } else {
+    //   toast.success("Billing saved successfully");
+
+    //   // Reset form
+    //   setCustomerName("");
+    //   setCustomerPhone("");
+    //   setNote("");
+    //   setMedicines([]);
+    //   setTotalAmount(0);
+    //   setDiscountAmount(0);
+    //   setDiscountPercentage(0);
+    //   setTaxAmount(0);
+    //   setTaxPercentage(0);
+    //   setNetAmount(0);
+    //   setPaymentMode("");
+    //   setPaymentAmount(0);
+    // }
   };
+
 
   return (
     <div className="p-6 space-y-6 w-full mx-auto mt-4">
@@ -438,10 +473,9 @@ export default function PharmacyBillingForm() {
                     <TableRow>
                       <TableHead>Category</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Batch</TableHead>
-                      <TableHead>Expiry</TableHead>
+                      {/* <TableHead>Batch-Expiry</TableHead> */}
+                      {/* <TableHead>Expiry</TableHead> */}
                       <TableHead>Qty</TableHead>
-                      <TableHead>Available</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -451,18 +485,45 @@ export default function PharmacyBillingForm() {
                       <TableRow key={med.id}>
                         <TableCell>{med.medicineCategory}</TableCell>
                         <TableCell>{med.medicineName}</TableCell>
-                        <TableCell>{med.batchNumber}</TableCell>
-                        <TableCell>{med.expiryDate}</TableCell>
-                        <TableCell>{med.quantity}</TableCell>
-                        <TableCell>{med.availableQuantity}</TableCell>
-                        <TableCell>{med.amount}</TableCell>
+                        {/* <TableCell>
+                          <div className="flex flex-col text-sm">
+                            {med.batches?.length > 0 ? (
+                              med.batches.map((b, idx) => (
+                                <span key={idx}>
+                                  {b.batchNumber} - {b.expiryDate}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground">No batches</span>
+                            )}
+                          </div>
+                        </TableCell> */}
+                        <TableCell>
+                          {med.quantity}
+                        </TableCell>
+                        <TableCell>
+                          {med.amount}
+                        </TableCell>
                         <TableCell className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => setEditMedicine(med)}>Edit</Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDeleteMedicine(med.id)}>Delete</Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditMedicine(med)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteMedicine(med.id)}
+                          >
+                            Delete
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
+
                 </Table>
               </div>
             )}
