@@ -47,7 +47,7 @@ export default function AddIPDPaymentModal({
   const [isLoading, setIsLoading] = useState(false);
 
   // Summary State
-  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number; balance: number ,IpdCreditLimit: number} | null>(null);
+  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number; balance: number, IpdCreditLimit: number } | null>(null);
   // Populate fields if editing
   useEffect(() => {
     if (paymentToEdit) {
@@ -116,12 +116,12 @@ export default function AddIPDPaymentModal({
     setIsLoading(false);
   };
 
-  if(summary){
+  if (summary) {
     const finalBalance = Math.max(summary?.balance - summary?.IpdCreditLimit, 0)
     const safeBalance = summary ? Math.max(summary.balance - summary.IpdCreditLimit, 0) : 0;
 
   }
-  
+
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -142,21 +142,21 @@ export default function AddIPDPaymentModal({
 
           {/* Summary Section */}
           {summary && (
-            <div className="grid grid-cols-4 gap-2 mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+            <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">Total Charges</p>
                 <p className="font-semibold text-sm">₹{summary.totalCharges.toFixed(2)}</p>
               </div>
-              <div className="text-center border-l border-border/50">
+              {/* <div className="text-center border-l border-border/50">
                 <p className="text-xs text-muted-foreground">Total Paid</p>
                 <p className="font-semibold text-sm text-green-600">₹{summary.totalPaid.toFixed(2)}</p>
-              </div>
+              </div> */}
               <div className="text-center border-l border-border/50">
                 <p className="text-xs text-muted-foreground">Credit</p>
-                <p className="font-semibold text-sm text-orange-600">₹{summary.IpdCreditLimit.toFixed(2)}</p>
+                <p className="font-semibold text-sm text-green-600">₹{summary.IpdCreditLimit.toFixed(2)}</p>
               </div>
               <div className="text-center border-l border-border/50">
-                <p className="text-xs text-muted-foreground">Balance</p>
+                <p className="text-xs text-muted-foreground">Payable Balance</p>
                 <p className="font-semibold text-sm text-red-600">₹{Math.max(summary?.balance - summary?.IpdCreditLimit, 0).toFixed(2)}</p>
               </div>
             </div>

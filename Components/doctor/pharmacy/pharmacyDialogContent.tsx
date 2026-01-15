@@ -115,9 +115,18 @@ export default function MedicineDialog({
       return;
     }
 
-    setAllocations(result.allocations);
+    // Find the maximum selling price among the allocated batches
+    const maxPrice = Math.max(...result.allocations.map(a => a.sellingPrice));
+    setSellingPrice(maxPrice);
 
-    const total = result.allocations.reduce(
+    const updatedAllocations = result.allocations.map(a => ({
+      ...a,
+      sellingPrice: maxPrice
+    }));
+
+    setAllocations(updatedAllocations);
+
+    const total = updatedAllocations.reduce(
       (sum, a) => sum + a.qty * a.sellingPrice,
       0
     );
@@ -177,15 +186,23 @@ export default function MedicineDialog({
       return;
     }
 
-    const batchString = result.allocations
+    // Find the maximum selling price among the allocated batches
+    const maxPrice = Math.max(...result.allocations.map(a => a.sellingPrice));
+
+    const updatedAllocations = result.allocations.map(a => ({
+      ...a,
+      sellingPrice: maxPrice
+    }));
+
+    const batchString = updatedAllocations
       .map(a => `${a.batchNumber}(${a.qty})`)
       .join(" + ");
 
-    const expiryString = result.allocations
+    const expiryString = updatedAllocations
       .map(a => a.expiryDate)
       .join(" , ");
 
-    const totalAmount = result.allocations.reduce(
+    const totalAmount = updatedAllocations.reduce(
       (sum, a) => sum + a.qty * a.sellingPrice,
       0
     );
@@ -201,10 +218,10 @@ export default function MedicineDialog({
       expiryDate: expiryString,
       quantity,
       availableQuantity: quantity,
-      sellingPrice: totalAmount / quantity,
-      unitPrice: totalAmount / quantity,
+      sellingPrice: maxPrice,
+      unitPrice: maxPrice,
       amount: totalAmount,
-      allocations: result.allocations,
+      allocations: updatedAllocations,
     };
 
     console.log("🧪 Medicine Payload Preview:", payload);

@@ -40,7 +40,7 @@ type Medicine = {
   medicineName: string;
   medicineCategory: string;
   quantity: number;
-  batches: BatchAllocation[]; // MUST
+  allocations: BatchAllocation[]; // MUST
   amount: number;
 };
 export default function PharmacyBillingForm() {
@@ -264,10 +264,11 @@ export default function PharmacyBillingForm() {
       toast.error("Please fill all required fields");
       return;
     }
+
     const saleItems = medicines
-      .filter((m) => m.batches && m.batches.length > 0)
+      .filter((m) => m.allocations && m.allocations.length > 0)
       .flatMap((m) =>
-        m.batches.map((b) => ({
+        m.allocations.map((b) => ({
           medicineId: m.medicineId || m.id,
           batchNumber: b.batchNumber,
           quantity: Number(b.qty),
@@ -276,7 +277,6 @@ export default function PharmacyBillingForm() {
           amount: Number(b.qty * b.sellingPrice),
         }))
       );
-
 
     if (saleItems.length === 0) {
       toast.error("No valid batches selected");
@@ -296,39 +296,28 @@ export default function PharmacyBillingForm() {
       note,
     };
 
-    console.log("💊 Billing Data:", {
-      customerName,
-      customerPhone,
-      medicines: saleItems,
-      totalAmount,
-      discountAmount,
-      taxAmount,
-      netAmount,
-      paymentMode,
-      note,
-    });
 
-    // const res = await createPharmacySale(billingData);
+    const res = await createPharmacySale(billingData);
 
-    // if (res.error) {
-    //   toast.error(res.error);
-    // } else {
-    //   toast.success("Billing saved successfully");
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Billing saved successfully");
 
-    //   // Reset form
-    //   setCustomerName("");
-    //   setCustomerPhone("");
-    //   setNote("");
-    //   setMedicines([]);
-    //   setTotalAmount(0);
-    //   setDiscountAmount(0);
-    //   setDiscountPercentage(0);
-    //   setTaxAmount(0);
-    //   setTaxPercentage(0);
-    //   setNetAmount(0);
-    //   setPaymentMode("");
-    //   setPaymentAmount(0);
-    // }
+      // Reset form
+      setCustomerName("");
+      setCustomerPhone("");
+      setNote("");
+      setMedicines([]);
+      setTotalAmount(0);
+      setDiscountAmount(0);
+      setDiscountPercentage(0);
+      setTaxAmount(0);
+      setTaxPercentage(0);
+      setNetAmount(0);
+      setPaymentMode("");
+      setPaymentAmount(0);
+    }
   };
 
 
