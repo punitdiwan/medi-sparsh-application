@@ -38,7 +38,7 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             totalCharges += amount + taxAmount - discountAmount;
         });
 
-        // Calculate Total Paid and Total Credit Limit
+        // ---------------- PAYMENTS ----------------
         const payments = await db
             .select({
                 amount: ipdPayments.paymentAmount,
@@ -48,32 +48,39 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             .from(ipdPayments)
             .where(eq(ipdPayments.ipdAdmissionId, ipdAdmissionId));
 
-
         let totalPaid = 0;
-        let totalCreditLimit = 0;
+        let totalCreditAdded = 0;
         let usedCredit = 0;
 
         payments.forEach((payment) => {
             const amount = Number(payment.amount);
             if (payment.toCredit) {
-                totalCreditLimit += amount;
-            } else {
-                if (payment.paymentMode === "Credit") {
-                    usedCredit += amount;
-                } else {
-                    totalPaid += amount;
-                }
+              totalCreditAdded += amount;
+              return;
             }
+
+            if (payment.paymentMode === "Credit") {
+              usedCredit += amount;
+            totalPaid += amount;
+            return;
+          }
+
+          totalPaid += amount;
         });
+
+    const IpdCreditLimit = totalCreditAdded - usedCredit;
+
+    const payable =
+      totalCharges > totalPaid ? totalCharges - totalPaid : 0;
 
         return {
             success: true,
             data: {
                 totalCharges,
                 totalPaid,
-                IpdCreditLimit: totalCreditLimit,
+                IpdCreditLimit,
                 usedCredit,
-                balance: totalCharges - totalPaid,
+                payable,
             },
         };
     } catch (error) {
@@ -129,7 +136,7 @@ export async function getIPDPayments(ipdAdmissionId: string) {
             .select()
             .from(ipdPayments)
             .where(eq(ipdPayments.ipdAdmissionId, ipdAdmissionId))
-            .orderBy(desc(ipdPayments.paymentDate));
+            .orderBy(desc(ipdPayments.createdAt));
 
         return { success: true, data: payments };
     } catch (error) {

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PaginationControl } from "@/components/pagination";
 import { useDischarge } from "../DischargeContext";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface ChargeRecord {
   id: string;
   chargeName: string | null;
@@ -53,6 +54,7 @@ export default function IPDChargesManagerPage() {
   const [selectedCharge, setSelectedCharge] = useState<ChargeRecord | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [chargeToDelete, setChargeToDelete] = useState<string | null>(null);
+  const [openDateFilter, setOpenDateFilter] = useState(false);
 
   useEffect(() => {
     const fetchCharges = async () => {
@@ -102,6 +104,19 @@ export default function IPDChargesManagerPage() {
     });
   }, [charges, search, fromDate, toDate]);
 
+  const totalNetAmount = useMemo(() => {
+    return filtered.reduce((sum, row) => {
+      const total = Number(row.totalAmount || 0);
+      const discount = Number(row.discountPercent || 0);
+      const tax = Number(row.taxPercent || 0);
+
+      const discountAmount = (total * discount) / 100;
+      const taxAmount = ((total - discountAmount) * tax) / 100;
+      const net = total - discountAmount + taxAmount;
+
+      return sum + net;
+    }, 0);
+  }, [filtered]);
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
@@ -299,24 +314,33 @@ export default function IPDChargesManagerPage() {
       {/* HEADER / SEARCH */}
       <Card className="border-dialog bg-dialog-header">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-2xl font-bold text-dialog flex items-center gap-2">
+          <CardTitle className="text-2xl font-bold text-dialog flex flex-wrap items-center gap-2">
             <Receipt className="bg-dialog-header text-dialog-icon" />
-            Charges
-          </CardTitle>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <Input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="sm:w-40"
-            />
+            <span>Charges</span>
 
-            <Input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="sm:w-40"
-            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <span className="text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                    ₹ {totalNetAmount.toFixed(2)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Total Charges</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </CardTitle>
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            {/* <Button
+              variant="outline"
+              onClick={() => setOpenDateFilter(true)}
+              className="flex items-center gap-2"
+            >
+             Filter by Date
+            </Button> */}
+
 
             <Input
               placeholder="Search by bill ID / charge name / type / category"
@@ -387,6 +411,51 @@ export default function IPDChargesManagerPage() {
         onConfirm={confirmDelete}
         isLoading={loading}
       />
+
+      <Dialog open={openDateFilter} onOpenChange={setOpenDateFilter}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Date Filter</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">From Date</label>
+              <Input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">To Date</label>
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+              }}
+            >
+              Clear
+            </Button>
+
+            <Button onClick={() => setOpenDateFilter(false)}>
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
