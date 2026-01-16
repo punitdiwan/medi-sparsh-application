@@ -18,6 +18,7 @@ import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import MedicineWithBatchesModal from "./medicineWithBatchesView";
 
 type MedicineDisplay = {
   id: string;
@@ -33,12 +34,16 @@ type MedicineDisplay = {
   quantity: number;
 };
 
+
 export default function MedicineStockManagerPage() {
   const [medicines, setMedicines] = useState<MedicineDisplay[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const [openBatch, setOpenBatch] = useState(false);
+  const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(null);
   const [selectedMedicine, setSelectedMedicine] = useState<PharmacyMedicine | undefined>(undefined);
   const [dropdowns, setDropdowns] = useState<{
     categories: Array<{ id: string; name: string }>;
@@ -63,7 +68,7 @@ export default function MedicineStockManagerPage() {
       if (medicinesRes.error) {
         toast.error(medicinesRes.error);
       } else if (medicinesRes.data) {
-        console.log("Medicine data",medicinesRes.data)
+        console.log("Medicine data", medicinesRes.data)
         setMedicines(medicinesRes.data);
       }
 
@@ -126,7 +131,10 @@ export default function MedicineStockManagerPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={()=>console.log(row.original.id)}
+                  onClick={() => {
+                    setSelectedMedicineId(row.original.id);
+                    setOpenBatch(true);
+                  }}
                 >
                   <Eye size={16} />
                 </Button>
@@ -262,6 +270,11 @@ export default function MedicineStockManagerPage() {
         <Table data={filtered} columns={columns} />
       )}
 
+      <MedicineWithBatchesModal
+        open={openBatch}
+        onOpenChange={setOpenBatch}
+        medicineId={selectedMedicineId}
+      />
 
       <PharmacyMedicineModal
         open={isModalOpen}
