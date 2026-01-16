@@ -10,6 +10,8 @@ export type PaymentData = {
     amount: number;
     paymentMode: string;
     note?: string;
+    toCredit?: boolean;
+    referenceId?: string;
 };
 
 export async function getIPDPaymentSummary(ipdAdmissionId: string) {
@@ -36,32 +38,41 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             totalCharges += amount + taxAmount - discountAmount;
         });
 
-        // Calculate Total Paid
+        // Calculate Total Paid and Total Credit Limit
         const payments = await db
             .select({
                 amount: ipdPayments.paymentAmount,
+                toCredit: ipdPayments.toCredit,
+                paymentMode: ipdPayments.paymentMode,
             })
             .from(ipdPayments)
             .where(eq(ipdPayments.ipdAdmissionId, ipdAdmissionId));
 
 
         let totalPaid = 0;
-        payments.forEach((payment) => {
-            totalPaid += Number(payment.amount);
-        });
+        let totalCreditLimit = 0;
+        let usedCredit = 0;
 
-        const IpdCredit = await db.select({
-            creditAmount:ipdAdmission.creditLimit
-        })
-        .from(ipdAdmission)
-        .where(eq(ipdAdmission.id,ipdAdmissionId));
+        payments.forEach((payment) => {
+            const amount = Number(payment.amount);
+            if (payment.toCredit) {
+                totalCreditLimit += amount;
+            } else {
+                if (payment.paymentMode === "Credit") {
+                    usedCredit += amount;
+                } else {
+                    totalPaid += amount;
+                }
+            }
+        });
 
         return {
             success: true,
             data: {
                 totalCharges,
                 totalPaid,
-                IpdCreditLimit:Number(IpdCredit[0].creditAmount),
+                IpdCreditLimit: totalCreditLimit,
+                usedCredit,
                 balance: totalCharges - totalPaid,
             },
         };
@@ -74,9 +85,10 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
 export async function createIPDPayment(data: PaymentData, ipdAdmissionId: string) {
     try {
         // Fetch admission to get hospitalId.
-        // Changed from db.query to db.select to avoid schema issues if query API is not enabled
         const admissionResult = await db
-            .select({ hospitalId: ipdAdmission.hospitalId })
+            .select({
+                hospitalId: ipdAdmission.hospitalId,
+            })
             .from(ipdAdmission)
             .where(eq(ipdAdmission.id, ipdAdmissionId))
             .limit(1);
@@ -87,13 +99,20 @@ export async function createIPDPayment(data: PaymentData, ipdAdmissionId: string
             return { success: false, error: "Admission not found" };
         }
 
+        let finalPaymentMode = data.paymentMode;
+        if (data.paymentMode === "Credit Limit") {
+            finalPaymentMode = "Credit";
+        }
+
         await db.insert(ipdPayments).values({
             hospitalId: admission.hospitalId,
             ipdAdmissionId: ipdAdmissionId,
             paymentDate: new Date(data.date),
-            paymentMode: data.paymentMode,
+            paymentMode: finalPaymentMode,
             paymentAmount: data.amount.toString(),
             paymentNote: data.note,
+            toCredit: data.toCredit || false,
+            referenceId: data.referenceId,
         });
 
         revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/payments`);
