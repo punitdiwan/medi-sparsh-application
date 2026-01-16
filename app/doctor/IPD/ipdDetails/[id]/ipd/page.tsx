@@ -130,6 +130,9 @@ export default function IPDOverviewPage() {
   const totalPaid = paymentSummary?.totalPaid || 0;
   const totalPending = paymentSummary?.balance || 0;
 
+  const totalCredit = paymentSummary?.IpdCreditLimit + paymentSummary?.usedCredit || 0;
+  const creditUsed = paymentSummary?.usedCredit ||0;
+  
   const overallPercentage = totalAmount
     ? Math.round((totalPaid / totalAmount) * 100)
     : 0;
@@ -327,7 +330,7 @@ export default function IPDOverviewPage() {
                           size="icon"
                           onClick={() => setOpenDischarge(true)}
                           className="h-9 w-9"
-                          disabled={totalPending - data.creditLimit > 0 || data.dischargeStatus !== "pending"}
+                          disabled={paymentSummary?.payable > 0 || data.dischargeStatus !== "pending"}
                         >
                           <FaRegHospital className="h-4 w-4" />
                         </Button>
@@ -338,8 +341,8 @@ export default function IPDOverviewPage() {
                       <p>
                         {data.dischargeStatus !== "pending"
                           ? "Patient already discharged"
-                          : totalPending - data.creditLimit > 0
-                            ? `Cannot discharge: Pending balance ₹${totalPending - data.creditLimit}`
+                          : paymentSummary?.payable > 0
+                            ? `Cannot discharge: Pending balance ₹${paymentSummary?.payable}`
                             : "Discharge Patient"}
                       </p>
                     </TooltipContent>
@@ -384,7 +387,7 @@ export default function IPDOverviewPage() {
             )}
           </CardContent>
         </Card>
-        <BillingCreditCard creditLimit={data.creditLimit} used={totalPending} />
+        <BillingCreditCard creditLimit={totalCredit} used={creditUsed} />
 
         {/* <Card className="bg-overview-card border-overview-strong">
           <CardHeader>

@@ -1187,6 +1187,8 @@ export const ipdPayments = pgTable("ipd_payments", {
 	paymentMode: text("payment_mode").notNull(),
 	paymentAmount: numeric("payment_amount").notNull(),
 	paymentNote: text("payment_note"),
+	referenceId: text("reference_id"),
+	toCredit: boolean("to_credit").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });

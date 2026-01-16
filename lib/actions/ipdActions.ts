@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db/index";
-import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments } from "@/db/schema";
+import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments, ipdPayments } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
@@ -16,7 +16,7 @@ export async function createIPDAdmission(data: any) {
 
         await db.transaction(async (tx) => {
             // Create IPD Admission
-            await tx.insert(ipdAdmission).values({
+            const [newAdmission] = await tx.insert(ipdAdmission).values({
                 hospitalId: org.id,
                 patientId: data.patientId,
                 admissionDate: new Date(data.admissionDate),
@@ -30,7 +30,20 @@ export async function createIPDAdmission(data: any) {
                 notes: data.notes,
                 medicalHistory: data.previousMedicalIssue,
                 diagnosis: data.symptoms, // Store symptoms in diagnosis column as JSONB
-            });
+            }).returning({ id: ipdAdmission.id });
+
+            // Add credit entry in ipd_payments if credit limit is provided
+            if (Number(data.creditLimit) > 0) {
+                await tx.insert(ipdPayments).values({
+                    hospitalId: org.id,
+                    ipdAdmissionId: newAdmission.id,
+                    paymentDate: new Date(data.admissionDate),
+                    paymentMode: "Credit Limit",
+                    paymentAmount: data.creditLimit.toString(),
+                    paymentNote: "Initial credit limit during registration",
+                    toCredit: true,
+                });
+            }
 
             // Update Bed Status
             await tx.update(beds)
@@ -63,8 +76,6 @@ export async function createIPDAdmission(data: any) {
                 }
             }
         });
-
-
 
         revalidatePath("/doctor/IPD/registration");
         revalidatePath("/doctor/IPD");

@@ -244,14 +244,14 @@ export default function MedicineDialog({
         <Button onClick={handleAddClick}>Add Medicine</Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl border border-dialog bg-dialog-surface p-0">
+        <DialogHeader className="px-6 py-4 bg-dialog-header border-b border-dialog">
           <DialogTitle>
             {editMedicine ? "Edit Medicine" : "Add Medicine"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+        <div className="px-6 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
             <Label>Medicine Category</Label>
             <Select
@@ -367,7 +367,7 @@ export default function MedicineDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-end gap-4">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
