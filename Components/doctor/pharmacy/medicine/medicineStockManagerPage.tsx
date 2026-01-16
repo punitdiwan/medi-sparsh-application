@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit, Plus, Trash2, Upload } from "lucide-react";
+import { Edit, Eye, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPharmacyMedicines,
@@ -63,6 +63,7 @@ export default function MedicineStockManagerPage() {
       if (medicinesRes.error) {
         toast.error(medicinesRes.error);
       } else if (medicinesRes.data) {
+        console.log("Medicine data",medicinesRes.data)
         setMedicines(medicinesRes.data);
       }
 
@@ -119,9 +120,35 @@ export default function MedicineStockManagerPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
-            <Edit className="w-4 h-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={()=>console.log(row.original.id)}
+                >
+                  <Eye size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>View Medicine Details</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Medicine Details</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <ConfirmDialog
             title="Delete Medicine"
