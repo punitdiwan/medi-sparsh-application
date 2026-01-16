@@ -21,21 +21,25 @@ import {
 } from "@/components/ui/select";
 import { getPharmacyStock } from "@/lib/actions/pharmacyStock";
 import { toast } from "sonner";
+export type BatchAllocation = {
+  batchNumber: string;
+  qty: number;
+  sellingPrice: number;
+  expiryDate: string;
+};
 
 export type Medicine = {
   id: string;
   medicineId: string;
   categoryId: string;
-  medicineCategory?: string;
   medicineName?: string;
-  batchNumber: string;
-  expiryDate: string;
   quantity: number;
-  availableQuantity: number;
-  unitPrice?: number;
   sellingPrice: number;
   amount: number;
+
+  allocations: BatchAllocation[]; // ⭐ IMPORTANT
 };
+
 
 export default function MedicineDialog({
   onSave,
@@ -55,6 +59,7 @@ export default function MedicineDialog({
   const [sellingPrice, setSellingPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
   const [amount, setAmount] = useState(0);
+  const [allocations, setAllocations] = useState<any[]>([]);
 
   // Update amount whenever quantity or price changes
   useEffect(() => {
@@ -73,23 +78,64 @@ export default function MedicineDialog({
       if (res.error) {
         toast.error(res.error);
       } else if (res.data) {
-        setBatches(res.data);
+        const sortedBatches = res.data
+          .filter((b: any) => b.quantity > 0) // sirf available batches
+          .sort((a: any, b: any) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()); // nearest expiry pehle
+
+        setBatches(sortedBatches);
+
+        if (sortedBatches.length > 0) {
+          const firstBatch = sortedBatches[0];
+          setSelectedBatch(firstBatch.batchNumber);
+          setExpiry(firstBatch.expiryDate);
+          setAvailableQuantity(Number(firstBatch.quantity));
+          setSellingPrice(Number(firstBatch.sellingPrice));
+          setQuantity(1);
+        }
       }
     };
+
     fetchBatches();
   }, [selectedMedicineId]);
 
-  // Update fields when batch is selected
+
   useEffect(() => {
-    if (!selectedBatch) return;
-    const batch = batches.find((b) => b.batchNumber === selectedBatch);
-    if (batch) {
-      setExpiry(batch.expiryDate);
-      setAvailableQuantity(Number(batch.quantity));
-      setSellingPrice(Number(batch.sellingPrice));
-      setQuantity(1);
+    if (quantity <= 0 || batches.length === 0) {
+      setAmount(0);
+      setAllocations([]);
+      return;
     }
-  }, [selectedBatch, batches]);
+
+    const result = allocateBatchesFIFO(batches, quantity);
+
+    if ("error" in result) {
+      toast.error(result.error);
+      setAmount(0);
+      setAllocations([]);
+      return;
+    }
+
+    // Find the maximum selling price among the allocated batches
+    const maxPrice = Math.max(...result.allocations.map(a => a.sellingPrice));
+    setSellingPrice(maxPrice);
+
+    const updatedAllocations = result.allocations.map(a => ({
+      ...a,
+      sellingPrice: maxPrice
+    }));
+
+    setAllocations(updatedAllocations);
+
+    const total = updatedAllocations.reduce(
+      (sum, a) => sum + a.qty * a.sellingPrice,
+      0
+    );
+
+    setAmount(total);
+  }, [quantity, batches]);
+
+
+
 
   // Load values when editing
   useEffect(() => {
@@ -133,23 +179,60 @@ export default function MedicineDialog({
 
 
   const handleSubmit = () => {
-    onSave({
+    const result = allocateBatchesFIFO(batches, quantity);
+
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+
+    // Find the maximum selling price among the allocated batches
+    const maxPrice = Math.max(...result.allocations.map(a => a.sellingPrice));
+
+    const updatedAllocations = result.allocations.map(a => ({
+      ...a,
+      sellingPrice: maxPrice
+    }));
+
+    const batchString = updatedAllocations
+      .map(a => `${a.batchNumber}(${a.qty})`)
+      .join(" + ");
+
+    const expiryString = updatedAllocations
+      .map(a => a.expiryDate)
+      .join(" , ");
+
+    const totalAmount = updatedAllocations.reduce(
+      (sum, a) => sum + a.qty * a.sellingPrice,
+      0
+    );
+
+    const payload = {
       id: editMedicine ? editMedicine.id : crypto.randomUUID(),
       categoryId: selectedCategory,
       medicineId: selectedMedicineId,
       medicineCategory: categories.find((c: any) => c.id === selectedCategory)?.name,
       medicineName: medicines.find((m: any) => m.id === selectedMedicineId)?.name,
-      batchNumber: selectedBatch,
-      expiryDate: expiry,
+
+      batchNumber: batchString,
+      expiryDate: expiryString,
       quantity,
-      availableQuantity,
-      sellingPrice,
-      unitPrice: sellingPrice,
-      amount,
-    });
+      availableQuantity: quantity,
+      sellingPrice: maxPrice,
+      unitPrice: maxPrice,
+      amount: totalAmount,
+      allocations: updatedAllocations,
+    };
+
+    console.log("🧪 Medicine Payload Preview:", payload);
+
+    // STOP actual save for now
+    onSave(payload);
+
     setOpen(false);
     resetForm();
   };
+
 
   const filteredMedicines = medicines.filter(
     (med: any) => med.categoryId === selectedCategory
@@ -236,19 +319,20 @@ export default function MedicineDialog({
             <Select
               value={selectedBatch}
               onValueChange={(val) => setSelectedBatch(val)}
-              disabled={!selectedMedicineId || batches.length === 0}
+              disabled
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Batch" />
+                <SelectValue placeholder="Auto-selected Batch" />
               </SelectTrigger>
               <SelectContent>
                 {batches.map((batch: any) => (
                   <SelectItem key={batch.batchNumber} value={batch.batchNumber}>
-                    {batch.batchNumber} (Exp: {batch.expiryDate})
+                    {batch.batchNumber}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
           </div>
 
           <div className="flex flex-col gap-1">
@@ -292,4 +376,36 @@ export default function MedicineDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function allocateBatchesFIFO(batches: any[], requiredQty: number) {
+  let remaining = requiredQty;
+  let allocations: {
+    batchNumber: string;
+    qty: number;
+    sellingPrice: number;
+    expiryDate: string;
+  }[] = [];
+
+  for (const batch of batches) {
+    if (remaining <= 0) break;
+    if (batch.quantity <= 0) continue;
+
+    const usedQty = Math.min(batch.quantity, remaining);
+
+    allocations.push({
+      batchNumber: batch.batchNumber,
+      qty: usedQty,
+      sellingPrice: Number(batch.sellingPrice),
+      expiryDate: batch.expiryDate,
+    });
+
+    remaining -= usedQty;
+  }
+
+  if (remaining > 0) {
+    return { error: "Not enough stock available" };
+  }
+
+  return { allocations };
 }

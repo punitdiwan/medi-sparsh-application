@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useMemo } from "react";
 import { getPharmacyBillDetails } from "@/lib/actions/pharmacySales";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -10,6 +10,25 @@ export default function PrintBillPage({ params }: { params: Promise<{ billId: st
     const [billData, setBillData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const groupedItems = useMemo(() => {
+        const items = billData?.items;
+        if (!items) return [];
+        const groups: { [key: string]: any } = {};
+        items.forEach((item: any) => {
+            if (!groups[item.medicineName]) {
+                groups[item.medicineName] = {
+                    ...item,
+                    quantity: Number(item.quantity),
+                    totalAmount: Number(item.totalAmount),
+                };
+            } else {
+                groups[item.medicineName].quantity += Number(item.quantity);
+                groups[item.medicineName].totalAmount += Number(item.totalAmount);
+            }
+        });
+        return Object.values(groups);
+    }, [billData?.items]);
 
     useEffect(() => {
         const fetchBill = async () => {
@@ -48,7 +67,8 @@ export default function PrintBillPage({ params }: { params: Promise<{ billId: st
 
     if (!billData) return null;
 
-    const { bill, items } = billData;
+    const { bill } = billData;
+
 
     return (
         <div className="p-8 max-w-4xl mx-auto font-sans">
@@ -73,19 +93,15 @@ export default function PrintBillPage({ params }: { params: Promise<{ billId: st
                 <thead>
                     <tr className="bg-gray-100">
                         <th className="border border-gray-300 p-2 text-left">Medicine Name</th>
-                        <th className="border border-gray-300 p-2 text-left">Batch No</th>
-                        <th className="border border-gray-300 p-2 text-left">Expiry</th>
                         <th className="border border-gray-300 p-2 text-right">Price</th>
                         <th className="border border-gray-300 p-2 text-right">Qty</th>
                         <th className="border border-gray-300 p-2 text-right">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {items.map((item: any) => (
-                        <tr key={item.id}>
+                    {groupedItems.map((item: any, index: number) => (
+                        <tr key={index}>
                             <td className="border border-gray-300 p-2">{item.medicineName}</td>
-                            <td className="border border-gray-300 p-2">{item.batchNumber}</td>
-                            <td className="border border-gray-300 p-2">{item.expiryDate}</td>
                             <td className="border border-gray-300 p-2 text-right">{item.unitPrice}</td>
                             <td className="border border-gray-300 p-2 text-right">{item.quantity}</td>
                             <td className="border border-gray-300 p-2 text-right">{item.totalAmount}</td>

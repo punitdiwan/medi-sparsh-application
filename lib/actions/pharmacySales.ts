@@ -7,29 +7,13 @@ import { eq, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getPharmacySalesByHospital } from "@/db/queries/pharmacySales";
 
-export async function createPharmacySale(data: {
-    customerName: string;
-    customerPhone: string;
-    medicines: {
-        id: string;
-        batchNumber: string;
-        quantity: number;
-        sellingPrice: number;
-        amount: number;
-    }[];
-    totalAmount: number;
-    discountAmount: number;
-    taxAmount: number;
-    netAmount: number;
-    paymentMode: string;
-    note?: string;
-}) {
+export async function createPharmacySale(data: any) {
     try {
         const org = await getActiveOrganization();
         if (!org) {
             return { error: "Unauthorized" };
         }
-
+        console.log("medicine data", data)
         await db.transaction(async (tx) => {
             // 1. Create Sale Record
             const [sale] = await tx
@@ -50,10 +34,10 @@ export async function createPharmacySale(data: {
             // 2. Create Sale Items
             if (data.medicines.length > 0) {
                 await tx.insert(pharmacySalesItems).values(
-                    data.medicines.map((item) => ({
+                    data.medicines.map((item: any) => ({
                         hospitalId: org.id,
                         billId: sale.id,
-                        medicineId: item.id,
+                        medicineId: item.medicineId,
                         batchNumber: item.batchNumber,
                         quantity: item.quantity.toString(),
                         unitPrice: item.sellingPrice.toString(),
@@ -73,7 +57,7 @@ export async function createPharmacySale(data: {
                         .where(
                             and(
                                 eq(pharmacyStock.hospitalId, org.id),
-                                eq(pharmacyStock.medicineId, item.id),
+                                eq(pharmacyStock.medicineId, item.medicineId),
                                 eq(pharmacyStock.batchNumber, item.batchNumber)
                             )
                         );

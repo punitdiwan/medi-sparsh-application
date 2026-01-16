@@ -12,8 +12,7 @@ import {
   List,
   Search,
   Users,
-  Bed,
-  Stethoscope,
+
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {

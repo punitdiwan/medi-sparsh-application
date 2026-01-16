@@ -47,7 +47,7 @@ export default function AddIPDPaymentModal({
   const [isLoading, setIsLoading] = useState(false);
 
   // Summary State
-  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number; balance: number } | null>(null);
+  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number; balance: number, IpdCreditLimit: number } | null>(null);
   // Populate fields if editing
   useEffect(() => {
     if (paymentToEdit) {
@@ -71,11 +71,11 @@ export default function AddIPDPaymentModal({
 
   const fetchSummary = async () => {
     const res = await getIPDPaymentSummary(ipdId);
-
     if (res.success && res.data) {
       setSummary(res.data);
       if (!paymentToEdit) {
-        setAmount(res.data.balance > 0 ? res.data.balance.toFixed(2) : "0");
+        const safeBalance = res?.data ? Math.max(res?.data.balance - res?.data?.IpdCreditLimit, 0) : 0;
+        setAmount(safeBalance.toFixed(2));
       }
     }
   };
@@ -86,10 +86,10 @@ export default function AddIPDPaymentModal({
     if (!paymentMode) { toast.error("Payment Mode is required"); return; }
 
     // Validation: Check if amount exceeds balance
-    if (summary && Number(amount) > summary.balance) {
-      toast.error(`Amount cannot exceed the balance of ₹${summary.balance.toFixed(2)}`);
-      return;
-    }
+    // if (summary && Number(amount) > (summary.balance)) {
+    //   toast.error(`Amount cannot exceed the balance of ₹${(summary.balance).toFixed(2)}`);
+    //   return;
+    // }
 
     setIsLoading(true);
 
@@ -116,6 +116,13 @@ export default function AddIPDPaymentModal({
     setIsLoading(false);
   };
 
+  if (summary) {
+    const finalBalance = Math.max(summary?.balance - summary?.IpdCreditLimit, 0)
+    const safeBalance = summary ? Math.max(summary.balance - summary.IpdCreditLimit, 0) : 0;
+
+  }
+
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md rounded-xl border border-dialog bg-dialog-surface p-0 overflow-hidden shadow-lg">
@@ -140,13 +147,17 @@ export default function AddIPDPaymentModal({
                 <p className="text-xs text-muted-foreground">Total Charges</p>
                 <p className="font-semibold text-sm">₹{summary.totalCharges.toFixed(2)}</p>
               </div>
-              <div className="text-center border-l border-border/50">
+              {/* <div className="text-center border-l border-border/50">
                 <p className="text-xs text-muted-foreground">Total Paid</p>
                 <p className="font-semibold text-sm text-green-600">₹{summary.totalPaid.toFixed(2)}</p>
+              </div> */}
+              <div className="text-center border-l border-border/50">
+                <p className="text-xs text-muted-foreground">Credit</p>
+                <p className="font-semibold text-sm text-green-600">₹{summary.IpdCreditLimit.toFixed(2)}</p>
               </div>
               <div className="text-center border-l border-border/50">
-                <p className="text-xs text-muted-foreground">Balance</p>
-                <p className="font-semibold text-sm text-red-600">₹{summary.balance.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground">Payable Balance</p>
+                <p className="font-semibold text-sm text-red-600">₹{Math.max(summary?.balance - summary?.IpdCreditLimit, 0).toFixed(2)}</p>
               </div>
             </div>
           )}

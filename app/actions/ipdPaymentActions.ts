@@ -50,11 +50,18 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
             totalPaid += Number(payment.amount);
         });
 
+        const IpdCredit = await db.select({
+            creditAmount:ipdAdmission.creditLimit
+        })
+        .from(ipdAdmission)
+        .where(eq(ipdAdmission.id,ipdAdmissionId));
+
         return {
             success: true,
             data: {
                 totalCharges,
                 totalPaid,
+                IpdCreditLimit:Number(IpdCredit[0].creditAmount),
                 balance: totalCharges - totalPaid,
             },
         };

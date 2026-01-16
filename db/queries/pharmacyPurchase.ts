@@ -4,8 +4,9 @@ import {
     medicineSuppliers,
     pharmacyPurchaseItem,
     pharmacyMedicines,
+    pharmacyStock,
 } from "@/drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { and,gte, lt, eq, desc, sql } from "drizzle-orm";
 
 export async function getPharmacyPurchasesByHospital(hospitalId: string) {
     return await db
@@ -20,6 +21,13 @@ export async function getPharmacyPurchasesByHospital(hospitalId: string) {
         })
         .from(pharmacyPurchase)
         .leftJoin(medicineSuppliers, eq(pharmacyPurchase.supplierId, medicineSuppliers.id))
+        .innerJoin(
+            pharmacyPurchaseItem,
+            and(
+                eq(pharmacyPurchaseItem.purchaseId, pharmacyPurchase.id),
+                gte(pharmacyPurchaseItem.expiryDate, sql`current_date`) 
+            )
+        )
         .where(eq(pharmacyPurchase.hospitalId, hospitalId))
         .orderBy(desc(pharmacyPurchase.purchaseDate));
 }
@@ -58,4 +66,39 @@ export async function getPharmacyPurchaseDetailsById(purchaseId: string) {
         .where(eq(pharmacyPurchaseItem.purchaseId, purchaseId));
 
     return { ...purchase[0], items };
+}
+
+export async function getExpiredMedicinebyHospital(hospitalId: string) {
+
+    return await db
+        .select({
+            stockId: pharmacyStock.id,
+            medicineName: pharmacyMedicines.name,
+            batchNumber: pharmacyPurchaseItem.batchNumber,
+            expiryDate: pharmacyPurchaseItem.expiryDate,
+            stockQty: pharmacyStock.quantity,
+            costPrice: pharmacyPurchaseItem.costPrice,
+            mrp: pharmacyPurchaseItem.mrp,
+            sellingPrice: pharmacyPurchaseItem.sellingPrice,
+            billNumber: pharmacyPurchase.billNumber,
+            purchaseDate: pharmacyPurchase.purchaseDate,
+            supplierName: medicineSuppliers.supplierName,
+        })
+        .from(pharmacyPurchaseItem)
+        .innerJoin(pharmacyPurchase,eq(pharmacyPurchaseItem.purchaseId, pharmacyPurchase.id))
+        .innerJoin(medicineSuppliers,eq(pharmacyPurchase.supplierId, medicineSuppliers.id))
+        .leftJoin(pharmacyStock,
+            and(
+                eq(pharmacyStock.medicineId, pharmacyPurchaseItem.medicineId),
+                eq(pharmacyStock.batchNumber, pharmacyPurchaseItem.batchNumber),
+                eq(pharmacyStock.hospitalId, hospitalId),
+                eq(pharmacyStock.isDeleted, false)
+            )
+        )
+        .innerJoin(pharmacyMedicines,eq(pharmacyPurchaseItem.medicineId, pharmacyMedicines.id))
+        .where(and(
+                    eq(pharmacyPurchaseItem.hospitalId, hospitalId),
+                    lt(pharmacyPurchaseItem.expiryDate, sql`current_date`)
+                    ))
+        .orderBy(desc(pharmacyPurchaseItem.expiryDate));
 }

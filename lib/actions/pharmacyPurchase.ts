@@ -5,7 +5,7 @@ import {
     getMedicineCategories,
     getPharmacyMedicinesByCategory,
 } from "@/db/queries/pharmacyMedicines";
-import { getPharmacyPurchasesByHospital, getPharmacyPurchaseDetailsById } from "@/db/queries/pharmacyPurchase";
+import { getPharmacyPurchasesByHospital, getPharmacyPurchaseDetailsById, getExpiredMedicinebyHospital } from "@/db/queries/pharmacyPurchase";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { db } from "@/db";
 import { pharmacyPurchase, pharmacyPurchaseItem, pharmacyMedicines, pharmacyStock } from "@/drizzle/schema";
@@ -195,5 +195,20 @@ export async function getPurchaseDetails(purchaseId: string) {
     } catch (error) {
         console.error("Error fetching purchase details:", error);
         return { error: "Failed to fetch purchase details" };
+    }
+}
+
+export async function getExpiredMedicine() {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await getExpiredMedicinebyHospital(org.id);
+        return { data };
+    } catch (error) {
+        console.error("Error fetching purchases:", error);
+        return { error: "Failed to fetch purchases" };
     }
 }
