@@ -138,8 +138,8 @@ export const PharmacyBillPdf: React.FC<Props> = (props) => {
                             <View key={idx} style={styles.tableRow}>
                                 <Text style={{ width: "50%", paddingLeft: 4 }}>{item.medicineName}</Text>
                                 <Text style={{ width: "25%", textAlign: "center" }}>{item.quantity}</Text>
-                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>₹{item.price.toFixed(2)}</Text>
-                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>₹{(item.quantity * item.price).toFixed(2)}</Text>
+                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{item.price.toFixed(2)}</Text>
+                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{(item.quantity * item.price).toFixed(2)}</Text>
                             </View>
                         ))}
                     </View>
@@ -148,19 +148,19 @@ export const PharmacyBillPdf: React.FC<Props> = (props) => {
                     <View style={styles.totalSection}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                             <Text>Total Amount:</Text>
-                            <Text>₹{props.totalAmount.toFixed(2)}</Text>
+                            <Text>{props.totalAmount.toFixed(2)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                             <Text>Discount:</Text>
-                            <Text>₹{props.discount.toFixed(2)}</Text>
+                            <Text>{props.discount.toFixed(2)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                             <Text>Tax:</Text>
-                            <Text>₹{props.tax.toFixed(2)}</Text>
+                            <Text>{props.tax.toFixed(2)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "#000", fontWeight: "bold" }}>
                             <Text style={{ fontWeight: "bold" }}>Net Amount:</Text>
-                            <Text style={{ fontWeight: "bold" }}>₹{netAmount.toFixed(2)}</Text>
+                            <Text style={{ fontWeight: "bold" }}>{netAmount.toFixed(2)}</Text>
                         </View>
                     </View>
                 </View>

@@ -90,7 +90,6 @@ export default function PharmacyBillPage() {
       if (res.error) {
         toast.error(res.error);
       } else if (res.data) {
-        console.log("billing data", res.data)
         const mappedBills = res.data.map((b: any) => ({
           id: b.id,
           billNo: b.billNumber,
@@ -133,7 +132,6 @@ export default function PharmacyBillPage() {
       }
 
       const bill = res.data;
-      console.log("before print bill data",bill)
       const blob = await pdf(
         <PharmacyBillPdf
           billNumber={bill.billNumber}
