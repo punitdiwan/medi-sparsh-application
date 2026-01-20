@@ -1,0 +1,38 @@
+name: Backup & Delete Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      organizationId:
+        description: Organization ID
+        required: true
+
+      deleteType:
+        description: data | organization
+        required: false
+        default: data
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Backup organization data
+        run: |
+          echo "🚀 Starting backup..."
+          chmod +x scripts/backup.sh
+          ./scripts/backup.sh "${{ github.event.inputs.organizationId }}"
+          curl -X DELETE \
+          "https://abc.medisparsh.com/api/createOrg?orgId=${{ github.event.inputs.organizationId }}&action=${{ github.event.inputs.deleteType }}"
+          echo "Backup completed"

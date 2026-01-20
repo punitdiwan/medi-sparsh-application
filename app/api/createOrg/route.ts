@@ -7,6 +7,10 @@ import {
   member
 } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
+import { seedDemoData } from "@/scripts/seedDemoData";
+import { deleteDemoData } from "@/scripts/deleteData";
+import { deleteOrganizationAndUsers } from "@/scripts/deleteOrganization";
+
 
 interface CreateOrgRequest {
   userName: string;
@@ -15,6 +19,7 @@ interface CreateOrgRequest {
   orgName: string;
   orgSlug: string;
   orgLogo?: string;
+  isDummyData?: boolean; 
   metadata?: {
     address?: string;
     phone?: string;
@@ -56,6 +61,7 @@ interface CreateOrgResponse {
  *   "orgName": "Medisparsh Hospital",
  *   "orgSlug": "medisparsh-hospital",
  *   "orgLogo": "https://example.com/logo.png",
+ *   "isDummyData": false; 
  *   "metadata": {
  *     "address": "123 Medical Street, City",
  *     "phone": "+91-1234567890",
@@ -198,6 +204,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
         }
 
         createdOrganization = org;
+
+        if(body.isDummyData){
+          await seedDemoData(org.id)
+        }
 
         return {
           success: true,
@@ -469,6 +479,73 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
             ? error.message
             : "Failed to update organization",
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+
+    const { searchParams } = new URL(request.url);
+    const orgId = searchParams.get("orgId");
+    const actionsParam = searchParams.get("action"); // demo | organization | demo,organization
+
+    if (!orgId || !actionsParam) {
+      return NextResponse.json(
+        { success: false, message: "orgId and action are required" },
+        { status: 400 }
+      );
+    }
+
+    const actions = actionsParam
+      .split(",")
+      .map((a) => a.trim().toLowerCase());
+
+    // 🧠 Check organization exists
+    const org = await db
+      .select()
+      .from(organization)
+      .where(eq(organization.id, orgId))
+      .limit(1);
+
+    if (!org.length) {
+      return NextResponse.json(
+        { success: false, message: "Organization not found" },
+        { status: 404 }
+      );
+    }
+
+    const results: string[] = [];
+
+    for (const action of actions) {
+      switch (action) {
+        case "data":
+          await deleteDemoData(orgId);
+          results.push("Demo data deleted");
+          break;
+
+        case "organization":
+          // ensure data delete first
+          await deleteDemoData(orgId);
+          await deleteOrganizationAndUsers(orgId);
+          results.push("Organization and related data deleted");
+          break;
+
+        default:
+          results.push(`Ignored unknown action: ${action}`);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Actions completed",
+      results,
+    });
+  } catch (err: any) {
+    console.error("DELETE ORG ERROR:", err);
+    return NextResponse.json(
+      { success: false, error: err.message },
       { status: 500 }
     );
   }
