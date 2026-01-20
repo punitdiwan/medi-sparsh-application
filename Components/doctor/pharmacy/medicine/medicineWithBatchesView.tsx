@@ -47,13 +47,29 @@ export default function MedicineWithBatchesModal({
     useEffect(() => {
         if (!open || !medicineId) return;
 
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setMedicine(dummyMedicine);
-            setLoading(false);
-        }, 800);
+        const fetchMedicineData = async () => {
+            setLoading(true);
+            setMedicine(null);
 
-        return () => clearTimeout(timer);
+            try {
+                const { getPharmacyMedicineWithBatches } = await import("@/lib/actions/pharmacyMedicines");
+                const result = await getPharmacyMedicineWithBatches(medicineId);
+
+                if (result.error) {
+                    console.error("Error fetching medicine:", result.error);
+                    setMedicine(null);
+                } else if (result.data) {
+                    setMedicine(result.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch medicine data:", error);
+                setMedicine(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMedicineData();
     }, [open, medicineId]);
 
     if (!open) return null;
@@ -93,7 +109,18 @@ export default function MedicineWithBatchesModal({
                             <>
                                 <Card className="bg-dialog-surface text-dialog">
                                     <CardHeader>
-                                        <CardTitle>{medicine.name}</CardTitle>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle>{medicine.name}</CardTitle>
+                                            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg">
+                                                <Box className="h-5 w-5 text-primary" />
+                                                <div className="text-right">
+                                                    <p className="text-xs text-muted-foreground">Total Available</p>
+                                                    <p className="text-lg font-bold text-primary">
+                                                        {medicine.batches.reduce((sum: number, batch: any) => sum + Number(batch.quantity), 0)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm ">
                                         <Info label="Company" value={medicine.companyName} icon={Building2}
@@ -116,7 +143,7 @@ export default function MedicineWithBatchesModal({
                                         <CardTitle>Medicine Batches</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-0 overflow-x-auto">
-                                         <div className="w-full overflow-x-auto scrollbar-show scroll-smooth">
+                                        <div className="w-full overflow-x-auto scrollbar-show scroll-smooth">
                                             <Table className="min-w-[500px]">
                                                 <TableHeader>
                                                     <TableRow>
@@ -132,7 +159,8 @@ export default function MedicineWithBatchesModal({
                                                 <TableBody>
                                                     {medicine.batches.map((batch) => {
                                                         const qty = Number(batch.quantity);
-                                                        const isLow = qty <= batch.lowStockAlert;
+                                                        const isEmpty = qty === 0;
+                                                        const isLow = qty > 0 && (qty <= 50 || qty <= batch.lowStockAlert);
                                                         return (
                                                             <TableRow key={batch.id}>
                                                                 <TableCell>{batch.batchNumber}</TableCell>
@@ -141,7 +169,8 @@ export default function MedicineWithBatchesModal({
                                                                     {format(new Date(batch.expiryDate), "dd MMM yyyy")}
                                                                 </TableCell>
                                                                 <TableCell className="text-right font-medium">
-                                                                    {qty <= batch.lowStockAlert && (
+
+                                                                    {isLow && !isEmpty && (
                                                                         <AlertTriangle className="inline h-4 w-4 text-yellow-500 mr-1" />
                                                                     )}
                                                                     {qty}
@@ -149,16 +178,28 @@ export default function MedicineWithBatchesModal({
                                                                 <TableCell className="text-right">₹{batch.costPrice}</TableCell>
                                                                 <TableCell className="text-right">₹{batch.mrp}</TableCell>
                                                                 <TableCell className="text-right">₹{batch.sellingPrice}</TableCell>
-                                                                <TableCell> {batch.isDeleted ? (<Badge className="flex items-center gap-1 bg-red-500 text-white">
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                    Deleted
-                                                                </Badge>) : isLow ? (<Badge className="flex items-center gap-1 bg-yellow-400 text-black">
-                                                                    <AlertTriangle className="h-3 w-3" />
-                                                                    Low Stock
-                                                                </Badge>) : (<Badge className="flex items-center gap-1 bg-green-600 text-white">
-                                                                    <CheckCircle2 className="h-3 w-3" />
-                                                                    In Stock
-                                                                </Badge>)}
+                                                                <TableCell>
+                                                                    {batch.isDeleted ? (
+                                                                        <Badge className="flex items-center gap-1 bg-red-500 text-white">
+                                                                            <Trash2 className="h-3 w-3" />
+                                                                            Deleted
+                                                                        </Badge>
+                                                                    ) : isEmpty ? (
+                                                                        <Badge className="flex items-center gap-1 bg-red-600 text-white">
+                                                                            <XCircle className="h-3 w-3" />
+                                                                            Empty
+                                                                        </Badge>
+                                                                    ) : isLow ? (
+                                                                        <Badge className="flex items-center gap-1 bg-yellow-400 text-black">
+                                                                            <AlertTriangle className="h-3 w-3" />
+                                                                            Low Stock
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Badge className="flex items-center gap-1 bg-green-600 text-white">
+                                                                            <CheckCircle2 className="h-3 w-3" />
+                                                                            In Stock
+                                                                        </Badge>
+                                                                    )}
                                                                 </TableCell>
 
                                                             </TableRow>
@@ -208,48 +249,3 @@ function Info({
     );
 }
 
-
-
-const dummyMedicine: MedicineWithBatches = {
-    id: "med-1",
-    name: "Paracetamol 650",
-    companyName: "Cipla Ltd",
-    categoryName: "Analgesic",
-    groupName: "Pain Killer",
-    unitName: "Tablet",
-    batches: [
-        {
-            id: "batch-1",
-            batchNumber: "PCM650-A1",
-            quantity: "120",
-            lowStockAlert: 20,
-            costPrice: "1.50",
-            mrp: "3.00",
-            sellingPrice: "2.50",
-            expiryDate: "2026-08-31",
-            isDeleted: false,
-        },
-        {
-            id: "batch-2",
-            batchNumber: "PCM650-B2",
-            quantity: "8",
-            lowStockAlert: 10,
-            costPrice: "1.40",
-            mrp: "3.00",
-            sellingPrice: "2.40",
-            expiryDate: "2025-12-15",
-            isDeleted: false,
-        },
-        {
-            id: "batch-3",
-            batchNumber: "PCM650-X9",
-            quantity: "0",
-            lowStockAlert: 10,
-            costPrice: "1.30",
-            mrp: "2.80",
-            sellingPrice: "2.30",
-            expiryDate: "2024-11-01",
-            isDeleted: true,
-        },
-    ],
-};

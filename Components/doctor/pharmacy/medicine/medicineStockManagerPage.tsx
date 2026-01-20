@@ -68,7 +68,6 @@ export default function MedicineStockManagerPage() {
       if (medicinesRes.error) {
         toast.error(medicinesRes.error);
       } else if (medicinesRes.data) {
-        console.log("Medicine data", medicinesRes.data)
         setMedicines(medicinesRes.data);
       }
 

@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { Card } from "@/components/ui/card";
-import PharmacyBillPdf from "@/Components/pdf/pharmacyBillPdf";
+import { PharmacyBillPdf } from "@/Components/pdf/pharmacyBillPdf";
 import { pdf } from "@react-pdf/renderer";
 
 type Bill = {
@@ -133,7 +133,7 @@ export default function PharmacyBillPage() {
       }
 
       const bill = res.data;
-      
+      console.log("before print bill data",bill)
       const blob = await pdf(
         <PharmacyBillPdf
           billNumber={bill.billNumber}

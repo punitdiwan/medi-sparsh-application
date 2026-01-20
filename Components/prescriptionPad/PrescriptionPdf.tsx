@@ -12,7 +12,6 @@ const styles = StyleSheet.create({
   }
   ,
   page: {
-    padding: 30,
     backgroundColor: "#fff",
     fontFamily: "Helvetica",
     fontSize: 11,
@@ -184,11 +183,9 @@ const style1 = StyleSheet.create({
     right: 0,
   },
   contentWrapper: {
-    marginTop: 100,
-    marginBottom: 60,
+    padding:20,
     textTransform: "capitalize",
   },
-
 
 })
 
@@ -342,8 +339,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
           doctorName={doctorName}
           doctorSpecialization={doctorSpecialization}
           logo={parsedMetadata?.logo} 
-          styles={styles}
-          style1={style1}
+
         />
 
 
@@ -493,7 +489,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
 
         {/* FOOTER */}
         <View style={[styles.footer, style1.footerFixed]}>
-          <Text>This is a generated prescription and does not require a signature.</Text>
+          <Text>This is a system generated prescription and does not require a signature.</Text>
         </View>
       </Page>
     </Document>
