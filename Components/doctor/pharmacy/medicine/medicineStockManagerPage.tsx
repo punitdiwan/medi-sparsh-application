@@ -147,7 +147,7 @@ export default function MedicineStockManagerPage() {
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
                   <Edit className="w-4 h-4" />
                 </Button>

@@ -1,25 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
-
+import { Loader2, X } from "lucide-react";
+import {
+    Pill, Building2, Layers, Tag, Box, AlertTriangle, CheckCircle2, Trash2, CalendarDays, XCircle
+} from "lucide-react";
 
 interface MedicineWithBatches {
     id: string;
@@ -59,8 +48,6 @@ export default function MedicineWithBatchesModal({
         if (!open || !medicineId) return;
 
         setLoading(true);
-
-        // fake API delay
         const timer = setTimeout(() => {
             setMedicine(dummyMedicine);
             setLoading(false);
@@ -69,150 +56,155 @@ export default function MedicineWithBatchesModal({
         return () => clearTimeout(timer);
     }, [open, medicineId]);
 
+    if (!open) return null;
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Medicine & Batch Details</DialogTitle>
-                </DialogHeader>
-
-                {/* LOADER */}
-                {loading && (
-                    <div className="flex justify-center py-10">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <>
+            <div
+                className="fixed inset-0 bg-black/50 z-40"
+                onClick={() => onOpenChange(false)}
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div
+                    className="bg-white dark:bg-background w-[90vw] max-w-5xl max-h-[85vh] rounded-xl
+                                shadow-xl flex flex-col overflow-hidden " >
+                    <div className="flex items-center justify-between px-6 py-4 bg-dialog-header border-b border-dialog">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-dialog-header text-dialog-icon">
+                                <Pill className="h-5 w-5" />
+                            </div>
+                            <h2 className="text-lg font-semibold">
+                                Medicine & Batch Details
+                            </h2>
+                        </div>
+                        <button
+                            onClick={() => onOpenChange(false)}
+                            className="p-2 rounded-full hover:bg-red-500/10 text-red-500 transition"
+                        > <XCircle className="h-5 w-5" />
+                        </button>
                     </div>
-                )}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 border border-dialog bg-overview-base">
+                        {loading && (
+                            <div className="flex justify-center items-center min-h-[300px]">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                        )}
+                        {!loading && medicine && (
+                            <>
+                                <Card className="bg-dialog-surface text-dialog">
+                                    <CardHeader>
+                                        <CardTitle>{medicine.name}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm ">
+                                        <Info label="Company" value={medicine.companyName} icon={Building2}
+                                            color="bg-indigo-500"
+                                        />
+                                        <Info label="Category" value={medicine.categoryName} icon={Tag}
+                                            color="bg-purple-500"
+                                        />
+                                        <Info label="Group" value={medicine.groupName} icon={Layers}
+                                            color="bg-pink-500"
+                                        />
+                                        <Info label="Unit" value={medicine.unitName} icon={Box}
+                                            color="bg-emerald-500"
+                                        />
+                                    </CardContent>
+                                </Card>
+                                {/* TABLE */}
+                                <Card className="bg-dialog-surface text-dialog">
+                                    <CardHeader>
+                                        <CardTitle>Medicine Batches</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-0 overflow-x-auto">
+                                         <div className="w-full overflow-x-auto scrollbar-show scroll-smooth">
+                                            <Table className="min-w-[500px]">
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Batch</TableHead>
+                                                        <TableHead>Expiry</TableHead>
+                                                        <TableHead className="text-right">Qty</TableHead>
+                                                        <TableHead className="text-right">Cost</TableHead>
+                                                        <TableHead className="text-right">MRP</TableHead>
+                                                        <TableHead className="text-right">Selling</TableHead>
+                                                        <TableHead>Status</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {medicine.batches.map((batch) => {
+                                                        const qty = Number(batch.quantity);
+                                                        const isLow = qty <= batch.lowStockAlert;
+                                                        return (
+                                                            <TableRow key={batch.id}>
+                                                                <TableCell>{batch.batchNumber}</TableCell>
+                                                                <TableCell className="flex items-center gap-1">
+                                                                    <CalendarDays className="h-4 w-4 text-blue-500" />
+                                                                    {format(new Date(batch.expiryDate), "dd MMM yyyy")}
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-medium">
+                                                                    {qty <= batch.lowStockAlert && (
+                                                                        <AlertTriangle className="inline h-4 w-4 text-yellow-500 mr-1" />
+                                                                    )}
+                                                                    {qty}
+                                                                </TableCell>
+                                                                <TableCell className="text-right">₹{batch.costPrice}</TableCell>
+                                                                <TableCell className="text-right">₹{batch.mrp}</TableCell>
+                                                                <TableCell className="text-right">₹{batch.sellingPrice}</TableCell>
+                                                                <TableCell> {batch.isDeleted ? (<Badge className="flex items-center gap-1 bg-red-500 text-white">
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                    Deleted
+                                                                </Badge>) : isLow ? (<Badge className="flex items-center gap-1 bg-yellow-400 text-black">
+                                                                    <AlertTriangle className="h-3 w-3" />
+                                                                    Low Stock
+                                                                </Badge>) : (<Badge className="flex items-center gap-1 bg-green-600 text-white">
+                                                                    <CheckCircle2 className="h-3 w-3" />
+                                                                    In Stock
+                                                                </Badge>)}
+                                                                </TableCell>
 
-                {/* DATA */}
-                {!loading && medicine && (
-                    <div className="space-y-6">
+                                                            </TableRow>
+                                                        );
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </>
+                        )}
 
-                        {/* MEDICINE DETAILS */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-xl font-semibold">
-                                    {medicine.name}
-                                </CardTitle>
-                            </CardHeader>
-
-                            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                    <p className="text-muted-foreground">Company</p>
-                                    <p className="font-medium">{medicine.companyName}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Category</p>
-                                    <p className="font-medium">{medicine.categoryName}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Group</p>
-                                    <p className="font-medium">{medicine.groupName}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Unit</p>
-                                    <p className="font-medium">{medicine.unitName}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* BATCH TABLE */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg font-semibold">
-                                    Medicine Batches
-                                </CardTitle>
-                            </CardHeader>
-
-                            <CardContent className="p-0 overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Batch No</TableHead>
-                                            <TableHead>Expiry</TableHead>
-                                            <TableHead className="text-right">Qty</TableHead>
-                                            <TableHead className="text-right">Cost</TableHead>
-                                            <TableHead className="text-right">MRP</TableHead>
-                                            <TableHead className="text-right">Selling</TableHead>
-                                            <TableHead>Status</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-
-                                    <TableBody>
-                                        {medicine.batches.map((batch) => {
-                                            const qty = Number(batch.quantity);
-                                            const isLowStock = qty <= batch.lowStockAlert;
-
-                                            return (
-                                                <TableRow key={batch.id}>
-                                                    <TableCell className="font-medium">
-                                                        {batch.batchNumber}
-                                                    </TableCell>
-
-                                                    <TableCell>
-                                                        {format(
-                                                            new Date(batch.expiryDate),
-                                                            "dd MMM yyyy"
-                                                        )}
-                                                    </TableCell>
-
-                                                    <TableCell className="text-right">{qty}</TableCell>
-
-                                                    <TableCell className="text-right">
-                                                        ₹{Number(batch.costPrice).toFixed(2)}
-                                                    </TableCell>
-
-                                                    <TableCell className="text-right">
-                                                        ₹{Number(batch.mrp).toFixed(2)}
-                                                    </TableCell>
-
-                                                    <TableCell className="text-right">
-                                                        ₹{Number(batch.sellingPrice).toFixed(2)}
-                                                    </TableCell>
-
-                                                    <TableCell>
-                                                        {batch.isDeleted ? (
-                                                            <Badge variant="destructive">Deleted</Badge>
-                                                        ) : isLowStock ? (
-                                                            <Badge className="bg-yellow-100 text-yellow-700">
-                                                                Low Stock
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge className="bg-green-600">
-                                                                In Stock
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-
-                                        {medicine.batches.length === 0 && (
-                                            <TableRow>
-                                                <TableCell
-                                                    colSpan={7}
-                                                    className="text-center text-muted-foreground"
-                                                >
-                                                    No batches available
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
-
+                        {!loading && !medicine && (
+                            <p className="text-center text-muted-foreground">
+                                No data found
+                            </p>
+                        )}
                     </div>
-                )}
+                </div>
+            </div>
+        </>
+    );
+}
 
-                {/* EMPTY */}
-                {!loading && !medicine && (
-                    <p className="text-center text-muted-foreground py-6">
-                        No data found
-                    </p>
-                )}
-            </DialogContent>
-        </Dialog>
+function Info({
+    label,
+    value,
+    icon: Icon,
+    color,
+}: {
+    label: string;
+    value: string;
+    icon: any;
+    color: string;
+}) {
+    return (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+            <div className={`p-2 rounded-md ${color}`}>
+                <Icon className="h-4 w-4 text-white" />
+            </div>
+            <div>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="font-medium">{value}</p>
+            </div>
+        </div>
     );
 }
 

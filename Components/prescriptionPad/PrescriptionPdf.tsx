@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { PdfHeader } from '../doctor/PdfHeader';
 
 const styles = StyleSheet.create({
   headRow: {
@@ -7,7 +8,7 @@ const styles = StyleSheet.create({
   },
   headLabel: {
     fontWeight: "bold",
-    textTransform: "capitalize", 
+    textTransform: "capitalize",
   }
   ,
   page: {
@@ -27,7 +28,7 @@ const styles = StyleSheet.create({
   doctorInfoRow: {
     flexDirection: "row",
     marginBottom: 3,
-    fontSize:"15px",
+    fontSize: "15px",
   },
 
   doctorLabel: {
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ccc",
     marginBottom: 10,
     backgroundColor: "#008C9E",
-    color:"white",
+    color: "white",
   },
   hospitalBlock: {
     flexDirection: "column",
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 1,
-    textTransform: "uppercase", 
+    textTransform: "uppercase",
   },
   doctorBlock: {
     textAlign: "right",
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
     paddingBottom: 4,
     marginBottom: 8,
-    textTransform: "capitalize", 
+    textTransform: "capitalize",
   },
 
   row: {
@@ -146,47 +147,47 @@ const styles = StyleSheet.create({
 
 const style1 = StyleSheet.create({
   sectionBox: {
-  padding: 8,
-  marginBottom: 10,
-  borderWidth: 1,
-  borderColor: "#ccc",
-  borderRadius: 4
-},
-row: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginBottom: 4
-},
-sectionTitle: {
-  fontSize: 14,
-  fontWeight: "bold",
-  marginBottom: 6
-},
-label: {
-  fontSize: 12,
-  fontWeight: "bold"
-},
-value: {
-  fontSize: 12
-},
-headerFixed: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-},
+    padding: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 6
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "bold"
+  },
+  value: {
+    fontSize: 12
+  },
+  headerFixed: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  },
 
-footerFixed: {
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  right: 0,
-},
-contentWrapper: {
-  marginTop: 100,
-  marginBottom: 60,
-  textTransform: "capitalize",
-},
+  footerFixed: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  contentWrapper: {
+    marginTop: 100,
+    marginBottom: 60,
+    textTransform: "capitalize",
+  },
 
 
 })
@@ -275,7 +276,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
     <Document>
       <Page size="A4" style={styles.page}>
 
-        {orgModeCheck ? (
+        {/* {orgModeCheck ? (
           <View style={[styles.header, style1.headerFixed]}>
             <View>
               <Text style={[styles.hospitalName, { fontSize: 22 }]}>
@@ -331,7 +332,20 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
               </Text>
             </View>
           </View>
-        )}
+        )} */}
+        <PdfHeader
+          orgModeCheck={orgModeCheck}
+          organizationName={organization?.name}
+          address={parsedMetadata?.address}
+          phone={parsedMetadata?.phone}
+          email={parsedMetadata?.email}
+          doctorName={doctorName}
+          doctorSpecialization={doctorSpecialization}
+          logo={parsedMetadata?.logo} 
+          styles={styles}
+          style1={style1}
+        />
+
 
         <View style={style1.contentWrapper}>
           <View style={styles.sectionBox}>
@@ -391,41 +405,41 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
           </View>
 
 
-            {/* TWO COLUMN WRAPPER */}
-            <View style={{ flexDirection: "row", gap: 10 }}>
+          {/* TWO COLUMN WRAPPER */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
 
-              {/* LEFT COLUMN — DIAGNOSIS + SYMPTOMS */}
-              <View style={{ flex: 1 }}>
+            {/* LEFT COLUMN — DIAGNOSIS + SYMPTOMS */}
+            <View style={{ flex: 1 }}>
+              <View style={styles.sectionBox}>
+                <Text style={styles.sectionTitle}>Diagnosis</Text>
+                <Text>{diagnosis || "—"}</Text>
+              </View>
+
+              {symptoms && (
                 <View style={styles.sectionBox}>
-                  <Text style={styles.sectionTitle}>Diagnosis</Text>
-                  <Text>{diagnosis || "—"}</Text>
+                  <Text style={styles.sectionTitle}>Symptoms</Text>
+                  <Text>{symptoms}</Text>
                 </View>
-
-                {symptoms && (
-                  <View style={styles.sectionBox}>
-                    <Text style={styles.sectionTitle}>Symptoms</Text>
-                    <Text>{symptoms}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* RIGHT COLUMN — VITALS ONLY */}
-              <View style={{ flex: 1 }}>
-                {vitals && Object.keys(vitals).length > 0 && (
-                  <View style={styles.sectionBox}>
-                    <Text style={styles.sectionTitle}>Vitals</Text>
-
-                    {Object.entries(vitals).map(([key, value]) => (
-                      <View style={styles.row} key={key}>
-                        <Text style={styles.label}>{key}:</Text>
-                        <Text style={styles.value}>{String(value)}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
+              )}
             </View>
+
+            {/* RIGHT COLUMN — VITALS ONLY */}
+            <View style={{ flex: 1 }}>
+              {vitals && Object.keys(vitals).length > 0 && (
+                <View style={styles.sectionBox}>
+                  <Text style={styles.sectionTitle}>Vitals</Text>
+
+                  {Object.entries(vitals).map(([key, value]) => (
+                    <View style={styles.row} key={key}>
+                      <Text style={styles.label}>{key}:</Text>
+                      <Text style={styles.value}>{String(value)}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+          </View>
 
 
           {/* MEDICINES */}
@@ -462,7 +476,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
           )}
 
           {/* FOLLOW UP */}
-          {followUpDate &&<View style={styles.sectionBox}>
+          {followUpDate && <View style={styles.sectionBox}>
             <Text style={styles.sectionTitle}>Follow Up</Text>
 
             <Text>Required: {followUpRequired ? "Yes" : "No"}</Text>
@@ -471,16 +485,16 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
           </View>}
 
           {/* ADDITIONAL NOTES */}
-          {notes&&<View style={styles.sectionBox}>
+          {notes && <View style={styles.sectionBox}>
             <Text style={styles.sectionTitle}>Additional Notes</Text>
             <Text>{notes}</Text>
           </View>}
         </View>
 
         {/* FOOTER */}
-         <View style={[styles.footer, style1.footerFixed]}>
-            <Text>This is a generated prescription and does not require a signature.</Text>
-          </View>
+        <View style={[styles.footer, style1.footerFixed]}>
+          <Text>This is a generated prescription and does not require a signature.</Text>
+        </View>
       </Page>
     </Document>
   );
