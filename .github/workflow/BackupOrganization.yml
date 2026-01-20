@@ -29,10 +29,23 @@ jobs:
         run: npm install
 
       - name: Backup organization data
+        env:
+            PGPASSWORD: ${{ secrets.PGPASSWORD }}
+            PGHOST: ${{ secrets.PGHOST }}
+            PGPORT: ${{ secrets.PGPORT }}
+            PGUSER: ${{ secrets.PGUSER }}
+            PGDATABASE: ${{ secrets.PGDATABASE }}
+
+            DO_ACCESS_KEY: ${{ secrets.DO_ACCESS_KEY }}
+            DO_SECRET_KEY: ${{ secrets.DO_SECRET_KEY }}
+            BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+            SPACES_ENDPOINT: ${{ secrets.SPACES_ENDPOINT }}
         run: |
           echo "🚀 Starting backup..."
           chmod +x scripts/backup.sh
           ./scripts/backup.sh "${{ github.event.inputs.organizationId }}"
+
           curl -X DELETE \
           "https://abc.medisparsh.com/api/createOrg?orgId=${{ github.event.inputs.organizationId }}&action=${{ github.event.inputs.deleteType }}"
+
           echo "Backup completed"
