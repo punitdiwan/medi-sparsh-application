@@ -39,6 +39,9 @@ export const ALL_PERMISSIONS: Record<string, string[]> = {
   billing: ["create", "read", "update", "delete"],
   pharmacyMedicine: ["create", "read", "update", "delete"],
   stock: ["create", "read", "update", "delete"],
+  PathologyBilling:["create", "read", "update", "delete"],
+  PathologyTest:["create", "read", "update", "delete"],
+  pathologySettings:["create", "read", "update", "delete"],
 };
 
 
