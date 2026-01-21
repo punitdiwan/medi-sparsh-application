@@ -36,6 +36,15 @@ interface Props {
     medicineId: string | null;
 }
 
+function Skeleton({ className }: { className?: string }) {
+    return (
+        <div
+            className={`animate-pulse rounded-md bg-muted ${className}`}
+        />
+    );
+}
+
+
 export default function MedicineWithBatchesModal({
     open,
     onOpenChange,
@@ -50,7 +59,6 @@ export default function MedicineWithBatchesModal({
         const fetchMedicineData = async () => {
             setLoading(true);
             setMedicine(null);
-
             try {
                 const { getPharmacyMedicineWithBatches } = await import("@/lib/actions/pharmacyMedicines");
                 const result = await getPharmacyMedicineWithBatches(medicineId);
@@ -84,21 +92,90 @@ export default function MedicineWithBatchesModal({
                 <div
                     className="bg-white dark:bg-background w-[90vw] max-w-5xl max-h-[85vh] rounded-xl
                                 shadow-xl flex flex-col overflow-hidden " >
-                    <div className="flex items-center justify-between px-6 py-4 bg-dialog-header border-b border-dialog">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-dialog-header text-dialog-icon">
-                                <Pill className="h-5 w-5" />
+                    <div className="flex flex-col gap-3 px-6 py-4 bg-dialog-header border-b border-dialog">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-dialog-header text-dialog-icon">
+                                    <Pill className="h-5 w-5" />
+                                </div>
+
+                                <div className="space-y-2 max-w-[400px]">
+                                    {/* TITLE */}
+                                    {loading && !medicine ? (
+                                        <Skeleton className="h-5 w-48" />
+                                    ) : (
+                                        <h2 className="text-lg font-semibold leading-tight transition-opacity duration-300">
+                                            {medicine?.name}
+                                        </h2>
+                                    )}
+
+                                    {/* META */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {loading && !medicine ? (
+                                            <>
+                                                <Skeleton className="h-5 w-24" />
+                                                <Skeleton className="h-5 w-20" />
+                                                <Skeleton className="h-5 w-20" />
+                                            </>
+                                        ) : (
+                                            medicine && (
+                                                <>
+                                                    <Badge variant="secondary">
+                                                        <Building2 className="h-3 w-3 mr-1" />
+                                                        {medicine.companyName}
+                                                    </Badge>
+                                                    <Badge variant="secondary">
+                                                        <Tag className="h-3 w-3 mr-1" />
+                                                        {medicine.categoryName}
+                                                    </Badge>
+                                                    <Badge variant="secondary">
+                                                        <Layers className="h-3 w-3 mr-1" />
+                                                        {medicine.groupName}
+                                                    </Badge>
+                                                    <Badge variant="secondary">
+                                                        <Box className="h-3 w-3 mr-1" />
+                                                        {medicine.unitName}
+                                                    </Badge>
+                                                </>
+                                            )
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <h2 className="text-lg font-semibold">
-                                Medicine & Batch Details
-                            </h2>
+
+                            {/* RIGHT SIDE */}
+                            <div className="flex items-center gap-3">
+                                {loading && !medicine ? (
+                                    <Skeleton className="h-12 w-28 rounded-lg" />
+                                ) : (
+                                    medicine && (
+                                        <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg transition-all duration-300">
+                                            <Box className="h-5 w-5 text-primary" />
+                                            <div className="text-right">
+                                                <p className="text-xs text-muted-foreground">
+                                                    Total Available
+                                                </p>
+                                                <p className="text-lg font-bold text-primary">
+                                                    {medicine.batches.reduce(
+                                                        (sum, b) => sum + Number(b.quantity),
+                                                        0
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+
+                                <button
+                                    onClick={() => onOpenChange(false)}
+                                    className="p-2 rounded-lg cursor-pointer hover:bg-black/20 dark:hover:bg-white/20 text-primary"
+                                >
+                                    <XCircle className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            onClick={() => onOpenChange(false)}
-                            className="p-2 rounded-full hover:bg-red-500/10 text-red-500 transition"
-                        > <XCircle className="h-5 w-5" />
-                        </button>
                     </div>
+
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 border border-dialog bg-overview-base">
                         {loading && (
                             <div className="flex justify-center items-center min-h-[300px]">
@@ -107,36 +184,6 @@ export default function MedicineWithBatchesModal({
                         )}
                         {!loading && medicine && (
                             <>
-                                <Card className="bg-dialog-surface text-dialog">
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle>{medicine.name}</CardTitle>
-                                            <div className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-lg">
-                                                <Box className="h-5 w-5 text-primary" />
-                                                <div className="text-right">
-                                                    <p className="text-xs text-muted-foreground">Total Available</p>
-                                                    <p className="text-lg font-bold text-primary">
-                                                        {medicine.batches.reduce((sum: number, batch: any) => sum + Number(batch.quantity), 0)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm ">
-                                        <Info label="Company" value={medicine.companyName} icon={Building2}
-                                            color="bg-indigo-500"
-                                        />
-                                        <Info label="Category" value={medicine.categoryName} icon={Tag}
-                                            color="bg-purple-500"
-                                        />
-                                        <Info label="Group" value={medicine.groupName} icon={Layers}
-                                            color="bg-pink-500"
-                                        />
-                                        <Info label="Unit" value={medicine.unitName} icon={Box}
-                                            color="bg-emerald-500"
-                                        />
-                                    </CardContent>
-                                </Card>
                                 {/* TABLE */}
                                 <Card className="bg-dialog-surface text-dialog">
                                     <CardHeader>

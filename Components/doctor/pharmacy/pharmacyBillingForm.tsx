@@ -445,11 +445,11 @@ export default function PharmacyBillingForm() {
 
             {/* Submit */}
             <div className="flex justify-end gap-4 mt-6">
-              <Button type="button" size="lg" onClick={() => handleSubmit(true)}>
-                Save & Back
+              <Button variant="outline" type="button" size="lg" onClick={() => handleSubmit(true)}>
+                Save
               </Button>
               <Button type="button" size="lg" onClick={() => handleSubmit(false)}>
-                Save Billing
+                Save & New
               </Button>
             </div>
           </Card>
