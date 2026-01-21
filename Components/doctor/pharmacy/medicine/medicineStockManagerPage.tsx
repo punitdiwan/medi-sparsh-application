@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit, Plus, Trash2, Upload } from "lucide-react";
+import { Edit, Eye, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPharmacyMedicines,
@@ -18,6 +18,7 @@ import HospitalMedicineExcelModal from "./hospitalMedicineExcelModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import MedicineWithBatchesModal from "./medicineWithBatchesView";
 
 type MedicineDisplay = {
   id: string;
@@ -33,12 +34,16 @@ type MedicineDisplay = {
   quantity: number;
 };
 
+
 export default function MedicineStockManagerPage() {
   const [medicines, setMedicines] = useState<MedicineDisplay[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const [openBatch, setOpenBatch] = useState(false);
+  const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(null);
   const [selectedMedicine, setSelectedMedicine] = useState<PharmacyMedicine | undefined>(undefined);
   const [dropdowns, setDropdowns] = useState<{
     categories: Array<{ id: string; name: string }>;
@@ -119,9 +124,38 @@ export default function MedicineStockManagerPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
-            <Edit className="w-4 h-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedMedicineId(row.original.id);
+                    setOpenBatch(true);
+                  }}
+                >
+                  <Eye size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>View Medicine Details</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Medicine Details</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <ConfirmDialog
             title="Delete Medicine"
@@ -235,6 +269,11 @@ export default function MedicineStockManagerPage() {
         <Table data={filtered} columns={columns} />
       )}
 
+      <MedicineWithBatchesModal
+        open={openBatch}
+        onOpenChange={setOpenBatch}
+        medicineId={selectedMedicineId}
+      />
 
       <PharmacyMedicineModal
         open={isModalOpen}

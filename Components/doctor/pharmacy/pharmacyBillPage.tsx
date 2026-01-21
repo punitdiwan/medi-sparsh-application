@@ -9,13 +9,14 @@ import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { getPharmacySales } from "@/lib/actions/pharmacySales";
+import { getPharmacySaleById, getPharmacySales } from "@/lib/actions/pharmacySales";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
 import { Card } from "@/components/ui/card";
-
+import { PharmacyBillPdf } from "@/Components/pdf/pharmacyBillPdf";
+import { pdf } from "@react-pdf/renderer";
 
 type Bill = {
   id: string;
@@ -28,6 +29,35 @@ type Bill = {
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
+
+interface PharmacyBillPdfProps {
+  billNumber: string;
+  billDate: string;
+
+  customerName: string;
+  customerPhone: string;
+
+  paymentMode: string;
+
+  items: Array<{
+    name: string;
+    qty: number;
+    price: number;
+    total: number;
+  }>;
+
+  totalAmount: number;
+  discount: number;
+  tax: number;
+
+  organization: {
+    id: string;
+    name: string;
+    metadata: string | null;
+  };
+
+  orgModeCheck: boolean;
+}
 
 export default function PharmacyBillPage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -90,10 +120,49 @@ export default function PharmacyBillPage() {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+  const handlePrint = async (billId: string) => {
+    if (!billId) return;
 
-  const handlePrint = (bill: Bill) => {
-    window.open(`/doctor/pharmacy/print/${bill.id}`, "_blank");
+    try {
+      const res: any = await getPharmacySaleById(billId);
+
+      if (!res?.data) {
+        toast.error("Bill not found");
+        return;
+      }
+
+      const bill = res.data;
+      const blob = await pdf(
+        <PharmacyBillPdf
+          billNumber={bill.billNumber}
+          billDate={format(new Date(bill.createdAt), "dd-MM-yyyy")}
+          customerName={bill.customerName}
+          customerPhone={bill.customerPhone}
+          paymentMode={bill.paymentMode}
+          items={bill.items || []}
+          totalAmount={Number(bill.netAmount)}
+          discount={Number(bill.discount || 0)}
+          tax={Number(bill.tax || 0)}
+          organization={bill.organization}
+          orgModeCheck={true}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url);
+
+      if (win) {
+        win.onload = () => {
+          win.focus();
+          win.print();
+        };
+      }
+    } catch (error) {
+      console.error("Print error:", error);
+      toast.error("Failed to print bill");
+    }
   };
+
 
   const allColumns: ColumnDef<Bill>[] = [
     { accessorKey: "billNo", header: "Bill No" },
@@ -109,7 +178,7 @@ export default function PharmacyBillPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handlePrint(row.original)}
+          onClick={() => handlePrint(row?.original?.id)}
         >
           Print
         </Button>

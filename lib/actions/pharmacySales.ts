@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { pharmacySales, pharmacySalesItems, pharmacyMedicines, pharmacyStock } from "@/drizzle/schema";
+import { pharmacySales, pharmacySalesItems, pharmacyMedicines, pharmacyStock, organization } from "@/drizzle/schema";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { eq, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -146,5 +146,66 @@ export async function getPharmacyBillDetails(billId: string) {
     } catch (error) {
         console.error("Error fetching bill details:", error);
         return { error: "Failed to fetch bill details" };
+    }
+}
+
+export async function getPharmacySaleById(billId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const [bill] = await db
+            .select()
+            .from(pharmacySales)
+            .where(and(eq(pharmacySales.id, billId), eq(pharmacySales.hospitalId, org.id)));
+
+        if (!bill) {
+            return { error: "Bill not found" };
+        }
+
+        // Use the organization object from getActiveOrganization which likely has parsed metadata/correct structure
+
+        const items = await db
+            .select()
+            .from(pharmacySalesItems)
+            .where(and(eq(pharmacySalesItems.billId, billId), eq(pharmacySalesItems.hospitalId, org.id)));
+
+        const itemsWithDetails = await Promise.all(items.map(async (item) => {
+            const [medicine] = await db
+                .select()
+                .from(pharmacyMedicines)
+                .where(eq(pharmacyMedicines.id, item.medicineId));
+
+            return {
+                ...item,
+                medicineName: medicine?.name || "Unknown",
+                price: item.unitPrice,
+                total: item.totalAmount
+            };
+        }));
+        let parsedMetadata: { address?: string; phone?: string; email?: string } =
+            {};
+        try {
+            parsedMetadata =
+                typeof org.metadata === "string" ? JSON.parse(org.metadata) : org.metadata;
+        } catch {
+            parsedMetadata = {};
+        }
+        return {
+            data: {
+                ...bill,
+                organization: {
+                    ...org,
+                    metadata: parsedMetadata, // parsed metadata
+                },
+                items: itemsWithDetails,
+                doctor: null // Schema doesn't link doctor to sales yet
+            }
+        };
+    } catch (error) {
+        console.error("Error fetching pharmacy sale by id:", error);
+        return { error: "Failed to fetch sale details" };
     }
 }

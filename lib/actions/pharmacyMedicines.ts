@@ -156,3 +156,113 @@ export async function getPharmacyMedicineDropdowns() {
         return { error: "Failed to fetch dropdown data" };
     }
 }
+
+export async function getPharmacyMedicineWithBatches(medicineId: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const { db } = await import("@/db");
+        const { pharmacyMedicines, pharmacyStock, medicineCategories, medicineCompanies, medicineGroups, medicineUnits } = await import("@/db/schema");
+        const { eq, and, gte } = await import("drizzle-orm");
+
+        // Fetch medicine details
+        const [medicine] = await db
+            .select({
+                id: pharmacyMedicines.id,
+                name: pharmacyMedicines.name,
+                categoryId: pharmacyMedicines.categoryId,
+                companyId: pharmacyMedicines.companyId,
+                groupId: pharmacyMedicines.groupId,
+                unitId: pharmacyMedicines.unitId,
+            })
+            .from(pharmacyMedicines)
+            .where(
+                and(
+                    eq(pharmacyMedicines.id, medicineId),
+                    eq(pharmacyMedicines.hospitalId, org.id)
+                )
+            );
+
+        if (!medicine) {
+            return { error: "Medicine not found" };
+        }
+
+        // Fetch related data
+        const [category] = await db
+            .select({ name: medicineCategories.name })
+            .from(medicineCategories)
+            .where(eq(medicineCategories.id, medicine.categoryId));
+
+        const [company] = await db
+            .select({ name: medicineCompanies.name })
+            .from(medicineCompanies)
+            .where(eq(medicineCompanies.id, medicine.companyId));
+
+        const [group] = await db
+            .select({ name: medicineGroups.name })
+            .from(medicineGroups)
+            .where(eq(medicineGroups.id, medicine.groupId));
+
+        const [unit] = await db
+            .select({ name: medicineUnits.name })
+            .from(medicineUnits)
+            .where(eq(medicineUnits.id, medicine.unitId));
+
+        // Fetch stock batches - ONLY non-expired ones, sorted by expiry date (earliest first)
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+        const batches = await db
+            .select({
+                id: pharmacyStock.id,
+                batchNumber: pharmacyStock.batchNumber,
+                quantity: pharmacyStock.quantity,
+                lowStockAlert: pharmacyStock.lowStockAlert,
+                costPrice: pharmacyStock.costPrice,
+                mrp: pharmacyStock.mrp,
+                sellingPrice: pharmacyStock.sellingPrice,
+                expiryDate: pharmacyStock.expiryDate,
+                isDeleted: pharmacyStock.isDeleted,
+            })
+            .from(pharmacyStock)
+            .where(
+                and(
+                    eq(pharmacyStock.medicineId, medicineId),
+                    eq(pharmacyStock.hospitalId, org.id),
+                    gte(pharmacyStock.expiryDate, today) // Only non-expired batches
+                )
+            )
+            .orderBy(pharmacyStock.expiryDate); // Sort by expiry date (earliest first)
+
+        // Format the response
+        const formattedData = {
+            id: medicine.id,
+            name: medicine.name,
+            companyName: company?.name || "N/A",
+            categoryName: category?.name || "N/A",
+            groupName: group?.name || "N/A",
+            unitName: unit?.name || "N/A",
+            batches: batches.map((stock) => ({
+                id: stock.id,
+                batchNumber: stock.batchNumber,
+                quantity: stock.quantity,
+                lowStockAlert: stock.lowStockAlert,
+                costPrice: stock.costPrice,
+                mrp: stock.mrp,
+                sellingPrice: stock.sellingPrice,
+                expiryDate: stock.expiryDate,
+                isDeleted: stock.isDeleted || false,
+            }))
+        };
+
+        return { data: formattedData };
+    } catch (error) {
+        console.error("Error fetching medicine with batches:", error);
+        return { error: "Failed to fetch medicine details" };
+    }
+}
+
+
+

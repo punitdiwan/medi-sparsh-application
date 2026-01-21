@@ -25,6 +25,7 @@ import { getMedicineCategories } from "@/lib/actions/medicineCategories";
 import { createPharmacySale } from "@/lib/actions/pharmacySales";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // ... (keep categories if needed, or fetch them too)
 type BatchAllocation = {
@@ -64,6 +65,7 @@ export default function PharmacyBillingForm() {
   const [allMedicines, setAllMedicines] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       const [medicinesRes, categoriesRes] = await Promise.all([
@@ -259,7 +261,7 @@ export default function PharmacyBillingForm() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (goBackAfterSave: boolean = false) => {
     if (!customerName || !customerPhone || medicines.length === 0 || !paymentMode) {
       toast.error("Please fill all required fields");
       return;
@@ -317,6 +319,9 @@ export default function PharmacyBillingForm() {
       setNetAmount(0);
       setPaymentMode("");
       setPaymentAmount(0);
+    }
+    if (goBackAfterSave) {
+      router.back();
     }
   };
 
@@ -439,9 +444,12 @@ export default function PharmacyBillingForm() {
             </div>
 
             {/* Submit */}
-            <div className="flex justify-end mt-6">
-              <Button type="button" size="lg" onClick={handleSubmit}>
-                Save Billing
+            <div className="flex justify-end gap-4 mt-6">
+              <Button variant="outline" type="button" size="lg" onClick={() => handleSubmit(true)}>
+                Save
+              </Button>
+              <Button type="button" size="lg" onClick={() => handleSubmit(false)}>
+                Save & New
               </Button>
             </div>
           </Card>
