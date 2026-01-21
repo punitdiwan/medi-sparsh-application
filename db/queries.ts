@@ -25,7 +25,8 @@ import {
   ipdCharges,
   pathologyCategories,
   pathologyUnits,
-  pathologyParameters
+  pathologyParameters,
+  pathologyTests
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1956,6 +1957,186 @@ export async function deletePathologyParameter(id: string) {
   const result = await db
     .delete(pathologyParameters)
     .where(eq(pathologyParameters.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ==================== Pathology Tests ====================
+
+export async function getPathologyTestsByHospital(hospitalId: string) {
+  const result = await db
+    .select({
+      id: pathologyTests.id,
+      testName: pathologyTests.testName,
+      shortName: pathologyTests.shortName,
+      testType: pathologyTests.testType,
+      description: pathologyTests.description,
+      categoryId: pathologyTests.categoryId,
+      categoryName: pathologyCategories.name,
+      subCategoryId: pathologyTests.subCategoryId,
+      method: pathologyTests.method,
+      reportDays: pathologyTests.reportDays,
+      chargeCategoryId: pathologyTests.chargeCategoryId,
+      chargeId: pathologyTests.chargeId,
+      chargeName: pathologyTests.chargeName,
+      testParameters: pathologyTests.testParameters,
+      unitId: pathologyTests.unitId,
+      unitName: pathologyUnits.name,
+      isDeleted: pathologyTests.isDeleted,
+      createdAt: pathologyTests.createdAt,
+      updatedAt: pathologyTests.updatedAt,
+    })
+    .from(pathologyTests)
+    .leftJoin(
+      pathologyCategories,
+      eq(pathologyTests.categoryId, pathologyCategories.id)
+    )
+    .leftJoin(pathologyUnits, eq(pathologyTests.unitId, pathologyUnits.id))
+    .where(eq(pathologyTests.hospitalId, hospitalId))
+    .orderBy(desc(pathologyTests.createdAt));
+
+  return result;
+}
+
+export async function getPathologyTestById(id: string) {
+  const result = await db
+    .select({
+      id: pathologyTests.id,
+      testName: pathologyTests.testName,
+      shortName: pathologyTests.shortName,
+      testType: pathologyTests.testType,
+      description: pathologyTests.description,
+      categoryId: pathologyTests.categoryId,
+      categoryName: pathologyCategories.name,
+      subCategoryId: pathologyTests.subCategoryId,
+      method: pathologyTests.method,
+      reportDays: pathologyTests.reportDays,
+      chargeCategoryId: pathologyTests.chargeCategoryId,
+      chargeId: pathologyTests.chargeId,
+      chargeName: pathologyTests.chargeName,
+      testParameters: pathologyTests.testParameters,
+      unitId: pathologyTests.unitId,
+      unitName: pathologyUnits.name,
+      isDeleted: pathologyTests.isDeleted,
+      createdAt: pathologyTests.createdAt,
+      updatedAt: pathologyTests.updatedAt,
+    })
+    .from(pathologyTests)
+    .leftJoin(
+      pathologyCategories,
+      eq(pathologyTests.categoryId, pathologyCategories.id)
+    )
+    .leftJoin(pathologyUnits, eq(pathologyTests.unitId, pathologyUnits.id))
+    .where(eq(pathologyTests.id, id));
+
+  return result[0];
+}
+
+export async function createPathologyTest(data: {
+  hospitalId: string;
+  testName: string;
+  shortName?: string;
+  testType: string;
+  description?: string;
+  categoryId: string;
+  subCategoryId?: string;
+  method?: string;
+  reportDays: number;
+  chargeCategoryId: string;
+  chargeId: string;
+  chargeName: string;
+  testParameters: any; // JSONB
+  unitId: string;
+}) {
+  const result = await db
+    .insert(pathologyTests)
+    .values({
+      hospitalId: data.hospitalId,
+      testName: data.testName,
+      shortName: data.shortName,
+      testType: data.testType,
+      description: data.description,
+      categoryId: data.categoryId,
+      subCategoryId: data.subCategoryId,
+      method: data.method,
+      reportDays: data.reportDays,
+      chargeCategoryId: data.chargeCategoryId,
+      chargeId: data.chargeId,
+      chargeName: data.chargeName,
+      testParameters: data.testParameters,
+      unitId: data.unitId,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updatePathologyTest(
+  id: string,
+  data: {
+    testName?: string;
+    shortName?: string;
+    testType?: string;
+    description?: string;
+    categoryId?: string;
+    subCategoryId?: string;
+    method?: string;
+    reportDays?: number;
+    chargeCategoryId?: string;
+    chargeId?: string;
+    chargeName?: string;
+    testParameters?: any; // JSONB
+    unitId?: string;
+  }
+) {
+  const result = await db
+    .update(pathologyTests)
+    .set({
+      ...(data.testName && { testName: data.testName }),
+      ...(data.shortName !== undefined && { shortName: data.shortName }),
+      ...(data.testType && { testType: data.testType }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.categoryId && { categoryId: data.categoryId }),
+      ...(data.subCategoryId !== undefined && {
+        subCategoryId: data.subCategoryId,
+      }),
+      ...(data.method !== undefined && { method: data.method }),
+      ...(data.reportDays && { reportDays: data.reportDays }),
+      ...(data.chargeCategoryId && { chargeCategoryId: data.chargeCategoryId }),
+      ...(data.chargeId && { chargeId: data.chargeId }),
+      ...(data.chargeName && { chargeName: data.chargeName }),
+      ...(data.testParameters && { testParameters: data.testParameters }),
+      ...(data.unitId && { unitId: data.unitId }),
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyTests.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deletePathologyTest(id: string) {
+  const result = await db
+    .update(pathologyTests)
+    .set({
+      isDeleted: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyTests.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function restorePathologyTest(id: string) {
+  const result = await db
+    .update(pathologyTests)
+    .set({
+      isDeleted: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyTests.id, id))
     .returning();
 
   return result[0];

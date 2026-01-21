@@ -19,34 +19,11 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FlaskConical, Plus, Trash2, X } from "lucide-react";
-
-// Dummy Data for Dropdowns
-const categories = [
-    { id: "cat1", name: "Blood Chemistry" },
-    { id: "cat2", name: "Hematology" },
-    { id: "cat3", name: "Serology" },
-];
-
-const chargeCategories = [
-    { id: "cc1", name: "Pathology Charges" },
-    { id: "cc2", name: "Urgent Charges" },
-];
-
-const chargeNames: Record<string, { id: string, name: string, tax: number, standardCharge: number }[]> = {
-    cc1: [
-        { id: "cn1", name: "Glucose Test Charge", tax: 5, standardCharge: 200 },
-        { id: "cn2", name: "FBC Charge", tax: 0, standardCharge: 500 },
-    ],
-    cc2: [
-        { id: "cn3", name: "Emergency Glucose Charge", tax: 10, standardCharge: 300 },
-    ],
-};
-
-const testParameters = [
-    { id: "param1", name: "Blood Glucose", range: "70-110", unit: "mg/dL" },
-    { id: "param2", name: "Hemoglobin", range: "13.5-17.5", unit: "g/dL" },
-    { id: "param3", name: "WBC Count", range: "4000-11000", unit: "/uL" },
-];
+import { getPathologyCategories } from "@/lib/actions/pathologyCategories";
+import { getPathologyUnits } from "@/lib/actions/pathologyUnits";
+import { getPathologyParameters } from "@/lib/actions/pathologyParameters";
+import { createPathologyTest, updatePathologyTest } from "@/lib/actions/pathologyTests";
+import { getChargeCategories, getCharges } from "@/lib/actions/chargeActions";
 
 export type ParameterRow = {
     id: string;
@@ -61,84 +38,134 @@ export type PathologyTest = {
     testName: string;
     shortName: string;
     testType: string;
+    description?: string;
     categoryId: string;
     categoryName?: string;
-    subCategory: string;
+    subCategoryId: string;
     method: string;
     reportDays: number | string;
     chargeCategoryId: string;
-    chargeNameId: string;
+    chargeId: string;
+    chargeName: string;
     tax: number;
     standardCharge: number;
     amount: number;
     parameters: ParameterRow[];
+    unitId: string;
+    unitName?: string;
+    isDeleted?: boolean;
 };
 
 type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     test?: PathologyTest;
-    onSave: (data: PathologyTest) => void;
+    onSaveSuccess: () => void;
 };
 
 export default function PathologyTestModal({
     open,
     onOpenChange,
     test,
-    onSave,
+    onSaveSuccess,
 }: Props) {
     const [form, setForm] = useState<PathologyTest>({
         id: "",
         testName: "",
         shortName: "",
         testType: "",
+        description: "",
         categoryId: "",
-        subCategory: "",
+        subCategoryId: "",
         method: "",
         reportDays: "",
         chargeCategoryId: "",
-        chargeNameId: "",
+        chargeId: "",
+        chargeName: "",
         tax: 0,
         standardCharge: 0,
         amount: 0,
         parameters: [
             { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
         ],
+        unitId: "",
     });
+
+    const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+    const [units, setUnits] = useState<{ id: string, name: string }[]>([]);
+    const [allParameters, setAllParameters] = useState<any[]>([]);
+    const [chargeCats, setChargeCats] = useState<{ id: string, name: string }[]>([]);
+    const [allCharges, setAllCharges] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [catRes, unitRes, paramRes, chargeCatRes, chargeRes] = await Promise.all([
+                    getPathologyCategories(),
+                    getPathologyUnits(),
+                    getPathologyParameters(),
+                    getChargeCategories(),
+                    getCharges()
+                ]);
+
+                if (catRes.data) setCategories(catRes.data);
+                if (unitRes.data) setUnits(unitRes.data);
+                if (paramRes.data) setAllParameters(paramRes.data);
+                if (chargeCatRes.data) setChargeCats(chargeCatRes.data);
+                if (chargeRes.data) setAllCharges(chargeRes.data);
+            } catch (error) {
+                console.error("Error fetching modal data:", error);
+            }
+        };
+
+        if (open) {
+            fetchData();
+        }
+    }, [open]);
 
     useEffect(() => {
         if (open) {
             if (test) {
-                setForm(test);
+                setForm({
+                    ...test,
+                    parameters: Array.isArray(test.parameters) ? test.parameters : (test as any).testParameters || []
+                });
             } else {
                 setForm({
                     id: "",
                     testName: "",
                     shortName: "",
                     testType: "",
+                    description: "",
                     categoryId: "",
-                    subCategory: "",
+                    subCategoryId: "",
                     method: "",
                     reportDays: "",
                     chargeCategoryId: "",
-                    chargeNameId: "",
+                    chargeId: "",
+                    chargeName: "",
                     tax: 0,
                     standardCharge: 0,
                     amount: 0,
                     parameters: [
                         { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
                     ],
+                    unitId: "",
                 });
             }
         }
     }, [test, open]);
+
+    const availableCharges = allCharges.filter(c => c.chargeCategoryId === form.chargeCategoryId);
 
     // Handle Charge Category Change
     const handleChargeCategoryChange = (val: string) => {
         setForm({
             ...form,
             chargeCategoryId: val,
-            chargeNameId: "",
+            chargeId: "",
+            chargeName: "",
             tax: 0,
             standardCharge: 0,
             amount: 0,
@@ -147,14 +174,15 @@ export default function PathologyTestModal({
 
     // Handle Charge Name Change
     const handleChargeNameChange = (val: string) => {
-        const selectedCharge = chargeNames[form.chargeCategoryId]?.find(c => c.id === val);
+        const selectedCharge = availableCharges.find(c => c.id === val);
         if (selectedCharge) {
-            const taxAmount = (selectedCharge.standardCharge * selectedCharge.tax) / 100;
+            const taxAmount = (selectedCharge.standardCharge * (selectedCharge.taxPercent || 0)) / 100;
             const totalAmount = selectedCharge.standardCharge + taxAmount;
             setForm({
                 ...form,
-                chargeNameId: val,
-                tax: selectedCharge.tax,
+                chargeId: val,
+                chargeName: selectedCharge.name,
+                tax: selectedCharge.taxPercent || 0,
                 standardCharge: selectedCharge.standardCharge,
                 amount: totalAmount,
             });
@@ -163,13 +191,19 @@ export default function PathologyTestModal({
 
     // Handle Parameter Row Change
     const handleParameterChange = (rowId: string, paramId: string) => {
-        const selectedParam = testParameters.find(p => p.id === paramId);
+        const selectedParam = allParameters.find(p => p.id === paramId);
         if (selectedParam) {
             setForm({
                 ...form,
                 parameters: form.parameters.map(p =>
                     p.id === rowId
-                        ? { ...p, parameterId: paramId, testParameterName: selectedParam.name, referenceRange: selectedParam.range, unit: selectedParam.unit }
+                        ? {
+                            ...p,
+                            parameterId: paramId,
+                            testParameterName: selectedParam.paramName,
+                            referenceRange: `${selectedParam.fromRange}-${selectedParam.toRange}`,
+                            unit: selectedParam.unitName || ""
+                        }
                         : p
                 )
             });
@@ -191,18 +225,46 @@ export default function PathologyTestModal({
         });
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!form.testName) return toast.error("Test Name is required");
-        if (!form.shortName) return toast.error("Short Name is required");
         if (!form.categoryId) return toast.error("Category is required");
         if (!form.reportDays) return toast.error("Report Days is required");
-        if (!form.chargeCategoryId) return toast.error("Charge Category is required");
-        if (!form.chargeNameId) return toast.error("Charge Name is required");
+        if (!form.unitId) return toast.error("Unit is required");
+        if (!form.chargeId) return toast.error("Charge is required");
 
-        const categoryName = categories.find(c => c.id === form.categoryId)?.name;
-        onSave({ ...form, categoryName });
-        onOpenChange(false);
-        toast.success(test ? "Test updated successfully" : "Test added successfully");
+        setLoading(true);
+        try {
+            const payload = {
+                testName: form.testName,
+                shortName: form.shortName,
+                testType: form.testType,
+                description: form.description,
+                categoryId: form.categoryId,
+                subCategoryId: form.subCategoryId,
+                method: form.method,
+                reportDays: Number(form.reportDays),
+                chargeCategoryId: form.chargeCategoryId,
+                chargeId: form.chargeId,
+                chargeName: form.chargeName,
+                testParameters: form.parameters,
+                unitId: form.unitId,
+            };
+
+            const result = test
+                ? await updatePathologyTest(test.id, payload)
+                : await createPathologyTest(payload as any);
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(test ? "Test updated successfully" : "Test added successfully");
+                onSaveSuccess();
+            }
+        } catch (error) {
+            toast.error("An error occurred while saving");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -210,7 +272,6 @@ export default function PathologyTestModal({
             <DialogContent className="sm:max-w-4xl border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog sticky top-0 z-10">
                     <div className="flex items-center justify-between">
-                        {/* Left: Icon + Title */}
                         <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center rounded-lg">
                                 <FlaskConical className="text-dialog-icon" />
@@ -235,24 +296,27 @@ export default function PathologyTestModal({
                             <label className="text-sm font-medium">Test Name *</label>
                             <Input
                                 placeholder="Test Name"
-                                value={form.testName}
+                                value={form.testName ?? ""}
                                 onChange={(e) => setForm({ ...form, testName: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Short Name *</label>
+                            <label className="text-sm font-medium">Short Name</label>
                             <Input
                                 placeholder="Short Name"
-                                value={form.shortName}
+                                value={form.shortName ?? ""}
                                 onChange={(e) => setForm({ ...form, shortName: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Test Type</label>
                             <Input
                                 placeholder="Test Type"
-                                value={form.testType}
+                                value={form.testType ?? ""}
                                 onChange={(e) => setForm({ ...form, testType: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -260,7 +324,7 @@ export default function PathologyTestModal({
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Category Name *</label>
-                            <Select value={form.categoryId} onValueChange={(v) => setForm({ ...form, categoryId: v })}>
+                            <Select value={form.categoryId ?? ""} onValueChange={(v) => setForm({ ...form, categoryId: v })} disabled={loading}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
@@ -275,16 +339,18 @@ export default function PathologyTestModal({
                             <label className="text-sm font-medium">Sub Category</label>
                             <Input
                                 placeholder="Sub Category"
-                                value={form.subCategory}
-                                onChange={(e) => setForm({ ...form, subCategory: e.target.value })}
+                                value={form.subCategoryId ?? ""}
+                                onChange={(e) => setForm({ ...form, subCategoryId: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Method</label>
                             <Input
                                 placeholder="Method"
-                                value={form.method}
+                                value={form.method ?? ""}
                                 onChange={(e) => setForm({ ...form, method: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -295,35 +361,32 @@ export default function PathologyTestModal({
                             <Input
                                 type="number"
                                 placeholder="Report Days"
-                                value={form.reportDays}
+                                value={form.reportDays ?? ""}
                                 onChange={(e) => setForm({ ...form, reportDays: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Charge Category *</label>
-                            <Select value={form.chargeCategoryId} onValueChange={handleChargeCategoryChange}>
+                            <label className="text-sm font-medium">Unit *</label>
+                            <Select value={form.unitId ?? ""} onValueChange={(v) => setForm({ ...form, unitId: v })} disabled={loading}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select Category" />
+                                    <SelectValue placeholder="Select Unit" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {chargeCategories.map(c => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    {units.map(u => (
+                                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Charge Name *</label>
-                            <Select
-                                value={form.chargeNameId}
-                                onValueChange={handleChargeNameChange}
-                                disabled={!form.chargeCategoryId}
-                            >
+                            <label className="text-sm font-medium">Charge Category *</label>
+                            <Select value={form.chargeCategoryId ?? ""} onValueChange={handleChargeCategoryChange} disabled={loading}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select Charge" />
+                                    <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {form.chargeCategoryId && chargeNames[form.chargeCategoryId]?.map(c => (
+                                    {chargeCats.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -333,16 +396,45 @@ export default function PathologyTestModal({
 
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
+                            <label className="text-sm font-medium">Charge Name *</label>
+                            <Select
+                                value={form.chargeId ?? ""}
+                                onValueChange={handleChargeNameChange}
+                                disabled={!form.chargeCategoryId || loading}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Charge" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableCharges.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-1">
                             <label className="text-sm font-medium">Tax (%)</label>
-                            <Input value={form.tax} disabled className="bg-muted" />
+                            <Input value={form.tax ?? 0} disabled className="bg-muted" />
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Standard Charge ($) *</label>
-                            <Input value={form.standardCharge} disabled className="bg-muted" />
+                            <Input value={form.standardCharge ?? 0} disabled className="bg-muted" />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Amount ($) *</label>
-                            <Input value={form.amount} disabled className="bg-muted" />
+                            <Input value={form.amount ?? 0} disabled className="bg-muted" />
+                        </div>
+                        <div className="col-span-2 space-y-1">
+                            <label className="text-sm font-medium">Description</label>
+                            <Input
+                                placeholder="Description"
+                                value={form.description ?? ""}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                disabled={loading}
+                            />
                         </div>
                     </div>
 
@@ -353,26 +445,27 @@ export default function PathologyTestModal({
                                 <div className="col-span-4 space-y-1">
                                     <label className="text-sm font-medium">Test Parameter Name *</label>
                                     <Select
-                                        value={param.parameterId}
+                                        value={param.parameterId ?? ""}
                                         onValueChange={(v) => handleParameterChange(param.id, v)}
+                                        disabled={loading}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Parameter" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {testParameters.map(p => (
-                                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                            {allParameters.map(p => (
+                                                <SelectItem key={p.id} value={p.id}>{p.paramName}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="col-span-4 space-y-1">
                                     <label className="text-sm font-medium">Reference Range *</label>
-                                    <Input value={param.referenceRange} disabled className="bg-muted" />
+                                    <Input value={param.referenceRange ?? ""} disabled className="bg-muted" />
                                 </div>
                                 <div className="col-span-3 space-y-1">
                                     <label className="text-sm font-medium">Unit *</label>
-                                    <Input value={param.unit} disabled className="bg-muted" />
+                                    <Input value={param.unit ?? ""} disabled className="bg-muted" />
                                 </div>
                                 <div className="col-span-1 pb-1">
                                     <Button
@@ -380,6 +473,7 @@ export default function PathologyTestModal({
                                         size="icon"
                                         onClick={() => removeParameterRow(param.id)}
                                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        disabled={loading}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -392,6 +486,7 @@ export default function PathologyTestModal({
                             size="sm"
                             onClick={addParameterRow}
                             className="mt-2"
+                            disabled={loading}
                         >
                             <Plus className="h-4 w-4 mr-2" /> Add Parameter
                         </Button>
@@ -399,12 +494,13 @@ export default function PathologyTestModal({
                 </div>
 
                 <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0 z-10">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         Cancel
                     </Button>
                     <Button onClick={handleSubmit}
+                        disabled={loading}
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
-                        {test ? "Update Test" : "Save Test"}
+                        {loading ? "Saving..." : test ? "Update Test" : "Save Test"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
