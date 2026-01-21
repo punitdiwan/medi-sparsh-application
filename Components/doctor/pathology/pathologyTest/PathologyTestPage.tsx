@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import PathologyTestModal, { PathologyTest } from "./PathologyTestModal";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
 
 
 // Dummy Data
@@ -60,7 +62,7 @@ export default function PathologyTestPage() {
     const [search, setSearch] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTest, setSelectedTest] = useState<PathologyTest | undefined>(undefined);
-
+    const ability = useAbility();
     const filteredTests = useMemo(() => {
         const query = search.toLowerCase().trim();
         if (!query) return tests;
@@ -88,29 +90,32 @@ export default function PathologyTestPage() {
             header: "Actions",
             cell: ({ row }) => (
                 <div className="flex gap-2">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
-                                    <Edit className="w-4 h-4" />
+                    <Can I="update" a="PathologyTest" ability={ability}>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
+                                        <Edit className="w-4 h-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Edit Test</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </Can>
+                    <Can I="delete" a="PathologyTest" ability={ability}>
+                        <ConfirmDialog
+                            title="Delete Test"
+                            description={`Are you sure you want to delete "${row.original.testName}"?`}
+                            onConfirm={() => handleDelete(row.original.id)}
+                            trigger={
+                                <Button variant="ghost" size="icon">
+                                    <Trash2 className="w-4 h-4 text-red-500" />
                                 </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Edit Test</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    <ConfirmDialog
-                        title="Delete Test"
-                        description={`Are you sure you want to delete "${row.original.testName}"?`}
-                        onConfirm={() => handleDelete(row.original.id)}
-                        trigger={
-                            <Button variant="ghost" size="icon">
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                        }
-                    />
+                            }
+                        />
+                    </Can>
                 </div>
             ),
         },
@@ -159,10 +164,11 @@ export default function PathologyTestPage() {
                         className="pl-9"
                     />
                 </div>
-
-                <Button variant="default" onClick={handleAdd}>
-                    <Plus size={16} /> Add Test
-                </Button>
+                <Can I="create" a="PathologyTest" ability={ability}>
+                    <Button variant="default" onClick={handleAdd}>
+                        <Plus size={16} /> Add Test
+                    </Button>
+                </Can>
             </div>
 
             {filteredTests.length === 0 ? (
