@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Scaling } from "lucide-react";
+import {
+    createPathologyUnit,
+    updatePathologyUnit,
+} from "@/lib/actions/pathologyUnits";
 
 export type Unit = {
     id: string;
@@ -22,16 +26,17 @@ type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     unit?: Unit;
-    onSave: (data: Unit) => void;
+    onSaveSuccess: () => void;
 };
 
 export default function UnitModal({
     open,
     onOpenChange,
     unit,
-    onSave,
+    onSaveSuccess,
 }: Props) {
     const [name, setName] = useState("");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -39,12 +44,28 @@ export default function UnitModal({
         }
     }, [unit, open]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!name.trim()) return toast.error("Unit Name is required");
 
-        onSave({ id: unit?.id || Math.random().toString(36).substr(2, 9), name });
-        onOpenChange(false);
-        toast.success(unit ? "Unit updated successfully" : "Unit added successfully");
+        setLoading(true);
+        try {
+            const formData = { name: name.trim() };
+
+            const result = unit
+                ? await updatePathologyUnit(unit.id, formData)
+                : await createPathologyUnit(formData);
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(unit ? "Unit updated successfully" : "Unit added successfully");
+                onSaveSuccess();
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -68,16 +89,17 @@ export default function UnitModal({
                             placeholder="Unit Name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            disabled={loading}
                         />
                     </div>
                 </div>
 
                 <DialogFooter className="px-6 py-4 bg-muted/30 border-t">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit}>
-                        {unit ? "Update Unit" : "Save Unit"}
+                    <Button onClick={handleSubmit} disabled={loading}>
+                        {loading ? "Saving..." : unit ? "Update Unit" : "Save Unit"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

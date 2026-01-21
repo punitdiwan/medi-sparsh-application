@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import {
@@ -22,18 +22,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const dummyUnits: Unit[] = [
-  { id: "u1", name: "mg/dL" },
-  { id: "u2", name: "g/dL" },
-  { id: "u3", name: "/uL" },
-];
+import {
+  getPathologyUnits,
+  deletePathologyUnit,
+} from "@/lib/actions/pathologyUnits";
+import { toast } from "sonner";
 
 export default function UnitManager() {
-  const [units, setUnits] = useState<Unit[]>(dummyUnits);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | undefined>();
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  const fetchUnits = async () => {
+    setLoading(true);
+    try {
+      const result = await getPathologyUnits();
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        setUnits(result.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch units");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUnits = units.filter((u) =>
     u.name.toLowerCase().includes(search.toLowerCase())
@@ -49,16 +69,23 @@ export default function UnitManager() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setUnits(units.filter((u) => u.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deletePathologyUnit(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Unit deleted successfully");
+        fetchUnits();
+      }
+    } catch (error) {
+      toast.error("Failed to delete unit");
+    }
   };
 
-  const handleSave = (unit: Unit) => {
-    if (selectedUnit) {
-      setUnits(units.map((u) => (u.id === unit.id ? unit : u)));
-    } else {
-      setUnits([...units, unit]);
-    }
+  const handleSaveSuccess = () => {
+    fetchUnits();
+    setIsModalOpen(false);
   };
 
   return (
@@ -99,7 +126,16 @@ export default function UnitManager() {
               </TableHeader>
 
               <TableBody>
-                {filteredUnits.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUnits.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={3}
@@ -159,7 +195,7 @@ export default function UnitManager() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         unit={selectedUnit}
-        onSave={handleSave}
+        onSaveSuccess={handleSaveSuccess}
       />
     </>
   );

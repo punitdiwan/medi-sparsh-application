@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, Plus, Trash2, Upload } from "lucide-react";
@@ -18,82 +18,72 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-const dummyCategories: PathologyCategory[] = [
-    { id: "cat1", name: "Blood Chemistry" },
-    { id: "cat2", name: "Hematology" },
-    { id: "cat3", name: "Serology" },
-];
+import {
+    getPathologyCategories,
+    deletePathologyCategory,
+} from "@/lib/actions/pathologyCategories";
+import { toast } from "sonner";
 
 export default function CategoryManager() {
-    const [categories, setCategories] = useState<PathologyCategory[]>(dummyCategories);
+    const [categories, setCategories] = useState<PathologyCategory[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<PathologyCategory | undefined>(undefined);
     const [openEx, setOpenEx] = useState(false);
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        setLoading(true);
+        try {
+            const result = await getPathologyCategories();
+            if (result.error) {
+                toast.error(result.error);
+            } else if (result.data) {
+                setCategories(result.data);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch categories");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredCategories = categories.filter((c) =>
         c.name.toLowerCase().includes(search.toLowerCase())
     );
-    const columns: ColumnDef<PathologyCategory>[] = [
-        {
-            header: "S.No",
-            cell: ({ row }) => row.index + 1,
-        },
-        { accessorKey: "name", header: "Category Name" },
-        {
-            id: "actions",
-            header: "Actions",
-            cell: ({ row }) => (
-                <div className="flex gap-2">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(row.original)}>
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Edit Category</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-
-                    <ConfirmDialog
-                        title="Delete Category"
-                        description={`Are you sure you want to delete "${row.original.name}"?`}
-                        onConfirm={() => handleDelete(row.original.id)}
-                        trigger={
-                            <Button variant="ghost" size="icon">
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                        }
-                    />
-                </div>
-            ),
-        },
-    ];
 
     const handleAdd = () => {
         setSelectedCategory(undefined);
-        setIsModalOpen(true);
+        setOpen(true);
     };
 
     const handleEdit = (category: PathologyCategory) => {
         setSelectedCategory(category);
-        setIsModalOpen(true);
+        setOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        setCategories(categories.filter((c) => c.id !== id));
-    };
-
-    const handleSave = (category: PathologyCategory) => {
-        if (selectedCategory) {
-            setCategories(categories.map((c) => (c.id === category.id ? category : c)));
-        } else {
-            setCategories([...categories, category]);
+    const handleDelete = async (id: string) => {
+        try {
+            const result = await deletePathologyCategory(id);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Category deleted successfully");
+                fetchCategories();
+            }
+        } catch (error) {
+            toast.error("Failed to delete category");
         }
+    };
+
+    const handleSaveSuccess = () => {
+        fetchCategories();
+        setOpen(false);
     };
 
     return (
@@ -112,23 +102,7 @@ export default function CategoryManager() {
                             className="max-w-sm"
                         />
                         <div className="flex flex-wrap gap-4">
-                            <Button onClick={() => setOpen(true)}>Add Category</Button>
-                            {/* <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => setOpenEx(true)}
-                                            className="p-2"
-                                        >
-                                            <Upload className="w-5 h-5" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Upload Pathology Category Excel</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider> */}
+                            <Button onClick={handleAdd}>Add Category</Button>
                         </div>
                     </div>
                     <div className="rounded-md border">
@@ -137,14 +111,21 @@ export default function CategoryManager() {
                                 <TableRow>
                                     <TableHead className="w-20">S.No</TableHead>
                                     <TableHead>Category Name</TableHead>
+                                    <TableHead>Description</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
 
                             <TableBody>
-                                {filteredCategories.length === 0 ? (
+                                {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-6">
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+                                            Loading...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : filteredCategories.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
                                             No categories found
                                         </TableCell>
                                     </TableRow>
@@ -155,6 +136,10 @@ export default function CategoryManager() {
 
                                             <TableCell className="font-medium">
                                                 {category.name}
+                                            </TableCell>
+
+                                            <TableCell className="max-w-[280px] truncate">
+                                                {category.description || "-"}
                                             </TableCell>
 
                                             <TableCell className="text-right">
@@ -202,10 +187,10 @@ export default function CategoryManager() {
             />
 
             <CategoryModal
-                open={isModalOpen}
-                onOpenChange={setIsModalOpen}
+                open={open}
+                onOpenChange={setOpen}
                 category={selectedCategory}
-                onSave={handleSave}
+                onSaveSuccess={handleSaveSuccess}
             />
         </>
     );

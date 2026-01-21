@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import {
@@ -23,38 +23,53 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-/* ---------------- Dummy Data ---------------- */
-
-const dummyUnits: Unit[] = [
-  { id: "u1", name: "mg/dL" },
-  { id: "u2", name: "g/dL" },
-  { id: "u3", name: "/uL" },
-];
-
-const dummyParameters: PathologyParameter[] = [
-  {
-    id: "p1",
-    parameterName: "Blood Glucose",
-    fromReferenceRange: "70",
-    toReferenceRange: "110",
-    unitId: "u1",
-    unitName: "mg/dL",
-    description: "Standard blood sugar measurement",
-  },
-];
-
-/* ---------------- Component ---------------- */
+import {
+  getPathologyParameters,
+  deletePathologyParameter,
+} from "@/lib/actions/pathologyParameters";
+import { getPathologyUnits } from "@/lib/actions/pathologyUnits";
+import { toast } from "sonner";
 
 export default function ParameterManager() {
-  const [parameters, setParameters] = useState<PathologyParameter[]>(dummyParameters);
-  const [units] = useState<Unit[]>(dummyUnits);
+  const [parameters, setParameters] = useState<PathologyParameter[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParameter, setSelectedParameter] = useState<PathologyParameter | undefined>();
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [parametersResult, unitsResult] = await Promise.all([
+        getPathologyParameters(),
+        getPathologyUnits(),
+      ]);
+
+      if (parametersResult.error) {
+        toast.error(parametersResult.error);
+      } else if (parametersResult.data) {
+        setParameters(parametersResult.data);
+      }
+
+      if (unitsResult.error) {
+        toast.error(unitsResult.error);
+      } else if (unitsResult.data) {
+        setUnits(unitsResult.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredParameters = parameters.filter((p) =>
-    p.parameterName.toLowerCase().includes(search.toLowerCase())
+    p.paramName.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAdd = () => {
@@ -67,16 +82,23 @@ export default function ParameterManager() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setParameters(parameters.filter((p) => p.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deletePathologyParameter(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Parameter deleted successfully");
+        fetchData();
+      }
+    } catch (error) {
+      toast.error("Failed to delete parameter");
+    }
   };
 
-  const handleSave = (parameter: PathologyParameter) => {
-    if (selectedParameter) {
-      setParameters(parameters.map((p) => (p.id === parameter.id ? parameter : p)));
-    } else {
-      setParameters([...parameters, parameter]);
-    }
+  const handleSaveSuccess = () => {
+    fetchData();
+    setIsModalOpen(false);
   };
 
   return (
@@ -123,7 +145,16 @@ export default function ParameterManager() {
               </TableHeader>
 
               <TableBody>
-                {filteredParameters.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredParameters.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={6}
@@ -138,11 +169,11 @@ export default function ParameterManager() {
                       <TableCell>{index + 1}</TableCell>
 
                       <TableCell className="font-medium">
-                        {parameter.parameterName}
+                        {parameter.paramName}
                       </TableCell>
 
                       <TableCell>
-                        {parameter.fromReferenceRange} – {parameter.toReferenceRange}
+                        {parameter.fromRange} – {parameter.toRange}
                       </TableCell>
 
                       <TableCell>{parameter.unitName}</TableCell>
@@ -170,7 +201,7 @@ export default function ParameterManager() {
 
                           <ConfirmDialog
                             title="Delete Parameter"
-                            description={`Are you sure you want to delete "${parameter.parameterName}"?`}
+                            description={`Are you sure you want to delete "${parameter.paramName}"?`}
                             onConfirm={() => handleDelete(parameter.id)}
                             trigger={
                               <Button variant="ghost" size="icon">
@@ -194,7 +225,7 @@ export default function ParameterManager() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         parameter={selectedParameter}
-        onSave={handleSave}
+        onSaveSuccess={handleSaveSuccess}
         units={units}
       />
     </>

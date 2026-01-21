@@ -1,3 +1,4 @@
+import { Description } from "@radix-ui/react-alert-dialog";
 import { batched } from "better-auth/react";
 import { create } from "domain";
 import { desc, relations, sql } from "drizzle-orm";
@@ -1208,3 +1209,40 @@ export const ipdMedications = pgTable("ipd_medications", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
+
+// Pathology Category Table
+export const pathologyCategories = pgTable("pathology_categories", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	name: text("name").notNull(),
+	description: text("description"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Pathology Unit Table
+export const pathologyUnits = pgTable("pathology_units", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Pathology Parameter Table
+export const pathologyParameters = pgTable("pathology_parameters", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	description: text("description"),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	paramName: text("param_name").notNull(),
+	fromRange: text("from_range").notNull(),
+	toRange: text("to_range").notNull(),
+	unitId: text("unit_id").notNull()
+		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+

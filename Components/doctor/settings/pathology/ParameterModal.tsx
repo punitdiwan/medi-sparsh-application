@@ -21,22 +21,29 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FlaskConical } from "lucide-react";
 import { Unit } from "./UnitModal";
+import {
+    createPathologyParameter,
+    updatePathologyParameter,
+} from "@/lib/actions/pathologyParameters";
 
 export type PathologyParameter = {
     id: string;
-    parameterName: string;
-    fromReferenceRange: string;
-    toReferenceRange: string;
+    paramName: string;
+    fromRange: string;
+    toRange: string;
     unitId: string;
-    unitName?: string;
-    description: string;
+    unitName?: string | null;
+    description?: string | null;
+    hospitalId?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 };
 
 type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     parameter?: PathologyParameter;
-    onSave: (data: PathologyParameter) => void;
+    onSaveSuccess: () => void;
     units: Unit[];
 };
 
@@ -44,17 +51,18 @@ export default function ParameterModal({
     open,
     onOpenChange,
     parameter,
-    onSave,
+    onSaveSuccess,
     units,
 }: Props) {
     const [form, setForm] = useState<PathologyParameter>({
         id: "",
-        parameterName: "",
-        fromReferenceRange: "",
-        toReferenceRange: "",
+        paramName: "",
+        fromRange: "",
+        toRange: "",
         unitId: "",
         description: "",
     });
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -63,9 +71,9 @@ export default function ParameterModal({
             } else {
                 setForm({
                     id: "",
-                    parameterName: "",
-                    fromReferenceRange: "",
-                    toReferenceRange: "",
+                    paramName: "",
+                    fromRange: "",
+                    toRange: "",
                     unitId: "",
                     description: "",
                 });
@@ -73,16 +81,37 @@ export default function ParameterModal({
         }
     }, [parameter, open]);
 
-    const handleSubmit = () => {
-        if (!form.parameterName.trim()) return toast.error("Parameter Name is required");
-        if (!form.fromReferenceRange.trim()) return toast.error("From Reference Range is required");
-        if (!form.toReferenceRange.trim()) return toast.error("To Reference Range is required");
+    const handleSubmit = async () => {
+        if (!form.paramName.trim()) return toast.error("Parameter Name is required");
+        if (!form.fromRange.trim()) return toast.error("From Reference Range is required");
+        if (!form.toRange.trim()) return toast.error("To Reference Range is required");
         if (!form.unitId) return toast.error("Unit is required");
 
-        const unitName = units.find(u => u.id === form.unitId)?.name;
-        onSave({ ...form, id: form.id || Math.random().toString(36).substr(2, 9), unitName });
-        onOpenChange(false);
-        toast.success(parameter ? "Parameter updated successfully" : "Parameter added successfully");
+        setLoading(true);
+        try {
+            const formData = {
+                paramName: form.paramName.trim(),
+                fromRange: form.fromRange.trim(),
+                toRange: form.toRange.trim(),
+                unitId: form.unitId,
+                description: form.description?.trim() || undefined,
+            };
+
+            const result = parameter
+                ? await updatePathologyParameter(parameter.id, formData)
+                : await createPathologyParameter(formData);
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(parameter ? "Parameter updated successfully" : "Parameter added successfully");
+                onSaveSuccess();
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -104,8 +133,9 @@ export default function ParameterModal({
                         <label className="text-sm font-medium">Parameter Name *</label>
                         <Input
                             placeholder="Parameter Name"
-                            value={form.parameterName}
-                            onChange={(e) => setForm({ ...form, parameterName: e.target.value })}
+                            value={form.paramName}
+                            onChange={(e) => setForm({ ...form, paramName: e.target.value })}
+                            disabled={loading}
                         />
                     </div>
 
@@ -114,16 +144,18 @@ export default function ParameterModal({
                             <label className="text-sm font-medium">From Reference Range *</label>
                             <Input
                                 placeholder="From"
-                                value={form.fromReferenceRange}
-                                onChange={(e) => setForm({ ...form, fromReferenceRange: e.target.value })}
+                                value={form.fromRange}
+                                onChange={(e) => setForm({ ...form, fromRange: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium">To Reference Range *</label>
                             <Input
                                 placeholder="To"
-                                value={form.toReferenceRange}
-                                onChange={(e) => setForm({ ...form, toReferenceRange: e.target.value })}
+                                value={form.toRange}
+                                onChange={(e) => setForm({ ...form, toRange: e.target.value })}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -133,6 +165,7 @@ export default function ParameterModal({
                         <Select
                             value={form.unitId}
                             onValueChange={(v) => setForm({ ...form, unitId: v })}
+                            disabled={loading}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Unit" />
@@ -151,18 +184,19 @@ export default function ParameterModal({
                         <label className="text-sm font-medium">Description</label>
                         <Textarea
                             placeholder="Description"
-                            value={form.description}
+                            value={form.description || ""}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            disabled={loading}
                         />
                     </div>
                 </div>
 
                 <DialogFooter className="px-6 py-4 bg-muted/30 border-t">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSubmit}>
-                        {parameter ? "Update Parameter" : "Save Parameter"}
+                    <Button onClick={handleSubmit} disabled={loading}>
+                        {loading ? "Saving..." : parameter ? "Update Parameter" : "Save Parameter"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

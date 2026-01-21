@@ -22,7 +22,10 @@ import {
   chargeTypes,
   chargeCategories,
   organizationRole,
-  ipdCharges
+  ipdCharges,
+  pathologyCategories,
+  pathologyUnits,
+  pathologyParameters
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -1732,4 +1735,228 @@ export async function getIPDChargesByAdmission(ipdAdmissionId: string, hospitalI
       )
     )
     .orderBy(desc(ipdCharges.createdAt));
+}
+
+// ===================================================
+// Pathology Category Queries
+// ===================================================
+
+export async function getPathologyCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(pathologyCategories)
+    .where(eq(pathologyCategories.hospitalId, hospitalId))
+    .orderBy(desc(pathologyCategories.createdAt));
+}
+
+export async function getPathologyCategoryById(id: string) {
+  const result = await db
+    .select()
+    .from(pathologyCategories)
+    .where(eq(pathologyCategories.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createPathologyCategory(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(pathologyCategories)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updatePathologyCategory(id: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(pathologyCategories)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deletePathologyCategory(id: string) {
+  const result = await db
+    .delete(pathologyCategories)
+    .where(eq(pathologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Pathology Unit Queries
+// ===================================================
+
+export async function getPathologyUnitsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(pathologyUnits)
+    .where(eq(pathologyUnits.hospitalId, hospitalId))
+    .orderBy(desc(pathologyUnits.createdAt));
+}
+
+export async function getPathologyUnitById(id: string) {
+  const result = await db
+    .select()
+    .from(pathologyUnits)
+    .where(eq(pathologyUnits.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createPathologyUnit(data: {
+  hospitalId: string;
+  name: string;
+}) {
+  const result = await db
+    .insert(pathologyUnits)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updatePathologyUnit(id: string, data: {
+  name: string;
+}) {
+  const result = await db
+    .update(pathologyUnits)
+    .set({
+      name: data.name,
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyUnits.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deletePathologyUnit(id: string) {
+  const result = await db
+    .delete(pathologyUnits)
+    .where(eq(pathologyUnits.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Pathology Parameter Queries
+// ===================================================
+
+export async function getPathologyParametersByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: pathologyParameters.id,
+      paramName: pathologyParameters.paramName,
+      fromRange: pathologyParameters.fromRange,
+      toRange: pathologyParameters.toRange,
+      unitId: pathologyParameters.unitId,
+      unitName: pathologyUnits.name,
+      description: pathologyParameters.description,
+      hospitalId: pathologyParameters.hospitalId,
+      createdAt: pathologyParameters.createdAt,
+      updatedAt: pathologyParameters.updatedAt,
+    })
+    .from(pathologyParameters)
+    .leftJoin(pathologyUnits, eq(pathologyParameters.unitId, pathologyUnits.id))
+    .where(eq(pathologyParameters.hospitalId, hospitalId))
+    .orderBy(desc(pathologyParameters.createdAt));
+}
+
+export async function getPathologyParameterById(id: string) {
+  const result = await db
+    .select({
+      id: pathologyParameters.id,
+      paramName: pathologyParameters.paramName,
+      fromRange: pathologyParameters.fromRange,
+      toRange: pathologyParameters.toRange,
+      unitId: pathologyParameters.unitId,
+      unitName: pathologyUnits.name,
+      description: pathologyParameters.description,
+      hospitalId: pathologyParameters.hospitalId,
+      createdAt: pathologyParameters.createdAt,
+      updatedAt: pathologyParameters.updatedAt,
+    })
+    .from(pathologyParameters)
+    .leftJoin(pathologyUnits, eq(pathologyParameters.unitId, pathologyUnits.id))
+    .where(eq(pathologyParameters.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createPathologyParameter(data: {
+  hospitalId: string;
+  paramName: string;
+  fromRange: string;
+  toRange: string;
+  unitId: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(pathologyParameters)
+    .values({
+      hospitalId: data.hospitalId,
+      paramName: data.paramName,
+      fromRange: data.fromRange,
+      toRange: data.toRange,
+      unitId: data.unitId,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updatePathologyParameter(id: string, data: {
+  paramName?: string;
+  fromRange?: string;
+  toRange?: string;
+  unitId?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(pathologyParameters)
+    .set({
+      ...(data.paramName && { paramName: data.paramName }),
+      ...(data.fromRange && { fromRange: data.fromRange }),
+      ...(data.toRange && { toRange: data.toRange }),
+      ...(data.unitId && { unitId: data.unitId }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(pathologyParameters.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deletePathologyParameter(id: string) {
+  const result = await db
+    .delete(pathologyParameters)
+    .where(eq(pathologyParameters.id, id))
+    .returning();
+
+  return result[0];
 }
