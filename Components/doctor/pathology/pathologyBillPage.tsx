@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { Plus, Printer } from "lucide-react";
+import { Plus, Printer, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -16,6 +16,26 @@ import { Card } from "@/components/ui/card";
 import { PathologyBillPdf } from "@/Components/pdf/pathologyBillPdf";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+type BillItem = {
+    medicineName: string;
+    quantity: number;
+    price: number;
+    total: number;
+};
 
 type Bill = {
     id: string;
@@ -25,6 +45,7 @@ type Bill = {
     customerPhone: string;
     paymentMode: string;
     totalAmount: number;
+    items: BillItem[];
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -38,6 +59,10 @@ const DUMMY_BILLS: Bill[] = [
         customerPhone: "1234567890",
         paymentMode: "Cash",
         totalAmount: 1500,
+        items: [
+            { medicineName: "Blood Test", quantity: 1, price: 500, total: 500 },
+            { medicineName: "Sugar Test", quantity: 1, price: 1000, total: 1000 },
+        ],
     },
     {
         id: "2",
@@ -47,6 +72,9 @@ const DUMMY_BILLS: Bill[] = [
         customerPhone: "9876543210",
         paymentMode: "UPI",
         totalAmount: 2500,
+        items: [
+            { medicineName: "Full Body Checkup", quantity: 1, price: 2500, total: 2500 },
+        ],
     },
 ];
 
@@ -94,10 +122,7 @@ export default function PathologyBillPage() {
                     customerName={bill.customerName}
                     customerPhone={bill.customerPhone}
                     paymentMode={bill.paymentMode}
-                    items={[
-                        { medicineName: "Blood Test", quantity: 1, price: 500, total: 500 },
-                        { medicineName: "Sugar Test", quantity: 1, price: 1000, total: 1000 },
-                    ]}
+                    items={bill.items}
                     totalAmount={bill.totalAmount}
                     discount={0}
                     tax={0}
@@ -132,13 +157,80 @@ export default function PathologyBillPage() {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePrint(row?.original?.id)}
-                >
-                    <Printer size={14} className="mr-2" /> Print
-                </Button>
+                <div className="flex gap-2">
+                    <TooltipProvider>
+                        <Dialog>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <Eye size={14} />
+                                        </Button>
+                                    </DialogTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>View Details</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                    <DialogTitle>Billing Details - {row.original.billNo}</DialogTitle>
+                                </DialogHeader>
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    <div>
+                                        <h3 className="font-semibold text-sm text-muted-foreground uppercase">Customer Info</h3>
+                                        <p className="text-sm">Name: {row.original.customerName}</p>
+                                        <p className="text-sm">Phone: {row.original.customerPhone}</p>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-sm text-muted-foreground uppercase">Bill Info</h3>
+                                        <p className="text-sm">Date: {row.original.date}</p>
+                                        <p className="text-sm">Payment: {row.original.paymentMode}</p>
+                                    </div>
+                                </div>
+                                <div className="mt-6">
+                                    <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-2">Items</h3>
+                                    <div className="border rounded-lg overflow-hidden">
+                                        <table className="w-full text-sm">
+                                            <thead className="bg-muted/50">
+                                                <tr className="border-b">
+                                                    <th className="p-2 text-left">Test/Medicine</th>
+                                                    <th className="p-2 text-center">Qty</th>
+                                                    <th className="p-2 text-right">Price</th>
+                                                    <th className="p-2 text-right">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {row.original.items.map((item, index) => (
+                                                    <tr key={index} className="border-b last:border-0">
+                                                        <td className="p-2">{item.medicineName}</td>
+                                                        <td className="p-2 text-center">{item.quantity}</td>
+                                                        <td className="p-2 text-right">{item.price}</td>
+                                                        <td className="p-2 text-right">{item.total}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot className="bg-muted/50 font-bold">
+                                                <tr>
+                                                    <td colSpan={3} className="p-2 text-right">Total Amount</td>
+                                                    <td className="p-2 text-right">{row.original.totalAmount}</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </TooltipProvider>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePrint(row?.original?.id)}
+                    >
+                        <Printer size={14} /> Print
+                    </Button>
+                </div>
             ),
         },
     ];
