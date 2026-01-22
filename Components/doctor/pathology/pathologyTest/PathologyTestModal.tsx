@@ -112,7 +112,13 @@ export default function PathologyTestModal({
                 if (catRes.data) setCategories(catRes.data);
                 if (unitRes.data) setUnits(unitRes.data);
                 if (paramRes.data) setAllParameters(paramRes.data);
-                if (chargeCatRes.data) setChargeCats(chargeCatRes.data);
+                if (chargeCatRes.data) {
+                    const chargeData = chargeCatRes.data.filter((item: any) =>
+                        item.categoryType?.toLowerCase() === "pathology"
+                    );
+
+                    setChargeCats(chargeData);
+                }
                 if (chargeRes.data) setAllCharges(chargeRes.data);
             } catch (error) {
                 console.error("Error fetching modal data:", error);
@@ -159,6 +165,27 @@ export default function PathologyTestModal({
 
     const availableCharges = allCharges.filter(c => c.chargeCategoryId === form.chargeCategoryId);
 
+    useEffect(() => {
+        if (!open) return;
+        if (!test) return;
+        if (!form.chargeId) return;
+        if (allCharges.length === 0) return;
+
+        const selectedCharge = allCharges.find(c => c.id === form.chargeId);
+        if (!selectedCharge) return;
+
+        const taxAmount =
+            (selectedCharge.standardCharge * (selectedCharge.taxPercent || 0)) / 100;
+
+        setForm(prev => ({
+            ...prev,
+            chargeName: selectedCharge.name,
+            tax: selectedCharge.taxPercent || 0,
+            standardCharge: selectedCharge.standardCharge,
+            amount: selectedCharge.standardCharge + taxAmount,
+        }));
+    }, [open, test, form.chargeId, allCharges]);
+
     // Handle Charge Category Change
     const handleChargeCategoryChange = (val: string) => {
         setForm({
@@ -176,14 +203,14 @@ export default function PathologyTestModal({
     const handleChargeNameChange = (val: string) => {
         const selectedCharge = availableCharges.find(c => c.id === val);
         if (selectedCharge) {
-            const taxAmount = (selectedCharge.standardCharge * (selectedCharge.taxPercent || 0)) / 100;
-            const totalAmount = selectedCharge.standardCharge + taxAmount;
+            const taxAmount = (selectedCharge.amount * (selectedCharge.taxPercent || 0)) / 100;
+            const totalAmount = Number(selectedCharge.amount) + Number(taxAmount);
             setForm({
                 ...form,
                 chargeId: val,
                 chargeName: selectedCharge.name,
                 tax: selectedCharge.taxPercent || 0,
-                standardCharge: selectedCharge.standardCharge,
+                standardCharge: Number(selectedCharge.amount),
                 amount: totalAmount,
             });
         }
