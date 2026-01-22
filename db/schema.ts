@@ -1273,3 +1273,68 @@ export const pathologyTests = pgTable("pathology_tests", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
+
+// Radiology Category Table
+export const radiologyCategories = pgTable("radiology_categories", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	categoryName: text("category_name").notNull(),
+	description: text("description"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Radiology Unit Table
+export const radiologyUnits = pgTable("radiology_units", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Radiology Parameter Table	
+export const radiologyParameters = pgTable("radiology_parameters", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	description: text("description"),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	paramName: text("param_name").notNull(),
+	fromRange: text("from_range").notNull(),
+	toRange: text("to_range").notNull(),
+	unitId: text("unit_id").notNull()
+		.references(() => radiologyUnits.id, { onDelete: "restrict" }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Radiology Test Table
+export const radiologyTests = pgTable("radiology_tests", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	testName: text("test_name").notNull(),
+	shortName: text("short_name"),
+	testType: text("test_type").notNull(),
+	description: text("description"),
+	categoryId: text("category_id").notNull()
+		.references(() => radiologyCategories.id, { onDelete: "restrict" }),
+	subCategoryId: text("sub_category_id"),
+	method: text("method"),
+	reportDays: integer("report_days").notNull(),
+	chargeCategoryId: text("charge_category_id").notNull()
+		.references(() => chargeCategories.id, { onDelete: "restrict" }),
+	chargeId: text("charge_id").notNull()
+		.references(() => charges.id, { onDelete: "restrict" }),
+	chargeName: text("charge_name").notNull(),
+	testParameters: jsonb("test_parameters").notNull(),
+	unitId: text("unit_id").notNull()
+		.references(() => radiologyUnits.id, { onDelete: "restrict" }),
+	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+	
