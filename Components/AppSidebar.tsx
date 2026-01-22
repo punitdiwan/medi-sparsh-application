@@ -18,7 +18,8 @@ import {
   ServerCog,
   BriefcaseMedical,
   TestTube,
-  FlaskConical
+  FlaskConical,
+  Microscope
 } from 'lucide-react';
 
 import {
@@ -91,6 +92,14 @@ const items: SidebarItem[] = [
     ],
   },
   {
+    title: 'Radiology',
+    icon: Microscope,
+    children: [
+      { title: 'Billing', url: '/doctor/radiology', subject: 'RadiologyBilling', action: 'read', },
+      { title: 'Radiology Test', url: '/doctor/radiology/radiologyTest', subject: 'RadiologyTest', action: 'read', },
+    ],
+  },
+  {
     title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus, subject: 'reports',
     action: 'read',
   },
@@ -111,6 +120,7 @@ const items: SidebarItem[] = [
       { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation', action: 'read' },
       { title: 'Medicine Record', url: '/doctor/settings/medicineRecord', subject: 'medicineRedord', action: 'read', },
       { title: 'Pathology', url: '/doctor/settings/pathology', subject: 'pathologySettings', action: 'read' },
+      { title: 'Radiology', url: '/doctor/settings/radiology', subject: 'radiologySettings', action: 'read' },
       { title: 'Stats', url: '/doctor/settings/stats', subject: 'stats', action: 'read', },
       { title: 'Payments History', url: '/doctor/billing', subject: 'payment', action: 'read', },
       { title: 'App Settings', url: '/doctor/settings/config', subject: 'appSetting', action: 'read', },
