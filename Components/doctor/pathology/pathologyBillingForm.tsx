@@ -19,7 +19,7 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import { Plus, Trash2, User } from "lucide-react";
+import { Info, Plus, Trash2, User } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -527,7 +527,6 @@ export default function PathologyBillingForm() {
                     </div>
                 </Card>
             </div>
-
             <div className="flex gap-4 w-full flex-col lg:flex-row">
                 <div className="w-full lg:w-[65%]">
                     <Card className="p-4">
@@ -579,31 +578,8 @@ export default function PathologyBillingForm() {
                     </Card>
                 </div>
 
-                <div className="w-full lg:w-[35%] space-y-4">
-                    <Card className="p-4 max-w-120">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Sample Collection</h2>
-
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="homeCollection"
-                                    checked={sampleCollectionType === "home"}
-                                    onChange={(e) =>
-                                        setSampleCollectionType(e.target.checked ? "home" : "lab")
-                                    }
-                                    className="h-4 w-4 accent-primary"
-                                />
-                                <Label
-                                    htmlFor="homeCollection"
-                                    className="text-sm cursor-pointer"
-                                >
-                                    Home Collection
-                                </Label>
-                            </div>
-                        </div>
-                    </Card>
-                    <Card className="p-4 ">
+                <div className="w-full lg:w-[35%]">
+                    <Card className="p-4">
                         <h2 className="text-lg font-semibold">Summary</h2>
                         <div className="space-y-2">
                             <div className="flex justify-between">
@@ -626,21 +602,13 @@ export default function PathologyBillingForm() {
                                 />
                             </div>
 
-                            <div className="flex justify-between border-t pt-2 mt-2">
+                            <div className="flex justify-between border-t pt-1 mt-2">
                                 <Label className="text-lg">Net Amount</Label>
                                 <span className="text-lg font-bold text-primary">
                                     ₹{netAmount.toFixed(2)}
                                 </span>
                             </div>
                         </div>
-
-                        {sampleCollectionType === "home" && (
-                            <div className="flex justify-between text-sm">
-                                <span>Home Collection Charge</span>
-                                <span>₹100.00</span>
-                            </div>
-                        )}
-
 
                         <div className="flex flex-col gap-2">
                             <Label>Note</Label>
@@ -650,7 +618,41 @@ export default function PathologyBillingForm() {
                                 placeholder="Internal notes..."
                             />
                         </div>
+                        <div className="border-t pt-3 space-y-2">
+                            <div className="flex gap-2">
+                                <div className="flex items-center gap-1">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[200px] whitespace-normal wrap-break-word">
+                                                This is an optional charge for collecting samples from the patient's home. Tick this box to include the home collection charge in the bill.
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <Label className="font-medium text-gray-700 dark:text-gray-300 cursor-default">
+                                        Home Sample Collection
+                                    </Label>
 
+                                </div>
+                                <input
+                                    type="checkbox"
+                                    checked={sampleCollectionType === "home"}
+                                    onChange={(e) =>
+                                        setSampleCollectionType(e.target.checked ? "home" : "lab")
+                                    }
+                                    className="h-4 w-4 accent-primary"
+                                />
+                            </div>
+
+                            {sampleCollectionType === "home" && (
+                                <div className="flex justify-between text-sm text-muted-foreground">
+                                    <span>Home Collection Charge</span>
+                                    <span>₹{HOME_COLLECTION_CHARGE.toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
                         <div className="flex flex-wrap gap-2">
                             {/* Generate & Print */}
                             {/* <TooltipProvider>
