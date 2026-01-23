@@ -17,18 +17,14 @@ import { PathologyBillPdf } from "@/Components/pdf/pathologyBillPdf";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import PathologyBillDetailsDialog from "./PathologyBillDetailsDialog";
+import { BsCash } from "react-icons/bs";
+import PathologyPaymentDialog from "./PathologyPaymentDialog";
 
 type BillItem = {
     medicineName: string;
@@ -45,6 +41,20 @@ type Bill = {
     customerPhone: string;
     paymentMode: string;
     totalAmount: number;
+    totalDiscount: number;
+    totalTax: number;
+    netAmount: number;
+    totalDeposit: number;
+    balanceAmount: number;
+    prescriptionNo?: string;
+    doctorName?: string;
+    bloodGroup?: string;
+    generatedBy?: string;
+    note?: string;
+    age?: string;
+    gender?: string;
+    email?: string;
+    address?: string;
     items: BillItem[];
 };
 
@@ -53,27 +63,56 @@ type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 const DUMMY_BILLS: Bill[] = [
     {
         id: "1",
-        billNo: "PATH-001",
-        date: "2024-01-20",
-        customerName: "John Doe",
-        customerPhone: "1234567890",
+        billNo: "PATHOB624",
+        date: "23/01/2026",
+        customerName: "Sunil Kumar",
+        customerPhone: "9876543210",
         paymentMode: "Cash",
+        prescriptionNo: "RX789",
+        doctorName: "Dr. Sanjay Gupta",
+        bloodGroup: "O+",
+        generatedBy: "Zeeshan (Admin)",
+        note: "Urgent report requested by patient.",
+        age: "35 Years",
+        gender: "Male",
+        email: "sunil.kumar@example.com",
+        address: "123, Gandhi Nagar, New Delhi",
         totalAmount: 1500,
+        totalDiscount: 100,
+        totalTax: 180,
+        netAmount: 1580,
+        totalDeposit: 1000,
+        balanceAmount: 580,
         items: [
-            { medicineName: "Blood Test", quantity: 1, price: 500, total: 500 },
-            { medicineName: "Sugar Test", quantity: 1, price: 1000, total: 1000 },
+            { medicineName: "CBC (Complete Blood Count)", quantity: 1, price: 500, total: 500 },
+            { medicineName: "Lipid Profile", quantity: 1, price: 1000, total: 1000 },
         ],
     },
     {
         id: "2",
-        billNo: "PATH-002",
-        date: "2024-01-21",
-        customerName: "Jane Smith",
-        customerPhone: "9876543210",
-        paymentMode: "UPI",
-        totalAmount: 2500,
+        billNo: "PATHOB625",
+        date: "23/01/2026",
+        customerName: "Rani Devi",
+        customerPhone: "8888777766",
+        paymentMode: "Online",
+        prescriptionNo: "RX790",
+        doctorName: "Dr. Anita Sharma",
+        bloodGroup: "B-",
+        generatedBy: "Amit (Staff)",
+        note: "Sample collected at home.",
+        age: "42 Years",
+        gender: "Female",
+        email: "rani.devi@example.com",
+        address: "45/A, Saket, South Delhi",
+        totalAmount: 2000,
+        totalDiscount: 200,
+        totalTax: 240,
+        netAmount: 2040,
+        totalDeposit: 2040,
+        balanceAmount: 0,
         items: [
-            { medicineName: "Full Body Checkup", quantity: 1, price: 2500, total: 2500 },
+            { medicineName: "Liver Function Test (LFT)", quantity: 1, price: 1200, total: 1200 },
+            { medicineName: "Thyroid Profile", quantity: 1, price: 800, total: 800 },
         ],
     },
 ];
@@ -83,6 +122,9 @@ export default function PathologyBillPage() {
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const route = useRouter();
     const ability = useAbility();
     const [visibleFields, setVisibleFields] = useState<string[]>([
@@ -159,77 +201,59 @@ export default function PathologyBillPage() {
             cell: ({ row }) => (
                 <div className="flex gap-2">
                     <TooltipProvider>
-                        <Dialog>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <Eye size={14} />
-                                        </Button>
-                                    </DialogTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>View Details</p>
-                                </TooltipContent>
-                            </Tooltip>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                    <DialogTitle>Billing Details - {row.original.billNo}</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <h3 className="font-semibold text-sm text-muted-foreground uppercase">Customer Info</h3>
-                                        <p className="text-sm">Name: {row.original.customerName}</p>
-                                        <p className="text-sm">Phone: {row.original.customerPhone}</p>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-sm text-muted-foreground uppercase">Bill Info</h3>
-                                        <p className="text-sm">Date: {row.original.date}</p>
-                                        <p className="text-sm">Payment: {row.original.paymentMode}</p>
-                                    </div>
-                                </div>
-                                <div className="mt-6">
-                                    <h3 className="font-semibold text-sm text-muted-foreground uppercase mb-2">Items</h3>
-                                    <div className="border rounded-lg overflow-hidden">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-muted/50">
-                                                <tr className="border-b">
-                                                    <th className="p-2 text-left">Test/Medicine</th>
-                                                    <th className="p-2 text-center">Qty</th>
-                                                    <th className="p-2 text-right">Price</th>
-                                                    <th className="p-2 text-right">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {row.original.items.map((item, index) => (
-                                                    <tr key={index} className="border-b last:border-0">
-                                                        <td className="p-2">{item.medicineName}</td>
-                                                        <td className="p-2 text-center">{item.quantity}</td>
-                                                        <td className="p-2 text-right">{item.price}</td>
-                                                        <td className="p-2 text-right">{item.total}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                            <tfoot className="bg-muted/50 font-bold">
-                                                <tr>
-                                                    <td colSpan={3} className="p-2 text-right">Total Amount</td>
-                                                    <td className="p-2 text-right">{row.original.totalAmount}</td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedBill(row.original);
+                                        setIsViewOpen(true);
+                                    }}
+                                >
+                                    <Eye size={14} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>View Details</p>
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePrint(row?.original?.id)}
-                    >
-                        <Printer size={14} /> Print
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedBill(row.original);
+                                        setIsPaymentOpen(true);
+                                    }}
+                                >
+                                    <BsCash />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Add/Edit Payment</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePrint(row?.original?.id)}
+                                >
+                                    <Printer size={14} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Print</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             ),
         },
@@ -300,6 +324,24 @@ export default function PathologyBillPage() {
                     setRowsPerPage(val);
                     setCurrentPage(1);
                 }}
+            />
+
+            <PathologyBillDetailsDialog
+                open={isViewOpen}
+                onClose={() => {
+                    setIsViewOpen(false);
+                    setSelectedBill(null);
+                }}
+                bill={selectedBill}
+            />
+
+            <PathologyPaymentDialog
+                open={isPaymentOpen}
+                onClose={() => {
+                    setIsPaymentOpen(false);
+                    setSelectedBill(null);
+                }}
+                bill={selectedBill}
             />
         </div>
     );

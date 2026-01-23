@@ -14,10 +14,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import BackButton from "@/Components/BackButton";
-import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import PatientSelector from "../patient/PatientSelector";
+import DoctorSelector from "../patient/DoctorSelector";
+import { toast } from "sonner";
+import BackButton from "@/Components/BackButton";
+import { Plus, Trash2, User } from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Printer } from "lucide-react";
+
 
 type Item = {
     id: string;
@@ -31,136 +41,186 @@ type Item = {
 };
 
 const tests = [
-  {
-    id: "1",
-    testName: "Glucose Fasting",
-    shortName: "GLU-F",
-    testType: "Blood",
-    categoryId: "cat1",
-    categoryName: "Blood Chemistry",
-    subCategory: "Sugar",
-    method: "Enzymatic",
-    reportDays: 1,
-    chargeCategoryId: "cc1",
-    chargeNameId: "cn1",
-    tax: 5,
-    standardCharge: 200,
-    amount: 210,
-    parameters: [
-      {
-        id: "p1",
-        parameterId: "param1",
-        testParameterName: "Blood Glucose",
-        referenceRange: "70-110",
-        unit: "mg/dL",
-      },
-    ],
-  },
+    {
+        id: "1",
+        testName: "Glucose Fasting",
+        shortName: "GLU-F",
+        testType: "Blood",
+        categoryId: "cat1",
+        categoryName: "Blood Chemistry",
+        subCategory: "Sugar",
+        method: "Enzymatic",
+        reportDays: 1,
+        chargeCategoryId: "cc1",
+        chargeNameId: "cn1",
+        tax: 5,
+        standardCharge: 200,
+        amount: 210,
+        parameters: [
+            {
+                id: "p1",
+                parameterId: "param1",
+                testParameterName: "Blood Glucose",
+                referenceRange: "70-110",
+                unit: "mg/dL",
+            },
+        ],
+    },
 
-  {
-    id: "2",
-    testName: "Complete Blood Count",
-    shortName: "CBC",
-    testType: "Blood",
-    categoryId: "cat2",
-    categoryName: "Hematology",
-    subCategory: "Routine",
-    method: "Automated Analyzer",
-    reportDays: 1,
-    chargeCategoryId: "cc2",
-    chargeNameId: "cn2",
-    tax: 5,
-    standardCharge: 350,
-    amount: 367.5,
-    parameters: [
-      {
-        id: "p2",
-        parameterId: "param2",
-        testParameterName: "Hemoglobin",
-        referenceRange: "13-17",
-        unit: "g/dL",
-      },
-      {
-        id: "p3",
-        parameterId: "param3",
-        testParameterName: "WBC Count",
-        referenceRange: "4000-11000",
-        unit: "/µL",
-      },
-    ],
-  },
+    {
+        id: "2",
+        testName: "Complete Blood Count",
+        shortName: "CBC",
+        testType: "Blood",
+        categoryId: "cat2",
+        categoryName: "Hematology",
+        subCategory: "Routine",
+        method: "Automated Analyzer",
+        reportDays: 1,
+        chargeCategoryId: "cc2",
+        chargeNameId: "cn2",
+        tax: 5,
+        standardCharge: 350,
+        amount: 367.5,
+        parameters: [
+            {
+                id: "p2",
+                parameterId: "param2",
+                testParameterName: "Hemoglobin",
+                referenceRange: "13-17",
+                unit: "g/dL",
+            },
+            {
+                id: "p3",
+                parameterId: "param3",
+                testParameterName: "WBC Count",
+                referenceRange: "4000-11000",
+                unit: "/µL",
+            },
+        ],
+    },
 
-  {
-    id: "3",
-    testName: "Lipid Profile",
-    shortName: "LIPID",
-    testType: "Blood",
-    categoryId: "cat1",
-    categoryName: "Blood Chemistry",
-    subCategory: "Cholesterol",
-    method: "Enzymatic Colorimetric",
-    reportDays: 2,
-    chargeCategoryId: "cc3",
-    chargeNameId: "cn3",
-    tax: 12,
-    standardCharge: 800,
-    amount: 896,
-    parameters: [
-      {
-        id: "p4",
-        parameterId: "param4",
-        testParameterName: "Total Cholesterol",
-        referenceRange: "<200",
-        unit: "mg/dL",
-      },
-      {
-        id: "p5",
-        parameterId: "param5",
-        testParameterName: "Triglycerides",
-        referenceRange: "<150",
-        unit: "mg/dL",
-      },
-    ],
-  },
+    {
+        id: "3",
+        testName: "Lipid Profile",
+        shortName: "LIPID",
+        testType: "Blood",
+        categoryId: "cat1",
+        categoryName: "Blood Chemistry",
+        subCategory: "Cholesterol",
+        method: "Enzymatic Colorimetric",
+        reportDays: 2,
+        chargeCategoryId: "cc3",
+        chargeNameId: "cn3",
+        tax: 12,
+        standardCharge: 800,
+        amount: 896,
+        parameters: [
+            {
+                id: "p4",
+                parameterId: "param4",
+                testParameterName: "Total Cholesterol",
+                referenceRange: "<200",
+                unit: "mg/dL",
+            },
+            {
+                id: "p5",
+                parameterId: "param5",
+                testParameterName: "Triglycerides",
+                referenceRange: "<150",
+                unit: "mg/dL",
+            },
+        ],
+    },
 
-  {
-    id: "4",
-    testName: "Urine Routine Examination",
-    shortName: "URINE-RE",
-    testType: "Urine",
-    categoryId: "cat3",
-    categoryName: "Clinical Pathology",
-    subCategory: "Routine",
-    method: "Manual & Microscopy",
-    reportDays: 1,
-    chargeCategoryId: "cc4",
-    chargeNameId: "cn4",
-    tax: 0,
-    standardCharge: 150,
-    amount: 150,
-    parameters: [
-      {
-        id: "p6",
-        parameterId: "param6",
-        testParameterName: "Protein",
-        referenceRange: "Negative",
-        unit: "",
-      },
-      {
-        id: "p7",
-        parameterId: "param7",
-        testParameterName: "Sugar",
-        referenceRange: "Negative",
-        unit: "",
-      },
-    ],
-  },
+    {
+        id: "4",
+        testName: "Urine Routine Examination",
+        shortName: "URINE-RE",
+        testType: "Urine",
+        categoryId: "cat3",
+        categoryName: "Clinical Pathology",
+        subCategory: "Routine",
+        method: "Manual & Microscopy",
+        reportDays: 1,
+        chargeCategoryId: "cc4",
+        chargeNameId: "cn4",
+        tax: 0,
+        standardCharge: 150,
+        amount: 150,
+        parameters: [
+            {
+                id: "p6",
+                parameterId: "param6",
+                testParameterName: "Protein",
+                referenceRange: "Negative",
+                unit: "",
+            },
+            {
+                id: "p7",
+                parameterId: "param7",
+                testParameterName: "Sugar",
+                referenceRange: "Negative",
+                unit: "",
+            },
+        ],
+    },
 ];
 
+const dummyIpdData = [
+    {
+        ipdId: "IPD-001",
+        patient: {
+            id: "pat1",
+            name: "Rahul Kumar",
+            phone: "9999999999",
+        },
+        doctor: {
+            id: "doc1",
+            name: "Dr. Amit Sharma",
+        },
+        tests: [
+            {
+                id: "1",
+                testName: "Glucose Fasting",
+                amount: 200,
+                tax: 5,
+            },
+            {
+                id: "2",
+                testName: "Complete Blood Count",
+                amount: 350,
+                tax: 5,
+            },
+        ],
+    },
+    {
+        ipdId: "IPD-002",
+        patient: {
+            id: "pat2",
+            name: "Sita Devi",
+            phone: "8888888888",
+        },
+        doctor: {
+            id: "doc2",
+            name: "Dr. Neha Verma",
+        },
+        tests: [
+            {
+                id: "3",
+                testName: "Lipid Profile",
+                amount: 800,
+                tax: 12,
+            },
+        ],
+    },
+];
+
+const HOME_COLLECTION_CHARGE = 100;
 
 export default function PathologyBillingForm() {
-    const [customerName, setCustomerName] = useState("");
-    const [customerPhone, setCustomerPhone] = useState("");
+    const [selectedPatient, setSelectedPatient] = useState<any>(null);
+    const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [note, setNote] = useState("");
     const [items, setItems] = useState<Item[]>([]);
 
@@ -175,31 +235,46 @@ export default function PathologyBillingForm() {
     const [netAmount, setNetAmount] = useState<number>(0);
     const [paymentMode, setPaymentMode] = useState("");
 
+    const [ipdId, setIpdId] = useState("");
+
+    const [sampleCollectionType, setSampleCollectionType] =
+        useState<"lab" | "home">("lab");
+
+    const [sampleAddress, setSampleAddress] = useState("");
+    const [sampleDate, setSampleDate] = useState("");
+    const [sampleTimeSlot, setSampleTimeSlot] = useState("");
+
     const router = useRouter();
 
     useEffect(() => {
-        const base = items.reduce(
+        const basePaise = items.reduce(
             (acc, i) => acc + Math.round(i.baseAmount * 100),
             0
         );
 
-        const tax = items.reduce(
+        const taxPaise = items.reduce(
             (acc, i) => acc + Math.round(i.taxAmount * 100),
             0
         );
 
-        const discount = Math.round(discountAmount * 100);
+        const discountPaise = Math.round(discountAmount * 100);
 
-        const net = base + tax - discount;
+        const homeChargePaise =
+            sampleCollectionType === "home" ? 100 * 100 : 0;
 
-        setTotalAmount((base + tax) / 100);
-        setTaxAmount(tax / 100);
-        setNetAmount(net / 100);
-    }, [items, discountAmount]);
+        const netPaise =
+            basePaise + taxPaise + homeChargePaise - discountPaise;
+
+        setTotalAmount((basePaise + taxPaise) / 100);
+        setTaxAmount(taxPaise / 100);
+        setNetAmount(netPaise / 100);
+    }, [items, discountAmount, sampleCollectionType]);
+
 
 
 
     const selectedTest = tests.find(t => t.id === selectedTestId);
+
 
     const handleAddItem = () => {
         if (!selectedTest) {
@@ -239,40 +314,163 @@ export default function PathologyBillingForm() {
         setItems(items.filter((item) => item.id !== id));
     };
 
-    const handleSubmit = () => {
-        if (!customerName || !customerPhone || items.length === 0 || !paymentMode) {
-            toast.error("Please fill all required fields");
+    const handlePatientSelect = (patient: any) => {
+        setSelectedPatient(patient);
+        if (patient) {
+            toast.success(`Patient ${patient.name} selected`);
+        }
+    };
+
+    const handleDoctorSelect = (doctor: any) => {
+        setSelectedDoctor(doctor);
+        if (doctor) {
+            toast.success(`Doctor ${doctor.name} assigned`);
+        }
+    };
+
+    const handleSubmit = (print: Boolean) => {
+        if (!selectedPatient || !selectedDoctor || items.length === 0) {
+            toast.error("Please fill all required fields (Patient, Doctor, Items, Payment)");
+            return;
+        }
+
+        const payload = {
+            patientId: selectedPatient.id,
+
+            doctorId: selectedDoctor.isInternal ? selectedDoctor.id : null,
+            doctorName: selectedDoctor.name,
+
+            billing: {
+                totalAmount,
+                taxAmount,
+                discountAmount,
+                netAmount,
+            },
+
+            sampleCollection: {
+                type: sampleCollectionType,
+                charge:
+                    sampleCollectionType === "home"
+                        ? HOME_COLLECTION_CHARGE
+                        : 0,
+
+                address:
+                    sampleCollectionType === "home"
+                        ? sampleAddress
+                        : null,
+
+                preferredDate:
+                    sampleCollectionType === "home"
+                        ? sampleDate
+                        : null,
+
+                timeSlot:
+                    sampleCollectionType === "home"
+                        ? sampleTimeSlot
+                        : null,
+            },
+
+            paymentMode,
+            note,
+            items,
+        };
+
+        console.log("Generating bill with payload:", payload);
+        if (print) {
+            toast.success("Bill generated and printed successfully (Dummy Data)");
             return;
         }
         toast.success("Bill generated successfully (Dummy Data)");
-        router.push("/doctor/pathology");
+        // router.push("/doctor/pathology");
     };
 
+    const handleIpdSearch = () => {
+        if (!ipdId) return;
+
+        const ipd = dummyIpdData.find(
+            (i) => i.ipdId.toLowerCase() === ipdId.toLowerCase()
+        );
+
+        if (!ipd) {
+            toast.error("IPD ID not found");
+            return;
+        }
+
+        // ✅ auto patient
+        setSelectedPatient(ipd.patient);
+
+        // ✅ auto doctor
+        setSelectedDoctor({
+            id: ipd.doctor.id,
+            name: ipd.doctor.name,
+            isInternal: true,
+        });
+
+        // ✅ auto tests
+        const ipdItems: Item[] = ipd.tests.map((t) => {
+            const basePaise = Math.round(t.amount * 100);
+            const taxPaise = Math.round(basePaise * t.tax / 100);
+
+            return {
+                id: crypto.randomUUID(),
+                name: t.testName,
+                quantity: 1,
+                price: t.amount,
+                taxPercent: t.tax,
+                baseAmount: basePaise / 100,
+                taxAmount: taxPaise / 100,
+                total: (basePaise + taxPaise) / 100,
+            };
+        });
+
+        setItems(ipdItems);
+
+        toast.success("IPD data auto-filled");
+    };
+
+    const appMode = "hospital"; //| "manual";
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
             <BackButton />
             <h1 className="text-2xl font-bold">Generate Pathology Bill</h1>
-
+            {appMode === "hospital" && (
+                <div className="space-y-2 mb-6">
+                    <Label>IPD ID</Label>
+                    <div className="flex gap-2">
+                        <Input
+                            placeholder="Enter IPD ID (e.g. IPD-001)"
+                            value={ipdId}
+                            onChange={(e) => setIpdId(e.target.value)}
+                            className="max-w-80"
+                        />
+                        <Button onClick={handleIpdSearch}>
+                            Search
+                        </Button>
+                    </div>
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4 space-y-4">
-                    <h2 className="text-lg font-semibold">Patient Information</h2>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <Label>Patient Name</Label>
-                            <Input
-                                value={customerName}
-                                onChange={(e) => setCustomerName(e.target.value)}
-                                placeholder="Enter patient name"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label>Phone Number</Label>
-                            <Input
-                                value={customerPhone}
-                                onChange={(e) => setCustomerPhone(e.target.value)}
-                                placeholder="Enter phone number"
-                            />
-                        </div>
+                <Card className="p-4 space-y-0 border-primary/10 ">
+                    <h2 className="text-lg font-semibold flex items-center gap-2 text-primary">
+                        <User className="h-5 w-5" />
+                        Patient Information
+                    </h2>
+
+                    <PatientSelector
+                        value={selectedPatient}
+                        onSelect={handlePatientSelect}
+                        title="Search Existing Patient"
+                        disabled={!!ipdId}
+                    />
+
+                    <div className="pt-2 border-t border-dashed">
+                        <DoctorSelector
+                            value={selectedDoctor}
+                            onSelect={handleDoctorSelect}
+                            title="Referring Doctor"
+                            appMode={appMode}
+                            disabled={!!ipdId}
+                        />
                     </div>
                 </Card>
 
@@ -372,7 +570,58 @@ export default function PathologyBillingForm() {
                     </Card>
                 </div>
 
-                <div className="w-full lg:w-[35%]">
+                <div className="w-full lg:w-[35%] space-y-4">
+                    <Card className="p-4 max-w-120">
+                        <h2 className="text-lg font-semibold">Sample Collection</h2>
+
+                        <Select
+                            value={sampleCollectionType}
+                            onValueChange={(v) =>
+                                setSampleCollectionType(v as "lab" | "home")
+                            }
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Sample Collection Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="lab">Lab Visit</SelectItem>
+                                <SelectItem value="home">Home Collection</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {sampleCollectionType === "home" && (
+                            <div className="space-y-2">
+                                <Label>Sample Collection Address</Label>
+                                <Textarea
+                                    value={sampleAddress}
+                                    onChange={(e) => setSampleAddress(e.target.value)}
+                                    placeholder="Enter full address"
+                                />
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input
+                                        type="date"
+                                        value={sampleDate}
+                                        onChange={(e) => setSampleDate(e.target.value)}
+                                    />
+
+                                    <Select
+                                        value={sampleTimeSlot}
+                                        onValueChange={setSampleTimeSlot}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Time Slot" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="morning">Morning</SelectItem>
+                                            <SelectItem value="afternoon">Afternoon</SelectItem>
+                                            <SelectItem value="evening">Evening</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
                     <Card className="p-4 ">
                         <h2 className="text-lg font-semibold">Summary</h2>
                         <div className="space-y-2">
@@ -403,20 +652,13 @@ export default function PathologyBillingForm() {
                             </div>
                         </div>
 
+                        {sampleCollectionType === "home" && (
+                            <div className="flex justify-between text-sm">
+                                <span>Home Collection Charge</span>
+                                <span>₹100.00</span>
+                            </div>
+                        )}
 
-                        <div className="flex flex-col gap-2">
-                            <Label>Payment Mode</Label>
-                            <Select value={paymentMode} onValueChange={setPaymentMode}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Payment Mode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="cash">Cash</SelectItem>
-                                    <SelectItem value="upi">UPI</SelectItem>
-                                    <SelectItem value="card">Card</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
 
                         <div className="flex flex-col gap-2">
                             <Label>Note</Label>
@@ -427,9 +669,37 @@ export default function PathologyBillingForm() {
                             />
                         </div>
 
-                        <Button onClick={handleSubmit} className="w-full" size="lg">
-                            Generate Bill & Print
-                        </Button>
+                        <div className="flex flex-wrap gap-2">
+                            {/* Generate & Print */}
+                            {/* <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="lg"
+                                            className="w-full flex gap-2"
+                                            onClick={() => handleSubmit(true)}
+                                        >
+                                            <Printer size={18} />
+                                            Generate & Print
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Generate bill and send to printer</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider> */}
+
+                            {/* Generate Only */}
+                            <Button
+                                size="lg"
+                                className="w-full"
+                                onClick={() => handleSubmit(false)}
+                            >
+                                Generate Bill
+                            </Button>
+                        </div>
+
                     </Card>
                 </div>
             </div>

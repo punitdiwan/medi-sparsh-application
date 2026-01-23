@@ -22,12 +22,12 @@ export default function PathologySettingsLayout({ children }: { children: React.
             action: "read",
             subject: "unit",
         },
-        {
-            name: "Pathology Parameter",
-            href: "/doctor/settings/pathology/parameter",
-            action: "read",
-            subject: "pathologyParameter",
-        },
+        // {
+        //     name: "Pathology Parameter",
+        //     href: "/doctor/settings/pathology/parameter",
+        //     action: "read",
+        //     subject: "pathologyParameter",
+        // },
     ];
 
     // For now, let's assume all tabs are visible if ability check is not strictly enforced for these new subjects yet

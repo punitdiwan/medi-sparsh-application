@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { FlaskConical, Plus, Trash2, X } from "lucide-react";
 import { getPathologyCategories } from "@/lib/actions/pathologyCategories";
 import { getPathologyUnits } from "@/lib/actions/pathologyUnits";
-import { getPathologyParameters } from "@/lib/actions/pathologyParameters";
+// import { getPathologyParameters } from "@/lib/actions/pathologyParameters";
 import { createPathologyTest, updatePathologyTest } from "@/lib/actions/pathologyTests";
 import { getChargeCategories, getCharges } from "@/lib/actions/chargeActions";
 
@@ -93,7 +93,6 @@ export default function PathologyTestModal({
 
     const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
     const [units, setUnits] = useState<{ id: string, name: string }[]>([]);
-    const [allParameters, setAllParameters] = useState<any[]>([]);
     const [chargeCats, setChargeCats] = useState<{ id: string, name: string }[]>([]);
     const [allCharges, setAllCharges] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -101,17 +100,15 @@ export default function PathologyTestModal({
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [catRes, unitRes, paramRes, chargeCatRes, chargeRes] = await Promise.all([
+                const [catRes, unitRes, chargeCatRes, chargeRes] = await Promise.all([
                     getPathologyCategories(),
                     getPathologyUnits(),
-                    getPathologyParameters(),
                     getChargeCategories(),
                     getCharges()
                 ]);
 
                 if (catRes.data) setCategories(catRes.data);
                 if (unitRes.data) setUnits(unitRes.data);
-                if (paramRes.data) setAllParameters(paramRes.data);
                 if (chargeCatRes.data) {
                     const chargeData = chargeCatRes.data.filter((item: any) =>
                         item.categoryType?.toLowerCase() === "pathology"
@@ -217,24 +214,13 @@ export default function PathologyTestModal({
     };
 
     // Handle Parameter Row Change
-    const handleParameterChange = (rowId: string, paramId: string) => {
-        const selectedParam = allParameters.find(p => p.id === paramId);
-        if (selectedParam) {
-            setForm({
-                ...form,
-                parameters: form.parameters.map(p =>
-                    p.id === rowId
-                        ? {
-                            ...p,
-                            parameterId: paramId,
-                            testParameterName: selectedParam.paramName,
-                            referenceRange: `${selectedParam.fromRange}-${selectedParam.toRange}`,
-                            unit: selectedParam.unitName || ""
-                        }
-                        : p
-                )
-            });
-        }
+    const handleParameterRowUpdate = (rowId: string, field: keyof ParameterRow, value: string) => {
+        setForm({
+            ...form,
+            parameters: form.parameters.map(p =>
+                p.id === rowId ? { ...p, [field]: value } : p
+            )
+        });
     };
 
     const addParameterRow = () => {
@@ -471,28 +457,30 @@ export default function PathologyTestModal({
                             <div key={param.id} className="grid grid-cols-12 gap-3 items-end">
                                 <div className="col-span-4 space-y-1">
                                     <label className="text-sm font-medium">Test Parameter Name *</label>
-                                    <Select
-                                        value={param.parameterId ?? ""}
-                                        onValueChange={(v) => handleParameterChange(param.id, v)}
+                                    <Input
+                                        placeholder="Parameter Name"
+                                        value={param.testParameterName ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "testParameterName", e.target.value)}
                                         disabled={loading}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Parameter" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {allParameters.map(p => (
-                                                <SelectItem key={p.id} value={p.id}>{p.paramName}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    />
                                 </div>
                                 <div className="col-span-4 space-y-1">
                                     <label className="text-sm font-medium">Reference Range *</label>
-                                    <Input value={param.referenceRange ?? ""} disabled className="bg-muted" />
+                                    <Input
+                                        placeholder="Reference Range"
+                                        value={param.referenceRange ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "referenceRange", e.target.value)}
+                                        disabled={loading}
+                                    />
                                 </div>
                                 <div className="col-span-3 space-y-1">
                                     <label className="text-sm font-medium">Unit *</label>
-                                    <Input value={param.unit ?? ""} disabled className="bg-muted" />
+                                    <Input
+                                        placeholder="Unit"
+                                        value={param.unit ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "unit", e.target.value)}
+                                        disabled={loading}
+                                    />
                                 </div>
                                 <div className="col-span-1 pb-1">
                                     <Button
