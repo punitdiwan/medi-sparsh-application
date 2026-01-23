@@ -27,7 +27,13 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Printer } from "lucide-react";
-
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 
 type Item = {
     id: string;
@@ -243,6 +249,9 @@ export default function PathologyBillingForm() {
     const [sampleAddress, setSampleAddress] = useState("");
     const [sampleDate, setSampleDate] = useState("");
     const [sampleTimeSlot, setSampleTimeSlot] = useState("");
+
+    const [openAddressDialog, setOpenAddressDialog] = useState(false);
+    const [pendingPrint, setPendingPrint] = useState(false);
 
     const router = useRouter();
 
@@ -572,55 +581,27 @@ export default function PathologyBillingForm() {
 
                 <div className="w-full lg:w-[35%] space-y-4">
                     <Card className="p-4 max-w-120">
-                        <h2 className="text-lg font-semibold">Sample Collection</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Sample Collection</h2>
 
-                        <Select
-                            value={sampleCollectionType}
-                            onValueChange={(v) =>
-                                setSampleCollectionType(v as "lab" | "home")
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Sample Collection Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="lab">Lab Visit</SelectItem>
-                                <SelectItem value="home">Home Collection</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        {sampleCollectionType === "home" && (
-                            <div className="space-y-2">
-                                <Label>Sample Collection Address</Label>
-                                <Textarea
-                                    value={sampleAddress}
-                                    onChange={(e) => setSampleAddress(e.target.value)}
-                                    placeholder="Enter full address"
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="homeCollection"
+                                    checked={sampleCollectionType === "home"}
+                                    onChange={(e) =>
+                                        setSampleCollectionType(e.target.checked ? "home" : "lab")
+                                    }
+                                    className="h-4 w-4 accent-primary"
                                 />
-
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Input
-                                        type="date"
-                                        value={sampleDate}
-                                        onChange={(e) => setSampleDate(e.target.value)}
-                                    />
-
-                                    <Select
-                                        value={sampleTimeSlot}
-                                        onValueChange={setSampleTimeSlot}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Time Slot" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="morning">Morning</SelectItem>
-                                            <SelectItem value="afternoon">Afternoon</SelectItem>
-                                            <SelectItem value="evening">Evening</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                <Label
+                                    htmlFor="homeCollection"
+                                    className="text-sm cursor-pointer"
+                                >
+                                    Home Collection
+                                </Label>
                             </div>
-                        )}
+                        </div>
                     </Card>
                     <Card className="p-4 ">
                         <h2 className="text-lg font-semibold">Summary</h2>
@@ -635,12 +616,13 @@ export default function PathologyBillingForm() {
                                 <span>₹{taxAmount.toFixed(2)}</span>
                             </div>
 
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-row justify-between gap-1">
                                 <Label>Discount</Label>
                                 <Input
                                     type="number"
                                     value={discountAmount}
                                     onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                                    className="max-w-25"
                                 />
                             </div>
 
@@ -694,7 +676,17 @@ export default function PathologyBillingForm() {
                             <Button
                                 size="lg"
                                 className="w-full"
-                                onClick={() => handleSubmit(false)}
+                                onClick={() => {
+                                    if (
+                                        sampleCollectionType === "home" &&
+                                        (!sampleAddress || !sampleDate || !sampleTimeSlot)
+                                    ) {
+                                        setPendingPrint(false);
+                                        setOpenAddressDialog(true);
+                                        return;
+                                    }
+                                    handleSubmit(false);
+                                }}
                             >
                                 Generate Bill
                             </Button>
@@ -703,6 +695,73 @@ export default function PathologyBillingForm() {
                     </Card>
                 </div>
             </div>
+
+            <Dialog open={openAddressDialog} onOpenChange={setOpenAddressDialog}>
+                <DialogContent className="max-w-md border border-dialog bg-dialog-surface p-0">
+                    <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+                        <DialogTitle>Home Sample Collection Details</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="px-6 py-5 space-y-4">
+                        <div className="space-y-1">
+                            <Label>Collection Address</Label>
+                            <Textarea
+                                value={sampleAddress}
+                                onChange={(e) => setSampleAddress(e.target.value)}
+                                placeholder="Enter full address"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 ">
+                            <div className="space-y-1">
+                                <Label>Date</Label>
+                                <Input
+                                    type="date"
+                                    value={sampleDate}
+                                    onChange={(e) => setSampleDate(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>Time Slot</Label>
+                                <Select value={sampleTimeSlot} onValueChange={setSampleTimeSlot}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select slot" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="morning">Morning</SelectItem>
+                                        <SelectItem value="afternoon">Afternoon</SelectItem>
+                                        <SelectItem value="evening">Evening</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenAddressDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            onClick={() => {
+                                if (!sampleAddress || !sampleDate || !sampleTimeSlot) {
+                                    toast.error("Please fill all address details");
+                                    return;
+                                }
+                                setOpenAddressDialog(false);
+                                handleSubmit(pendingPrint);
+                            }}
+                        >
+                            Confirm Address
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }
