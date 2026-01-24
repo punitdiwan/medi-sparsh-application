@@ -146,8 +146,8 @@ function SampleCollectorDialog({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md border border-dialog bg-dialog-surface p-0">
-                <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
+            <DialogContent className="sm:max-w-md border border-dialog bg-dialog-surface rounded-lg p-0">
+                <DialogHeader className="px-6 py-4 rounded-t-lg bg-dialog-header text-header border-b border-dialog">
                     <DialogTitle>Add/Edit Sample Collector</DialogTitle>
                     <p className="text-sm text-muted-foreground">{testName}</p>
                 </DialogHeader>
@@ -180,7 +180,7 @@ function SampleCollectorDialog({
                         />
                     </div>
                 </div>
-                <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+                <DialogFooter className="px-6 py-4 rounded-b-lg bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
                     <Button variant="outline" onClick={onClose}
                         className="text-dialog-muted">Cancel</Button>
                     <Button onClick={() => onSave(formData)}
@@ -405,8 +405,8 @@ export default function PathologyBillDetailsDialog({
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-6 py-4 bg-dialog-header border-b border-dialog shadow-md">
                     <div className="flex items-center gap-4">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <FileText className="h-6 w-6" />
+                        <div className="flex items-center justify-center rounded-lg ">
+                            <FileText className="bg-dialog-header text-dialog-icon" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">Pathology Bill Details</h2>

@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { Plus, Printer, Eye } from "lucide-react";
+import { Plus, Printer, Eye, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -199,12 +199,12 @@ export default function PathologyBillPage() {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (
-                <div className="flex gap-2">
+                <div className="flex">
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                         setSelectedBill(row.original);
@@ -223,7 +223,7 @@ export default function PathologyBillPage() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                         setSelectedBill(row.original);
@@ -242,7 +242,7 @@ export default function PathologyBillPage() {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     size="sm"
                                     onClick={() => handlePrint(row?.original?.id)}
                                 >
@@ -251,6 +251,31 @@ export default function PathologyBillPage() {
                             </TooltipTrigger>
                             <TooltipContent>
                                 <p>Print</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        const bill = row.original;
+
+                                        if (!bill.email) {
+                                            toast.error("Patient email not available");
+                                            return;
+                                        }
+                                        // future: open email dialog / trigger API
+                                        toast.success(`Bill will be sent to ${bill.email}`);
+                                    }}
+                                >
+                                    <Mail size={14} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Send Bill via Email</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

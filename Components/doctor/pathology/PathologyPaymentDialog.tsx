@@ -173,8 +173,8 @@ export default function PathologyPaymentDialog({
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-6 py-4 bg-dialog-header border-b border-dialog shadow-md">
                     <div className="flex items-center gap-4">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <CreditCard className="h-6 w-6 text-primary" />
+                        <div className="flex items-center justify-center rounded-lg ">
+                            <CreditCard className="bg-dialog-header text-dialog-icon" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold">Add/Edit Payment</h2>
@@ -244,7 +244,7 @@ export default function PathologyPaymentDialog({
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Payment Summary & Form */}
                             <div className="space-y-6">
-                                <Card className="border-overview-strong bg-dialog-header shadow-sm">
+                                <Card className="border-overview-strong bg-overview-card shadow-sm">
                                     <CardHeader className="py-3 px-4 border-b border-overview-strong">
                                         <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
                                             <IndianRupee className="h-4 w-4 text-primary" />
@@ -334,7 +334,7 @@ export default function PathologyPaymentDialog({
                             </div>
 
                             {/* Transaction History */}
-                            <Card className="border-overview-strong bg-dialog-header shadow-sm overflow-hidden flex flex-col">
+                            <Card className="border-overview-strong bg-overview-card shadow-sm overflow-hidden flex flex-col">
                                 <CardHeader className="py-3 px-4 border-b border-overview-strong bg-muted/20">
                                     <div className="flex justify-between items-center">
                                         <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">

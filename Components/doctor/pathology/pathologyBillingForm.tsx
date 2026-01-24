@@ -253,6 +253,8 @@ export default function PathologyBillingForm() {
     const [openAddressDialog, setOpenAddressDialog] = useState(false);
     const [pendingPrint, setPendingPrint] = useState(false);
 
+    const [usePatientAddress, setUsePatientAddress] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -323,8 +325,22 @@ export default function PathologyBillingForm() {
         setItems(items.filter((item) => item.id !== id));
     };
 
+    useEffect(() => {
+        if (!selectedPatient) {
+            setUsePatientAddress(false);
+            return;
+        }
+
+        // agar patient ke paas address hai & checkbox ON hai
+        if (usePatientAddress && selectedPatient.address) {
+            setSampleAddress(selectedPatient.address);
+        }
+    }, [selectedPatient, usePatientAddress]);
+
+
     const handlePatientSelect = (patient: any) => {
         setSelectedPatient(patient);
+        console.log("selected patients details", patient);
         if (patient) {
             toast.success(`Patient ${patient.name} selected`);
         }
@@ -704,13 +720,47 @@ export default function PathologyBillingForm() {
                         <DialogTitle>Home Sample Collection Details</DialogTitle>
                     </DialogHeader>
 
-                    <div className="px-6 py-5 space-y-4">
+                    <div className="px-6 py-4 space-y-4">
+                        {selectedPatient?.address && (
+                            <div className="flex items-center border-b pb-1 gap-2">
+                                <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[200px] whitespace-normal wrap-break-word">
+                                                 Select this to automatically use the patient’s saved address for home sample collection.
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                <Label className="text-sm text-gray-700 dark:text-gray-300 ">
+                                    Use patient’s existing address
+                                </Label>
+                                <input
+                                    type="checkbox"
+                                    checked={usePatientAddress}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setUsePatientAddress(checked);
+
+                                        if (checked) {
+                                            setSampleAddress(selectedPatient.address);
+                                        } else {
+                                            setSampleAddress("");
+                                        }
+                                    }}
+                                    className="h-4 w-4 accent-primary cursor-pointer"
+                                />
+                            </div>
+                        )}
                         <div className="space-y-1">
                             <Label>Collection Address</Label>
                             <Textarea
                                 value={sampleAddress}
                                 onChange={(e) => setSampleAddress(e.target.value)}
                                 placeholder="Enter full address"
+                                disabled={usePatientAddress}
+                                className={usePatientAddress ? "bg-muted cursor-not-allowed" : ""}
                             />
                         </div>
 
@@ -739,6 +789,7 @@ export default function PathologyBillingForm() {
                             </div>
                         </div>
                     </div>
+
 
                     <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
                         <Button
