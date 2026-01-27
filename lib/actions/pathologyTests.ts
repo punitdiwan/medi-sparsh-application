@@ -28,7 +28,7 @@ export async function getPathologyTests() {
 export async function createPathologyTest(formData: {
     testName: string;
     shortName?: string;
-    testType: string;
+    sampleType: string;
     description?: string;
     categoryId: string;
     subCategoryId?: string;
@@ -37,8 +37,13 @@ export async function createPathologyTest(formData: {
     chargeCategoryId: string;
     chargeId: string;
     chargeName: string;
-    testParameters: any;
-    unitId: string;
+    parameters: {
+        paramName: string;
+        fromRange: string;
+        toRange: string;
+        unitId: string;
+        description?: string;
+    }[];
 }) {
     try {
         const org = await getActiveOrganization();
@@ -52,6 +57,7 @@ export async function createPathologyTest(formData: {
 
         const newTest = await dbCreatePathologyTest({
             ...formData,
+            reportHours: formData.reportDays * 24,
             hospitalId: org.id,
         });
 
@@ -66,7 +72,7 @@ export async function createPathologyTest(formData: {
 export async function updatePathologyTest(id: string, formData: {
     testName?: string;
     shortName?: string;
-    testType?: string;
+    sampleType?: string;
     description?: string;
     categoryId?: string;
     subCategoryId?: string;
@@ -75,8 +81,14 @@ export async function updatePathologyTest(id: string, formData: {
     chargeCategoryId?: string;
     chargeId?: string;
     chargeName?: string;
-    testParameters?: any;
-    unitId?: string;
+    parameters?: {
+        id?: string;
+        paramName: string;
+        fromRange: string;
+        toRange: string;
+        unitId: string;
+        description?: string;
+    }[];
 }) {
     try {
         const org = await getActiveOrganization();
@@ -84,7 +96,11 @@ export async function updatePathologyTest(id: string, formData: {
             return { error: "Unauthorized" };
         }
 
-        const updatedTest = await dbUpdatePathologyTest(id, formData);
+        const updatedTest = await dbUpdatePathologyTest(id, {
+            ...formData,
+            hospitalId: org.id,
+            ...(formData.reportDays !== undefined && { reportHours: formData.reportDays * 24 }),
+        });
 
         if (!updatedTest) {
             return { error: "Pathology test not found" };

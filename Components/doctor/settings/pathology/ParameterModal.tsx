@@ -32,6 +32,7 @@ export type PathologyParameter = {
     fromRange: string;
     toRange: string;
     unitId: string;
+    testId: string;
     unitName?: string | null;
     description?: string | null;
     hospitalId?: string;
@@ -45,6 +46,7 @@ type Props = {
     parameter?: PathologyParameter;
     onSaveSuccess: () => void;
     units: Unit[];
+    tests: any[];
 };
 
 export default function ParameterModal({
@@ -53,6 +55,7 @@ export default function ParameterModal({
     parameter,
     onSaveSuccess,
     units,
+    tests,
 }: Props) {
     const [form, setForm] = useState<PathologyParameter>({
         id: "",
@@ -60,6 +63,7 @@ export default function ParameterModal({
         fromRange: "",
         toRange: "",
         unitId: "",
+        testId: "",
         description: "",
     });
     const [loading, setLoading] = useState(false);
@@ -75,6 +79,7 @@ export default function ParameterModal({
                     fromRange: "",
                     toRange: "",
                     unitId: "",
+                    testId: "",
                     description: "",
                 });
             }
@@ -86,10 +91,12 @@ export default function ParameterModal({
         if (!form.fromRange.trim()) return toast.error("From Reference Range is required");
         if (!form.toRange.trim()) return toast.error("To Reference Range is required");
         if (!form.unitId) return toast.error("Unit is required");
+        if (!form.testId) return toast.error("Test is required");
 
         setLoading(true);
         try {
             const formData = {
+                testId: form.testId,
                 paramName: form.paramName.trim(),
                 fromRange: form.fromRange.trim(),
                 toRange: form.toRange.trim(),
@@ -137,6 +144,26 @@ export default function ParameterModal({
                             onChange={(e) => setForm({ ...form, paramName: e.target.value })}
                             disabled={loading}
                         />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium">Select Test *</label>
+                        <Select
+                            value={form.testId}
+                            onValueChange={(v) => setForm({ ...form, testId: v })}
+                            disabled={loading}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Test" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tests.map((t) => (
+                                    <SelectItem key={t.id} value={t.id}>
+                                        {t.testName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

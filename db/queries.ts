@@ -1874,6 +1874,7 @@ export async function getPathologyParametersByHospital(hospitalId: string) {
       fromRange: pathologyParameters.fromRange,
       toRange: pathologyParameters.toRange,
       unitId: pathologyParameters.unitId,
+      testId: pathologyParameters.testId,
       unitName: pathologyUnits.name,
       description: pathologyParameters.description,
       hospitalId: pathologyParameters.hospitalId,
@@ -1909,6 +1910,7 @@ export async function getPathologyParameterById(id: string) {
 
 export async function createPathologyParameter(data: {
   hospitalId: string;
+  testId: string;
   paramName: string;
   fromRange: string;
   toRange: string;
@@ -1919,6 +1921,7 @@ export async function createPathologyParameter(data: {
     .insert(pathologyParameters)
     .values({
       hospitalId: data.hospitalId,
+      testId: data.testId,
       paramName: data.paramName,
       fromRange: data.fromRange,
       toRange: data.toRange,
@@ -1970,19 +1973,16 @@ export async function getPathologyTestsByHospital(hospitalId: string) {
       id: pathologyTests.id,
       testName: pathologyTests.testName,
       shortName: pathologyTests.shortName,
-      testType: pathologyTests.testType,
+      sampleType: pathologyTests.sampleType,
       description: pathologyTests.description,
       categoryId: pathologyTests.categoryId,
       categoryName: pathologyCategories.name,
       subCategoryId: pathologyTests.subCategoryId,
       method: pathologyTests.method,
-      reportDays: pathologyTests.reportDays,
+      reportHours: pathologyTests.reportHours,
       chargeCategoryId: pathologyTests.chargeCategoryId,
       chargeId: pathologyTests.chargeId,
       chargeName: pathologyTests.chargeName,
-      testParameters: pathologyTests.testParameters,
-      unitId: pathologyTests.unitId,
-      unitName: pathologyUnits.name,
       isDeleted: pathologyTests.isDeleted,
       createdAt: pathologyTests.createdAt,
       updatedAt: pathologyTests.updatedAt,
@@ -1992,11 +1992,28 @@ export async function getPathologyTestsByHospital(hospitalId: string) {
       pathologyCategories,
       eq(pathologyTests.categoryId, pathologyCategories.id)
     )
-    .leftJoin(pathologyUnits, eq(pathologyTests.unitId, pathologyUnits.id))
     .where(eq(pathologyTests.hospitalId, hospitalId))
     .orderBy(desc(pathologyTests.createdAt));
 
-  return result;
+  const testsWithParameters = await Promise.all(
+    result.map(async (test) => {
+      const parameters = await db
+        .select({
+          id: pathologyParameters.id,
+          paramName: pathologyParameters.paramName,
+          fromRange: pathologyParameters.fromRange,
+          toRange: pathologyParameters.toRange,
+          unitId: pathologyParameters.unitId,
+          unitName: pathologyUnits.name,
+        })
+        .from(pathologyParameters)
+        .leftJoin(pathologyUnits, eq(pathologyParameters.unitId, pathologyUnits.id))
+        .where(eq(pathologyParameters.testId, test.id));
+      return { ...test, parameters };
+    })
+  );
+
+  return testsWithParameters;
 }
 
 export async function getPathologyTestById(id: string) {
@@ -2005,19 +2022,16 @@ export async function getPathologyTestById(id: string) {
       id: pathologyTests.id,
       testName: pathologyTests.testName,
       shortName: pathologyTests.shortName,
-      testType: pathologyTests.testType,
+      sampleType: pathologyTests.sampleType,
       description: pathologyTests.description,
       categoryId: pathologyTests.categoryId,
       categoryName: pathologyCategories.name,
       subCategoryId: pathologyTests.subCategoryId,
       method: pathologyTests.method,
-      reportDays: pathologyTests.reportDays,
+      reportHours: pathologyTests.reportHours,
       chargeCategoryId: pathologyTests.chargeCategoryId,
       chargeId: pathologyTests.chargeId,
       chargeName: pathologyTests.chargeName,
-      testParameters: pathologyTests.testParameters,
-      unitId: pathologyTests.unitId,
-      unitName: pathologyUnits.name,
       isDeleted: pathologyTests.isDeleted,
       createdAt: pathologyTests.createdAt,
       updatedAt: pathologyTests.updatedAt,
@@ -2027,93 +2041,152 @@ export async function getPathologyTestById(id: string) {
       pathologyCategories,
       eq(pathologyTests.categoryId, pathologyCategories.id)
     )
-    .leftJoin(pathologyUnits, eq(pathologyTests.unitId, pathologyUnits.id))
     .where(eq(pathologyTests.id, id));
 
-  return result[0];
+  if (result.length === 0) return null;
+
+  const test = result[0];
+  const parameters = await db
+    .select({
+      id: pathologyParameters.id,
+      paramName: pathologyParameters.paramName,
+      fromRange: pathologyParameters.fromRange,
+      toRange: pathologyParameters.toRange,
+      unitId: pathologyParameters.unitId,
+      unitName: pathologyUnits.name,
+    })
+    .from(pathologyParameters)
+    .leftJoin(pathologyUnits, eq(pathologyParameters.unitId, pathologyUnits.id))
+    .where(eq(pathologyParameters.testId, test.id));
+
+  return { ...test, parameters };
 }
 
 export async function createPathologyTest(data: {
   hospitalId: string;
   testName: string;
   shortName?: string;
-  testType: string;
+  sampleType: string;
   description?: string;
   categoryId: string;
   subCategoryId?: string;
   method?: string;
-  reportDays: number;
+  reportHours: number;
   chargeCategoryId: string;
   chargeId: string;
   chargeName: string;
-  testParameters: any; // JSONB
-  unitId: string;
+  parameters: {
+    paramName: string;
+    fromRange: string;
+    toRange: string;
+    unitId: string;
+    description?: string;
+  }[];
 }) {
-  const result = await db
-    .insert(pathologyTests)
-    .values({
-      hospitalId: data.hospitalId,
-      testName: data.testName,
-      shortName: data.shortName,
-      testType: data.testType,
-      description: data.description,
-      categoryId: data.categoryId,
-      subCategoryId: data.subCategoryId,
-      method: data.method,
-      reportDays: data.reportDays,
-      chargeCategoryId: data.chargeCategoryId,
-      chargeId: data.chargeId,
-      chargeName: data.chargeName,
-      testParameters: data.testParameters,
-      unitId: data.unitId,
-    })
-    .returning();
+  return await db.transaction(async (tx) => {
+    const [newTest] = await tx
+      .insert(pathologyTests)
+      .values({
+        hospitalId: data.hospitalId,
+        testName: data.testName,
+        shortName: data.shortName,
+        sampleType: data.sampleType,
+        description: data.description,
+        categoryId: data.categoryId,
+        subCategoryId: data.subCategoryId,
+        method: data.method,
+        reportHours: data.reportHours,
+        chargeCategoryId: data.chargeCategoryId,
+        chargeId: data.chargeId,
+        chargeName: data.chargeName,
+      })
+      .returning();
 
-  return result[0];
+    if (data.parameters && data.parameters.length > 0) {
+      await tx.insert(pathologyParameters).values(
+        data.parameters.map((p) => ({
+          ...p,
+          hospitalId: data.hospitalId,
+          testId: newTest.id,
+        }))
+      );
+    }
+
+    return newTest;
+  });
 }
 
 export async function updatePathologyTest(
   id: string,
   data: {
+    hospitalId: string;
     testName?: string;
     shortName?: string;
-    testType?: string;
+    sampleType?: string;
     description?: string;
     categoryId?: string;
     subCategoryId?: string;
     method?: string;
-    reportDays?: number;
+    reportHours?: number;
     chargeCategoryId?: string;
     chargeId?: string;
     chargeName?: string;
-    testParameters?: any; // JSONB
-    unitId?: string;
+    parameters?: {
+      id?: string;
+      paramName: string;
+      fromRange: string;
+      toRange: string;
+      unitId: string;
+      description?: string;
+    }[];
   }
 ) {
-  const result = await db
-    .update(pathologyTests)
-    .set({
-      ...(data.testName && { testName: data.testName }),
-      ...(data.shortName !== undefined && { shortName: data.shortName }),
-      ...(data.testType && { testType: data.testType }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(data.categoryId && { categoryId: data.categoryId }),
-      ...(data.subCategoryId !== undefined && {
-        subCategoryId: data.subCategoryId,
-      }),
-      ...(data.method !== undefined && { method: data.method }),
-      ...(data.reportDays && { reportDays: data.reportDays }),
-      ...(data.chargeCategoryId && { chargeCategoryId: data.chargeCategoryId }),
-      ...(data.chargeId && { chargeId: data.chargeId }),
-      ...(data.chargeName && { chargeName: data.chargeName }),
-      ...(data.testParameters && { testParameters: data.testParameters }),
-      ...(data.unitId && { unitId: data.unitId }),
-      updatedAt: new Date(),
-    })
-    .where(eq(pathologyTests.id, id))
-    .returning();
+  return await db.transaction(async (tx) => {
+    const [updatedTest] = await tx
+      .update(pathologyTests)
+      .set({
+        ...(data.testName && { testName: data.testName }),
+        ...(data.shortName !== undefined && { shortName: data.shortName }),
+        ...(data.sampleType && { sampleType: data.sampleType }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.categoryId && { categoryId: data.categoryId }),
+        ...(data.subCategoryId !== undefined && {
+          subCategoryId: data.subCategoryId,
+        }),
+        ...(data.method !== undefined && { method: data.method }),
+        ...(data.reportHours && { reportHours: data.reportHours }),
+        ...(data.chargeCategoryId && { chargeCategoryId: data.chargeCategoryId }),
+        ...(data.chargeId && { chargeId: data.chargeId }),
+        ...(data.chargeName && { chargeName: data.chargeName }),
+        updatedAt: new Date(),
+      })
+      .where(eq(pathologyTests.id, id))
+      .returning();
 
-  return result[0];
+    if (data.parameters) {
+      // Simple sync: delete all and re-insert
+      // Alternatively, we could do a more complex diffing update
+      await tx
+        .delete(pathologyParameters)
+        .where(eq(pathologyParameters.testId, id));
+
+      if (data.parameters.length > 0) {
+        await tx.insert(pathologyParameters).values(
+          data.parameters.map((p) => ({
+            paramName: p.paramName,
+            fromRange: p.fromRange,
+            toRange: p.toRange,
+            unitId: p.unitId,
+            description: p.description,
+            hospitalId: data.hospitalId,
+            testId: id,
+          }))
+        );
+      }
+    }
+
+    return updatedTest;
+  });
 }
 
 export async function deletePathologyTest(id: string) {

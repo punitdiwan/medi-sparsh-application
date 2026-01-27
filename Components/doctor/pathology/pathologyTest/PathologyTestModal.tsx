@@ -27,22 +27,23 @@ import { getChargeCategories, getCharges } from "@/lib/actions/chargeActions";
 
 export type ParameterRow = {
     id: string;
-    parameterId: string;
-    testParameterName: string;
-    referenceRange: string;
-    unit: string;
+    paramName: string;
+    fromRange: string;
+    toRange: string;
+    unitId: string;
 };
 
 export type PathologyTest = {
     id: string;
     testName: string;
     shortName: string;
-    testType: string;
+    sampleType: string;
     description?: string;
     categoryId: string;
     categoryName?: string;
     subCategoryId: string;
     method: string;
+    reportHours: number | string;
     reportDays: number | string;
     chargeCategoryId: string;
     chargeId: string;
@@ -51,8 +52,6 @@ export type PathologyTest = {
     standardCharge: number;
     amount: number;
     parameters: ParameterRow[];
-    unitId: string;
-    unitName?: string;
     isDeleted?: boolean;
 };
 
@@ -73,12 +72,13 @@ export default function PathologyTestModal({
         id: "",
         testName: "",
         shortName: "",
-        testType: "",
+        sampleType: "",
         description: "",
         categoryId: "",
         subCategoryId: "",
         method: "",
         reportDays: "",
+        reportHours: "",
         chargeCategoryId: "",
         chargeId: "",
         chargeName: "",
@@ -86,9 +86,8 @@ export default function PathologyTestModal({
         standardCharge: 0,
         amount: 0,
         parameters: [
-            { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
+            { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }
         ],
-        unitId: "",
     });
 
     const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
@@ -132,6 +131,7 @@ export default function PathologyTestModal({
             if (test) {
                 setForm({
                     ...test,
+                    reportDays: test.reportHours ? Number(test.reportHours) / 24 : "",
                     parameters: Array.isArray(test.parameters) ? test.parameters : (test as any).testParameters || []
                 });
             } else {
@@ -139,12 +139,13 @@ export default function PathologyTestModal({
                     id: "",
                     testName: "",
                     shortName: "",
-                    testType: "",
+                    sampleType: "",
                     description: "",
                     categoryId: "",
                     subCategoryId: "",
                     method: "",
                     reportDays: "",
+                    reportHours: "",
                     chargeCategoryId: "",
                     chargeId: "",
                     chargeName: "",
@@ -152,9 +153,8 @@ export default function PathologyTestModal({
                     standardCharge: 0,
                     amount: 0,
                     parameters: [
-                        { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
+                        { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }
                     ],
-                    unitId: "",
                 });
             }
         }
@@ -226,7 +226,7 @@ export default function PathologyTestModal({
     const addParameterRow = () => {
         setForm({
             ...form,
-            parameters: [...form.parameters, { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }]
+            parameters: [...form.parameters, { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }]
         });
     };
 
@@ -242,7 +242,6 @@ export default function PathologyTestModal({
         if (!form.testName) return toast.error("Test Name is required");
         if (!form.categoryId) return toast.error("Category is required");
         if (!form.reportDays) return toast.error("Report Days is required");
-        if (!form.unitId) return toast.error("Unit is required");
         if (!form.chargeId) return toast.error("Charge is required");
 
         setLoading(true);
@@ -250,17 +249,22 @@ export default function PathologyTestModal({
             const payload = {
                 testName: form.testName,
                 shortName: form.shortName,
-                testType: form.testType,
+                sampleType: form.sampleType,
                 description: form.description,
                 categoryId: form.categoryId,
                 subCategoryId: form.subCategoryId,
                 method: form.method,
                 reportDays: Number(form.reportDays),
+                reportHours: Number(form.reportDays) * 24,
                 chargeCategoryId: form.chargeCategoryId,
                 chargeId: form.chargeId,
                 chargeName: form.chargeName,
-                testParameters: form.parameters,
-                unitId: form.unitId,
+                parameters: form.parameters.map(p => ({
+                    paramName: p.paramName,
+                    fromRange: p.fromRange,
+                    toRange: p.toRange,
+                    unitId: p.unitId,
+                })),
             };
 
             const result = test
@@ -324,11 +328,11 @@ export default function PathologyTestModal({
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Test Type</label>
+                            <label className="text-sm font-medium">Sample Type</label>
                             <Input
-                                placeholder="Test Type"
-                                value={form.testType ?? ""}
-                                onChange={(e) => setForm({ ...form, testType: e.target.value })}
+                                placeholder="Sample Type"
+                                value={form.sampleType ?? ""}
+                                onChange={(e) => setForm({ ...form, sampleType: e.target.value })}
                                 disabled={loading}
                             />
                         </div>
@@ -378,19 +382,6 @@ export default function PathologyTestModal({
                                 onChange={(e) => setForm({ ...form, reportDays: e.target.value })}
                                 disabled={loading}
                             />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium">Unit *</label>
-                            <Select value={form.unitId ?? ""} onValueChange={(v) => setForm({ ...form, unitId: v })} disabled={loading}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {units.map(u => (
-                                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Charge Category *</label>
@@ -455,32 +446,49 @@ export default function PathologyTestModal({
                         <h3 className="font-semibold text-lg border-b pb-2">Test Parameters</h3>
                         {form.parameters.map((param, index) => (
                             <div key={param.id} className="grid grid-cols-12 gap-3 items-end">
-                                <div className="col-span-4 space-y-1">
-                                    <label className="text-sm font-medium">Test Parameter Name *</label>
+                                <div className="col-span-3 space-y-1">
+                                    <label className="text-sm font-medium">Parameter Name *</label>
                                     <Input
                                         placeholder="Parameter Name"
-                                        value={param.testParameterName ?? ""}
-                                        onChange={(e) => handleParameterRowUpdate(param.id, "testParameterName", e.target.value)}
+                                        value={param.paramName ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "paramName", e.target.value)}
+                                        disabled={loading}
+                                    />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <label className="text-sm font-medium">From Range *</label>
+                                    <Input
+                                        placeholder="From"
+                                        value={param.fromRange ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "fromRange", e.target.value)}
+                                        disabled={loading}
+                                    />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <label className="text-sm font-medium">To Range *</label>
+                                    <Input
+                                        placeholder="To"
+                                        value={param.toRange ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "toRange", e.target.value)}
                                         disabled={loading}
                                     />
                                 </div>
                                 <div className="col-span-4 space-y-1">
-                                    <label className="text-sm font-medium">Reference Range *</label>
-                                    <Input
-                                        placeholder="Reference Range"
-                                        value={param.referenceRange ?? ""}
-                                        onChange={(e) => handleParameterRowUpdate(param.id, "referenceRange", e.target.value)}
-                                        disabled={loading}
-                                    />
-                                </div>
-                                <div className="col-span-3 space-y-1">
                                     <label className="text-sm font-medium">Unit *</label>
-                                    <Input
-                                        placeholder="Unit"
-                                        value={param.unit ?? ""}
-                                        onChange={(e) => handleParameterRowUpdate(param.id, "unit", e.target.value)}
+                                    <Select
+                                        value={param.unitId ?? ""}
+                                        onValueChange={(v) => handleParameterRowUpdate(param.id, "unitId", v)}
                                         disabled={loading}
-                                    />
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Unit" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {units.map(u => (
+                                                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="col-span-1 pb-1">
                                     <Button

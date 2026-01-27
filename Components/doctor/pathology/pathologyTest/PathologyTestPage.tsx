@@ -71,11 +71,15 @@ export default function PathologyTestPage() {
         },
         { accessorKey: "testName", header: "Test Name" },
         { accessorKey: "shortName", header: "Short Name" },
-        { accessorKey: "testType", header: "Test Type" },
+        { accessorKey: "sampleType", header: "Sample Type" },
         { accessorKey: "categoryName", header: "Category" },
         { accessorKey: "subCategoryId", header: "Sub Category" },
         { accessorKey: "method", header: "Method" },
-        { accessorKey: "reportDays", header: "Report Days" },
+        {
+            accessorKey: "reportHours",
+            header: "Report Days",
+            cell: ({ row }) => Number(row.original.reportHours) / 24
+        },
         {
             id: "actions",
             header: "Actions",

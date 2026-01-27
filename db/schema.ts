@@ -1231,20 +1231,6 @@ export const pathologyUnits = pgTable("pathology_units", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-// Pathology Parameter Table
-export const pathologyParameters = pgTable("pathology_parameters", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	description: text("description"),
-	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "restrict" }),
-	paramName: text("param_name").notNull(),
-	fromRange: text("from_range").notNull(),
-	toRange: text("to_range").notNull(),
-	unitId: text("unit_id").notNull()
-		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-});
 
 // Pathology Test Table	
 export const pathologyTests = pgTable("pathology_tests", {
@@ -1253,23 +1239,36 @@ export const pathologyTests = pgTable("pathology_tests", {
 		.references(() => organization.id, { onDelete: "restrict" }),
 	testName: text("test_name").notNull(),
 	shortName: text("short_name"),
-	testType: text("test_type").notNull(),
+	sampleType: text("sample_type").notNull(),
 	description: text("description"),
 	categoryId: text("category_id").notNull()
 		.references(() => pathologyCategories.id, { onDelete: "restrict" }),
 	subCategoryId: text("sub_category_id"),
 	method: text("method"),
-	reportDays: integer("report_days").notNull(),
+	reportHours: integer("report_hours").notNull(),
 	chargeCategoryId: text("charge_category_id").notNull()
 		.references(() => chargeCategories.id, { onDelete: "restrict" }),
 	chargeId: text("charge_id").notNull()
 		.references(() => charges.id, { onDelete: "restrict" }),
 	chargeName: text("charge_name").notNull(),
-	testParameters: jsonb("test_parameters").notNull(),
-	unitId: text("unit_id").notNull()
-		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
+// Pathology Parameter Table
+export const pathologyParameters = pgTable("pathology_parameters", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	description: text("description"),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	paramName: text("param_name").notNull(),
+	testId: text("test_id").notNull()
+		.references(() => pathologyTests.id, { onDelete: "restrict" }),
+	fromRange: text("from_range").notNull(),
+	toRange: text("to_range").notNull(),
+	unitId: text("unit_id").notNull()
+		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
