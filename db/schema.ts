@@ -1300,6 +1300,7 @@ export const pathologyOrderTests = pgTable("pathology_order_tests", {
 	testId: text("test_id").notNull()
 		.references(() => pathologyTests.id, { onDelete: "restrict" }),
 	price: numeric("price").notNull(),
+	tax: numeric("tax").notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
@@ -1370,20 +1371,7 @@ export const pathologyBills = pgTable("pathology_bills", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-// pathology_bills_items table
-export const pathologyBillsItems = pgTable("pathology_bills_items", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "restrict" }),
-	billId: text('bill_id').notNull()
-		.references(() => pathologyBills.id, { onDelete: "restrict" }),
-	orderTestId: text('order_test_id').notNull()
-		.references(() => pathologyOrderTests.id, { onDelete: "restrict" }),
-	testName: text("test_name").notNull(),
-	amount: numeric("amount").notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-});
+
 
 // pathology_payments table
 export const pathologyPayments = pgTable("pathology_payments", {

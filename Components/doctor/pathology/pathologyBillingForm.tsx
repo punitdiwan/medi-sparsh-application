@@ -39,7 +39,6 @@ type Item = {
     id: string; // for list keys
     testId: string; // from database
     name: string;
-    quantity: number;
     price: number;       // per unit price
     taxPercent: number;  // test.tax
     baseAmount: number;  // without tax
@@ -109,7 +108,6 @@ export default function PathologyBillingForm() {
 
     // Modal state for adding item
     const [selectedTestId, setSelectedTestId] = useState("");
-    const [newItemQty, setNewItemQty] = useState(1);
 
 
     const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -188,62 +186,38 @@ export default function PathologyBillingForm() {
             return;
         }
 
-        if (newItemQty <= 0) {
-            toast.error("Quantity must be greater than 0");
-            return;
-        }
-
         const existingItemIndex = items.findIndex(item => item.testId === selectedTest.id);
 
         if (existingItemIndex > -1) {
-            // Update existing item quantity and amounts
-            const updatedItems = [...items];
-            const item = updatedItems[existingItemIndex];
-            const newQty = item.quantity + newItemQty;
-
-            // work in paise
-            const basePaise = Math.round(newQty * item.price * 100);
-            const taxPaise = Math.round(basePaise * item.taxPercent / 100);
-            const totalPaise = basePaise + taxPaise;
-
-            updatedItems[existingItemIndex] = {
-                ...item,
-                quantity: newQty,
-                baseAmount: basePaise / 100,
-                taxAmount: taxPaise / 100,
-                total: totalPaise / 100,
-            };
-            setItems(updatedItems);
-            toast.success(`Updated quantity for ${selectedTest.testName}`);
-        } else {
-            // Add new item
-            const qty = newItemQty;
-            const price = Number(selectedTest.amount || 0); // Base price from DB
-            const taxPercent = Number(selectedTest.taxPercent || 0);
-
-            // work in paise
-            const basePaise = Math.round(qty * price * 100);
-            const taxPaise = Math.round(basePaise * taxPercent / 100);
-            const totalPaise = basePaise + taxPaise;
-
-            const newItem: Item = {
-                id: Math.random().toString(36).slice(2),
-                testId: selectedTest.id,
-                name: selectedTest.testName,
-                quantity: qty,
-                price,
-                taxPercent,
-                baseAmount: basePaise / 100,
-                taxAmount: taxPaise / 100,
-                total: totalPaise / 100,
-            };
-
-            setItems(prev => [...prev, newItem]);
-            toast.success(`Added ${selectedTest.testName} to bill`);
+            // Test already exists in bill
+            toast.error(`${selectedTest.testName} is already added to the bill`);
+            return;
         }
 
+        // Add new item with quantity = 1
+        const qty = 1;
+        const price = Number(selectedTest.amount || 0); // Base price from DB
+        const taxPercent = Number(selectedTest.taxPercent || 0);
+
+        // work in paise
+        const basePaise = Math.round(qty * price * 100);
+        const taxPaise = Math.round(basePaise * taxPercent / 100);
+        const totalPaise = basePaise + taxPaise;
+
+        const newItem: Item = {
+            id: Math.random().toString(36).slice(2),
+            testId: selectedTest.id,
+            name: selectedTest.testName,
+            price,
+            taxPercent,
+            baseAmount: basePaise / 100,
+            taxAmount: taxPaise / 100,
+            total: totalPaise / 100,
+        };
+
+        setItems(prev => [...prev, newItem]);
         setSelectedTestId("");
-        setNewItemQty(1);
+        toast.success(`Added ${selectedTest.testName} to bill`);
     };
 
 
@@ -450,15 +424,6 @@ export default function PathologyBillingForm() {
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="flex flex-col gap-2">
-                                <Label>Quantity</Label>
-                                <Input
-                                    type="number"
-                                    min="1"
-                                    value={newItemQty}
-                                    onChange={(e) => setNewItemQty(Number(e.target.value))}
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2">
                                 <Label>Price</Label>
                                 <Input
                                     type="number"
@@ -497,7 +462,6 @@ export default function PathologyBillingForm() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Test</TableHead>
-                                            <TableHead className="text-center">Qty</TableHead>
                                             <TableHead className="text-right">Price</TableHead>
                                             <TableHead className="text-right">Tax</TableHead>
                                             <TableHead className="text-right">Total</TableHead>
@@ -508,7 +472,6 @@ export default function PathologyBillingForm() {
                                         {items.map(item => (
                                             <TableRow key={item.id}>
                                                 <TableCell>{item.name}</TableCell>
-                                                <TableCell className="text-center">{item.quantity}</TableCell>
                                                 <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
                                                 <TableCell className="text-right">
                                                     ₹{item.taxAmount.toFixed(2)} ({item.taxPercent}%)
