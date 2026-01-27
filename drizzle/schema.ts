@@ -1244,6 +1244,8 @@ export const pathologyOrders = pgTable("pathology_orders", {
 		.references(() => patients.id, { onDelete: "restrict" }),
 	doctorId: text("doctor_id"),
 	doctorName: text("doctor_name"),
+	isSampleAtHome: boolean("is_sample_at_home").default(false),
+	sampleData: jsonb("sample_data"),	
 	orderDate: timestamp("order_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	remarks: text("remarks"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),

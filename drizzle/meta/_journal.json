@@ -351,6 +351,13 @@
       "when": 1769505160438,
       "tag": "0049_yummy_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1769521841228,
+      "tag": "0050_chilly_madame_hydra",
+      "breakpoints": true
     }
   ]
 }
