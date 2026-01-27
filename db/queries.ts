@@ -1986,12 +1986,16 @@ export async function getPathologyTestsByHospital(hospitalId: string) {
       isDeleted: pathologyTests.isDeleted,
       createdAt: pathologyTests.createdAt,
       updatedAt: pathologyTests.updatedAt,
+      amount: charges.amount,
+      taxPercent: taxCategories.percent,
     })
     .from(pathologyTests)
     .leftJoin(
       pathologyCategories,
       eq(pathologyTests.categoryId, pathologyCategories.id)
     )
+    .leftJoin(charges, eq(pathologyTests.chargeId, charges.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
     .where(eq(pathologyTests.hospitalId, hospitalId))
     .orderBy(desc(pathologyTests.createdAt));
 
@@ -2004,6 +2008,7 @@ export async function getPathologyTestsByHospital(hospitalId: string) {
           fromRange: pathologyParameters.fromRange,
           toRange: pathologyParameters.toRange,
           unitId: pathologyParameters.unitId,
+          description: pathologyParameters.description,
           unitName: pathologyUnits.name,
         })
         .from(pathologyParameters)
@@ -2035,12 +2040,16 @@ export async function getPathologyTestById(id: string) {
       isDeleted: pathologyTests.isDeleted,
       createdAt: pathologyTests.createdAt,
       updatedAt: pathologyTests.updatedAt,
+      amount: charges.amount,
+      taxPercent: taxCategories.percent,
     })
     .from(pathologyTests)
     .leftJoin(
       pathologyCategories,
       eq(pathologyTests.categoryId, pathologyCategories.id)
     )
+    .leftJoin(charges, eq(pathologyTests.chargeId, charges.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
     .where(eq(pathologyTests.id, id));
 
   if (result.length === 0) return null;
@@ -2053,6 +2062,7 @@ export async function getPathologyTestById(id: string) {
       fromRange: pathologyParameters.fromRange,
       toRange: pathologyParameters.toRange,
       unitId: pathologyParameters.unitId,
+      description: pathologyParameters.description,
       unitName: pathologyUnits.name,
     })
     .from(pathologyParameters)

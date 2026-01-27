@@ -81,6 +81,15 @@ export default function PathologyTestPage() {
             cell: ({ row }) => Number(row.original.reportHours) / 24
         },
         {
+            header: "Amount",
+            cell: ({ row }) => {
+                const amount = Number((row.original as any).amount || 0);
+                const taxPercent = Number((row.original as any).taxPercent || 0);
+                const total = amount + (amount * taxPercent / 100);
+                return total.toFixed(2);
+            }
+        },
+        {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (

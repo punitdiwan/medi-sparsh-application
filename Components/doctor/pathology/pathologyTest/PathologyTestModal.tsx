@@ -31,6 +31,7 @@ export type ParameterRow = {
     fromRange: string;
     toRange: string;
     unitId: string;
+    description?: string;
 };
 
 export type PathologyTest = {
@@ -86,7 +87,7 @@ export default function PathologyTestModal({
         standardCharge: 0,
         amount: 0,
         parameters: [
-            { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }
+            { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
         ],
     });
 
@@ -153,7 +154,7 @@ export default function PathologyTestModal({
                     standardCharge: 0,
                     amount: 0,
                     parameters: [
-                        { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }
+                        { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
                     ],
                 });
             }
@@ -172,14 +173,14 @@ export default function PathologyTestModal({
         if (!selectedCharge) return;
 
         const taxAmount =
-            (selectedCharge.standardCharge * (selectedCharge.taxPercent || 0)) / 100;
+            (Number(selectedCharge.amount) * (selectedCharge.taxPercent || 0)) / 100;
 
         setForm(prev => ({
             ...prev,
             chargeName: selectedCharge.name,
             tax: selectedCharge.taxPercent || 0,
-            standardCharge: selectedCharge.standardCharge,
-            amount: selectedCharge.standardCharge + taxAmount,
+            standardCharge: Number(selectedCharge.amount),
+            amount: Number(selectedCharge.amount) + taxAmount,
         }));
     }, [open, test, form.chargeId, allCharges]);
 
@@ -226,7 +227,7 @@ export default function PathologyTestModal({
     const addParameterRow = () => {
         setForm({
             ...form,
-            parameters: [...form.parameters, { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "" }]
+            parameters: [...form.parameters, { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }]
         });
     };
 
@@ -264,6 +265,7 @@ export default function PathologyTestModal({
                     fromRange: p.fromRange,
                     toRange: p.toRange,
                     unitId: p.unitId,
+                    description: p.description,
                 })),
             };
 
@@ -500,6 +502,15 @@ export default function PathologyTestModal({
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
+                                </div>
+                                <div className="col-span-12 space-y-1">
+                                    <label className="text-sm font-medium">Description</label>
+                                    <Input
+                                        placeholder="Description (Optional)"
+                                        value={param.description ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "description", e.target.value)}
+                                        disabled={loading}
+                                    />
                                 </div>
                             </div>
                         ))}

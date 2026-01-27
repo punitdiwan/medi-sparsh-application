@@ -19,14 +19,14 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import { Info, Plus, Trash2, User } from "lucide-react";
+import { Info, Plus, Trash2, User, Printer } from "lucide-react";
+import { getPathologyTests } from "@/lib/actions/pathologyTests";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Printer } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -46,132 +46,6 @@ type Item = {
     total: number;       // with tax
 };
 
-const tests = [
-    {
-        id: "1",
-        testName: "Glucose Fasting",
-        shortName: "GLU-F",
-        testType: "Blood",
-        categoryId: "cat1",
-        categoryName: "Blood Chemistry",
-        subCategory: "Sugar",
-        method: "Enzymatic",
-        reportDays: 1,
-        chargeCategoryId: "cc1",
-        chargeNameId: "cn1",
-        tax: 5,
-        standardCharge: 200,
-        amount: 210,
-        parameters: [
-            {
-                id: "p1",
-                parameterId: "param1",
-                testParameterName: "Blood Glucose",
-                referenceRange: "70-110",
-                unit: "mg/dL",
-            },
-        ],
-    },
-
-    {
-        id: "2",
-        testName: "Complete Blood Count",
-        shortName: "CBC",
-        testType: "Blood",
-        categoryId: "cat2",
-        categoryName: "Hematology",
-        subCategory: "Routine",
-        method: "Automated Analyzer",
-        reportDays: 1,
-        chargeCategoryId: "cc2",
-        chargeNameId: "cn2",
-        tax: 5,
-        standardCharge: 350,
-        amount: 367.5,
-        parameters: [
-            {
-                id: "p2",
-                parameterId: "param2",
-                testParameterName: "Hemoglobin",
-                referenceRange: "13-17",
-                unit: "g/dL",
-            },
-            {
-                id: "p3",
-                parameterId: "param3",
-                testParameterName: "WBC Count",
-                referenceRange: "4000-11000",
-                unit: "/µL",
-            },
-        ],
-    },
-
-    {
-        id: "3",
-        testName: "Lipid Profile",
-        shortName: "LIPID",
-        testType: "Blood",
-        categoryId: "cat1",
-        categoryName: "Blood Chemistry",
-        subCategory: "Cholesterol",
-        method: "Enzymatic Colorimetric",
-        reportDays: 2,
-        chargeCategoryId: "cc3",
-        chargeNameId: "cn3",
-        tax: 12,
-        standardCharge: 800,
-        amount: 896,
-        parameters: [
-            {
-                id: "p4",
-                parameterId: "param4",
-                testParameterName: "Total Cholesterol",
-                referenceRange: "<200",
-                unit: "mg/dL",
-            },
-            {
-                id: "p5",
-                parameterId: "param5",
-                testParameterName: "Triglycerides",
-                referenceRange: "<150",
-                unit: "mg/dL",
-            },
-        ],
-    },
-
-    {
-        id: "4",
-        testName: "Urine Routine Examination",
-        shortName: "URINE-RE",
-        testType: "Urine",
-        categoryId: "cat3",
-        categoryName: "Clinical Pathology",
-        subCategory: "Routine",
-        method: "Manual & Microscopy",
-        reportDays: 1,
-        chargeCategoryId: "cc4",
-        chargeNameId: "cn4",
-        tax: 0,
-        standardCharge: 150,
-        amount: 150,
-        parameters: [
-            {
-                id: "p6",
-                parameterId: "param6",
-                testParameterName: "Protein",
-                referenceRange: "Negative",
-                unit: "",
-            },
-            {
-                id: "p7",
-                parameterId: "param7",
-                testParameterName: "Sugar",
-                referenceRange: "Negative",
-                unit: "",
-            },
-        ],
-    },
-];
 
 const dummyIpdData = [
     {
@@ -229,6 +103,8 @@ export default function PathologyBillingForm() {
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [note, setNote] = useState("");
     const [items, setItems] = useState<Item[]>([]);
+    const [availableTests, setAvailableTests] = useState<any[]>([]);
+    const [loadingTests, setLoadingTests] = useState(false);
 
     // Modal state for adding item
     const [selectedTestId, setSelectedTestId] = useState("");
@@ -258,6 +134,24 @@ export default function PathologyBillingForm() {
     const router = useRouter();
 
     useEffect(() => {
+        const fetchTests = async () => {
+            setLoadingTests(true);
+            try {
+                const result = await getPathologyTests();
+                if (result.data) {
+                    setAvailableTests(result.data);
+                } else if (result.error) {
+                    toast.error(result.error);
+                }
+            } catch (error) {
+                toast.error("Failed to fetch tests");
+            } finally {
+                setLoadingTests(false);
+            }
+        };
+        fetchTests();
+    }, []);
+    useEffect(() => {
         const basePaise = items.reduce(
             (acc, i) => acc + Math.round(i.baseAmount * 100),
             0
@@ -271,7 +165,7 @@ export default function PathologyBillingForm() {
         const discountPaise = Math.round(discountAmount * 100);
 
         const homeChargePaise =
-            sampleCollectionType === "home" ? 100 * 100 : 0;
+            sampleCollectionType === "home" ? HOME_COLLECTION_CHARGE * 100 : 0;
 
         const netPaise =
             basePaise + taxPaise + homeChargePaise - discountPaise;
@@ -284,7 +178,7 @@ export default function PathologyBillingForm() {
 
 
 
-    const selectedTest = tests.find(t => t.id === selectedTestId);
+    const selectedTest = availableTests.find(t => t.id === selectedTestId);
 
 
     const handleAddItem = () => {
@@ -294,8 +188,8 @@ export default function PathologyBillingForm() {
         }
 
         const qty = newItemQty;
-        const price = selectedTest.amount;
-        const taxPercent = selectedTest.tax;
+        const price = Number(selectedTest.amount || 0); // Base price from DB
+        const taxPercent = Number(selectedTest.taxPercent || 0);
 
         // work in paise
         const basePaise = Math.round(qty * price * 100);
@@ -509,15 +403,19 @@ export default function PathologyBillingForm() {
                                     <SelectValue placeholder="Select Pathology Test" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {tests.map(test => (
-                                        <SelectItem key={test.id} value={test.id}>
-                                            {test.testName} ({test.shortName})
-                                        </SelectItem>
-                                    ))}
+                                    {loadingTests ? (
+                                        <div className="p-2 text-center text-sm text-muted-foreground">Loading...</div>
+                                    ) : (
+                                        availableTests.map(test => (
+                                            <SelectItem key={test.id} value={test.id}>
+                                                {test.testName} {test.shortName ? `(${test.shortName})` : ""}
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             <div className="flex flex-col gap-2">
                                 <Label>Quantity</Label>
                                 <Input
@@ -530,12 +428,20 @@ export default function PathologyBillingForm() {
                                 <Label>Price</Label>
                                 <Input
                                     type="number"
-                                    value={selectedTest?.amount ?? 0}
+                                    value={Number(selectedTest?.amount || 0).toFixed(2)}
                                     disabled
                                     className="bg-muted"
                                 />
                             </div>
-
+                            <div className="flex flex-col gap-2">
+                                <Label>Tax (%)</Label>
+                                <Input
+                                    type="number"
+                                    value={Number(selectedTest?.taxPercent || 0).toFixed(2)}
+                                    disabled
+                                    className="bg-muted"
+                                />
+                            </div>
                         </div>
                         <Button onClick={handleAddItem} className="w-full">
                             <Plus size={16} className="mr-2" /> Add to Bill
@@ -724,15 +630,15 @@ export default function PathologyBillingForm() {
                         {selectedPatient?.address && (
                             <div className="flex items-center border-b pb-1 gap-2">
                                 <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-[200px] whitespace-normal wrap-break-word">
-                                                 Select this to automatically use the patient’s saved address for home sample collection.
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[200px] whitespace-normal wrap-break-word">
+                                            Select this to automatically use the patient’s saved address for home sample collection.
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <Label className="text-sm text-gray-700 dark:text-gray-300 ">
                                     Use patient’s existing address
                                 </Label>
