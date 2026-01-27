@@ -1231,21 +1231,6 @@ export const pathologyUnits = pgTable("pathology_units", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-// Pathology Parameter Table
-export const pathologyParameters = pgTable("pathology_parameters", {
-	id: text().default(useUUIDv4).primaryKey().notNull(),
-	description: text("description"),
-	hospitalId: text("hospital_id").notNull()
-		.references(() => organization.id, { onDelete: "restrict" }),
-	paramName: text("param_name").notNull(),
-	fromRange: text("from_range").notNull(),
-	toRange: text("to_range").notNull(),
-	unitId: text("unit_id").notNull()
-		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
-});
-
 // Pathology Test Table	
 export const pathologyTests = pgTable("pathology_tests", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
@@ -1265,10 +1250,26 @@ export const pathologyTests = pgTable("pathology_tests", {
 	chargeId: text("charge_id").notNull()
 		.references(() => charges.id, { onDelete: "restrict" }),
 	chargeName: text("charge_name").notNull(),
-	testParameters: jsonb("test_parameters").notNull(),
 	unitId: text("unit_id").notNull()
 		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
 	isDeleted: boolean("is_deleted").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// Pathology Parameter Table
+export const pathologyParameters = pgTable("pathology_parameters", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	testId: text("test_id").notNull()
+		.references(() => pathologyTests.id, { onDelete: "restrict" }),
+	description: text("description"),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	paramName: text("param_name").notNull(),
+	fromRange: text("from_range").notNull(),
+	toRange: text("to_range").notNull(),
+	unitId: text("unit_id").notNull()
+		.references(() => pathologyUnits.id, { onDelete: "restrict" }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
