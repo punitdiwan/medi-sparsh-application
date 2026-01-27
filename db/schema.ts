@@ -1272,3 +1272,129 @@ export const pathologyParameters = pgTable("pathology_parameters", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
+
+// pathology_orders table
+export const pathologyOrders = pgTable("pathology_orders", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	patientId: text("patient_id").notNull()
+		.references(() => patients.id, { onDelete: "restrict" }),
+	doctorId: text("doctor_id"),
+	doctorName: text("doctor_name"),
+	orderDate: timestamp("order_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	remarks: text("remarks"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_order_tests table
+export const pathologyOrderTests = pgTable("pathology_order_tests", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	orderId: text("order_id").notNull()
+		.references(() => pathologyOrders.id, { onDelete: "restrict" }),
+	testId: text("test_id").notNull()
+		.references(() => pathologyTests.id, { onDelete: "restrict" }),
+	price: numeric("price").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_samples table
+export const pathologySamples = pgTable("pathology_samples", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	orderTestID: text('order_test_id').notNull()
+		.references(() => pathologyOrderTests.id, { onDelete: "restrict" }),
+	sampleNumber: text("sample_number").notNull(),
+	sampleType: text("sample_type").notNull(),
+	sampleDate: timestamp("sample_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	sampleStatus: text("sample_status").notNull(),
+	collectedBy: text("collected_by").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_results table
+export const pathologyResults = pgTable("pathology_results", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	orderTestID: text('order_test_id').notNull()
+		.references(() => pathologyOrderTests.id, { onDelete: "restrict" }),
+	resultDate: timestamp("result_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	remarks: text("remarks").notNull(),
+	approvedBy: text('approved_by'),
+	approvedAt: timestamp('approved_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_result_values table
+export const pathologyResultValues = pgTable("pathology_result_values", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	resultID: text('result_id').notNull()
+		.references(() => pathologyResults.id, { onDelete: "restrict" }),
+	parameterID: text('parameter_id').notNull()
+		.references(() => pathologyParameters.id, { onDelete: "restrict" }),
+	resultValue: text('result_value').notNull(),
+	unit: text('unit').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_bills_status_enum
+export const pathologyBillsStatusEnum = pgEnum("pathology_bills_status", ["pending", "paid", "partially_paid", "refunded"]);
+
+
+// pathology_bills table
+export const pathologyBills = pgTable("pathology_bills", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	orderId: text('order_id').notNull()
+		.references(() => pathologyOrders.id, { onDelete: "restrict" }),
+	billDate: timestamp("bill_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	billDiscount: numeric("bill_discount").notNull(),
+	billTotalAmount: numeric("bill_total_amount").notNull(),
+	billNetAmount: numeric("bill_net_amount").notNull(),
+	billStatus: pathologyBillsStatusEnum("bill_status").notNull().default("pending"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_bills_items table
+export const pathologyBillsItems = pgTable("pathology_bills_items", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	billId: text('bill_id').notNull()
+		.references(() => pathologyBills.id, { onDelete: "restrict" }),
+	orderTestId: text('order_test_id').notNull()
+		.references(() => pathologyOrderTests.id, { onDelete: "restrict" }),
+	testName: text("test_name").notNull(),
+	amount: numeric("amount").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// pathology_payments table
+export const pathologyPayments = pgTable("pathology_payments", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	billId: text('bill_id').notNull()
+		.references(() => pathologyBills.id, { onDelete: "restrict" }),
+	paymentDate: timestamp("payment_date", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	paymentAmount: numeric("payment_amount").notNull(),
+	paymentMode: text("payment_mode").notNull(),
+	referenceNo: text('reference_no'),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
