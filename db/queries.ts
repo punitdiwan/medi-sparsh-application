@@ -26,7 +26,11 @@ import {
   pathologyCategories,
   pathologyUnits,
   pathologyParameters,
-  pathologyTests
+  pathologyTests,
+  pathologyOrders,
+  pathologyOrderTests,
+  pathologyBills,
+  pathologyPayments,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {

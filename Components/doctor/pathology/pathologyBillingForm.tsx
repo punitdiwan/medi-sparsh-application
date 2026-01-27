@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
 import { Info, Plus, Trash2, User, Printer } from "lucide-react";
 import { getPathologyTests } from "@/lib/actions/pathologyTests";
+import { createPathologyBill } from "@/lib/actions/pathologyBills";
 import {
     Tooltip,
     TooltipContent,
@@ -128,6 +129,7 @@ export default function PathologyBillingForm() {
     const [pendingPrint, setPendingPrint] = useState(false);
 
     const [usePatientAddress, setUsePatientAddress] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
 
@@ -255,58 +257,56 @@ export default function PathologyBillingForm() {
         }
     };
 
-    const handleSubmit = (print: Boolean) => {
+    const handleSubmit = async (print: Boolean) => {
         if (!selectedPatient || !selectedDoctor || items.length === 0) {
-            toast.error("Please fill all required fields (Patient, Doctor, Items, Payment)");
+            toast.error("Please fill all required fields (Patient, Doctor, Items)");
             return;
         }
 
-        const payload = {
-            patientId: selectedPatient.id,
+        try {
+            setIsSubmitting(true);
 
-            doctorId: selectedDoctor.isInternal ? selectedDoctor.id : null,
-            doctorName: selectedDoctor.name,
+            const billDiscount = totalAmount * (discountPercent / 100);
+            const finalNetAmount = netAmount;
 
-            billing: {
-                totalAmount,
-                taxAmount,
-                discountPercent,
-                netAmount,
-            },
+            const result = await createPathologyBill({
+                patientId: selectedPatient.id,
+                doctorId: selectedDoctor.isInternal ? selectedDoctor.id : undefined,
+                doctorName: selectedDoctor.name,
+                remarks,
+                tests: items.map(item => ({
+                    testId: item.testId,
+                    price: item.price,
+                    tax: item.taxPercent,
+                })),
+                billDiscount: Number(billDiscount.toFixed(2)),
+                billTotalAmount: Number(totalAmount.toFixed(2)),
+                billNetAmount: Number(finalNetAmount.toFixed(2)),
+            });
 
-            sampleCollection: {
-                type: sampleCollectionType,
-                charge:
-                    sampleCollectionType === "home"
-                        ? HOME_COLLECTION_CHARGE
-                        : 0,
-
-                address:
-                    sampleCollectionType === "home"
-                        ? sampleAddress
-                        : null,
-
-                preferredDate:
-                    sampleCollectionType === "home"
-                        ? sampleDate
-                        : null,
-
-                timeSlot:
-                    sampleCollectionType === "home"
-                        ? sampleTimeSlot
-                        : null,
-            },
-            remarks,
-            items,
-        };
-
-        console.log("Generating bill with payload:", payload);
-        if (print) {
-            toast.success("Bill generated and printed successfully (Dummy Data)");
-            return;
+            if (result.success) {
+                toast.success(result.message || "Bill created successfully");
+                // Reset form
+                setSelectedPatient(null);
+                setSelectedDoctor(null);
+                setItems([]);
+                setRemarks("");
+                setDiscountPercent(0);
+                if (print) {
+                    // TODO: Implement print functionality
+                    toast.info("Print feature coming soon");
+                }
+                // Navigate to bills list
+                router.push("/doctor/pathology");
+            } else {
+                toast.error(result.error || "Failed to create bill");
+            }
+        } catch (error) {
+            console.error("Error creating bill:", error);
+            toast.error("An error occurred while creating the bill");
+        } finally {
+            setIsSubmitting(false);
         }
-        toast.success("Bill generated successfully (Dummy Data)");
-        // router.push("/doctor/pathology");
     };
 
     const handleIpdSearch = () => {
@@ -608,6 +608,7 @@ export default function PathologyBillingForm() {
                             <Button
                                 size="lg"
                                 className="w-full"
+                                disabled={isSubmitting || items.length === 0 || !selectedPatient || !selectedDoctor}
                                 onClick={() => {
                                     if (
                                         sampleCollectionType === "home" &&
@@ -620,7 +621,7 @@ export default function PathologyBillingForm() {
                                     handleSubmit(false);
                                 }}
                             >
-                                Generate Bill
+                                {isSubmitting ? "Creating Bill..." : "Generate Bill"}
                             </Button>
                         </div>
 
