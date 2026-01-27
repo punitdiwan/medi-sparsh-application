@@ -36,7 +36,8 @@ import {
 } from "@/components/ui/dialog";
 
 type Item = {
-    id: string;
+    id: string; // for list keys
+    testId: string; // from database
     name: string;
     quantity: number;
     price: number;       // per unit price
@@ -101,7 +102,7 @@ const HOME_COLLECTION_CHARGE = 100;
 export default function PathologyBillingForm() {
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
-    const [note, setNote] = useState("");
+    const [remarks, setRemarks] = useState("");
     const [items, setItems] = useState<Item[]>([]);
     const [availableTests, setAvailableTests] = useState<any[]>([]);
     const [loadingTests, setLoadingTests] = useState(false);
@@ -112,10 +113,9 @@ export default function PathologyBillingForm() {
 
 
     const [totalAmount, setTotalAmount] = useState<number>(0);
-    const [discountAmount, setDiscountAmount] = useState<number>(0);
+    const [discountPercent, setDiscountPercent] = useState<number>(0);
     const [taxAmount, setTaxAmount] = useState<number>(0);
     const [netAmount, setNetAmount] = useState<number>(0);
-    const [paymentMode, setPaymentMode] = useState("");
 
     const [ipdId, setIpdId] = useState("");
 
@@ -162,18 +162,19 @@ export default function PathologyBillingForm() {
             0
         );
 
-        const discountPaise = Math.round(discountAmount * 100);
+        const totalWithoutDiscountPaise = basePaise + taxPaise;
+        const discountAmountPaise = Math.round(totalWithoutDiscountPaise * (discountPercent / 100));
 
         const homeChargePaise =
             sampleCollectionType === "home" ? HOME_COLLECTION_CHARGE * 100 : 0;
 
         const netPaise =
-            basePaise + taxPaise + homeChargePaise - discountPaise;
+            totalWithoutDiscountPaise + homeChargePaise - discountAmountPaise;
 
-        setTotalAmount((basePaise + taxPaise) / 100);
+        setTotalAmount(totalWithoutDiscountPaise / 100);
         setTaxAmount(taxPaise / 100);
         setNetAmount(netPaise / 100);
-    }, [items, discountAmount, sampleCollectionType]);
+    }, [items, discountPercent, sampleCollectionType]);
 
 
 
@@ -187,27 +188,60 @@ export default function PathologyBillingForm() {
             return;
         }
 
-        const qty = newItemQty;
-        const price = Number(selectedTest.amount || 0); // Base price from DB
-        const taxPercent = Number(selectedTest.taxPercent || 0);
+        if (newItemQty <= 0) {
+            toast.error("Quantity must be greater than 0");
+            return;
+        }
 
-        // work in paise
-        const basePaise = Math.round(qty * price * 100);
-        const taxPaise = Math.round(basePaise * taxPercent / 100);
-        const totalPaise = basePaise + taxPaise;
+        const existingItemIndex = items.findIndex(item => item.testId === selectedTest.id);
 
-        const newItem: Item = {
-            id: Math.random().toString(36).slice(2),
-            name: selectedTest.testName,
-            quantity: qty,
-            price,
-            taxPercent,
-            baseAmount: basePaise / 100,
-            taxAmount: taxPaise / 100,
-            total: totalPaise / 100,
-        };
+        if (existingItemIndex > -1) {
+            // Update existing item quantity and amounts
+            const updatedItems = [...items];
+            const item = updatedItems[existingItemIndex];
+            const newQty = item.quantity + newItemQty;
 
-        setItems(prev => [...prev, newItem]);
+            // work in paise
+            const basePaise = Math.round(newQty * item.price * 100);
+            const taxPaise = Math.round(basePaise * item.taxPercent / 100);
+            const totalPaise = basePaise + taxPaise;
+
+            updatedItems[existingItemIndex] = {
+                ...item,
+                quantity: newQty,
+                baseAmount: basePaise / 100,
+                taxAmount: taxPaise / 100,
+                total: totalPaise / 100,
+            };
+            setItems(updatedItems);
+            toast.success(`Updated quantity for ${selectedTest.testName}`);
+        } else {
+            // Add new item
+            const qty = newItemQty;
+            const price = Number(selectedTest.amount || 0); // Base price from DB
+            const taxPercent = Number(selectedTest.taxPercent || 0);
+
+            // work in paise
+            const basePaise = Math.round(qty * price * 100);
+            const taxPaise = Math.round(basePaise * taxPercent / 100);
+            const totalPaise = basePaise + taxPaise;
+
+            const newItem: Item = {
+                id: Math.random().toString(36).slice(2),
+                testId: selectedTest.id,
+                name: selectedTest.testName,
+                quantity: qty,
+                price,
+                taxPercent,
+                baseAmount: basePaise / 100,
+                taxAmount: taxPaise / 100,
+                total: totalPaise / 100,
+            };
+
+            setItems(prev => [...prev, newItem]);
+            toast.success(`Added ${selectedTest.testName} to bill`);
+        }
+
         setSelectedTestId("");
         setNewItemQty(1);
     };
@@ -262,7 +296,7 @@ export default function PathologyBillingForm() {
             billing: {
                 totalAmount,
                 taxAmount,
-                discountAmount,
+                discountPercent,
                 netAmount,
             },
 
@@ -288,9 +322,7 @@ export default function PathologyBillingForm() {
                         ? sampleTimeSlot
                         : null,
             },
-
-            paymentMode,
-            note,
+            remarks,
             items,
         };
 
@@ -332,6 +364,7 @@ export default function PathologyBillingForm() {
 
             return {
                 id: crypto.randomUUID(),
+                testId: t.id,
                 name: t.testName,
                 quantity: 1,
                 price: t.amount,
@@ -420,6 +453,7 @@ export default function PathologyBillingForm() {
                                 <Label>Quantity</Label>
                                 <Input
                                     type="number"
+                                    min="1"
                                     value={newItemQty}
                                     onChange={(e) => setNewItemQty(Number(e.target.value))}
                                 />
@@ -515,11 +549,22 @@ export default function PathologyBillingForm() {
                             </div>
 
                             <div className="flex flex-row justify-between gap-1">
-                                <Label>Discount</Label>
+                                <Label>Discount (%)</Label>
                                 <Input
                                     type="number"
-                                    value={discountAmount}
-                                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                                    min="0"
+                                    max="100"
+                                    value={discountPercent}
+                                    onChange={(e) => {
+                                        const val = Number(e.target.value);
+                                        if (val >= 0 && val <= 100) {
+                                            setDiscountPercent(val);
+                                        } else if (val > 100) {
+                                            setDiscountPercent(100);
+                                        } else {
+                                            setDiscountPercent(0);
+                                        }
+                                    }}
                                     className="max-w-25"
                                 />
                             </div>
@@ -533,10 +578,10 @@ export default function PathologyBillingForm() {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label>Note</Label>
+                            <Label>Remarks</Label>
                             <Textarea
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
                                 placeholder="Internal notes..."
                             />
                         </div>
