@@ -118,6 +118,7 @@ export default function PathologyPaymentDialog({
         date: new Date().toISOString().split("T")[0],
         amount: 0,
         mode: "Cash",
+        referenceNo: "",
         note: "",
     });
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
@@ -140,7 +141,7 @@ export default function PathologyPaymentDialog({
                         amount: Number(p.paymentAmount)
                     }));
                     setTransactions(history);
-                    setPaymentData(prev => ({ ...prev, amount: result.data.balanceAmount }));
+                    setPaymentData(prev => ({ ...prev, amount: result.data.balanceAmount, referenceNo: "", note: "" }));
                 } else {
                     toast.error(result.error || "Failed to load bill details");
                 }
@@ -193,11 +194,16 @@ export default function PathologyPaymentDialog({
             return;
         }
 
+        if (paymentData.mode !== "Cash" && !paymentData.referenceNo) {
+            toast.error("Please enter Reference # for non-cash payments");
+            return;
+        }
+
         try {
             const result = await recordPayment(billId, {
                 amount: paymentData.amount,
                 mode: paymentData.mode,
-                referenceNo: paymentData.note
+                referenceNo: paymentData.referenceNo || paymentData.note
             });
 
             if (result.success) {
@@ -218,6 +224,7 @@ export default function PathologyPaymentDialog({
                         date: new Date().toISOString().split("T")[0],
                         amount: updated.data.balanceAmount,
                         mode: "Cash",
+                        referenceNo: "",
                         note: "",
                     });
                 }
@@ -372,6 +379,7 @@ export default function PathologyPaymentDialog({
                                                     onChange={(e) => setPaymentData({ ...paymentData, amount: Number(e.target.value) })}
                                                 />
                                             </div>
+
                                             <div className="space-y-2">
                                                 <Label className="text-xs">Payment Mode</Label>
                                                 <Select
@@ -389,14 +397,39 @@ export default function PathologyPaymentDialog({
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs">Note</Label>
-                                                <Input
-                                                    placeholder="Optional note"
-                                                    value={paymentData.note}
-                                                    onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
-                                                />
-                                            </div>
+
+                                            {/* Either show Note (for Cash) or Reference # (for other modes) */}
+                                            {paymentData.mode === "Cash" ? (
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs">Note</Label>
+                                                    <Input
+                                                        placeholder="Optional note"
+                                                        value={paymentData.note}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs">Reference #</Label>
+                                                    <Input
+                                                        placeholder="Reference number / transaction id"
+                                                        value={paymentData.referenceNo}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, referenceNo: e.target.value })}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Shift note to next row for non-cash modes */}
+                                            {paymentData.mode !== "Cash" && (
+                                                <div className="col-span-2 mt-2">
+                                                    <Label className="text-xs">Note</Label>
+                                                    <Input
+                                                        placeholder="Optional note"
+                                                        value={paymentData.note}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         <Button className="w-full mt-6 gap-2" onClick={handleAddPayment}>
                                             <Save className="h-4 w-4" /> Save Transaction

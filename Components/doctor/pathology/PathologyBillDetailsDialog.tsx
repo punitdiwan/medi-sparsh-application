@@ -47,6 +47,8 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { getBillById } from "@/lib/actions/pathologyBills";
+import { saveSampleCollector, getSampleByOrderTest } from "@/lib/actions/pathologySampleCollector";
+import { saveReportData, getReportByOrderTest, getParametersByOrderTest } from "@/lib/actions/pathologyReports";
 import { differenceInYears, format } from "date-fns";
 
 /* -------------------- TYPES -------------------- */
@@ -134,17 +136,90 @@ function SampleCollectorDialog({
     onClose,
     onSave,
     testName,
+    testId,
 }: {
     open: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
     testName: string;
+    testId?: string;
 }) {
     const [formData, setFormData] = useState({
         personName: "",
         collectedDate: new Date().toISOString().split("T")[0],
         pathologyCenter: "",
     });
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Load existing sample data when dialog opens
+    React.useEffect(() => {
+        if (!open || !testId) {
+            // Reset form when dialog closes
+            setFormData({
+                personName: "",
+                collectedDate: new Date().toISOString().split("T")[0],
+                pathologyCenter: "",
+            });
+            return;
+        }
+
+        const loadSampleData = async () => {
+            try {
+                const result = await getSampleByOrderTest(testId);
+                if (result.success && result.data) {
+                    setFormData({
+                        personName: result.data.collectedBy || "",
+                        collectedDate: result.data.sampleDate
+                            ? new Date(result.data.sampleDate).toISOString().split("T")[0]
+                            : new Date().toISOString().split("T")[0],
+                        pathologyCenter: result.data.sampleType || "",
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading sample data:", error);
+            }
+        };
+
+        loadSampleData();
+    }, [open, testId]);
+
+    const handleSave = async () => {
+        if (!formData.personName || !formData.collectedDate || !formData.pathologyCenter) {
+            toast.error("Please fill all required fields");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // Save to database if testId is available
+            if (testId) {
+                const result = await saveSampleCollector({
+                    orderTestId: testId,
+                    personName: formData.personName,
+                    collectedDate: formData.collectedDate,
+                    pathologyCenter: formData.pathologyCenter,
+                });
+
+                if (!result.success) {
+                    toast.error(result.error || "Failed to save sample");
+                    return;
+                }
+            }
+
+            onSave(formData);
+            setFormData({
+                personName: "",
+                collectedDate: new Date().toISOString().split("T")[0],
+                pathologyCenter: "",
+            });
+            onClose();
+        } catch (error) {
+            console.error("Error saving sample:", error);
+            toast.error("An error occurred while saving");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -161,6 +236,7 @@ function SampleCollectorDialog({
                             value={formData.personName}
                             onChange={(e) => setFormData({ ...formData, personName: e.target.value })}
                             placeholder="Enter name"
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="space-y-2">
@@ -170,6 +246,7 @@ function SampleCollectorDialog({
                             type="date"
                             value={formData.collectedDate}
                             onChange={(e) => setFormData({ ...formData, collectedDate: e.target.value })}
+                            disabled={isLoading}
                         />
                     </div>
                     <div className="space-y-2">
@@ -179,16 +256,26 @@ function SampleCollectorDialog({
                             value={formData.pathologyCenter}
                             onChange={(e) => setFormData({ ...formData, pathologyCenter: e.target.value })}
                             placeholder="Enter center name"
+                            disabled={isLoading}
                         />
                     </div>
                 </div>
                 <DialogFooter className="px-6 py-4 rounded-b-lg bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
-                    <Button variant="outline" onClick={onClose}
-                        className="text-dialog-muted">Cancel</Button>
-                    <Button onClick={() => onSave(formData)}
+                    <Button 
+                        variant="outline" 
+                        onClick={onClose}
+                        disabled={isLoading}
+                        className="text-dialog-muted"
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSave}
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-                        disabled={!formData.personName || !formData.collectedDate || !formData.pathologyCenter}
-                    >Save Details</Button>
+                        disabled={!formData.personName || !formData.collectedDate || !formData.pathologyCenter || isLoading}
+                    >
+                        {isLoading ? "Saving..." : "Save Details"}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -213,8 +300,117 @@ function ReportEditorDialog({
         approveDate: new Date().toISOString().split("T")[0],
         uploadReport: "",
         result: "",
-        parameterValues: test.parameters.map(p => ({ ...p })),
+        parameterValues: [] as Array<{
+            id: string;
+            name: string;
+            value: string;
+            range: string;
+        }>,
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingParams, setIsLoadingParams] = useState(false);
+
+    // Load parameters and report data when dialog opens
+    React.useEffect(() => {
+        if (!open || !test) {
+            // Reset form when dialog closes
+            setFormData({
+                approvedBy: "",
+                approveDate: new Date().toISOString().split("T")[0],
+                uploadReport: "",
+                result: "",
+                parameterValues: [],
+            });
+            return;
+        }
+
+        const loadData = async () => {
+            setIsLoadingParams(true);
+            try {
+                // Fetch parameters from database
+                const paramsResult = await getParametersByOrderTest(test.id);
+                let parameters: any[] = [];
+
+                if (paramsResult.success && paramsResult.data) {
+                    parameters = paramsResult.data.map((p: any) => ({
+                        id: p.id,
+                        name: p.paramName,
+                        value: "",
+                        range: `${p.fromRange} - ${p.toRange}`,
+                    }));
+                }
+
+                // Fetch existing report data
+                const reportResult = await getReportByOrderTest(test.id);
+                if (reportResult.success && reportResult.data) {
+                    const reportData = reportResult.data;
+                    const paramValues = reportData.parameterValues || [];
+
+                    setFormData({
+                        approvedBy: reportData.approvedBy || "",
+                        approveDate: reportData.approvedAt
+                            ? new Date(reportData.approvedAt).toISOString().split("T")[0]
+                            : new Date().toISOString().split("T")[0],
+                        uploadReport: "",
+                        result: reportData.remarks || "",
+                        parameterValues: parameters.map((p: any) => {
+                            const paramValue = paramValues.find((pv: any) => pv.parameterID === p.id);
+                            return {
+                                ...p,
+                                value: paramValue?.resultValue || "",
+                            };
+                        }),
+                    });
+                } else {
+                    // No existing report, just set parameters
+                    setFormData(prev => ({
+                        ...prev,
+                        parameterValues: parameters,
+                    }));
+                }
+            } catch (error) {
+                console.error("Error loading data:", error);
+                toast.error("Failed to load parameters");
+            } finally {
+                setIsLoadingParams(false);
+            }
+        };
+
+        loadData();
+    }, [open, test]);
+
+    const handleSave = async () => {
+        if (!formData.approvedBy || !formData.approveDate) {
+            toast.error("Please fill in Approved By and Approve Date");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // Save to database
+            const result = await saveReportData({
+                orderTestId: test.id,
+                approvedBy: formData.approvedBy,
+                approveDate: formData.approveDate,
+                remarks: formData.result,
+                parameterValues: formData.parameterValues,
+            });
+
+            if (!result.success) {
+                toast.error(result.error || "Failed to save report");
+                return;
+            }
+
+            onSave(formData);
+            onClose();
+            toast.success("Report saved successfully");
+        } catch (error) {
+            console.error("Error saving report:", error);
+            toast.error("An error occurred while saving report");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -257,6 +453,7 @@ function ReportEditorDialog({
                                 value={formData.approvedBy}
                                 onChange={(e) => setFormData({ ...formData, approvedBy: e.target.value })}
                                 placeholder="Dr. Name"
+                                disabled={isLoading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -265,6 +462,7 @@ function ReportEditorDialog({
                                 type="date"
                                 value={formData.approveDate}
                                 onChange={(e) => setFormData({ ...formData, approveDate: e.target.value })}
+                                disabled={isLoading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -272,6 +470,7 @@ function ReportEditorDialog({
                             <Input
                                 type="file"
                                 onChange={(e) => setFormData({ ...formData, uploadReport: e.target.value })}
+                                disabled={isLoading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -280,6 +479,7 @@ function ReportEditorDialog({
                                 value={formData.result}
                                 onChange={(e) => setFormData({ ...formData, result: e.target.value })}
                                 placeholder="Overall summary"
+                                disabled={isLoading}
                             />
                         </div>
                     </div>
@@ -289,46 +489,65 @@ function ReportEditorDialog({
                             <FlaskConical className="h-4 w-4 text-primary" />
                             Test Parameters
                         </h3>
-                        <div className="border rounded-lg overflow-hidden">
-                            <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow>
-                                        <TableHead className="w-[50px]">#</TableHead>
-                                        <TableHead>Test Parameter Name</TableHead>
-                                        <TableHead className="w-[200px]">Report Value *</TableHead>
-                                        <TableHead>Reference Range</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {formData.parameterValues.map((p, idx) => (
-                                        <TableRow key={p.id}>
-                                            <TableCell>{idx + 1}</TableCell>
-                                            <TableCell className="font-medium">{p.name}</TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    value={p.value}
-                                                    onChange={(e) => {
-                                                        const newVals = [...formData.parameterValues];
-                                                        newVals[idx].value = e.target.value;
-                                                        setFormData({ ...formData, parameterValues: newVals });
-                                                    }}
-                                                    className="h-8"
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">{p.range}</TableCell>
+                        {isLoadingParams ? (
+                            <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center">
+                                <p className="text-muted-foreground animate-pulse">Loading parameters...</p>
+                            </div>
+                        ) : formData.parameterValues.length === 0 ? (
+                            <div className="border rounded-lg p-4 bg-muted/30 text-center">
+                                <p className="text-muted-foreground text-sm">No parameters found for this test</p>
+                            </div>
+                        ) : (
+                            <div className="border rounded-lg overflow-hidden">
+                                <Table>
+                                    <TableHeader className="bg-muted/50">
+                                        <TableRow>
+                                            <TableHead className="w-[50px]">#</TableHead>
+                                            <TableHead>Test Parameter Name</TableHead>
+                                            <TableHead className="w-[200px]">Report Value *</TableHead>
+                                            <TableHead>Reference Range</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {formData.parameterValues.map((p, idx) => (
+                                            <TableRow key={p.id}>
+                                                <TableCell>{idx + 1}</TableCell>
+                                                <TableCell className="font-medium">{p.name}</TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        value={p.value}
+                                                        onChange={(e) => {
+                                                            const newVals = [...formData.parameterValues];
+                                                            newVals[idx].value = e.target.value;
+                                                            setFormData({ ...formData, parameterValues: newVals });
+                                                        }}
+                                                        className="h-8"
+                                                        disabled={isLoading || isLoadingParams}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">{p.range}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
-                    <Button variant="outline" onClick={onClose}
-                        className="text-dialog-muted">Cancel</Button>
-                    <Button onClick={() => onSave(formData)}
-                        className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
-                        Save Report
+                    <Button 
+                        variant="outline" 
+                        onClick={onClose}
+                        disabled={isLoading}
+                        className="text-dialog-muted">
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleSave}
+                        className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
+                        disabled={!formData.approvedBy || !formData.approveDate || isLoading}
+                    >
+                        {isLoading ? "Saving..." : "Save Report"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -360,15 +579,26 @@ export default function PathologyBillDetailsDialog({
                 const result = await getBillById(billId);
                 if (result.success && result.data) {
                     setBillData(result.data);
-                    // Map items from fetched data
-                    const detailedItems: TestItem[] = result.data.tests.map((item: any, idx: number) => ({
-                        id: item.id,
-                        testName: item.testName,
-                        tax: Number(item.tax),
-                        netAmount: Number(item.price),
-                        status: "Pending", // This status could be fetched from results table in future
-                        parameters: [] // Parameters could be fetched too
-                    }));
+                    // Map items from fetched data and fetch sample info for each
+                    const detailedItems: TestItem[] = await Promise.all(
+                        result.data.tests.map(async (item: any, idx: number) => {
+                            // Fetch sample data if exists
+                            const sampleResult = await getSampleByOrderTest(item.id);
+                            const sampleData = sampleResult.success ? sampleResult.data : null;
+
+                            return {
+                                id: item.id,
+                                testName: item.testName,
+                                tax: Number(item.tax),
+                                netAmount: Number(item.price),
+                                status: sampleData ? "Collected" : "Pending",
+                                sampleCollectedBy: sampleData?.collectedBy || undefined,
+                                collectedDate: sampleData ? format(new Date(sampleData.sampleDate), "dd/MM/yyyy") : undefined,
+                                pathologyCenter: sampleData?.sampleType || undefined,
+                                parameters: []
+                            };
+                        })
+                    );
                     setItems(detailedItems);
                 } else {
                     toast.error(result.error || "Failed to load bill details");
@@ -715,6 +945,7 @@ export default function PathologyBillDetailsDialog({
                     onClose={() => setIsCollectorOpen(false)}
                     onSave={handleSaveCollector}
                     testName={selectedTest?.testName || ""}
+                    testId={selectedTest?.id}
                 />
 
                 <ReportEditorDialog
