@@ -67,6 +67,7 @@ interface TestItem {
     collectedDate?: string;
     pathologyCenter?: string;
     reportDate?: string;
+    reportHours?: number;
     approvedBy?: string;
     approveDate?: string;
     tax: number;
@@ -150,6 +151,8 @@ function SampleCollectorDialog({
         pathologyCenter: "",
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [existingDataId, setExistingDataId] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     // Load existing sample data when dialog opens
     React.useEffect(() => {
@@ -160,9 +163,10 @@ function SampleCollectorDialog({
                 collectedDate: new Date().toISOString().split("T")[0],
                 pathologyCenter: "",
             });
+            setExistingDataId(null);
+            setIsEditing(false);
             return;
         }
-
         const loadSampleData = async () => {
             try {
                 const result = await getSampleByOrderTest(testId);
@@ -174,9 +178,23 @@ function SampleCollectorDialog({
                             : new Date().toISOString().split("T")[0],
                         pathologyCenter: result.data.sampleType || "",
                     });
+                    // Mark that we're editing existing data
+                    setExistingDataId(result.data.id || testId);
+                    setIsEditing(true);
+                } else {
+                    // No existing data - fresh insert
+                    setFormData({
+                        personName: "",
+                        collectedDate: new Date().toISOString().split("T")[0],
+                        pathologyCenter: "",
+                    });
+                    setExistingDataId(null);
+                    setIsEditing(false);
                 }
             } catch (error) {
                 console.error("Error loading sample data:", error);
+                setIsEditing(false);
+                setExistingDataId(null);
             }
         };
 
@@ -198,6 +216,8 @@ function SampleCollectorDialog({
                     personName: formData.personName,
                     collectedDate: formData.collectedDate,
                     pathologyCenter: formData.pathologyCenter,
+                    isUpdate: isEditing, // Pass flag to indicate update vs insert
+                    sampleId: existingDataId, // Pass existing ID for update
                 });
 
                 if (!result.success) {
@@ -212,7 +232,10 @@ function SampleCollectorDialog({
                 collectedDate: new Date().toISOString().split("T")[0],
                 pathologyCenter: "",
             });
+            setExistingDataId(null);
+            setIsEditing(false);
             onClose();
+            toast.success(isEditing ? "Sample data updated successfully" : "Sample data saved successfully");
         } catch (error) {
             console.error("Error saving sample:", error);
             toast.error("An error occurred while saving");
@@ -274,7 +297,7 @@ function SampleCollectorDialog({
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
                         disabled={!formData.personName || !formData.collectedDate || !formData.pathologyCenter || isLoading}
                     >
-                        {isLoading ? "Saving..." : "Save Details"}
+                        {isLoading ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Details" : "Save Details")}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -293,7 +316,6 @@ function ReportEditorDialog({
     onSave: (data: any) => void;
     test: TestItem | null;
 }) {
-    if (!test) return null;
 
     const [formData, setFormData] = useState({
         approvedBy: "",
@@ -389,7 +411,7 @@ function ReportEditorDialog({
         try {
             // Save to database
             const result = await saveReportData({
-                orderTestId: test.id,
+                orderTestId: currentTest.id,
                 approvedBy: formData.approvedBy,
                 approveDate: formData.approveDate,
                 remarks: formData.result,
@@ -412,6 +434,14 @@ function ReportEditorDialog({
         }
     };
 
+    // Return null if no test is provided
+    if (!test) {
+        return null;
+    }
+
+    // Type assertion to ensure test is not null in JSX
+    const currentTest = test as TestItem;
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-3xl border border-dialog bg-dialog-surface p-0 overflow-y-auto">
@@ -422,27 +452,27 @@ function ReportEditorDialog({
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
                         <div>
                             <Label className="text-xs text-muted-foreground">Test Name</Label>
-                            <p className="font-medium text-sm">{test.testName}</p>
+                            <p className="font-medium text-sm">{currentTest.testName}</p>
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">Expected Date</Label>
-                            <p className="font-medium text-sm">{test.reportDate || "N/A"}</p>
+                            <p className="font-medium text-sm">{currentTest.reportDate || "N/A"}</p>
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">Approve Date</Label>
-                            <p className="font-medium text-sm">{test.approveDate || "N/A"}</p>
+                            <p className="font-medium text-sm">{currentTest.approveDate || "N/A"}</p>
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">Date Of Collection</Label>
-                            <p className="font-medium text-sm">{test.collectedDate || "N/A"}</p>
+                            <p className="font-medium text-sm">{currentTest.collectedDate || "N/A"}</p>
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">Collection By</Label>
-                            <p className="font-medium text-sm">{test.sampleCollectedBy || "N/A"}</p>
+                            <p className="font-medium text-sm">{currentTest.sampleCollectedBy || "N/A"}</p>
                         </div>
                         <div>
                             <Label className="text-xs text-muted-foreground">Pathology Center</Label>
-                            <p className="font-medium text-sm">{test.pathologyCenter || "N/A"}</p>
+                            <p className="font-medium text-sm">{currentTest.pathologyCenter || "N/A"}</p>
                         </div>
                     </div>
 
@@ -583,17 +613,22 @@ export default function PathologyBillDetailsDialog({
                     const detailedItems: TestItem[] = await Promise.all(
                         result.data.tests.map(async (item: any, idx: number) => {
                             // Fetch sample data if exists
-                            const sampleResult = await getSampleByOrderTest(item.id);
+                            const sampleResult = await getSampleByOrderTest(item.id); 
                             const sampleData = sampleResult.success ? sampleResult.data : null;
+                            const approvedResult = await getReportByOrderTest(item.id);
+                            const approvedData = approvedResult.success ? approvedResult?.data : null;
 
                             return {
                                 id: item.id,
                                 testName: item.testName,
+                                reportHours: item.reportHours,
                                 tax: Number(item.tax),
                                 netAmount: Number(item.price),
                                 status: sampleData ? "Collected" : "Pending",
                                 sampleCollectedBy: sampleData?.collectedBy || undefined,
                                 collectedDate: sampleData ? format(new Date(sampleData.sampleDate), "dd/MM/yyyy") : undefined,
+                                approvedBy: approvedData?.approvedBy || undefined,
+                                approveDate: approvedData ? format(new Date(approvedData?.approvedAt),"dd/MM/yyyy"): undefined,
                                 pathologyCenter: sampleData?.sampleType || undefined,
                                 parameters: []
                             };
@@ -814,7 +849,7 @@ export default function PathologyBillDetailsDialog({
                                             <TableRow>
                                                 <TableHead>Test Name</TableHead>
                                                 <TableHead>Sample Collected</TableHead>
-                                                <TableHead>Report Date</TableHead>
+                                                <TableHead>Report Hours</TableHead>
                                                 <TableHead>Approved By / Date</TableHead>
                                                 <TableHead className="text-center">Tax (%)</TableHead>
                                                 <TableHead className="text-right">Net Amount</TableHead>
@@ -836,7 +871,16 @@ export default function PathologyBillDetailsDialog({
                                                             <span className="text-muted-foreground text-xs">Not Collected</span>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="text-sm">{item.reportDate || "-"}</TableCell>
+                                                    <TableCell className="text-center">
+                                                        {item.reportHours ? (
+                                                            <div className="flex flex-col items-center gap-0.5">
+                                                                <span className="text-sm font-medium">{item.reportHours}</span>
+                                                                <span className="text-[10px] text-muted-foreground">hours</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-muted-foreground text-xs">-</span>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell>
                                                         {item.approvedBy ? (
                                                             <div className="flex flex-col gap-0.5">

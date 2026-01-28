@@ -187,6 +187,7 @@ export async function getBillById(billId: string) {
         price: pathologyOrderTests.price,
         tax: pathologyOrderTests.tax,
         testName: pathologyTests.testName,
+        reportHours: pathologyTests.reportHours,
       })
       .from(pathologyOrderTests)
       .leftJoin(pathologyTests, eq(pathologyOrderTests.testId, pathologyTests.id))
@@ -404,5 +405,60 @@ export async function getPaymentsByBillId(billId: string) {
   } catch (error) {
     console.error("Error fetching payments:", error);
     return { error: "Failed to fetch payments", success: false };
+  }
+}
+
+export async function deletePayment(paymentId: string, billId: string) {
+  try {
+    const org = await getActiveOrganization();
+    if (!org) {
+      return { error: "Unauthorized", success: false };
+    }
+
+    // Delete the payment
+    const result = await db
+      .delete(pathologyPayments)
+      .where(
+        and(
+          eq(pathologyPayments.id, paymentId),
+          eq(pathologyPayments.hospitalId, org.id)
+        )
+      )
+      .returning();
+
+    if (result.length === 0) {
+      return { error: "Payment not found", success: false };
+    }
+
+    // Update bill status based on remaining payments
+    const allPayments = await db
+      .select()
+      .from(pathologyPayments)
+      .where(eq(pathologyPayments.billId, billId));
+
+    const totalPaid = allPayments.reduce((sum, p) => sum + Number(p.paymentAmount), 0);
+    const bill = await db.select().from(pathologyBills).where(eq(pathologyBills.id, billId)).limit(1);
+
+    if (bill[0]) {
+      const billAmount = Number(bill[0].billNetAmount);
+      let newStatus = "pending";
+
+      if (totalPaid >= billAmount) {
+        newStatus = "paid";
+      } else if (totalPaid > 0) {
+        newStatus = "partially_paid";
+      }
+
+      await db
+        .update(pathologyBills)
+        .set({ billStatus: newStatus as any, updatedAt: new Date() })
+        .where(eq(pathologyBills.id, billId));
+    }
+
+    revalidatePath("/doctor/pathology");
+    return { success: true, data: result[0], message: "Payment deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting payment:", error);
+    return { error: "Failed to delete payment", success: false };
   }
 }

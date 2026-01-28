@@ -13,7 +13,8 @@ import {
     Save,
     ChevronDown,
     ChevronUp,
-    Info
+    Info,
+    CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +37,10 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { getBillById, recordPayment } from "@/lib/actions/pathologyBills";
+import { getBillById, recordPayment, deletePayment } from "@/lib/actions/pathologyBills";
 import { differenceInYears, format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getShortId } from "@/utils/getShortId";
 
 /* -------------------- TYPES -------------------- */
 
@@ -122,6 +124,8 @@ export default function PathologyPaymentDialog({
         note: "",
     });
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; amount: number } | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Initialize detailed items from bill when it changes
     useEffect(() => {
@@ -237,10 +241,52 @@ export default function PathologyPaymentDialog({
         }
     };
 
-    const handleDeleteTrx = (id: string) => {
-        // In real app, call a delete action
-        setTransactions(transactions.filter(t => t.id !== id));
-        toast.success("Transaction deleted (Mock - deletion action needed)");
+    const handleDeleteTrx = (id: string, amount: number) => {
+        setDeleteConfirm({ id, amount });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+
+        setIsDeleting(true);
+        try {
+            const result = await deletePayment(deleteConfirm.id, billId);
+
+            if (result.success) {
+                // Remove from local state
+                setTransactions(transactions.filter(t => t.id !== deleteConfirm.id));
+                toast.success("Transaction deleted successfully");
+
+                // Refresh bill data
+                const updated = await getBillById(billId);
+                if (updated.success && updated.data) {
+                    setBillData(updated.data);
+                    const history: Transaction[] = updated.data.payments.map((p: any) => ({
+                        id: p.id,
+                        date: format(new Date(p.paymentDate), "yyyy-MM-dd"),
+                        mode: p.paymentMode,
+                        note: p.referenceNo || "",
+                        amount: Number(p.paymentAmount)
+                    }));
+                    setTransactions(history);
+                    setPaymentData({
+                        date: new Date().toISOString().split("T")[0],
+                        amount: updated.data.balanceAmount,
+                        mode: "Cash",
+                        referenceNo: "",
+                        note: "",
+                    });
+                }
+            } else {
+                toast.error(result.error || "Failed to delete transaction");
+            }
+        } catch (error) {
+            console.error("Error deleting transaction:", error);
+            toast.error("An error occurred while deleting transaction");
+        } finally {
+            setIsDeleting(false);
+            setDeleteConfirm(null);
+        }
     };
 
     const totalPaid = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -369,6 +415,7 @@ export default function PathologyPaymentDialog({
                                                     type="date"
                                                     value={paymentData.date}
                                                     onChange={(e) => setPaymentData({ ...paymentData, date: e.target.value })}
+                                                    disabled={dueAmount <= 0}
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -377,6 +424,7 @@ export default function PathologyPaymentDialog({
                                                     type="number"
                                                     value={paymentData.amount}
                                                     onChange={(e) => setPaymentData({ ...paymentData, amount: Number(e.target.value) })}
+                                                    disabled={dueAmount <= 0}
                                                 />
                                             </div>
 
@@ -385,6 +433,7 @@ export default function PathologyPaymentDialog({
                                                 <Select
                                                     value={paymentData.mode}
                                                     onValueChange={(val) => setPaymentData({ ...paymentData, mode: val })}
+                                                    disabled={dueAmount <= 0}
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Mode" />
@@ -431,9 +480,20 @@ export default function PathologyPaymentDialog({
                                                 </div>
                                             )}
                                         </div>
-                                        <Button className="w-full mt-6 gap-2" onClick={handleAddPayment}>
-                                            <Save className="h-4 w-4" /> Save Transaction
-                                        </Button>
+                                        {dueAmount <= 0 ? (
+                                            <div className="w-full mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center gap-2">
+                                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                                <span className="text-sm font-semibold text-green-700">Bill Paid Successfully</span>
+                                            </div>
+                                        ) : (
+                                            <Button 
+                                                className="w-full mt-6 gap-2" 
+                                                onClick={handleAddPayment}
+                                                disabled={paymentData.amount <= 0}
+                                            >
+                                                <Save className="h-4 w-4" /> Save Transaction
+                                            </Button>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>
@@ -466,7 +526,7 @@ export default function PathologyPaymentDialog({
                                             {transactions.length > 0 ? (
                                                 transactions.map((t) => (
                                                     <TableRow key={t.id} className="hover:bg-muted/30 transition-colors">
-                                                        <TableCell className="text-xs font-mono">{t.id}</TableCell>
+                                                        <TableCell className="text-xs font-mono">{getShortId(t.id)}</TableCell>
                                                         <TableCell className="text-xs">{t.date}</TableCell>
                                                         <TableCell className="text-xs">
                                                             <Badge variant="secondary" className="px-1.5 h-5 text-[10px]">
@@ -492,7 +552,7 @@ export default function PathologyPaymentDialog({
                                                                     <Tooltip>
                                                                         <TooltipTrigger asChild>
                                                                             <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                                                                                onClick={() => handleDeleteTrx(t.id)}>
+                                                                                onClick={() => handleDeleteTrx(t.id, t.amount)}>
                                                                                 <Trash2 className="h-3 w-3" />
                                                                             </Button>
                                                                         </TooltipTrigger>
@@ -540,6 +600,52 @@ export default function PathologyPaymentDialog({
                         Close Payment View
                     </Button>
                 </div>
+                
+                {/* Delete Confirmation Dialog */}
+                {deleteConfirm && (
+                    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <Card className="w-full max-w-md border-destructive">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                                    <Trash2 className="h-5 w-5" />
+                                    Delete Transaction
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Are you sure you want to delete this transaction?
+                                </p>
+                                <div className="bg-muted/30 rounded-lg p-3 border border-muted">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium">Amount to be deleted:</span>
+                                        <span className="text-lg font-bold text-destructive">₹{deleteConfirm.amount}</span>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    This action will update the bill status and due amount. This cannot be undone.
+                                </p>
+                            </CardContent>
+                            <div className="flex gap-3 p-6 border-t">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setDeleteConfirm(null)}
+                                    disabled={isDeleting}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    variant="destructive"
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="flex-1 gap-2"
+                                >
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
+                )}
             </div>
         </div>
     );

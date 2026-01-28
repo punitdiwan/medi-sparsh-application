@@ -40,6 +40,8 @@ export async function saveSampleCollector(data: {
   personName: string;
   collectedDate: string;
   pathologyCenter: string;
+  isUpdate?: boolean;
+  sampleId?: string | null;
 }) {
   try {
     const org = await getActiveOrganization();
@@ -47,21 +49,48 @@ export async function saveSampleCollector(data: {
       return { error: "Unauthorized", success: false };
     }
 
-    // Generate sample number if not provided
-    const sampleNumber = `SAM-${Date.now()}`;
+    // Check if this is an update operation
+    if (data.isUpdate && data.sampleId) {
+      // Update existing sample record
+      const result = await db.update(pathologySamples)
+        .set({
+          collectedBy: data.personName,
+          sampleDate: new Date(data.collectedDate),
+          sampleType: data.pathologyCenter,
+          sampleStatus: "Collected",
+        })
+        .where(
+          and(
+            eq(pathologySamples.id, data.sampleId),
+            eq(pathologySamples.hospitalId, org.id)
+          )
+        )
+        .returning();
 
-    const result = await db.insert(pathologySamples).values({
-      hospitalId: org.id,
-      orderTestID: data.orderTestId,
-      sampleNumber: sampleNumber,
-      sampleType: "General",
-      sampleDate: new Date(data.collectedDate),
-      sampleStatus: "Collected",
-      collectedBy: data.personName,
-    }).returning();
+      if (result.length === 0) {
+        return { error: "Sample record not found", success: false };
+      }
 
-    revalidatePath("/doctor/pathology");
-    return { success: true, data: result[0], message: "Sample details saved successfully" };
+      revalidatePath("/doctor/pathology");
+      return { success: true, data: result[0], message: "Sample details updated successfully" };
+    } else {
+      // Insert new sample record
+      // Generate sample number if not provided
+      const sampleNumber = `SAM-${Date.now()}`;
+
+      const result = await db.insert(pathologySamples).values({
+        hospitalId: org.id,
+        orderTestID: data.orderTestId,
+        sampleNumber: sampleNumber,
+        sampleType: data.pathologyCenter,
+        sampleDate: new Date(data.collectedDate),
+        sampleStatus: "Collected",
+        collectedBy: data.personName,
+      }).returning();
+
+      revalidatePath("/doctor/pathology");
+      return { success: true, data: result[0], message: "Sample details saved successfully" };
+    }
   } catch (error) {
     console.error("Error saving sample:", error);
     return { error: "Failed to save sample", success: false };
