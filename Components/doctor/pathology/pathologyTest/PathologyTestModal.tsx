@@ -45,7 +45,6 @@ export type PathologyTest = {
     subCategoryId: string;
     method: string;
     reportHours: number | string;
-    reportDays: number | string;
     chargeCategoryId: string;
     chargeId: string;
     chargeName: string;
@@ -78,7 +77,6 @@ export default function PathologyTestModal({
         categoryId: "",
         subCategoryId: "",
         method: "",
-        reportDays: "",
         reportHours: "",
         chargeCategoryId: "",
         chargeId: "",
@@ -132,7 +130,7 @@ export default function PathologyTestModal({
             if (test) {
                 setForm({
                     ...test,
-                    reportDays: test.reportHours ? Number(test.reportHours) / 24 : "",
+                    reportHours: test.reportHours ?? "",
                     parameters: Array.isArray(test.parameters) ? test.parameters : (test as any).testParameters || []
                 });
             } else {
@@ -145,7 +143,6 @@ export default function PathologyTestModal({
                     categoryId: "",
                     subCategoryId: "",
                     method: "",
-                    reportDays: "",
                     reportHours: "",
                     chargeCategoryId: "",
                     chargeId: "",
@@ -242,7 +239,7 @@ export default function PathologyTestModal({
     const handleSubmit = async () => {
         if (!form.testName) return toast.error("Test Name is required");
         if (!form.categoryId) return toast.error("Category is required");
-        if (!form.reportDays) return toast.error("Report Days is required");
+        if (!form.reportHours) return toast.error("Report Days is required");
         if (!form.chargeId) return toast.error("Charge is required");
 
         setLoading(true);
@@ -255,8 +252,7 @@ export default function PathologyTestModal({
                 categoryId: form.categoryId,
                 subCategoryId: form.subCategoryId,
                 method: form.method,
-                reportDays: Number(form.reportDays),
-                reportHours: Number(form.reportDays) * 24,
+                reportHours: Number(form.reportHours),
                 chargeCategoryId: form.chargeCategoryId,
                 chargeId: form.chargeId,
                 chargeName: form.chargeName,
@@ -376,12 +372,12 @@ export default function PathologyTestModal({
 
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Report Days *</label>
+                            <label className="text-sm font-medium">Report Hours *</label>
                             <Input
                                 type="number"
-                                placeholder="Report Days"
-                                value={form.reportDays ?? ""}
-                                onChange={(e) => setForm({ ...form, reportDays: e.target.value })}
+                                placeholder="Report Hours"
+                                value={form.reportHours ?? ""}
+                                onChange={(e) => setForm({ ...form, reportHours: e.target.value })}
                                 disabled={loading}
                             />
                         </div>

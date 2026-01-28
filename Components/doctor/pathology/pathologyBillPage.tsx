@@ -120,7 +120,6 @@ export default function PathologyBillPage() {
                 toast.error(result.error || "Failed to fetch bill details", { id: "print-pdf" });
                 return;
             }
-
             const billData = result.data;
             const pdfDoc = (
                 <PathologyBillPdf
@@ -129,17 +128,29 @@ export default function PathologyBillPage() {
                     customerName={billData.patientName}
                     customerPhone={billData.patientPhone}
                     paymentMode={billData.payments?.[0]?.paymentMode || "Cash"}
-                    items={billData.tests.map((t: any) => ({
-                        testName: t.testName,
-                        price: Number(t.price),
-                        tax: Number(t.tax),
-                        total: Number(t.price),
-                    }))}
-                    totalAmount={Number(billData.billTotalAmount)}
+                    items={billData.tests.map((t: any) => {
+                        const price = Number(t.price) || 0;
+                        const taxPercent = Number(t.tax) || 0;
+                        const taxAmount = (price * taxPercent) / 100;
+                        const total = price + taxAmount;
+                        return {
+                            testName: t.testName,
+                            price,
+                            tax: taxPercent,
+                            total,
+                        };
+                    })}
                     discount={Number(billData.billDiscount)}
-                    tax={billData.tests.reduce((sum: number, t: any) => sum + Number(t.tax), 0)}
                     organization={billData.organization}
                     orgModeCheck={true}
+                    payments={billData.payments?.map((p: any) => ({
+                        date: format(new Date(p.paymentDate), "dd/MM/yyyy"),
+                        amount: Number(p.paymentAmount),
+                        mode: p.paymentMode,
+                    })) || []}
+                    totalPaid={billData.totalPaid}
+                    balanceAmount={billData.balanceAmount}
+                    doctorName={billData.doctorName || ""}
                 />
             );
 

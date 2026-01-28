@@ -50,6 +50,8 @@ import { getBillById } from "@/lib/actions/pathologyBills";
 import { saveSampleCollector, getSampleByOrderTest } from "@/lib/actions/pathologySampleCollector";
 import { saveReportData, getReportByOrderTest, getParametersByOrderTest } from "@/lib/actions/pathologyReports";
 import { differenceInYears, format } from "date-fns";
+import { pdf } from "@react-pdf/renderer";
+import { PathologyTestReportPdf } from "@/Components/pdf/PathologyTestReportPdf";
 
 /* -------------------- TYPES -------------------- */
 
@@ -284,15 +286,15 @@ function SampleCollectorDialog({
                     </div>
                 </div>
                 <DialogFooter className="px-6 py-4 rounded-b-lg bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         onClick={onClose}
                         disabled={isLoading}
                         className="text-dialog-muted"
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleSave}
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
                         disabled={!formData.personName || !formData.collectedDate || !formData.pathologyCenter || isLoading}
@@ -565,14 +567,14 @@ function ReportEditorDialog({
                     </div>
                 </div>
                 <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         onClick={onClose}
                         disabled={isLoading}
                         className="text-dialog-muted">
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleSave}
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
                         disabled={!formData.approvedBy || !formData.approveDate || isLoading}
@@ -599,6 +601,84 @@ export default function PathologyBillDetailsDialog({
     const [isCollectorOpen, setIsCollectorOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const handlePrintReport = async (testItems: TestItem[]) => {
+        try {
+            setIsPrinting(true);
+            toast.loading("Preparing Test Report PDF...", { id: "print-report" });
+
+            // Ensure all test items have parameters loaded
+            const reportsData = await Promise.all(testItems.map(async (item) => {
+                let parameters = item.parameters || [];
+
+                // If parameters are empty, fetch them
+                if (parameters.length === 0) {
+                    const paramsResult = await getParametersByOrderTest(item.id);
+                    const reportResult = await getReportByOrderTest(item.id);
+
+                    if (paramsResult.success && paramsResult.data) {
+                        const reportData = reportResult.success ? reportResult.data : null;
+                        const paramValues = reportData?.parameterValues || [];
+
+                        parameters = paramsResult.data.map((p: any) => {
+                            const valObj = paramValues.find((pv: any) => pv.parameterID === p.id);
+                            return {
+                                id: p.id,
+                                name: p.paramName,
+                                value: valObj?.resultValue || "N/A",
+                                range: `${p.fromRange} - ${p.toRange}`,
+                            };
+                        });
+                    }
+                }
+
+                return {
+                    testName: item.testName,
+                    sampleCollectedBy: item.sampleCollectedBy,
+                    collectedDate: item.collectedDate,
+                    pathologyCenter: item.pathologyCenter,
+                    approvedBy: item.approvedBy,
+                    approveDate: item.approveDate,
+                    parameters: parameters.map(p => ({
+                        name: p.name,
+                        value: p.value,
+                        range: p.range
+                    }))
+                };
+            }));
+
+            const pdfDoc = (
+                <PathologyTestReportPdf
+                    patient={{
+                        name: bill.customerName,
+                        phone: bill.customerPhone,
+                        age: bill.age,
+                        gender: bill.gender,
+                        address: bill.address
+                    }}
+                    billDetails={{
+                        billNo: bill.billNo,
+                        date: bill.date
+                    }}
+                    reports={reportsData}
+                    organization={billData.organization}
+                    orgModeCheck={true}
+                    doctorName={bill.doctorName}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            toast.success("Test report ready", { id: "print-report" });
+        } catch (error) {
+            console.error("Error generating report PDF:", error);
+            toast.error("Failed to generate report PDF", { id: "print-report" });
+        } finally {
+            setIsPrinting(false);
+        }
+    };
 
     // Initialize detailed items from bill when it changes
     React.useEffect(() => {
@@ -613,7 +693,7 @@ export default function PathologyBillDetailsDialog({
                     const detailedItems: TestItem[] = await Promise.all(
                         result.data.tests.map(async (item: any, idx: number) => {
                             // Fetch sample data if exists
-                            const sampleResult = await getSampleByOrderTest(item.id); 
+                            const sampleResult = await getSampleByOrderTest(item.id);
                             const sampleData = sampleResult.success ? sampleResult.data : null;
                             const approvedResult = await getReportByOrderTest(item.id);
                             const approvedData = approvedResult.success ? approvedResult?.data : null;
@@ -628,7 +708,7 @@ export default function PathologyBillDetailsDialog({
                                 sampleCollectedBy: sampleData?.collectedBy || undefined,
                                 collectedDate: sampleData ? format(new Date(sampleData.sampleDate), "dd/MM/yyyy") : undefined,
                                 approvedBy: approvedData?.approvedBy || undefined,
-                                approveDate: approvedData ? format(new Date(approvedData?.approvedAt),"dd/MM/yyyy"): undefined,
+                                approveDate: approvedData ? format(new Date(approvedData?.approvedAt), "dd/MM/yyyy") : undefined,
                                 pathologyCenter: sampleData?.sampleType || undefined,
                                 parameters: []
                             };
@@ -830,8 +910,13 @@ export default function PathologyBillDetailsDialog({
                                         <TooltipProvider>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <Button variant="outline" size="sm" onClick={() => setIsCollectorOpen(true)}>
-                                                        <Printer />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handlePrintReport(items)}
+                                                        disabled={isPrinting}
+                                                    >
+                                                        <Printer className="h-4 w-4" />
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -947,6 +1032,8 @@ export default function PathologyBillDetailsDialog({
                                                                             variant="outline"
                                                                             size="icon"
                                                                             className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                                            onClick={() => handlePrintReport([item])}
+                                                                            disabled={isPrinting}
                                                                         >
                                                                             <Printer className="h-4 w-4" />
                                                                         </Button>

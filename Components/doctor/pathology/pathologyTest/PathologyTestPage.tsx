@@ -77,8 +77,8 @@ export default function PathologyTestPage() {
         { accessorKey: "method", header: "Method" },
         {
             accessorKey: "reportHours",
-            header: "Report Days",
-            cell: ({ row }) => Number(row.original.reportHours) / 24
+            header: "Report Hours",
+            cell: ({ row }) => Number(row.original.reportHours)
         },
         {
             header: "Amount",
