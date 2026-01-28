@@ -99,6 +99,10 @@ export async function getBillsByHospital(searchTerm?: string, status?: string) {
         billStatus: pathologyBills.billStatus,
         patientName: patients.name,
         patientPhone: patients.mobileNumber,
+        patientEmail: patients.email,
+        patientGender: patients.gender,
+        patientDob: patients.dob,
+        patientAddress: patients.address,
         createdAt: pathologyBills.createdAt,
       })
       .from(pathologyBills)
@@ -137,9 +141,30 @@ export async function getBillById(billId: string) {
       return { error: "Unauthorized", success: false };
     }
 
-    const bill = await db
-      .select()
+    const billResult = await db
+      .select({
+        id: pathologyBills.id,
+        orderId: pathologyBills.orderId,
+        billDate: pathologyBills.billDate,
+        billDiscount: pathologyBills.billDiscount,
+        billTotalAmount: pathologyBills.billTotalAmount,
+        billNetAmount: pathologyBills.billNetAmount,
+        billStatus: pathologyBills.billStatus,
+        createdAt: pathologyBills.createdAt,
+        updatedAt: pathologyBills.updatedAt,
+        patientName: patients.name,
+        patientPhone: patients.mobileNumber,
+        patientDob: patients.dob,
+        patientGender: patients.gender,
+        patientAddress: patients.address,
+        patientEmail: patients.email,
+        patientBloodGroup: patients.bloodGroup,
+        doctorName: pathologyOrders.doctorName,
+        remarks: pathologyOrders.remarks,
+      })
       .from(pathologyBills)
+      .leftJoin(pathologyOrders, eq(pathologyBills.orderId, pathologyOrders.id))
+      .leftJoin(patients, eq(pathologyOrders.patientId, patients.id))
       .where(
         and(
           eq(pathologyBills.id, billId),
@@ -148,16 +173,11 @@ export async function getBillById(billId: string) {
       )
       .limit(1);
 
-    if (!bill[0]) {
+    if (!billResult[0]) {
       return { error: "Bill not found", success: false };
     }
 
-    // Get order details
-    const order = await db
-      .select()
-      .from(pathologyOrders)
-      .where(eq(pathologyOrders.id, bill[0].orderId))
-      .limit(1);
+    const bill = billResult[0];
 
     // Get order tests
     const orderTests = await db
@@ -170,14 +190,26 @@ export async function getBillById(billId: string) {
       })
       .from(pathologyOrderTests)
       .leftJoin(pathologyTests, eq(pathologyOrderTests.testId, pathologyTests.id))
-      .where(eq(pathologyOrderTests.orderId, bill[0].orderId));
+      .where(eq(pathologyOrderTests.orderId, bill.orderId));
+
+    // Get payments
+    const payments = await db
+      .select()
+      .from(pathologyPayments)
+      .where(eq(pathologyPayments.billId, billId));
+
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.paymentAmount), 0);
+    const balanceAmount = Number(bill.billNetAmount) - totalPaid;
 
     return {
       success: true,
       data: {
-        ...bill[0],
-        order: order[0],
+        ...bill,
         tests: orderTests,
+        payments,
+        totalPaid,
+        balanceAmount,
+        organization: org,
       },
     };
   } catch (error) {

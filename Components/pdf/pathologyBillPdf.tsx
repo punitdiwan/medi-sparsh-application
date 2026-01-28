@@ -47,47 +47,49 @@ const contentWrapper = {
 interface Props {
     billNumber: string;
     billDate: string;
-    customerName: string;
-    customerPhone: string;
+    customerName: string | null;
+    customerPhone: string | null;
     paymentMode: string;
-    items: Array<{ medicineName: string; quantity: number; price: number; total: number }>;
+    items: Array<{ testName: string; price: number; tax: number; total: number }>;
     totalAmount: number;
     discount: number;
     tax: number;
     netAmount?: number;
-    organization: { name: string; metadata: any };
+    organization: { name: string; metadata?: any };
     orgModeCheck: boolean;
 }
 
 export const PathologyBillPdf: React.FC<Props> = (props) => {
     const { organization, orgModeCheck } = props;
-    const parsedMetadata = organization.metadata;
+    const metadata = typeof organization.metadata === 'string'
+        ? JSON.parse(organization.metadata)
+        : organization.metadata;
 
-    // Group items by name, sum quantities, and get max price
+    // Group items by name (though usually tests are unique)
     const groupedItems = props.items.reduce(
         (
             acc: {
-                medicineName: string;
-                quantity: number;
+                testName: string;
                 price: number;
+                tax: number;
+                total: number;
             }[],
             item
         ) => {
             const existing = acc.find(
-                (m) => m.medicineName === item.medicineName
+                (m) => m.testName === item.testName
             );
 
             if (existing) {
-                existing.quantity += Number(item.quantity);
-                existing.price = Math.max(
-                    existing.price,
-                    Number(item.price)
-                );
+                // In pathology, we might not have 'quantity' in the same way as pharmacy,
+                // but if we do, we could add it. For now, let's assume unique tests.
+                existing.total += Number(item.total);
             } else {
                 acc.push({
-                    medicineName: item.medicineName,
-                    quantity: Number(item.quantity),
+                    testName: item.testName,
                     price: Number(item.price),
+                    tax: Number(item.tax),
+                    total: Number(item.total),
                 });
             }
 
@@ -107,10 +109,10 @@ export const PathologyBillPdf: React.FC<Props> = (props) => {
                 <PdfHeader
                     orgModeCheck={orgModeCheck}
                     organizationName={organization.name}
-                    address={parsedMetadata?.address}
-                    phone={parsedMetadata?.phone}
-                    email={parsedMetadata?.email}
-                    logo={parsedMetadata?.logo}
+                    address={metadata?.address}
+                    phone={metadata?.phone}
+                    email={metadata?.email}
+                    logo={metadata?.logo}
                     doctorName=""
                     doctorSpecialization=""
                 />
@@ -118,55 +120,66 @@ export const PathologyBillPdf: React.FC<Props> = (props) => {
                 {/* CONTENT BELOW HEADER */}
                 <View style={contentWrapper}>
                     <View style={styles.section}>
-                        <Text>Bill No: {props.billNumber}</Text>
-                        <Text>Date: {props.billDate}</Text>
-                        <Text>Customer: {props.customerName}</Text>
-                        <Text>Phone: {props.customerPhone}</Text>
-                        <Text>Payment Mode: {props.paymentMode}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <View>
+                                <Text style={{ fontSize: 12, fontWeight: 'bold' }}>Bill To:</Text>
+                                <Text style={{ fontSize: 14, marginTop: 4 }}>{props.customerName}</Text>
+                                <Text style={{ marginTop: 2 }}>Phone: {props.customerPhone}</Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-end' }}>
+                                <Text style={{ fontSize: 12, fontWeight: 'bold' }}>Bill Details:</Text>
+                                <Text style={{ marginTop: 4 }}>Bill No: {props.billNumber}</Text>
+                                <Text style={{ marginTop: 2 }}>Date: {props.billDate}</Text>
+                                <Text style={{ marginTop: 2 }}>Payment: {props.paymentMode}</Text>
+                            </View>
+                        </View>
                     </View>
 
-                    {/* Medicine Table - Only Name, Quantity, Price */}
+                    {/* Test Table */}
                     <View style={styles.section}>
                         <View style={styles.tableHeader}>
-                            <Text style={{ width: "40%", paddingLeft: 4 }}>Medicine Name</Text>
-                            <Text style={{ width: "20%", textAlign: "center" }}>Quantity</Text>
-                            <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>Price</Text>
-                            <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>Total</Text>
+                            <Text style={{ width: "50%", paddingLeft: 4 }}>Test Name</Text>
+                            <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>Price</Text>
+                            <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>Total</Text>
                         </View>
 
                         {groupedItems.map((item, idx) => (
                             <View key={idx} style={styles.tableRow}>
-                                <Text style={{ width: "40%", paddingLeft: 4 }}>{item.medicineName}</Text>
-                                <Text style={{ width: "20%", textAlign: "center" }}>{item.quantity}</Text>
-                                <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>{item.price.toFixed(2)}</Text>
-                                <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>{(item.quantity * item.price).toFixed(2)}</Text>
+                                <Text style={{ width: "50%", paddingLeft: 4 }}>{item.testName}</Text>
+                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{item.price.toFixed(2)}</Text>
+                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{item.total.toFixed(2)}</Text>
                             </View>
                         ))}
                     </View>
 
                     {/* Total Section */}
                     <View style={styles.totalSection}>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                            <Text>Total Amount:</Text>
-                            <Text>{props.totalAmount.toFixed(2)}</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                            <Text>Discount:</Text>
-                            <Text>{props.discount.toFixed(2)}</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-                            <Text>Tax:</Text>
-                            <Text>{props.tax.toFixed(2)}</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "#000", fontWeight: "bold" }}>
-                            <Text style={{ fontWeight: "bold" }}>Net Amount:</Text>
-                            <Text style={{ fontWeight: "bold" }}>{netAmount.toFixed(2)}</Text>
+                        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 4 }}>
+                            <View style={{ width: "40%" }}>
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                                    <Text>Total Amount:</Text>
+                                    <Text>₹{props.totalAmount.toFixed(2)}</Text>
+                                </View>
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                                    <Text>Discount:</Text>
+                                    <Text>₹{props.discount.toFixed(2)}</Text>
+                                </View>
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
+                                    <Text>Tax:</Text>
+                                    <Text>₹{props.tax.toFixed(2)}</Text>
+                                </View>
+                                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: "#000" }}>
+                                    <Text style={{ fontWeight: "bold" }}>Net Amount:</Text>
+                                    <Text style={{ fontWeight: "bold" }}>₹{netAmount.toFixed(2)}</Text>
+                                </View>
+                            </View>
                         </View>
                     </View>
                 </View>
 
                 <View style={[styles.footer, styles.footerFixed]}>
-                    <Text>Thank you for your business!</Text>
+                    <Text>This is a computer generated bill.</Text>
+                    <Text>Thank you for choosing {organization.name}!</Text>
                 </View>
             </Page>
         </Document>

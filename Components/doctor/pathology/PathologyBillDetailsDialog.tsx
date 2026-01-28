@@ -46,6 +46,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { getBillById } from "@/lib/actions/pathologyBills";
+import { differenceInYears, format } from "date-fns";
 
 /* -------------------- TYPES -------------------- */
 
@@ -99,7 +101,7 @@ interface Bill {
 interface PathologyBillDetailsDialogProps {
     open: boolean;
     onClose: () => void;
-    bill: Bill | null;
+    bill: string;
 }
 
 /* -------------------- SUB-COMPONENTS -------------------- */
@@ -339,34 +341,82 @@ function ReportEditorDialog({
 export default function PathologyBillDetailsDialog({
     open,
     onClose,
-    bill,
+    bill: billId,
 }: PathologyBillDetailsDialogProps) {
+    const [loading, setLoading] = useState(false);
+    const [billData, setBillData] = useState<any>(null);
     const [items, setItems] = useState<TestItem[]>([]);
     const [selectedTest, setSelectedTest] = useState<TestItem | null>(null);
     const [isCollectorOpen, setIsCollectorOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
-    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
 
     // Initialize detailed items from bill when it changes
     React.useEffect(() => {
-        if (bill) {
-            // Mocking detailed test data based on bill items
-            const detailedItems: TestItem[] = bill.items.map((item, idx) => ({
-                id: `test-${idx}`,
-                testName: item.medicineName,
-                tax: 18,
-                netAmount: item.total,
-                status: "Pending",
-                parameters: [
-                    { id: "p1", name: "Parameter A", value: "", range: "10-20 mg/dL" },
-                    { id: "p2", name: "Parameter B", value: "", range: "Negative" },
-                ]
-            }));
-            setItems(detailedItems);
-        }
-    }, [bill]);
+        const fetchBillDetails = async () => {
+            if (!billId || !open) return;
+            try {
+                setLoading(true);
+                const result = await getBillById(billId);
+                if (result.success && result.data) {
+                    setBillData(result.data);
+                    // Map items from fetched data
+                    const detailedItems: TestItem[] = result.data.tests.map((item: any, idx: number) => ({
+                        id: item.id,
+                        testName: item.testName,
+                        tax: Number(item.tax),
+                        netAmount: Number(item.price),
+                        status: "Pending", // This status could be fetched from results table in future
+                        parameters: [] // Parameters could be fetched too
+                    }));
+                    setItems(detailedItems);
+                } else {
+                    toast.error(result.error || "Failed to load bill details");
+                }
+            } catch (error) {
+                console.error("Error fetching bill details:", error);
+                toast.error("An error occurred while fetching bill details");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    if (!open || !bill) return null;
+        fetchBillDetails();
+    }, [billId, open]);
+
+    if (!open) return null;
+    if (loading) return (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center">
+            <div className="bg-background p-6 rounded-lg shadow-xl">
+                <p className="text-muted-foreground animate-pulse">Loading bill details...</p>
+            </div>
+        </div>
+    );
+    if (!billData) return null;
+
+    const bill = {
+        id: billData.id,
+        billNo: billData.id.substring(0, 8).toUpperCase(),
+        date: format(new Date(billData.billDate), "dd/MM/yyyy"),
+        customerName: billData.patientName,
+        customerPhone: billData.patientPhone,
+        age: billData.patientDob ? `${differenceInYears(new Date(), new Date(billData.patientDob))} Years` : "N/A",
+        gender: billData.patientGender,
+        email: billData.patientEmail,
+        address: billData.patientAddress,
+        bloodGroup: billData.patientBloodGroup,
+        doctorName: billData.doctorName,
+        generatedBy: "System", // Or fetch from staff
+        note: billData.remarks,
+        totalAmount: Number(billData.billTotalAmount),
+        totalDiscount: Number(billData.billDiscount),
+        totalTax: 0, // Calculate if needed
+        netAmount: Number(billData.billNetAmount),
+        totalDeposit: billData.totalPaid,
+        balanceAmount: billData.balanceAmount,
+        items: items,
+        prescriptionNo: "N/A",
+    };
 
     const handleSaveCollector = (data: any) => {
         if (!selectedTest) return;

@@ -25,7 +25,7 @@ import {
 import PathologyBillDetailsDialog from "./PathologyBillDetailsDialog";
 import { BsCash } from "react-icons/bs";
 import PathologyPaymentDialog from "./PathologyPaymentDialog";
-import { getBillsByHospital } from "@/lib/actions/pathologyBills";
+import { getBillsByHospital, getBillById } from "@/lib/actions/pathologyBills";
 
 type BillItem = {
     medicineName: string;
@@ -44,6 +44,10 @@ type Bill = {
     billStatus: string;
     patientName: string | null;
     patientPhone: string | null;
+    patientEmail: string | null;
+    patientGender: string | null;
+    patientDob: string | null;
+    patientAddress: string | null;
     createdAt: string | Date;
     items?: BillItem[];
 };
@@ -57,7 +61,7 @@ export default function PathologyBillPage() {
     const [statusFilter, setStatusFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
-    const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+    const [selectedBill, setSelectedBill] = useState<string>("");
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const route = useRouter();
@@ -109,26 +113,51 @@ export default function PathologyBillPage() {
     );
 
     const handlePrint = async (billId: string) => {
-        const bill = bills.find((b) => b.id === billId);
-        if (!bill) return;
-
         try {
-            const url = URL.createObjectURL(new Blob(["Print feature coming soon"]));
-            const win = window.open(url);
-            if (win) {
-                win.print();
+            toast.loading("Preparing PDF...", { id: "print-pdf" });
+            const result = await getBillById(billId);
+            if (!result.success || !result.data) {
+                toast.error(result.error || "Failed to fetch bill details", { id: "print-pdf" });
+                return;
             }
+
+            const billData = result.data;
+            const pdfDoc = (
+                <PathologyBillPdf
+                    billNumber={billData.id.substring(0, 8).toUpperCase()}
+                    billDate={format(new Date(billData.billDate), "dd/MM/yyyy")}
+                    customerName={billData.patientName}
+                    customerPhone={billData.patientPhone}
+                    paymentMode={billData.payments?.[0]?.paymentMode || "Cash"}
+                    items={billData.tests.map((t: any) => ({
+                        testName: t.testName,
+                        price: Number(t.price),
+                        tax: Number(t.tax),
+                        total: Number(t.price),
+                    }))}
+                    totalAmount={Number(billData.billTotalAmount)}
+                    discount={Number(billData.billDiscount)}
+                    tax={billData.tests.reduce((sum: number, t: any) => sum + Number(t.tax), 0)}
+                    organization={billData.organization}
+                    orgModeCheck={true}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            toast.success("PDF ready for printing", { id: "print-pdf" });
         } catch (error) {
             console.error("Print error:", error);
-            toast.error("Failed to print bill");
+            toast.error("Failed to generate PDF", { id: "print-pdf" });
         }
     };
 
     const allColumns: ColumnDef<Bill>[] = [
         { accessorKey: "id", header: "Bill ID", cell: ({ row }) => row.original.id.substring(0, 8) },
-        { 
-            accessorKey: "createdAt", 
-            header: "Bill Date", 
+        {
+            accessorKey: "createdAt",
+            header: "Bill Date",
             cell: ({ row }) => {
                 const date = new Date(row.original.createdAt);
                 return format(date, "dd/MM/yyyy");
@@ -176,7 +205,7 @@ export default function PathologyBillPage() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                        setSelectedBill(row.original);
+                                        setSelectedBill(row.original.id);
                                         setIsViewOpen(true);
                                     }}
                                 >
@@ -195,7 +224,7 @@ export default function PathologyBillPage() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                        setSelectedBill(row.original);
+                                        setSelectedBill(row?.original?.id);
                                         setIsPaymentOpen(true);
                                     }}
                                 >
@@ -226,21 +255,34 @@ export default function PathologyBillPage() {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        toast.info("Email feature coming soon");
-                                    }}
-                                >
-                                    <Mail size={14} />
-                                </Button>
+                                <span className="inline-block">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={!row?.original?.patientEmail}
+                                        onClick={() => {
+                                            if (!row?.original?.patientEmail) return;
+                                            toast.info(
+                                                `Email feature coming soon ${row.original.patientEmail}`
+                                            );
+                                        }}
+                                    >
+                                        <Mail size={14} />
+                                    </Button>
+                                </span>
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Send Bill via Email</p>
+                                {row?.original?.patientEmail ? (
+                                    <p>Send Bill via Email</p>
+                                ) : (
+                                    <p className="text-red-500">
+                                        This patient doesn’t have an email added
+                                    </p>
+                                )}
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
+
                 </div>
             ),
         },
@@ -347,18 +389,18 @@ export default function PathologyBillPage() {
                 open={isViewOpen}
                 onClose={() => {
                     setIsViewOpen(false);
-                    setSelectedBill(null);
+                    setSelectedBill("");
                 }}
-                bill={selectedBill as any}
+                bill={selectedBill as string}
             />
 
             <PathologyPaymentDialog
                 open={isPaymentOpen}
                 onClose={() => {
                     setIsPaymentOpen(false);
-                    setSelectedBill(null);
+                    setSelectedBill("");
                 }}
-                bill={selectedBill as any}
+                bill={selectedBill as string}
             />
         </div>
     );

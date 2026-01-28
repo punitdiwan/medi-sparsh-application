@@ -36,6 +36,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { getBillById, recordPayment } from "@/lib/actions/pathologyBills";
+import { differenceInYears, format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* -------------------- TYPES -------------------- */
@@ -74,7 +76,7 @@ interface Bill {
 interface PathologyPaymentDialogProps {
     open: boolean;
     onClose: () => void;
-    bill: Bill | null;
+    bill: string;
 }
 
 /* -------------------- SUB-COMPONENTS -------------------- */
@@ -107,8 +109,10 @@ function SummaryItem({ label, value }: { label: string; value: string | number |
 export default function PathologyPaymentDialog({
     open,
     onClose,
-    bill,
+    bill: billId,
 }: PathologyPaymentDialogProps) {
+    const [loading, setLoading] = useState(false);
+    const [billData, setBillData] = useState<any>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [paymentData, setPaymentData] = useState({
         date: new Date().toISOString().split("T")[0],
@@ -116,52 +120,120 @@ export default function PathologyPaymentDialog({
         mode: "Cash",
         note: "",
     });
-    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
 
-    // Mock initial transactions based on bill deposit
+    // Initialize detailed items from bill when it changes
     useEffect(() => {
-        if (bill) {
-            const initialTransactions: Transaction[] = [];
-            if (bill.totalDeposit > 0) {
-                initialTransactions.push({
-                    id: "TRX-101",
-                    date: bill.date,
-                    mode: "Cash",
-                    note: "Initial Deposit",
-                    amount: bill.totalDeposit
-                });
+        const fetchBillDetails = async () => {
+            if (!billId || !open) return;
+            try {
+                setLoading(true);
+                const result = await getBillById(billId);
+                if (result.success && result.data) {
+                    setBillData(result.data);
+
+                    const history: Transaction[] = result.data.payments.map((p: any) => ({
+                        id: p.id,
+                        date: format(new Date(p.paymentDate), "yyyy-MM-dd"),
+                        mode: p.paymentMode,
+                        note: p.referenceNo || "",
+                        amount: Number(p.paymentAmount)
+                    }));
+                    setTransactions(history);
+                    setPaymentData(prev => ({ ...prev, amount: result.data.balanceAmount }));
+                } else {
+                    toast.error(result.error || "Failed to load bill details");
+                }
+            } catch (error) {
+                console.error("Error fetching bill details:", error);
+                toast.error("An error occurred while fetching bill details");
+            } finally {
+                setLoading(false);
             }
-            setTransactions(initialTransactions);
-            setPaymentData(prev => ({ ...prev, amount: bill.balanceAmount }));
-        }
-    }, [bill]);
+        };
 
-    if (!open || !bill) return null;
+        fetchBillDetails();
+    }, [billId, open]);
 
-    const handleAddPayment = () => {
+    if (!open) return null;
+    if (loading) return (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center">
+            <div className="bg-background p-6 rounded-lg shadow-xl">
+                <p className="text-muted-foreground animate-pulse">Loading payment details...</p>
+            </div>
+        </div>
+    );
+    if (!billData) return null;
+
+    const bill = {
+        id: billData.id,
+        billNo: billData.id.substring(0, 8).toUpperCase(),
+        date: format(new Date(billData.billDate), "dd/MM/yyyy"),
+        customerName: billData.patientName,
+        customerPhone: billData.patientPhone,
+        age: billData.patientDob ? `${differenceInYears(new Date(), new Date(billData.patientDob))} Years` : "N/A",
+        gender: billData.patientGender,
+        email: billData.patientEmail,
+        address: billData.patientAddress,
+        bloodGroup: billData.patientBloodGroup,
+        doctorName: billData.doctorName,
+        generatedBy: "System",
+        note: billData.remarks,
+        totalAmount: Number(billData.billTotalAmount),
+        totalDiscount: Number(billData.billDiscount),
+        totalTax: 0,
+        netAmount: Number(billData.billNetAmount),
+        totalDeposit: billData.totalPaid,
+        balanceAmount: billData.balanceAmount,
+    };
+
+    const handleAddPayment = async () => {
         if (paymentData.amount <= 0) {
             toast.error("Please enter a valid amount");
             return;
         }
 
-        const newTrx: Transaction = {
-            id: `TRX-${Math.floor(Math.random() * 900) + 100}`,
-            ...paymentData
-        };
+        try {
+            const result = await recordPayment(billId, {
+                amount: paymentData.amount,
+                mode: paymentData.mode,
+                referenceNo: paymentData.note
+            });
 
-        setTransactions([...transactions, newTrx]);
-        toast.success("Payment added successfully");
-        setPaymentData({
-            date: new Date().toISOString().split("T")[0],
-            amount: 0,
-            mode: "Cash",
-            note: "",
-        });
+            if (result.success) {
+                toast.success("Payment added successfully");
+                // Refresh data
+                const updated = await getBillById(billId);
+                if (updated.success && updated.data) {
+                    setBillData(updated.data);
+                    const history: Transaction[] = updated.data.payments.map((p: any) => ({
+                        id: p.id,
+                        date: format(new Date(p.paymentDate), "yyyy-MM-dd"),
+                        mode: p.paymentMode,
+                        note: p.referenceNo || "",
+                        amount: Number(p.paymentAmount)
+                    }));
+                    setTransactions(history);
+                    setPaymentData({
+                        date: new Date().toISOString().split("T")[0],
+                        amount: updated.data.balanceAmount,
+                        mode: "Cash",
+                        note: "",
+                    });
+                }
+            } else {
+                toast.error(result.error || "Failed to save payment");
+            }
+        } catch (error) {
+            console.error("Error saving payment:", error);
+            toast.error("An error occurred while saving payment");
+        }
     };
 
     const handleDeleteTrx = (id: string) => {
+        // In real app, call a delete action
         setTransactions(transactions.filter(t => t.id !== id));
-        toast.success("Transaction deleted");
+        toast.success("Transaction deleted (Mock - deletion action needed)");
     };
 
     const totalPaid = transactions.reduce((sum, t) => sum + t.amount, 0);
