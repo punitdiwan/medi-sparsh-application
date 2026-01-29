@@ -232,7 +232,12 @@ export default function PathologyBillPage() {
 
                             {/* Edit */}
                             <DropdownMenuItem
-                                onClick={() => console.log("Edit bill clicked")}
+                                disabled={row.original.billStatus !== "pending"}
+                                onClick={() => {
+                                    if (row.original.billStatus === "pending") {
+                                        route.push(`/doctor/pathology/genrateBill?billId=${row.original.id}&mode=edit`);
+                                    }
+                                }}
                                 className="group gap-2 cursor-pointer"
                             >
                                 <Edit size={14} className="text-muted-foreground group-hover:text-primary" />

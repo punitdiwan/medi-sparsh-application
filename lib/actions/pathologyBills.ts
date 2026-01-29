@@ -8,8 +8,9 @@ import {
   pathologyPayments,
   pathologyTests,
   patients,
+  pathologySamples,
 } from "@/drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 import { revalidatePath } from "next/cache";
 
@@ -152,6 +153,7 @@ export async function getBillById(billId: string) {
         billStatus: pathologyBills.billStatus,
         createdAt: pathologyBills.createdAt,
         updatedAt: pathologyBills.updatedAt,
+        patientId: pathologyOrders.patientId,
         patientName: patients.name,
         patientPhone: patients.mobileNumber,
         patientDob: patients.dob,
@@ -159,6 +161,7 @@ export async function getBillById(billId: string) {
         patientAddress: patients.address,
         patientEmail: patients.email,
         patientBloodGroup: patients.bloodGroup,
+        doctorId: pathologyOrders.doctorId,
         doctorName: pathologyOrders.doctorName,
         remarks: pathologyOrders.remarks,
       })
@@ -202,6 +205,23 @@ export async function getBillById(billId: string) {
     const totalPaid = payments.reduce((sum, p) => sum + Number(p.paymentAmount), 0);
     const balanceAmount = Number(bill.billNetAmount) - totalPaid;
 
+    // Get all order tests
+    const allOrderTests = await db
+      .select({ id: pathologyOrderTests.id })
+      .from(pathologyOrderTests)
+      .where(eq(pathologyOrderTests.orderId, bill.orderId));
+
+    // Check if any samples have been collected for the order tests
+    let hasSampleCollected = false;
+    if (allOrderTests.length > 0) {
+      const testIds = allOrderTests.map(t => t.id);
+      const samples = await db
+        .select()
+        .from(pathologySamples)
+        .where(inArray(pathologySamples.orderTestID, testIds));
+      hasSampleCollected = samples.length > 0;
+    }
+
     return {
       success: true,
       data: {
@@ -211,6 +231,7 @@ export async function getBillById(billId: string) {
         totalPaid,
         balanceAmount,
         organization: org,
+        hasSampleCollected,
       },
     };
   } catch (error) {
@@ -295,6 +316,93 @@ export async function updateBillDiscount(billId: string, discount: number) {
 }
 
 // ==================== DELETE ====================
+
+export async function updatePathologyBill(billId: string, data: {
+  tests: Array<{
+    testId: string;
+    price: number;
+    tax: number;
+  }>;
+  billDiscount: number;
+  billTotalAmount: number;
+  billNetAmount: number;
+  remarks?: string;
+}) {
+  console.log("Updating pathology bill with data:", data);
+  try {
+    const org = await getActiveOrganization();
+    if (!org) {
+      return { error: "Unauthorized", success: false };
+    }
+
+    // Get the bill and its order
+    const bill = await db
+      .select()
+      .from(pathologyBills)
+      .where(
+        and(
+          eq(pathologyBills.id, billId),
+          eq(pathologyBills.hospitalId, org.id)
+        )
+      )
+      .limit(1);
+
+    if (!bill[0]) {
+      return { error: "Bill not found", success: false };
+    }
+
+    // Check if bill is in pending status
+    if (bill[0].billStatus !== "pending") {
+      return { error: "Can only edit bills with pending status", success: false };
+    }
+
+    const orderId = bill[0].orderId;
+
+    // Delete existing order tests
+    await db.delete(pathologyOrderTests).where(eq(pathologyOrderTests.orderId, orderId));
+
+    // Add new order tests
+    if (data.tests.length > 0) {
+      await db.insert(pathologyOrderTests).values(
+        data.tests.map(test => ({
+          hospitalId: org.id,
+          orderId,
+          testId: test.testId,
+          price: test.price.toString(),
+          tax: test.tax.toString(),
+        }))
+      );
+    }
+
+    // Update remarks if provided
+    if (data.remarks !== undefined) {
+      await db
+        .update(pathologyOrders)
+        .set({
+          remarks: data.remarks,
+        })
+        .where(eq(pathologyOrders.id, orderId));
+    }
+
+    // Update bill
+    const result = await db
+      .update(pathologyBills)
+      .set({
+        billDiscount: data.billDiscount.toString(),
+        billTotalAmount: data.billTotalAmount.toString(),
+        billNetAmount: data.billNetAmount.toString(),
+        updatedAt: new Date(),
+      })
+      .where(eq(pathologyBills.id, billId))
+      .returning();
+
+    revalidatePath("/doctor/pathology");
+    return { success: true, data: result[0], message: "Bill updated successfully" };
+  } catch (error) {
+    console.error("Error updating bill:", error);
+    return { error: "Failed to update bill", success: false };
+  }
+}
 
 export async function deleteBill(billId: string) {
   try {

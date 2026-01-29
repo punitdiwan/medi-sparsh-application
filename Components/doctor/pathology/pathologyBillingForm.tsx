@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
 import { Info, Plus, Trash2, User, Printer } from "lucide-react";
 import { getPathologyTests } from "@/lib/actions/pathologyTests";
-import { createPathologyBill } from "@/lib/actions/pathologyBills";
+import { createPathologyBill, updatePathologyBill, getBillById } from "@/lib/actions/pathologyBills";
 import {
     Tooltip,
     TooltipContent,
@@ -99,13 +99,20 @@ const dummyIpdData = [
 
 const HOME_COLLECTION_CHARGE = 100;
 
-export default function PathologyBillingForm() {
+interface PathologyBillingFormProps {
+    billId?: string;
+    mode?: string;
+}
+
+export default function PathologyBillingForm({ billId, mode }: PathologyBillingFormProps) {
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [remarks, setRemarks] = useState("");
     const [items, setItems] = useState<Item[]>([]);
     const [availableTests, setAvailableTests] = useState<any[]>([]);
     const [loadingTests, setLoadingTests] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(mode === "edit" && !!billId);
+    const [isLoadingBill, setIsLoadingBill] = useState(isEditMode);
 
     // Modal state for adding item
     const [selectedTestId, setSelectedTestId] = useState("");
@@ -130,6 +137,7 @@ export default function PathologyBillingForm() {
 
     const [usePatientAddress, setUsePatientAddress] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasSampleCollected, setHasSampleCollected] = useState(false);
 
     const router = useRouter();
 
@@ -151,6 +159,95 @@ export default function PathologyBillingForm() {
         };
         fetchTests();
     }, []);
+
+    // Load bill data when in edit mode
+    useEffect(() => {
+        const loadBillData = async () => {
+            if (!isEditMode || !billId) {
+                setIsLoadingBill(false);
+                return;
+            }
+
+            try {
+                setIsLoadingBill(true);
+                const result = await getBillById(billId);
+
+                if (!result.success || !result.data) {
+                    toast.error(result.error || "Failed to load bill");
+                    router.push("/doctor/pathology");
+                    return;
+                }
+
+                const billData = result.data;
+
+                // Set sample collected flag
+                setHasSampleCollected(billData.hasSampleCollected || false);
+
+                // Set patient - create a mock patient object from bill data
+                if (billData.orderId) {
+                    setSelectedPatient({
+                        id: billData.patientId,
+                        name: billData.patientName,
+                        mobileNumber: billData.patientPhone,
+                        email: billData.patientEmail,
+                        dob: billData.patientDob,
+                        gender: billData.patientGender,
+                        address: billData.patientAddress,
+                    });
+                }
+
+                // Set doctor
+                if (billData.doctorName) {
+                    setSelectedDoctor({
+                        id: billData.doctorId || "",
+                        name: billData.doctorName,
+                    });
+                }
+
+                // Set remarks
+                setRemarks(billData.remarks || "");
+
+                // Set discount
+                const discount = Number(billData.billDiscount) || 0;
+                const totalAmount = Number(billData.billTotalAmount) || 0;
+                if (totalAmount > 0) {
+                    const discountPercentage = (discount / totalAmount) * 100;
+                    setDiscountPercent(discountPercentage);
+                }
+
+                // Convert tests to items
+                const billItems: Item[] = billData.tests.map((test: any) => {
+                    const price = Number(test.price) || 0;
+                    const taxPercent = Number(test.tax) || 0;
+                    const baseAmount = price;
+                    const taxAmount = (baseAmount * taxPercent) / 100;
+                    const total = baseAmount + taxAmount;
+
+                    return {
+                        id: test.id,
+                        testId: test.testId,
+                        name: test.testName,
+                        price,
+                        taxPercent,
+                        baseAmount,
+                        taxAmount,
+                        total,
+                    };
+                });
+
+                setItems(billItems);
+                toast.success("Bill loaded for editing");
+            } catch (error) {
+                console.error("Error loading bill:", error);
+                toast.error("Failed to load bill data");
+                router.push("/doctor/pathology");
+            } finally {
+                setIsLoadingBill(false);
+            }
+        };
+
+        loadBillData();
+    }, [isEditMode, billId, router]);
     useEffect(() => {
         const basePaise = items.reduce(
             (acc, i) => acc + Math.round(i.baseAmount * 100),
@@ -269,11 +366,7 @@ export default function PathologyBillingForm() {
             const billDiscount = totalAmount * (discountPercent / 100);
             const finalNetAmount = netAmount;
 
-            const result = await createPathologyBill({
-                patientId: selectedPatient.id,
-                doctorId: selectedDoctor.isInternal ? selectedDoctor.id : undefined,
-                doctorName: selectedDoctor.name,
-                remarks,
+            const billData = {
                 tests: items.map(item => ({
                     testId: item.testId,
                     price: item.price,
@@ -282,10 +375,31 @@ export default function PathologyBillingForm() {
                 billDiscount: Number(billDiscount.toFixed(2)),
                 billTotalAmount: Number(totalAmount.toFixed(2)),
                 billNetAmount: Number(finalNetAmount.toFixed(2)),
-            });
+                remarks,
+            };
+
+            let result;
+
+            if (isEditMode && billId) {
+                // Update existing bill
+                result = await updatePathologyBill(billId, billData);
+            } else {
+                // Create new bill
+                result = await createPathologyBill({
+                    patientId: selectedPatient.id,
+                    doctorId: selectedDoctor.isInternal ? selectedDoctor.id : undefined,
+                    doctorName: selectedDoctor.name,
+                    remarks,
+                    tests: billData.tests,
+                    billDiscount: billData.billDiscount,
+                    billTotalAmount: billData.billTotalAmount,
+                    billNetAmount: billData.billNetAmount,
+                });
+            }
 
             if (result.success) {
-                toast.success(result.message || "Bill created successfully");
+                const successMessage = isEditMode ? "Bill updated successfully" : "Bill created successfully";
+                toast.success(result.message || successMessage);
                 // Reset form
                 setSelectedPatient(null);
                 setSelectedDoctor(null);
@@ -299,11 +413,11 @@ export default function PathologyBillingForm() {
                 // Navigate to bills list
                 router.push("/doctor/pathology");
             } else {
-                toast.error(result.error || "Failed to create bill");
+                toast.error(result.error || (isEditMode ? "Failed to update bill" : "Failed to create bill"));
             }
         } catch (error) {
-            console.error("Error creating bill:", error);
-            toast.error("An error occurred while creating the bill");
+            console.error("Error saving bill:", error);
+            toast.error("An error occurred while saving the bill");
         } finally {
             setIsSubmitting(false);
         }
@@ -355,10 +469,27 @@ export default function PathologyBillingForm() {
     };
 
     const appMode = "hospital"; //| "manual";
+    
+    if (isLoadingBill) {
+        return (
+            <div className="p-6 space-y-6 w-full mx-auto mt-4">
+                <BackButton />
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                        <p className="text-muted-foreground">Loading bill data...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
             <BackButton />
-            <h1 className="text-2xl font-bold">Generate Pathology Bill</h1>
+            <h1 className="text-2xl font-bold">
+                {isEditMode ? "Edit Pathology Bill" : "Generate Pathology Bill"}
+            </h1>
             {appMode === "hospital" && (
                 <div className="space-y-2 mb-6">
                     <Label>IPD ID</Label>
@@ -386,7 +517,7 @@ export default function PathologyBillingForm() {
                         value={selectedPatient}
                         onSelect={handlePatientSelect}
                         title="Search Existing Patient"
-                        disabled={!!ipdId}
+                        disabled={!!ipdId || isEditMode}
                     />
 
                     <div className="pt-2 border-t border-dashed">
@@ -395,7 +526,7 @@ export default function PathologyBillingForm() {
                             onSelect={handleDoctorSelect}
                             title="Referring Doctor"
                             appMode={appMode}
-                            disabled={!!ipdId}
+                            disabled={!!ipdId || isEditMode}
                         />
                     </div>
                 </Card>
@@ -480,13 +611,25 @@ export default function PathologyBillingForm() {
                                                     ₹{item.total.toFixed(2)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleRemoveItem(item.id)}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleRemoveItem(item.id)}
+                                                                    disabled={isEditMode && hasSampleCollected}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            {isEditMode && hasSampleCollected && (
+                                                                <TooltipContent>
+                                                                    Cannot remove items after sample collection
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -621,7 +764,7 @@ export default function PathologyBillingForm() {
                                     handleSubmit(false);
                                 }}
                             >
-                                {isSubmitting ? "Creating Bill..." : "Generate Bill"}
+                                {isSubmitting ? (isEditMode ? "Updating Bill..." : "Creating Bill...") : (isEditMode ? "Update Bill" : "Generate Bill")}
                             </Button>
                         </div>
 
