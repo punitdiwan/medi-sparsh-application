@@ -346,14 +346,6 @@ export default function PathologyBillPage() {
                 </div>
 
                 <div className="flex gap-3">
-                    <Can I="create" a="PathologyBilling" ability={ability}>
-                        <Button
-                            variant="default"
-                            onClick={() => route.push("/doctor/pathology/genrateBill")}
-                        >
-                            <Plus size={16} /> Generate Bill
-                        </Button>
-                    </Can>
                     <FieldSelectorDropdown
                         columns={allColumns as TypedColumn<Bill>[]}
                         visibleFields={visibleFields}
@@ -363,6 +355,14 @@ export default function PathologyBillPage() {
                             );
                         }}
                     />
+                    <Can I="create" a="PathologyBilling" ability={ability}>
+                        <Button
+                            variant="default"
+                            onClick={() => route.push("/doctor/pathology/genrateBill")}
+                        >
+                            <Plus size={16} /> Generate Bill
+                        </Button>
+                    </Can>
                 </div>
             </div>
 
