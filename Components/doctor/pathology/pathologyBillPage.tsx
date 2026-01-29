@@ -74,8 +74,7 @@ export default function PathologyBillPage() {
         "billStatus",
         "createdAt",
     ]);
-
-    // Fetch bills from database
+    
     useEffect(() => {
         const loadBills = async () => {
             try {
