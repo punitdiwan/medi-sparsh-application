@@ -26,6 +26,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type BillItem = {
     medicineName: string;
@@ -321,17 +322,21 @@ export default function PathologyBillPage() {
                         onChange={(e) => setSearch(e.target.value)}
                         className="max-w-sm"
                     />
-                    <select
+                    <Select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3 py-2 border rounded-md bg-white dark:bg-gray-800"
+                        onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
                     >
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="partially_paid">Partially Paid</option>
-                        <option value="refunded">Refunded</option>
-                    </select>
+                        <SelectTrigger className=" focus-visible:ring-primary">
+                            <SelectValue placeholder="Filter by Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                            <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="flex gap-3">
