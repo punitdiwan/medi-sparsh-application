@@ -7,14 +7,11 @@ import {
     User,
     Calendar,
     FlaskConical,
-    CheckCircle2,
     Printer,
     Edit,
     ClipboardCheck,
     Building2,
     Trash2,
-    Eye,
-    Plus,
     ChevronDown,
     ChevronUp,
     Info
@@ -812,319 +809,280 @@ export default function PathologyBillDetailsDialog({
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center">
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                            console.log("Edit bill clicked");
-                                        }}
-                                        className="h-9 w-9"
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit Bill</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => {
-                                            console.log("Delete bill clicked");
-                                        }}
-                                        className="h-9 w-9"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete Bill</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={onClose}
-                                        className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
-                                    >
-                                        <X className="h-6 w-6" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Close</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onClose}
+                        className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                        <X className="h-6 w-6" />
+                    </Button>
+            </div>
 
-                {/* CONTENT */}
-                <div className="flex-1 overflow-y-auto p-6 bg-dialog-surface text-dialog">
-                    <div className=" mx-auto space-y-6">
+            {/* CONTENT */}
+            <div className="flex-1 overflow-y-auto p-6 bg-dialog-surface text-dialog">
+                <div className=" mx-auto space-y-6">
 
-                        {/* Expandable Summary Card */}
-                        <Card className="border-overview-strong bg-overview-card/30 shadow-sm overflow-hidden transition-all duration-300">
-                            <button
-                                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                                className="w-full flex items-center justify-between px-6 py-3 bg-overview-card hover:bg-muted/10 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-1.5 bg-primary/10 rounded-md">
-                                        <Info className="h-4 w-4 text-primary" />
+                    {/* Expandable Summary Card */}
+                    <Card className="border-overview-strong bg-overview-card/30 shadow-sm overflow-hidden transition-all duration-300">
+                        <button
+                            onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                            className="w-full flex items-center justify-between px-6 py-3 bg-overview-card hover:bg-muted/10 transition-colors"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-1.5 bg-primary/10 rounded-md">
+                                    <Info className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <h3 className="text-sm font-bold uppercase tracking-wider">Patient & Billing Summary</h3>
+                                    <div className="h-4 w-px bg-border hidden md:block" />
+                                    <div className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
+                                        <span><span className="text-[10px] uppercase opacity-70 mr-1">Patient:</span> {bill.customerName}</span>
+                                        <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.netAmount}</span>
+                                        <span><span className="text-[10px] uppercase opacity-70 mr-1">Due:</span> ₹{bill.balanceAmount}</span>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <h3 className="text-sm font-bold uppercase tracking-wider">Patient & Billing Summary</h3>
-                                        <div className="h-4 w-px bg-border hidden md:block" />
-                                        <div className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Patient:</span> {bill.customerName}</span>
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.netAmount}</span>
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Due:</span> ₹{bill.balanceAmount}</span>
+                                </div>
+                            </div>
+                            {isSummaryExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                        </button>
+
+                        {isSummaryExpanded && (
+                            <CardContent className="p-6 border-t border-overview-strong animate-in slide-in-from-top-2 duration-300">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    {/* Patient Details */}
+                                    <SummarySection title="Patient Information" icon={User}>
+                                        <SummaryItem label="Patient Name" value={bill.customerName} />
+                                        <SummaryItem label="Mobile No" value={bill.customerPhone} />
+                                        <SummaryItem label="Age" value={bill.age} />
+                                        <SummaryItem label="Gender" value={bill.gender} />
+                                        <SummaryItem label="Blood Group" value={bill.bloodGroup} />
+                                        <SummaryItem label="Prescription No" value={bill.prescriptionNo} />
+                                        <SummaryItem label="Email" value={bill.email} />
+                                        <div className="col-span-2">
+                                            <SummaryItem label="Address" value={bill.address} />
                                         </div>
-                                    </div>
-                                </div>
-                                {isSummaryExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-                            </button>
+                                    </SummarySection>
 
-                            {isSummaryExpanded && (
-                                <CardContent className="p-6 border-t border-overview-strong animate-in slide-in-from-top-2 duration-300">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                        {/* Patient Details */}
-                                        <SummarySection title="Patient Information" icon={User}>
-                                            <SummaryItem label="Patient Name" value={bill.customerName} />
-                                            <SummaryItem label="Mobile No" value={bill.customerPhone} />
-                                            <SummaryItem label="Age" value={bill.age} />
-                                            <SummaryItem label="Gender" value={bill.gender} />
-                                            <SummaryItem label="Blood Group" value={bill.bloodGroup} />
-                                            <SummaryItem label="Prescription No" value={bill.prescriptionNo} />
-                                            <SummaryItem label="Email" value={bill.email} />
-                                            <div className="col-span-2">
-                                                <SummaryItem label="Address" value={bill.address} />
+                                    {/* Billing Details */}
+                                    <SummarySection title="Billing Details" icon={Building2}>
+                                        <SummaryItem label="Doctor Name" value={bill.doctorName} />
+                                        <SummaryItem label="Generated By" value={bill.generatedBy} />
+                                        <SummaryItem label="Bill No" value={bill.billNo} />
+                                        <SummaryItem label="Bill Date" value={bill.date} />
+                                        <div className="col-span-2">
+                                            <SummaryItem label="Note" value={bill.note} />
+                                        </div>
+                                    </SummarySection>
+
+                                    {/* Payment Summary */}
+                                    <SummarySection title="Payment Summary" icon={ClipboardCheck}>
+                                        <SummaryItem label="Total" value={`₹${bill.totalAmount}`} />
+                                        <SummaryItem label="Total Discount" value={`₹${bill.totalDiscount || 0}`} />
+                                        <SummaryItem label="Total Tax" value={`₹${bill.totalTax || 0}`} />
+                                        <SummaryItem label="Net Amount" value={`₹${bill.netAmount}`} />
+                                        <SummaryItem label="Total Deposit" value={`₹${bill.totalDeposit || 0}`} />
+                                        <div className="col-span-2">
+                                            <div className="flex items-center justify-between p-2 bg-primary/5 rounded border border-primary/20 mt-1">
+                                                <span className="text-xs font-bold uppercase text-primary">Balance Amount</span>
+                                                <span className="text-base font-bold text-primary">₹{bill.balanceAmount || 0}</span>
                                             </div>
-                                        </SummarySection>
-
-                                        {/* Billing Details */}
-                                        <SummarySection title="Billing Details" icon={Building2}>
-                                            <SummaryItem label="Doctor Name" value={bill.doctorName} />
-                                            <SummaryItem label="Generated By" value={bill.generatedBy} />
-                                            <SummaryItem label="Bill No" value={bill.billNo} />
-                                            <SummaryItem label="Bill Date" value={bill.date} />
-                                            <div className="col-span-2">
-                                                <SummaryItem label="Note" value={bill.note} />
-                                            </div>
-                                        </SummarySection>
-
-                                        {/* Payment Summary */}
-                                        <SummarySection title="Payment Summary" icon={ClipboardCheck}>
-                                            <SummaryItem label="Total" value={`₹${bill.totalAmount}`} />
-                                            <SummaryItem label="Total Discount" value={`₹${bill.totalDiscount || 0}`} />
-                                            <SummaryItem label="Total Tax" value={`₹${bill.totalTax || 0}`} />
-                                            <SummaryItem label="Net Amount" value={`₹${bill.netAmount}`} />
-                                            <SummaryItem label="Total Deposit" value={`₹${bill.totalDeposit || 0}`} />
-                                            <div className="col-span-2">
-                                                <div className="flex items-center justify-between p-2 bg-primary/5 rounded border border-primary/20 mt-1">
-                                                    <span className="text-xs font-bold uppercase text-primary">Balance Amount</span>
-                                                    <span className="text-base font-bold text-primary">₹{bill.balanceAmount || 0}</span>
-                                                </div>
-                                            </div>
-                                        </SummarySection>
-                                    </div>
-                                </CardContent>
-                            )}
-                        </Card>
-
-                        <Card className="border-none bg-overview-card shadow-sm overflow-hidden">
-                            <CardHeader className="bg-overview-card border-overview-strong border-b">
-                                <div className="flex justify-between items-center">
-                                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                                        <FlaskConical className="h-5 w-5 text-primary" />
-                                        Applied Tests
-                                    </CardTitle>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                                            {items.length} Total Tests
-                                        </Badge>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handlePrintReport(items)}
-                                                        disabled={isPrinting}
-                                                    >
-                                                        <Printer className="h-4 w-4" />
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Print All Test Reports</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="bg-muted/40">
-                                            <TableRow>
-                                                <TableHead>Test Name</TableHead>
-                                                <TableHead>Sample Collected</TableHead>
-                                                <TableHead>Report Hours</TableHead>
-                                                <TableHead>Approved By / Date</TableHead>
-                                                <TableHead className="text-center">Tax (%)</TableHead>
-                                                <TableHead className="text-right">Net Amount</TableHead>
-                                                <TableHead className="text-center">Status</TableHead>
-                                                <TableHead className="text-right pr-6">Action</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {items.map((item) => (
-                                                <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
-                                                    <TableCell className="font-medium py-4">{item.testName}</TableCell>
-                                                    <TableCell>
-                                                        {item.sampleCollectedBy ? (
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-sm font-medium">{item.sampleCollectedBy}</span>
-                                                                <span className="text-[10px] text-muted-foreground">{item.collectedDate}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground text-xs">Not Collected</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-center">
-                                                        {item.reportHours ? (
-                                                            <div className="flex flex-col items-center gap-0.5">
-                                                                <span className="text-sm font-medium">{item.reportHours}</span>
-                                                                <span className="text-[10px] text-muted-foreground">hours</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground text-xs">-</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {item.approvedBy ? (
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-sm font-medium">{item.approvedBy}</span>
-                                                                <span className="text-[10px] text-muted-foreground">{item.approveDate}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-muted-foreground text-xs">-</span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-center">{item.tax}</TableCell>
-                                                    <TableCell className="text-right font-semibold">₹{item.netAmount}</TableCell>
-                                                    <TableCell className="text-center">
-                                                        <Badge
-                                                            variant={
-                                                                item.status === "Approved" ? "default" :
-                                                                    item.status === "Collected" ? "secondary" : "outline"
-                                                            }
-                                                            className="h-5 px-1.5 text-[10px]"
-                                                        >
-                                                            {item.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right pr-6">
-                                                        <div className="flex justify-end gap-1">
-                                                            <TooltipProvider>
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="icon"
-                                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                                            onClick={() => {
-                                                                                setSelectedTest(item);
-                                                                                setIsCollectorOpen(true);
-                                                                            }}
-                                                                        >
-                                                                            <ClipboardCheck className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>Add/Edit Sample Collector</TooltipContent>
-                                                                </Tooltip>
-
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="icon"
-                                                                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                                                            onClick={() => {
-                                                                                setSelectedTest(item);
-                                                                                setIsReportOpen(true);
-                                                                            }}
-                                                                        >
-                                                                            <Edit className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>Add/Edit Report</TooltipContent>
-                                                                </Tooltip>
-
-                                                                <Tooltip>
-                                                                    <TooltipTrigger asChild>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="icon"
-                                                                            className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                                            onClick={() => handlePrintReport([item])}
-                                                                            disabled={isPrinting}
-                                                                        >
-                                                                            <Printer className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>Print Test Report</TooltipContent>
-                                                                </Tooltip>
-                                                            </TooltipProvider>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                        </div>
+                                    </SummarySection>
                                 </div>
                             </CardContent>
-                        </Card>
-                    </div>
+                        )}
+                    </Card>
+
+                    <Card className="border-none bg-overview-card shadow-sm overflow-hidden">
+                        <CardHeader className="bg-overview-card border-overview-strong border-b">
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                    <FlaskConical className="h-5 w-5 text-primary" />
+                                    Applied Tests
+                                </CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                                        {items.length} Total Tests
+                                    </Badge>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handlePrintReport(items)}
+                                                    disabled={isPrinting}
+                                                >
+                                                    <Printer className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Print All Test Reports</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-muted/40">
+                                        <TableRow>
+                                            <TableHead>Test Name</TableHead>
+                                            <TableHead>Sample Collected</TableHead>
+                                            <TableHead>Report Hours</TableHead>
+                                            <TableHead>Approved By / Date</TableHead>
+                                            <TableHead className="text-center">Tax (%)</TableHead>
+                                            <TableHead className="text-right">Net Amount</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
+                                            <TableHead className="text-right pr-6">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {items.map((item) => (
+                                            <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
+                                                <TableCell className="font-medium py-4">{item.testName}</TableCell>
+                                                <TableCell>
+                                                    {item.sampleCollectedBy ? (
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="text-sm font-medium">{item.sampleCollectedBy}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{item.collectedDate}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">Not Collected</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    {item.reportHours ? (
+                                                        <div className="flex flex-col items-center gap-0.5">
+                                                            <span className="text-sm font-medium">{item.reportHours}</span>
+                                                            <span className="text-[10px] text-muted-foreground">hours</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {item.approvedBy ? (
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="text-sm font-medium">{item.approvedBy}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{item.approveDate}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-center">{item.tax}</TableCell>
+                                                <TableCell className="text-right font-semibold">₹{item.netAmount}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge
+                                                        variant={
+                                                            item.status === "Approved" ? "default" :
+                                                                item.status === "Collected" ? "secondary" : "outline"
+                                                        }
+                                                        className="h-5 px-1.5 text-[10px]"
+                                                    >
+                                                        {item.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right pr-6">
+                                                    <div className="flex justify-end gap-1">
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                        onClick={() => {
+                                                                            setSelectedTest(item);
+                                                                            setIsCollectorOpen(true);
+                                                                        }}
+                                                                    >
+                                                                        <ClipboardCheck className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Add/Edit Sample Collector</TooltipContent>
+                                                            </Tooltip>
+
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                        onClick={() => {
+                                                                            setSelectedTest(item);
+                                                                            setIsReportOpen(true);
+                                                                        }}
+                                                                    >
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Add/Edit Report</TooltipContent>
+                                                            </Tooltip>
+
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                                                        onClick={() => handlePrintReport([item])}
+                                                                        disabled={isPrinting}
+                                                                    >
+                                                                        <Printer className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Print Test Report</TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
-
-                {/* FOOTER */}
-                <div className="bg-dialog-header border-t border-dialog text-dialog-muted px-6 py-4 flex justify-between items-center shadow-lg relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Customer</span>
-                            <span className="text-sm font-semibold">{bill.customerName}</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Balance Amount</span>
-                            <span className="text-sm font-bold text-destructive">₹{bill.balanceAmount || 0}</span>
-                        </div>
-                    </div>
-                    <Button variant="outline" onClick={onClose} className="gap-2">
-                        Close View
-                    </Button>
-                </div>
-
-                {/* MODALS */}
-                <SampleCollectorDialog
-                    open={isCollectorOpen}
-                    onClose={() => setIsCollectorOpen(false)}
-                    onSave={handleSaveCollector}
-                    testName={selectedTest?.testName || ""}
-                    testId={selectedTest?.id}
-                />
-
-                <ReportEditorDialog
-                    open={isReportOpen}
-                    onClose={() => setIsReportOpen(false)}
-                    onSave={handleSaveReport}
-                    test={selectedTest}
-                />
             </div>
+
+            {/* FOOTER */}
+            <div className="bg-dialog-header border-t border-dialog text-dialog-muted px-6 py-4 flex justify-between items-center shadow-lg relative z-10">
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Customer</span>
+                        <span className="text-sm font-semibold">{bill.customerName}</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Balance Amount</span>
+                        <span className="text-sm font-bold text-destructive">₹{bill.balanceAmount || 0}</span>
+                    </div>
+                </div>
+                <Button variant="outline" onClick={onClose} className="gap-2">
+                    Close View
+                </Button>
+            </div>
+
+            {/* MODALS */}
+            <SampleCollectorDialog
+                open={isCollectorOpen}
+                onClose={() => setIsCollectorOpen(false)}
+                onSave={handleSaveCollector}
+                testName={selectedTest?.testName || ""}
+                testId={selectedTest?.id}
+            />
+
+            <ReportEditorDialog
+                open={isReportOpen}
+                onClose={() => setIsReportOpen(false)}
+                onSave={handleSaveReport}
+                test={selectedTest}
+            />
         </div>
+        </div >
     );
 }
