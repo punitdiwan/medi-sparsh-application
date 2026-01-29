@@ -812,14 +812,53 @@ export default function PathologyBillDetailsDialog({
                             </div>
                         </div>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        className="hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
-                    >
-                        <X className="h-6 w-6" />
-                    </Button>
+                    <div className="flex items-center">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                            console.log("Edit bill clicked");
+                                        }}
+                                        className="h-9 w-9"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Edit Bill</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                            console.log("Delete bill clicked");
+                                        }}
+                                        className="h-9 w-9"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete Bill</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={onClose}
+                                        className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Close</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
 
                 {/* CONTENT */}

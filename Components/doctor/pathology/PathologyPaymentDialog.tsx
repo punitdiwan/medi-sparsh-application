@@ -539,18 +539,6 @@ export default function PathologyPaymentDialog({
                                                                 <TooltipProvider>
                                                                     <Tooltip>
                                                                         <TooltipTrigger asChild>
-                                                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10">
-                                                                                <Printer className="h-3 w-3" />
-                                                                            </Button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>
-                                                                            Print
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                                <TooltipProvider>
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
                                                                             <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10"
                                                                                 onClick={() => handleDeleteTrx(t.id, t.amount)}>
                                                                                 <Trash2 className="h-3 w-3" />
