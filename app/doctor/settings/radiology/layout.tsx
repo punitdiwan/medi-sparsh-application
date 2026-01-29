@@ -26,12 +26,6 @@ export default function RadiologySettingsLayout({
       action: "read",
       subject: "radiologyUnit",
     },
-    {
-      name: "Radiology Parameter",
-      href: "/doctor/settings/radiology/parameter",
-      action: "read",
-      subject: "radiologyParameter",
-    },
   ];
 
   const visibleTabs = tabs.filter((tab) =>

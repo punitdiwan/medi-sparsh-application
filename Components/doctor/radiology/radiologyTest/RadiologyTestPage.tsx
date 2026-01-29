@@ -15,9 +15,12 @@ import { Can } from "@casl/react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
+
+type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
 // Dummy data for radiology tests
-const DUMMY_RADIOLOGY_TESTS: RadiologyTest[] = [
+const INITIAL_DUMMY_DATA: RadiologyTest[] = [
     {
         id: "1",
         testName: "X-Ray Chest PA View",
@@ -36,16 +39,10 @@ const DUMMY_RADIOLOGY_TESTS: RadiologyTest[] = [
         standardCharge: 1500,
         amount: 1575,
         parameters: [
-            {
-                id: "p1",
-                parameterId: "param1",
-                testParameterName: "PA View",
-                referenceRange: "Standard",
-                unit: "Image",
-            },
+            { id: "p1", paramName: "PA View", fromRange: "Standard", toRange: "Standard", unitId: "unit1" },
         ],
         unitId: "unit1",
-        unitName: "Images",
+        isDeleted: false,
     },
     {
         id: "2",
@@ -65,115 +62,28 @@ const DUMMY_RADIOLOGY_TESTS: RadiologyTest[] = [
         standardCharge: 4000,
         amount: 4480,
         parameters: [
-            {
-                id: "p2",
-                parameterId: "param2",
-                testParameterName: "Axial Images",
-                referenceRange: "5mm Slice",
-                unit: "Images",
-            },
+            { id: "p2", paramName: "Axial Images", fromRange: "5mm", toRange: "Standard", unitId: "unit1" },
         ],
         unitId: "unit1",
-        unitName: "Images",
-    },
-    {
-        id: "3",
-        testName: "Ultrasound Abdomen",
-        shortName: "USG-ABD",
-        testType: "Ultrasound",
-        description: "Real-time ultrasound of abdominal organs",
-        categoryId: "cat3",
-        categoryName: "Ultrasonography",
-        subCategoryId: "sub3",
-        method: "Real-time Ultrasound",
-        reportDays: 1,
-        chargeCategoryId: "cc3",
-        chargeId: "ch3",
-        chargeName: "Ultrasound Charge",
-        tax: 5,
-        standardCharge: 800,
-        amount: 840,
-        parameters: [
-            {
-                id: "p3",
-                parameterId: "param3",
-                testParameterName: "B-mode Imaging",
-                referenceRange: "Complete Study",
-                unit: "Study",
-            },
-        ],
-        unitId: "unit1",
-        unitName: "Studies",
-    },
-    {
-        id: "4",
-        testName: "MRI Brain with Contrast",
-        shortName: "MRI-BRAIN",
-        testType: "MRI",
-        description: "3T MRI of brain with gadolinium contrast",
-        categoryId: "cat4",
-        categoryName: "MRI Imaging",
-        subCategoryId: "sub4",
-        method: "3T MRI",
-        reportDays: 2,
-        chargeCategoryId: "cc4",
-        chargeId: "ch4",
-        chargeName: "MRI Charge",
-        tax: 12,
-        standardCharge: 5000,
-        amount: 5600,
-        parameters: [
-            {
-                id: "p4",
-                parameterId: "param4",
-                testParameterName: "T1/T2 Weighted",
-                referenceRange: "Standard Protocol",
-                unit: "Sequences",
-            },
-        ],
-        unitId: "unit1",
-        unitName: "Sequences",
+        isDeleted: false,
     },
 ];
 
-export type ParameterRow = {
-    id: string;
-    parameterId: string;
-    testParameterName: string;
-    referenceRange: string;
-    unit: string;
-};
-
-// export type RadiologyTest = {
-//     id: string;
-//     testName: string;
-//     shortName: string;
-//     testType: string;
-//     description?: string;
-//     categoryId: string;
-//     categoryName?: string;
-//     subCategoryId: string;
-//     method: string;
-//     reportDays: number | string;
-//     chargeCategoryId: string;
-//     chargeId: string;
-//     chargeName: string;
-//     tax: number;
-//     standardCharge: number;
-//     amount: number;
-//     parameters: ParameterRow[];
-//     unitId: string;
-//     unitName?: string;
-//     isDeleted?: boolean;
-// };
-
 export default function RadiologyTestPage() {
-    const [tests, setTests] = useState<RadiologyTest[]>(DUMMY_RADIOLOGY_TESTS);
+    const [tests, setTests] = useState<RadiologyTest[]>(INITIAL_DUMMY_DATA);
     const [search, setSearch] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTest, setSelectedTest] = useState<RadiologyTest | undefined>(undefined);
     const [loading, setLoading] = useState(false);
     const [showDeleted, setShowDeleted] = useState(false);
+    const [visibleFields, setVisibleFields] = useState<string[]>([
+        "testName",
+        "shortName",
+        "testType",
+        "categoryName",
+        "reportDays",
+        "amount",
+    ]);
 
     const ability = useAbility();
 
@@ -194,8 +104,9 @@ export default function RadiologyTestPage() {
         );
     }, [search, tests, showDeleted]);
 
-    const columns: ColumnDef<RadiologyTest>[] = [
+    const allColumns: ColumnDef<RadiologyTest>[] = [
         {
+            id: "sno",
             header: "S.No",
             cell: ({ row }) => row.index + 1,
         },
@@ -203,8 +114,23 @@ export default function RadiologyTestPage() {
         { accessorKey: "shortName", header: "Short Name" },
         { accessorKey: "testType", header: "Test Type" },
         { accessorKey: "categoryName", header: "Category" },
+        { accessorKey: "subCategoryId", header: "Sub Category" },
         { accessorKey: "method", header: "Method" },
-        { accessorKey: "reportDays", header: "Report Days" },
+        {
+            accessorKey: "reportDays",
+            header: "Report Days",
+            cell: ({ row }) => Number(row.original.reportDays)
+        },
+        {
+            accessorKey: "amount",
+            header: "Amount",
+            cell: ({ row }) => {
+                const amount = Number((row.original as any).amount || 0);
+                return amount.toFixed(2);
+            }
+        },
+        { accessorKey: "chargeName", header: "Charge Name" },
+        { accessorKey: "description", header: "Description" },
         {
             id: "actions",
             header: "Actions",
@@ -260,6 +186,21 @@ export default function RadiologyTestPage() {
         },
     ];
 
+    const columns = useMemo(() => {
+        const filtered = allColumns.filter((col) => {
+            if (col.id === "actions" || col.id === "sno") return true;
+            const key = "accessorKey" in col ? col.accessorKey : undefined;
+            return key && visibleFields.includes(key as string);
+        });
+
+        // Ensure actions column is always last if it exists
+        const actionCol = allColumns.find((c) => c.id === "actions");
+        const finalCols = filtered.filter(c => c.id !== "actions");
+        if (actionCol) finalCols.push(actionCol);
+
+        return finalCols;
+    }, [visibleFields, allColumns]);
+
     const handleAdd = () => {
         setSelectedTest(undefined);
         setIsModalOpen(true);
@@ -280,7 +221,12 @@ export default function RadiologyTestPage() {
         toast.success("Test restored successfully");
     };
 
-    const handleSaveSuccess = () => {
+    const handleSaveSuccess = (newTest: RadiologyTest) => {
+        if (selectedTest) {
+            setTests(tests.map(t => t.id === selectedTest.id ? newTest : t));
+        } else {
+            setTests([...tests, { ...newTest, id: Date.now().toString(), isDeleted: false }]);
+        }
         setIsModalOpen(false);
     };
 
@@ -315,11 +261,22 @@ export default function RadiologyTestPage() {
                         <Label htmlFor="show-deleted">Show Deleted</Label>
                     </div>
                 </div>
-                <Can I="create" a="RadiologyTest" ability={ability}>
-                    <Button variant="default" onClick={handleAdd}>
-                        <Plus size={16} /> Add Test
-                    </Button>
-                </Can>
+                <div className="flex gap-3 items-center">
+                    <FieldSelectorDropdown
+                        columns={allColumns as TypedColumn<RadiologyTest>[]}
+                        visibleFields={visibleFields}
+                        onToggle={(key, checked) => {
+                            setVisibleFields((prev) =>
+                                checked ? [...prev, key] : prev.filter((f) => f !== key)
+                            );
+                        }}
+                    />
+                    <Can I="create" a="RadiologyTest" ability={ability}>
+                        <Button variant="default" onClick={handleAdd}>
+                            <Plus size={16} /> Add Test
+                        </Button>
+                    </Can>
+                </div>
             </div>
 
             {loading ? (

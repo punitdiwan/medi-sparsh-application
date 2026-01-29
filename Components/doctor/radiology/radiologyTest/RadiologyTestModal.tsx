@@ -22,10 +22,11 @@ import { Microscope, Plus, Trash2, X } from "lucide-react";
 
 export type ParameterRow = {
     id: string;
-    parameterId: string;
-    testParameterName: string;
-    referenceRange: string;
-    unit: string;
+    paramName: string;
+    fromRange: string;
+    toRange: string;
+    unitId: string;
+    description?: string;
 };
 
 export type RadiologyTest = {
@@ -47,7 +48,6 @@ export type RadiologyTest = {
     amount: number;
     parameters: ParameterRow[];
     unitId: string;
-    unitName?: string;
     isDeleted?: boolean;
 };
 
@@ -55,7 +55,7 @@ type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     test?: RadiologyTest;
-    onSaveSuccess: () => void;
+    onSaveSuccess: (test: RadiologyTest) => void;
 };
 
 // Dummy data for dropdowns
@@ -64,35 +64,22 @@ const DUMMY_CATEGORIES = [
     { id: "cat2", name: "CT Imaging" },
     { id: "cat3", name: "Ultrasonography" },
     { id: "cat4", name: "MRI Imaging" },
-    { id: "cat5", name: "Fluoroscopy" },
 ];
 
 const DUMMY_UNITS = [
     { id: "unit1", name: "Images" },
     { id: "unit2", name: "Studies" },
     { id: "unit3", name: "Sequences" },
-    { id: "unit4", name: "Slices" },
-];
-
-const DUMMY_PARAMETERS = [
-    { id: "param1", paramName: "PA View", fromRange: "Standard", toRange: "Standard", unitName: "Image" },
-    { id: "param2", paramName: "Axial Images", fromRange: "5mm", toRange: "Standard", unitName: "Images" },
-    { id: "param3", paramName: "B-mode Imaging", fromRange: "Complete", toRange: "Study", unitName: "Study" },
-    { id: "param4", paramName: "T1/T2 Weighted", fromRange: "Standard", toRange: "Protocol", unitName: "Sequences" },
 ];
 
 const DUMMY_CHARGE_CATEGORIES = [
-    { id: "cc1", name: "X-Ray Services", categoryType: "radiology" },
-    { id: "cc2", name: "CT Services", categoryType: "radiology" },
-    { id: "cc3", name: "Ultrasound Services", categoryType: "radiology" },
-    { id: "cc4", name: "MRI Services", categoryType: "radiology" },
+    { id: "cc1", name: "Radiology Services" },
 ];
 
 const DUMMY_CHARGES = [
-    { id: "ch1", name: "X-Ray Charge", chargeCategoryId: "cc1", amount: 1500, standardCharge: 1500, taxPercent: 5 },
-    { id: "ch2", name: "CT Charge", chargeCategoryId: "cc2", amount: 4000, standardCharge: 4000, taxPercent: 12 },
-    { id: "ch3", name: "Ultrasound Charge", chargeCategoryId: "cc3", amount: 800, standardCharge: 800, taxPercent: 5 },
-    { id: "ch4", name: "MRI Charge", chargeCategoryId: "cc4", amount: 5000, standardCharge: 5000, taxPercent: 12 },
+    { id: "ch1", name: "X-Ray Charge", chargeCategoryId: "cc1", amount: 1500, taxPercent: 5 },
+    { id: "ch2", name: "CT Charge", chargeCategoryId: "cc1", amount: 4000, taxPercent: 12 },
+    { id: "ch3", name: "USG Charge", chargeCategoryId: "cc1", amount: 800, taxPercent: 5 },
 ];
 
 export default function RadiologyTestModal({
@@ -118,16 +105,11 @@ export default function RadiologyTestModal({
         standardCharge: 0,
         amount: 0,
         parameters: [
-            { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
+            { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
         ],
         unitId: "",
     });
 
-    const [categories] = useState(DUMMY_CATEGORIES);
-    const [units] = useState(DUMMY_UNITS);
-    const [allParameters] = useState(DUMMY_PARAMETERS);
-    const [chargeCats] = useState(DUMMY_CHARGE_CATEGORIES);
-    const [allCharges] = useState(DUMMY_CHARGES);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -135,6 +117,7 @@ export default function RadiologyTestModal({
             if (test) {
                 setForm({
                     ...test,
+                    reportDays: test.reportDays ?? "",
                     parameters: Array.isArray(test.parameters) ? test.parameters : []
                 });
             } else {
@@ -155,7 +138,7 @@ export default function RadiologyTestModal({
                     standardCharge: 0,
                     amount: 0,
                     parameters: [
-                        { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }
+                        { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
                     ],
                     unitId: "",
                 });
@@ -163,7 +146,7 @@ export default function RadiologyTestModal({
         }
     }, [test, open]);
 
-    const availableCharges = allCharges.filter(c => c.chargeCategoryId === form.chargeCategoryId);
+    const availableCharges = DUMMY_CHARGES.filter(c => c.chargeCategoryId === form.chargeCategoryId);
 
     const handleChargeCategoryChange = (val: string) => {
         setForm({
@@ -193,30 +176,19 @@ export default function RadiologyTestModal({
         }
     };
 
-    const handleParameterChange = (rowId: string, paramId: string) => {
-        const selectedParam = allParameters.find(p => p.id === paramId);
-        if (selectedParam) {
-            setForm({
-                ...form,
-                parameters: form.parameters.map(p =>
-                    p.id === rowId
-                        ? {
-                            ...p,
-                            parameterId: paramId,
-                            testParameterName: selectedParam.paramName,
-                            referenceRange: `${selectedParam.fromRange}-${selectedParam.toRange}`,
-                            unit: selectedParam.unitName || ""
-                        }
-                        : p
-                )
-            });
-        }
+    const handleParameterRowUpdate = (rowId: string, field: keyof ParameterRow, value: string) => {
+        setForm({
+            ...form,
+            parameters: form.parameters.map(p =>
+                p.id === rowId ? { ...p, [field]: value } : p
+            )
+        });
     };
 
     const addParameterRow = () => {
         setForm({
             ...form,
-            parameters: [...form.parameters, { id: Date.now().toString(), parameterId: "", testParameterName: "", referenceRange: "", unit: "" }]
+            parameters: [...form.parameters, { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }]
         });
     };
 
@@ -232,19 +204,26 @@ export default function RadiologyTestModal({
         if (!form.testName) return toast.error("Test Name is required");
         if (!form.categoryId) return toast.error("Category is required");
         if (!form.reportDays) return toast.error("Report Days is required");
-        if (!form.unitId) return toast.error("Unit is required");
         if (!form.chargeId) return toast.error("Charge is required");
 
         setLoading(true);
         try {
-            // Simulating save - in real app this would call an API
-            setTimeout(() => {
-                toast.success(test ? "Test updated successfully (Dummy)" : "Test added successfully (Dummy)");
-                setLoading(false);
-                onSaveSuccess();
-            }, 500);
+            // Simulated delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const category = DUMMY_CATEGORIES.find(c => c.id === form.categoryId);
+
+            const finalData: RadiologyTest = {
+                ...form,
+                categoryName: category?.name || "",
+                reportDays: Number(form.reportDays),
+            };
+
+            toast.success(test ? "Test updated successfully (Dummy)" : "Test added successfully (Dummy)");
+            onSaveSuccess(finalData);
         } catch (error) {
             toast.error("An error occurred while saving");
+        } finally {
             setLoading(false);
         }
     };
@@ -311,7 +290,7 @@ export default function RadiologyTestModal({
                                     <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map(c => (
+                                    {DUMMY_CATEGORIES.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -355,7 +334,7 @@ export default function RadiologyTestModal({
                                     <SelectValue placeholder="Select Unit" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {units.map(u => (
+                                    {DUMMY_UNITS.map(u => (
                                         <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -368,7 +347,7 @@ export default function RadiologyTestModal({
                                     <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {chargeCats.map(c => (
+                                    {DUMMY_CHARGE_CATEGORIES.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -424,30 +403,49 @@ export default function RadiologyTestModal({
                         <h3 className="font-semibold text-lg border-b pb-2">Test Parameters</h3>
                         {form.parameters.map((param, index) => (
                             <div key={param.id} className="grid grid-cols-12 gap-3 items-end">
+                                <div className="col-span-3 space-y-1">
+                                    <label className="text-sm font-medium">Parameter Name *</label>
+                                    <Input
+                                        placeholder="Parameter Name"
+                                        value={param.paramName ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "paramName", e.target.value)}
+                                        disabled={loading}
+                                    />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <label className="text-sm font-medium">From Range *</label>
+                                    <Input
+                                        placeholder="From"
+                                        value={param.fromRange ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "fromRange", e.target.value)}
+                                        disabled={loading}
+                                    />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <label className="text-sm font-medium">To Range *</label>
+                                    <Input
+                                        placeholder="To"
+                                        value={param.toRange ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "toRange", e.target.value)}
+                                        disabled={loading}
+                                    />
+                                </div>
                                 <div className="col-span-4 space-y-1">
-                                    <label className="text-sm font-medium">Test Parameter Name *</label>
+                                    <label className="text-sm font-medium">Unit *</label>
                                     <Select
-                                        value={param.parameterId ?? ""}
-                                        onValueChange={(v) => handleParameterChange(param.id, v)}
+                                        value={param.unitId ?? ""}
+                                        onValueChange={(v) => handleParameterRowUpdate(param.id, "unitId", v)}
                                         disabled={loading}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select Parameter" />
+                                            <SelectValue placeholder="Select Unit" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {allParameters.map(p => (
-                                                <SelectItem key={p.id} value={p.id}>{p.paramName}</SelectItem>
+                                            {DUMMY_UNITS.map(u => (
+                                                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div className="col-span-4 space-y-1">
-                                    <label className="text-sm font-medium">Reference Range *</label>
-                                    <Input value={param.referenceRange ?? ""} disabled className="bg-muted" />
-                                </div>
-                                <div className="col-span-3 space-y-1">
-                                    <label className="text-sm font-medium">Unit *</label>
-                                    <Input value={param.unit ?? ""} disabled className="bg-muted" />
                                 </div>
                                 <div className="col-span-1 pb-1">
                                     <Button
@@ -459,6 +457,15 @@ export default function RadiologyTestModal({
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
+                                </div>
+                                <div className="col-span-12 space-y-1">
+                                    <label className="text-sm font-medium">Description</label>
+                                    <Input
+                                        placeholder="Description (Optional)"
+                                        value={param.description ?? ""}
+                                        onChange={(e) => handleParameterRowUpdate(param.id, "description", e.target.value)}
+                                        disabled={loading}
+                                    />
                                 </div>
                             </div>
                         ))}
