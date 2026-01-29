@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { Plus, Printer } from "lucide-react";
+import { Plus, Printer, Eye, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -16,62 +16,91 @@ import { Card } from "@/components/ui/card";
 import { PathologyBillPdf } from "@/Components/pdf/pathologyBillPdf";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import PathologyBillDetailsDialog from "./PathologyBillDetailsDialog";
+import { BsCash } from "react-icons/bs";
+import PathologyPaymentDialog from "./PathologyPaymentDialog";
+import { getBillsByHospital, getBillById } from "@/lib/actions/pathologyBills";
+
+type BillItem = {
+    medicineName: string;
+    quantity: number;
+    price: number;
+    total: number;
+};
 
 type Bill = {
     id: string;
-    billNo: string;
-    date: string;
-    customerName: string;
-    customerPhone: string;
-    paymentMode: string;
-    totalAmount: number;
+    orderId: string;
+    billDate: string | Date;
+    billDiscount: string | number;
+    billTotalAmount: string | number;
+    billNetAmount: string | number;
+    billStatus: string;
+    patientName: string | null;
+    patientPhone: string | null;
+    patientEmail: string | null;
+    patientGender: string | null;
+    patientDob: string | null;
+    patientAddress: string | null;
+    createdAt: string | Date;
+    items?: BillItem[];
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-const DUMMY_BILLS: Bill[] = [
-    {
-        id: "1",
-        billNo: "PATH-001",
-        date: "2024-01-20",
-        customerName: "John Doe",
-        customerPhone: "1234567890",
-        paymentMode: "Cash",
-        totalAmount: 1500,
-    },
-    {
-        id: "2",
-        billNo: "PATH-002",
-        date: "2024-01-21",
-        customerName: "Jane Smith",
-        customerPhone: "9876543210",
-        paymentMode: "UPI",
-        totalAmount: 2500,
-    },
-];
-
 export default function PathologyBillPage() {
-    const [bills, setBills] = useState<Bill[]>(DUMMY_BILLS);
+    const [bills, setBills] = useState<Bill[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [selectedBill, setSelectedBill] = useState<string>("");
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const route = useRouter();
     const ability = useAbility();
     const [visibleFields, setVisibleFields] = useState<string[]>([
-        "billNo",
-        "date",
-        "customerName",
-        "customerPhone",
-        "paymentMode",
-        "totalAmount",
+        "id",
+        "patientName",
+        "patientPhone",
+        "billTotalAmount",
+        "billStatus",
+        "createdAt",
     ]);
+    
+    useEffect(() => {
+        const loadBills = async () => {
+            try {
+                setLoading(true);
+                const result = await getBillsByHospital(search, statusFilter);
+                if (result.success && result.data) {
+                    setBills(result.data as any);
+                } else {
+                    toast.error(result.error || "Failed to load bills");
+                }
+            } catch (error) {
+                console.error("Error loading bills:", error);
+                toast.error("An error occurred while loading bills");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadBills();
+    }, [search, statusFilter]);
 
     const filteredData = useMemo(() => {
         return bills.filter((b) =>
             search
-                ? b.billNo.toLowerCase().includes(search.toLowerCase()) ||
-                b.customerName.toLowerCase().includes(search.toLowerCase()) ||
-                b.customerPhone.includes(search)
+                ? b.id.substring(0, 8).toLowerCase().includes(search.toLowerCase()) ||
+                b.patientName?.toLowerCase().includes(search.toLowerCase()) ||
+                b.patientPhone?.includes(search)
                 : true
         );
     }, [search, bills]);
@@ -83,62 +112,188 @@ export default function PathologyBillPage() {
     );
 
     const handlePrint = async (billId: string) => {
-        const bill = bills.find((b) => b.id === billId);
-        if (!bill) return;
-
         try {
-            const blob = await pdf(
-                <PathologyBillPdf
-                    billNumber={bill.billNo}
-                    billDate={bill.date}
-                    customerName={bill.customerName}
-                    customerPhone={bill.customerPhone}
-                    paymentMode={bill.paymentMode}
-                    items={[
-                        { medicineName: "Blood Test", quantity: 1, price: 500, total: 500 },
-                        { medicineName: "Sugar Test", quantity: 1, price: 1000, total: 1000 },
-                    ]}
-                    totalAmount={bill.totalAmount}
-                    discount={0}
-                    tax={0}
-                    organization={{ name: "Medi Sparsh Pathology", metadata: { address: "Test Address", phone: "1234567890", email: "path@test.com" } }}
-                    orgModeCheck={true}
-                />
-            ).toBlob();
-
-            const url = URL.createObjectURL(blob);
-            const win = window.open(url);
-
-            if (win) {
-                win.onload = () => {
-                    win.focus();
-                    win.print();
-                };
+            toast.loading("Preparing PDF...", { id: "print-pdf" });
+            const result = await getBillById(billId);
+            if (!result.success || !result.data) {
+                toast.error(result.error || "Failed to fetch bill details", { id: "print-pdf" });
+                return;
             }
+            const billData = result.data;
+            const pdfDoc = (
+                <PathologyBillPdf
+                    billNumber={billData.id.substring(0, 8).toUpperCase()}
+                    billDate={format(new Date(billData.billDate), "dd/MM/yyyy")}
+                    customerName={billData.patientName}
+                    customerPhone={billData.patientPhone}
+                    paymentMode={billData.payments?.[0]?.paymentMode || "Cash"}
+                    items={billData.tests.map((t: any) => {
+                        const price = Number(t.price) || 0;
+                        const taxPercent = Number(t.tax) || 0;
+                        const taxAmount = (price * taxPercent) / 100;
+                        const total = price + taxAmount;
+                        return {
+                            testName: t.testName,
+                            price,
+                            tax: taxPercent,
+                            total,
+                        };
+                    })}
+                    discount={Number(billData.billDiscount)}
+                    organization={billData.organization}
+                    orgModeCheck={true}
+                    payments={billData.payments?.map((p: any) => ({
+                        date: format(new Date(p.paymentDate), "dd/MM/yyyy"),
+                        amount: Number(p.paymentAmount),
+                        mode: p.paymentMode,
+                    })) || []}
+                    totalPaid={billData.totalPaid}
+                    balanceAmount={billData.balanceAmount}
+                    doctorName={billData.doctorName || ""}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            toast.success("PDF ready for printing", { id: "print-pdf" });
         } catch (error) {
             console.error("Print error:", error);
-            toast.error("Failed to print bill");
+            toast.error("Failed to generate PDF", { id: "print-pdf" });
         }
     };
 
     const allColumns: ColumnDef<Bill>[] = [
-        { accessorKey: "billNo", header: "Bill No" },
-        { accessorKey: "date", header: "Bill Date" },
-        { accessorKey: "customerName", header: "Customer Name" },
-        { accessorKey: "customerPhone", header: "Customer Phone" },
-        { accessorKey: "paymentMode", header: "Payment Mode" },
-        { accessorKey: "totalAmount", header: "Total Amount" },
+        { accessorKey: "id", header: "Bill ID", cell: ({ row }) => row.original.id.substring(0, 8) },
+        {
+            accessorKey: "createdAt",
+            header: "Bill Date",
+            cell: ({ row }) => {
+                const date = new Date(row.original.createdAt);
+                return format(date, "dd/MM/yyyy");
+            }
+        },
+        { accessorKey: "patientName", header: "Patient Name" },
+        { accessorKey: "patientPhone", header: "Phone" },
+        {
+            accessorKey: "billTotalAmount",
+            header: "Total Amount",
+            cell: ({ row }) => `₹${Number(row.original.billTotalAmount).toFixed(2)}`
+        },
+        {
+            accessorKey: "billNetAmount",
+            header: "Net Amount",
+            cell: ({ row }) => `₹${Number(row.original.billNetAmount).toFixed(2)}`
+        },
+        {
+            accessorKey: "billStatus",
+            header: "Status",
+            cell: ({ row }) => {
+                const status = row.original.billStatus;
+                const statusColor = {
+                    pending: "bg-yellow-100 text-yellow-800",
+                    paid: "bg-green-100 text-green-800",
+                    partially_paid: "bg-blue-100 text-blue-800",
+                    refunded: "bg-gray-100 text-gray-800",
+                };
+                return (
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[status as keyof typeof statusColor] || "bg-gray-100"}`}>
+                        {status === "partially_paid" ? "Partially Paid" : status.charAt(0).toUpperCase() + status.slice(1)}
+                    </span>
+                );
+            }
+        },
         {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePrint(row?.original?.id)}
-                >
-                    <Printer size={14} className="mr-2" /> Print
-                </Button>
+                <div className="flex">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedBill(row.original.id);
+                                        setIsViewOpen(true);
+                                    }}
+                                >
+                                    <Eye size={14} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>View Details</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSelectedBill(row?.original?.id);
+                                        setIsPaymentOpen(true);
+                                    }}
+                                >
+                                    <BsCash />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Add/Edit Payment</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handlePrint(row?.original?.id)}
+                                >
+                                    <Printer size={14} />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Print</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="inline-block">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={!row?.original?.patientEmail}
+                                        onClick={() => {
+                                            if (!row?.original?.patientEmail) return;
+                                            toast.info(
+                                                `Email feature coming soon ${row.original.patientEmail}`
+                                            );
+                                        }}
+                                    >
+                                        <Mail size={14} />
+                                    </Button>
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {row?.original?.patientEmail ? (
+                                    <p>Send Bill via Email</p>
+                                ) : (
+                                    <p className="text-red-500">
+                                        This patient doesn’t have an email added
+                                    </p>
+                                )}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                </div>
             ),
         },
     ];
@@ -169,22 +324,27 @@ export default function PathologyBillPage() {
             </Card>
 
             <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-                <Input
-                    placeholder="Search Bill / Patient / Phone"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="max-w-sm"
-                />
+                <div className="flex gap-3 flex-1">
+                    <Input
+                        placeholder="Search Bill / Patient / Phone"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="max-w-sm"
+                    />
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-3 py-2 border rounded-md bg-white dark:bg-gray-800"
+                    >
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="partially_paid">Partially Paid</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+                </div>
 
                 <div className="flex gap-3">
-                    <Can I="create" a="PathologyBilling" ability={ability}>
-                        <Button
-                            variant="default"
-                            onClick={() => route.push("/doctor/pathology/genrateBill")}
-                        >
-                            <Plus size={16} /> Generate Bill
-                        </Button>
-                    </Can>
                     <FieldSelectorDropdown
                         columns={allColumns as TypedColumn<Bill>[]}
                         visibleFields={visibleFields}
@@ -194,20 +354,63 @@ export default function PathologyBillPage() {
                             );
                         }}
                     />
+                    <Can I="create" a="PathologyBilling" ability={ability}>
+                        <Button
+                            variant="default"
+                            onClick={() => route.push("/doctor/pathology/genrateBill")}
+                        >
+                            <Plus size={16} /> Generate Bill
+                        </Button>
+                    </Can>
                 </div>
             </div>
 
-            <Table data={paginated} columns={columns} fallback={"No Bill found"} />
+            {loading ? (
+                <Card className="p-8 text-center">
+                    <p className="text-muted-foreground">Loading bills...</p>
+                </Card>
+            ) : bills.length === 0 ? (
+                <Card className="p-8 text-center">
+                    <p className="text-muted-foreground mb-4">No bills found</p>
+                    <Button
+                        onClick={() => route.push("/doctor/pathology/genrateBill")}
+                    >
+                        <Plus size={16} className="mr-2" /> Create First Bill
+                    </Button>
+                </Card>
+            ) : (
+                <>
+                    <Table data={paginated} columns={columns} fallback={"No Bill found"} />
 
-            <PaginationControl
-                currentPage={currentPage}
-                totalPages={totalPages}
-                rowsPerPage={rowsPerPage}
-                onPageChange={setCurrentPage}
-                onRowsPerPageChange={(val) => {
-                    setRowsPerPage(val);
-                    setCurrentPage(1);
+                    <PaginationControl
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        rowsPerPage={rowsPerPage}
+                        onPageChange={setCurrentPage}
+                        onRowsPerPageChange={(val) => {
+                            setRowsPerPage(val);
+                            setCurrentPage(1);
+                        }}
+                    />
+                </>
+            )}
+
+            <PathologyBillDetailsDialog
+                open={isViewOpen}
+                onClose={() => {
+                    setIsViewOpen(false);
+                    setSelectedBill("");
                 }}
+                bill={selectedBill as string}
+            />
+
+            <PathologyPaymentDialog
+                open={isPaymentOpen}
+                onClose={() => {
+                    setIsPaymentOpen(false);
+                    setSelectedBill("");
+                }}
+                bill={selectedBill as string}
             />
         </div>
     );

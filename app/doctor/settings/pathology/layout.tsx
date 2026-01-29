@@ -22,12 +22,12 @@ export default function PathologySettingsLayout({ children }: { children: React.
             action: "read",
             subject: "pathologyunit",
         },
-        {
-            name: "Pathology Parameter",
-            href: "/doctor/settings/pathology/parameter",
-            action: "read",
-            subject: "pathologyParameter",
-        },
+        // {
+        //     name: "Pathology Parameter",
+        //     href: "/doctor/settings/pathology/parameter",
+        //     action: "read",
+        //     subject: "pathologyParameter",
+        // },
     ];
 
     const visibleTabs = tabs.filter((tab) =>

@@ -28,11 +28,13 @@ import {
   deletePathologyParameter,
 } from "@/lib/actions/pathologyParameters";
 import { getPathologyUnits } from "@/lib/actions/pathologyUnits";
+import { getPathologyTests } from "@/lib/actions/pathologyTests";
 import { toast } from "sonner";
 
 export default function ParameterManager() {
   const [parameters, setParameters] = useState<PathologyParameter[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [tests, setTests] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParameter, setSelectedParameter] = useState<PathologyParameter | undefined>();
   const [search, setSearch] = useState("");
@@ -45,21 +47,28 @@ export default function ParameterManager() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [parametersResult, unitsResult] = await Promise.all([
+      const [parametersResult, unitsResult, testsResult] = await Promise.all([
         getPathologyParameters(),
         getPathologyUnits(),
+        getPathologyTests(),
       ]);
 
       if (parametersResult.error) {
         toast.error(parametersResult.error);
       } else if (parametersResult.data) {
-        setParameters(parametersResult.data);
+        // setParameters(parametersResult.data);
       }
 
       if (unitsResult.error) {
         toast.error(unitsResult.error);
       } else if (unitsResult.data) {
         setUnits(unitsResult.data);
+      }
+
+      if (testsResult.error) {
+        toast.error(testsResult.error);
+      } else if (testsResult.data) {
+        setTests(testsResult.data);
       }
     } catch (error) {
       toast.error("Failed to fetch data");
@@ -227,6 +236,7 @@ export default function ParameterManager() {
         parameter={selectedParameter}
         onSaveSuccess={handleSaveSuccess}
         units={units}
+        tests={tests}
       />
     </>
   );

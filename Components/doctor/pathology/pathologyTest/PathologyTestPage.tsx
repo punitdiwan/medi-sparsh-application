@@ -16,6 +16,9 @@ import { getPathologyTests, deletePathologyTest, restorePathologyTest } from "@/
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
+
+type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
 export default function PathologyTestPage() {
     const [tests, setTests] = useState<PathologyTest[]>([]);
@@ -24,6 +27,14 @@ export default function PathologyTestPage() {
     const [selectedTest, setSelectedTest] = useState<PathologyTest | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [showDeleted, setShowDeleted] = useState(false);
+    const [visibleFields, setVisibleFields] = useState<string[]>([
+        "testName",
+        "shortName",
+        "sampleType",
+        "categoryName",
+        "reportHours",
+        "amount",
+    ]);
 
     const ability = useAbility();
 
@@ -64,18 +75,35 @@ export default function PathologyTestPage() {
         );
     }, [search, tests, showDeleted]);
 
-    const columns: ColumnDef<PathologyTest>[] = [
+    const allColumns: ColumnDef<PathologyTest>[] = [
         {
+            id: "sno",
             header: "S.No",
             cell: ({ row }) => row.index + 1,
         },
         { accessorKey: "testName", header: "Test Name" },
         { accessorKey: "shortName", header: "Short Name" },
-        { accessorKey: "testType", header: "Test Type" },
+        { accessorKey: "sampleType", header: "Sample Type" },
         { accessorKey: "categoryName", header: "Category" },
         { accessorKey: "subCategoryId", header: "Sub Category" },
         { accessorKey: "method", header: "Method" },
-        { accessorKey: "reportDays", header: "Report Days" },
+        {
+            accessorKey: "reportHours",
+            header: "Report Hours",
+            cell: ({ row }) => Number(row.original.reportHours)
+        },
+        {
+            accessorKey: "amount",
+            header: "Amount",
+            cell: ({ row }) => {
+                const amount = Number((row.original as any).amount || 0);
+                const taxPercent = Number((row.original as any).taxPercent || 0);
+                const total = amount + (amount * taxPercent / 100);
+                return total.toFixed(2);
+            }
+        },
+        { accessorKey: "chargeName", header: "Charge Name" },
+        { accessorKey: "description", header: "Description" },
         {
             id: "actions",
             header: "Actions",
@@ -130,6 +158,21 @@ export default function PathologyTestPage() {
             ),
         },
     ];
+
+    const columns = useMemo(() => {
+        const filtered = allColumns.filter((col) => {
+            if (col.id === "actions" || col.id === "sno") return true;
+            const key = "accessorKey" in col ? col.accessorKey : undefined;
+            return key && visibleFields.includes(key as string);
+        });
+
+        // Ensure actions column is always last if it exists
+        const actionCol = allColumns.find((c) => c.id === "actions");
+        const finalCols = filtered.filter(c => c.id !== "actions");
+        if (actionCol) finalCols.push(actionCol);
+
+        return finalCols;
+    }, [visibleFields, allColumns]);
 
     const handleAdd = () => {
         setSelectedTest(undefined);
@@ -205,11 +248,22 @@ export default function PathologyTestPage() {
                         <Label htmlFor="show-deleted">Show Deleted</Label>
                     </div>
                 </div>
-                <Can I="create" a="PathologyTest" ability={ability}>
-                    <Button variant="default" onClick={handleAdd}>
-                        <Plus size={16} /> Add Test
-                    </Button>
-                </Can>
+                <div className="flex gap-3 items-center">
+                    <FieldSelectorDropdown
+                        columns={allColumns as TypedColumn<PathologyTest>[]}
+                        visibleFields={visibleFields}
+                        onToggle={(key, checked) => {
+                            setVisibleFields((prev) =>
+                                checked ? [...prev, key] : prev.filter((f) => f !== key)
+                            );
+                        }}
+                    />
+                    <Can I="create" a="PathologyTest" ability={ability}>
+                        <Button variant="default" onClick={handleAdd}>
+                            <Plus size={16} /> Add Test
+                        </Button>
+                    </Can>
+                </div>
             </div>
 
             {loading ? (

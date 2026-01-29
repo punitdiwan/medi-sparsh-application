@@ -29,6 +29,7 @@ export async function getPathologyParameters() {
 }
 
 export async function createPathologyParameter(formData: {
+    testId: string;
     paramName: string;
     fromRange: string;
     toRange: string;
@@ -41,7 +42,11 @@ export async function createPathologyParameter(formData: {
             return { error: "Unauthorized" };
         }
 
-        const { paramName, fromRange, toRange, unitId, description } = formData;
+        const { testId, paramName, fromRange, toRange, unitId, description } = formData;
+
+        if (!testId || !testId.trim()) {
+            return { error: "Test ID is required" };
+        }
 
         if (!paramName || !paramName.trim()) {
             return { error: "Parameter name is required" };
@@ -61,6 +66,7 @@ export async function createPathologyParameter(formData: {
 
         const newParameter = await dbCreatePathologyParameter({
             hospitalId: org.id,
+            testId: testId.trim(),
             paramName: paramName.trim(),
             fromRange: fromRange.trim(),
             toRange: toRange.trim(),
