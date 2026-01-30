@@ -13,7 +13,6 @@ export async function createPharmacySale(data: any) {
         if (!org) {
             return { error: "Unauthorized" };
         }
-        console.log("medicine data", data)
         await db.transaction(async (tx) => {
             // 1. Create Sale Record
             const [sale] = await tx
