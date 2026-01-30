@@ -302,7 +302,7 @@ export default function PathologyPaymentDialog({
                             <CreditCard className="bg-dialog-header text-dialog-icon" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">Add/Edit Payment</h2>
+                            <h2 className="text-xl font-bold">Pathology Payments</h2>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                                 <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {bill.customerName}</span>
                                 <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {bill.billNo}</span>

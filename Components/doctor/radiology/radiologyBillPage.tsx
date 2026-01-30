@@ -234,7 +234,7 @@ export default function RadiologyBillPage() {
                                 className="group gap-2 cursor-pointer"
                             >
                                 <BsCash className="text-muted-foreground group-hover:text-primary" />
-                                Add / Edit Payment
+                                Payments
                             </DropdownMenuItem>
 
                             <DropdownMenuItem
