@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { Plus, Printer, Eye, Mail } from "lucide-react";
+import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -16,16 +16,17 @@ import { Card } from "@/components/ui/card";
 import { PathologyBillPdf } from "@/Components/pdf/pathologyBillPdf";
 import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import PathologyBillDetailsDialog from "./PathologyBillDetailsDialog";
 import { BsCash } from "react-icons/bs";
 import PathologyPaymentDialog from "./PathologyPaymentDialog";
 import { getBillsByHospital, getBillById } from "@/lib/actions/pathologyBills";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type BillItem = {
     medicineName: string;
@@ -50,6 +51,7 @@ type Bill = {
     patientAddress: string | null;
     createdAt: string | Date;
     items?: BillItem[];
+    hasSampleCollected:boolean ;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -74,13 +76,14 @@ export default function PathologyBillPage() {
         "billStatus",
         "createdAt",
     ]);
-    
+
     useEffect(() => {
         const loadBills = async () => {
             try {
                 setLoading(true);
                 const result = await getBillsByHospital(search, statusFilter);
                 if (result.success && result.data) {
+                    console.log("TOtal bills",result.data)
                     setBills(result.data as any);
                 } else {
                     toast.error(result.error || "Failed to load bills");
@@ -207,92 +210,88 @@ export default function PathologyBillPage() {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (
-                <div className="flex">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setSelectedBill(row.original.id);
-                                        setIsViewOpen(true);
-                                    }}
-                                >
-                                    <Eye size={14} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>View Details</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setSelectedBill(row?.original?.id);
-                                        setIsPaymentOpen(true);
-                                    }}
-                                >
-                                    <BsCash />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Add/Edit Payment</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handlePrint(row?.original?.id)}
-                                >
-                                    <Printer size={14} />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Print</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span className="inline-block">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={!row?.original?.patientEmail}
-                                        onClick={() => {
-                                            if (!row?.original?.patientEmail) return;
-                                            toast.info(
-                                                `Email feature coming soon ${row.original.patientEmail}`
-                                            );
-                                        }}
-                                    >
-                                        <Mail size={14} />
-                                    </Button>
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {row?.original?.patientEmail ? (
-                                    <p>Send Bill via Email</p>
-                                ) : (
-                                    <p className="text-red-500">
-                                        This patient doesn’t have an email added
-                                    </p>
-                                )}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical size={18} />
+                            </Button>
+                        </DropdownMenuTrigger>
 
+                        <DropdownMenuContent align="end" className="w-48">
+
+                            {/* View */}
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    setSelectedBill(row.original.id);
+                                    setIsViewOpen(true);
+                                }}
+                                className="group gap-2 cursor-pointer"
+                            >
+                                <Eye size={14} className="text-muted-foreground group-hover:text-primary" />
+                                View Details
+                            </DropdownMenuItem>
+
+                            {/* Edit */}
+                            <DropdownMenuItem
+                                disabled={row.original.billStatus !== "pending"}
+                                onClick={() => {
+                                    if (row.original.billStatus === "pending") {
+                                        route.push(`/doctor/pathology/genrateBill?billId=${row.original.id}&mode=edit`);
+                                    }
+                                }}
+                                className="group gap-2 cursor-pointer"
+                            >
+                                <Edit size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Edit Bill
+                            </DropdownMenuItem>
+
+                            {/* Payment */}
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    setSelectedBill(row?.original?.id);
+                                    setIsPaymentOpen(true);
+                                }}
+                                className="group gap-2 cursor-pointer"
+                            >
+                                <BsCash className="text-muted-foreground group-hover:text-primary" />
+                                Add / Edit Payment
+                            </DropdownMenuItem>
+
+                            {/* Print */}
+                            <DropdownMenuItem
+                                onClick={() => handlePrint(row?.original?.id)}
+                                className="group gap-2 cursor-pointer"
+                            >
+                                <Printer size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Print Bill
+                            </DropdownMenuItem>
+
+                            {/* Email */}
+                            <DropdownMenuItem
+                                disabled={!row?.original?.patientEmail}
+                                onClick={() => {
+                                    if (!row?.original?.patientEmail) return;
+                                    toast.info(`Email feature coming soon ${row.original.patientEmail}`);
+                                }}
+                                className="group gap-2 cursor-pointer"
+                            >
+                                <Mail size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Send via Email
+                            </DropdownMenuItem>
+
+                            {/* Cancel Bill (Danger) */}
+                            <DropdownMenuItem
+                                onClick={() => console.log("Cancel bill clicked")}
+                                className="group gap-2 cursor-pointer text-destructive focus:text-destructive"
+                                disabled={!!row?.original?.hasSampleCollected}
+                            >
+                                <Trash2 size={14} className="text-destructive group-hover:text-red-600" />
+                                Cancel Bill
+                            </DropdownMenuItem>
+
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             ),
         },
@@ -331,17 +330,21 @@ export default function PathologyBillPage() {
                         onChange={(e) => setSearch(e.target.value)}
                         className="max-w-sm"
                     />
-                    <select
+                    <Select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-3 py-2 border rounded-md bg-white dark:bg-gray-800"
+                        onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}
                     >
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="partially_paid">Partially Paid</option>
-                        <option value="refunded">Refunded</option>
-                    </select>
+                        <SelectTrigger className=" focus-visible:ring-primary">
+                            <SelectValue placeholder="Filter by Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                            <SelectItem value="refunded">Refunded</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="flex gap-3">

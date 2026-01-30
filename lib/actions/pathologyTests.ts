@@ -33,7 +33,7 @@ export async function createPathologyTest(formData: {
     categoryId: string;
     subCategoryId?: string;
     method?: string;
-    reportDays: number;
+    reportHours: number;
     chargeCategoryId: string;
     chargeId: string;
     chargeName: string;
@@ -57,7 +57,6 @@ export async function createPathologyTest(formData: {
 
         const newTest = await dbCreatePathologyTest({
             ...formData,
-            reportHours: formData.reportDays * 24,
             hospitalId: org.id,
         });
 

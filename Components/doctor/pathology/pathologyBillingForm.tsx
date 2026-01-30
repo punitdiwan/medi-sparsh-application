@@ -19,9 +19,9 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import { Info, Plus, Trash2, User, Printer } from "lucide-react";
+import { Info, Plus, Trash2, User, Printer, TestTubeDiagonal, ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText } from "lucide-react";
 import { getPathologyTests } from "@/lib/actions/pathologyTests";
-import { createPathologyBill } from "@/lib/actions/pathologyBills";
+import { createPathologyBill, updatePathologyBill, getBillById } from "@/lib/actions/pathologyBills";
 import {
     Tooltip,
     TooltipContent,
@@ -45,6 +45,7 @@ type Item = {
     baseAmount: number;  // without tax
     taxAmount: number;   // tax value
     total: number;       // with tax
+    isLocked: boolean;
 };
 
 
@@ -99,13 +100,20 @@ const dummyIpdData = [
 
 const HOME_COLLECTION_CHARGE = 100;
 
-export default function PathologyBillingForm() {
+interface PathologyBillingFormProps {
+    billId?: string;
+    mode?: string;
+}
+
+export default function PathologyBillingForm({ billId, mode }: PathologyBillingFormProps) {
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [remarks, setRemarks] = useState("");
     const [items, setItems] = useState<Item[]>([]);
     const [availableTests, setAvailableTests] = useState<any[]>([]);
     const [loadingTests, setLoadingTests] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(mode === "edit" && !!billId);
+    const [isLoadingBill, setIsLoadingBill] = useState(isEditMode);
 
     // Modal state for adding item
     const [selectedTestId, setSelectedTestId] = useState("");
@@ -151,6 +159,92 @@ export default function PathologyBillingForm() {
         };
         fetchTests();
     }, []);
+
+    // Load bill data when in edit mode
+    useEffect(() => {
+        const loadBillData = async () => {
+            if (!isEditMode || !billId) {
+                setIsLoadingBill(false);
+                return;
+            }
+
+            try {
+                setIsLoadingBill(true);
+                const result = await getBillById(billId);
+
+                if (!result.success || !result.data) {
+                    toast.error(result.error || "Failed to load bill");
+                    router.push("/doctor/pathology");
+                    return;
+                }
+
+                const billData = result.data;
+
+                // Set patient - create a mock patient object from bill data
+                if (billData.orderId) {
+                    setSelectedPatient({
+                        id: billData.patientId,
+                        name: billData.patientName,
+                        mobileNumber: billData.patientPhone,
+                        email: billData.patientEmail,
+                        dob: billData.patientDob,
+                        gender: billData.patientGender,
+                        address: billData.patientAddress,
+                    });
+                }
+
+                // Set doctor
+                if (billData.doctorName) {
+                    setSelectedDoctor({
+                        id: billData.doctorId || "",
+                        name: billData.doctorName,
+                    });
+                }
+
+                // Set remarks
+                setRemarks(billData.remarks || "");
+
+                // Set discount
+                const discount = Number(billData.billDiscount) || 0;
+                const totalAmount = Number(billData.billTotalAmount) || 0;
+                if (totalAmount > 0) {
+                    const discountPercentage = (discount / totalAmount) * 100;
+                    setDiscountPercent(discountPercentage);
+                }
+
+                // Convert tests to items
+                const billItems: Item[] = billData.tests.map((test: any) => {
+                    const price = Number(test.price) || 0;
+                    const taxPercent = Number(test.tax) || 0;
+                    const baseAmount = price;
+                    const taxAmount = (baseAmount * taxPercent) / 100;
+                    const total = baseAmount + taxAmount;
+
+                    return {
+                        id: test.id,
+                        testId: test.testId,
+                        name: test.testName,
+                        price,
+                        taxPercent,
+                        baseAmount,
+                        taxAmount,
+                        total,
+                        isLocked: test.hasSampleCollected === true
+                    };
+                });
+                setItems(billItems);
+                toast.success("Bill loaded for editing");
+            } catch (error) {
+                console.error("Error loading bill:", error);
+                toast.error("Failed to load bill data");
+                router.push("/doctor/pathology");
+            } finally {
+                setIsLoadingBill(false);
+            }
+        };
+
+        loadBillData();
+    }, [isEditMode, billId, router]);
     useEffect(() => {
         const basePaise = items.reduce(
             (acc, i) => acc + Math.round(i.baseAmount * 100),
@@ -215,6 +309,7 @@ export default function PathologyBillingForm() {
             baseAmount: basePaise / 100,
             taxAmount: taxPaise / 100,
             total: totalPaise / 100,
+            isLocked: false,
         };
 
         setItems(prev => [...prev, newItem]);
@@ -244,7 +339,6 @@ export default function PathologyBillingForm() {
 
     const handlePatientSelect = (patient: any) => {
         setSelectedPatient(patient);
-        console.log("selected patients details", patient);
         if (patient) {
             toast.success(`Patient ${patient.name} selected`);
         }
@@ -269,11 +363,7 @@ export default function PathologyBillingForm() {
             const billDiscount = totalAmount * (discountPercent / 100);
             const finalNetAmount = netAmount;
 
-            const result = await createPathologyBill({
-                patientId: selectedPatient.id,
-                doctorId: selectedDoctor.isInternal ? selectedDoctor.id : undefined,
-                doctorName: selectedDoctor.name,
-                remarks,
+            const billData = {
                 tests: items.map(item => ({
                     testId: item.testId,
                     price: item.price,
@@ -282,10 +372,30 @@ export default function PathologyBillingForm() {
                 billDiscount: Number(billDiscount.toFixed(2)),
                 billTotalAmount: Number(totalAmount.toFixed(2)),
                 billNetAmount: Number(finalNetAmount.toFixed(2)),
-            });
+                remarks,
+            };
+            let result;
+
+            if (isEditMode && billId) {
+                // Update existing bill
+                result = await updatePathologyBill(billId, billData);
+            } else {
+                // Create new bill
+                result = await createPathologyBill({
+                    patientId: selectedPatient.id,
+                    doctorId: selectedDoctor.isInternal ? selectedDoctor.id : undefined,
+                    doctorName: selectedDoctor.name,
+                    remarks,
+                    tests: billData.tests,
+                    billDiscount: billData.billDiscount,
+                    billTotalAmount: billData.billTotalAmount,
+                    billNetAmount: billData.billNetAmount,
+                });
+            }
 
             if (result.success) {
-                toast.success(result.message || "Bill created successfully");
+                const successMessage = isEditMode ? "Bill updated successfully" : "Bill created successfully";
+                toast.success(successMessage);
                 // Reset form
                 setSelectedPatient(null);
                 setSelectedDoctor(null);
@@ -299,11 +409,11 @@ export default function PathologyBillingForm() {
                 // Navigate to bills list
                 router.push("/doctor/pathology");
             } else {
-                toast.error(result.error || "Failed to create bill");
+                toast.error(result.error || (isEditMode ? "Failed to update bill" : "Failed to create bill"));
             }
         } catch (error) {
-            console.error("Error creating bill:", error);
-            toast.error("An error occurred while creating the bill");
+            console.error("Error saving bill:", error);
+            toast.error("An error occurred while saving the bill");
         } finally {
             setIsSubmitting(false);
         }
@@ -346,6 +456,7 @@ export default function PathologyBillingForm() {
                 baseAmount: basePaise / 100,
                 taxAmount: taxPaise / 100,
                 total: (basePaise + taxPaise) / 100,
+                isLocked: false
             };
         });
 
@@ -355,28 +466,66 @@ export default function PathologyBillingForm() {
     };
 
     const appMode = "hospital"; //| "manual";
+
+    if (isLoadingBill) {
+        return (
+            <div className="p-6 space-y-6 w-full mx-auto mt-4">
+                <BackButton />
+                <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                        <p className="text-muted-foreground">Loading bill data...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
             <BackButton />
-            <h1 className="text-2xl font-bold">Generate Pathology Bill</h1>
+            <Card className="bg-Module-header text-white shadow-lg px-6 py-5 rounded-2xl mb-4">
+                <div className="flex items-start gap-3">
+                    <FileText className="h-6 w-6 text-white/90 mt-0.5" />
+
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            {isEditMode ? "Edit Pathology Bill" : "Generate Pathology Bill"}
+                        </h1>
+
+                        <p className="text-sm text-white/80 mt-1 max-w-2xl leading-relaxed">
+                            {isEditMode ? (<>
+                                You can modify test selection and update discounts.
+                                Patient, doctor, and home collection details are locked.
+                                    Tests cannot be deleted once the sample has been collected.
+                            </>) : (<>
+                                Add patient, assign doctor, select tests, apply discounts,
+                                and enable home sample collection if required.
+                            </>
+                            )}
+                        </p>
+                    </div>
+                </div>
+            </Card>
             {appMode === "hospital" && (
                 <div className="space-y-2 mb-6">
                     <Label>IPD ID</Label>
                     <div className="flex gap-2">
                         <Input
-                            placeholder="Enter IPD ID (e.g. IPD-001)"
+                            placeholder="Enter IPD ID (e.g. IPD-1234)"
                             value={ipdId}
                             onChange={(e) => setIpdId(e.target.value)}
                             className="max-w-80"
                         />
-                        <Button onClick={handleIpdSearch}>
+                        <Button onClick={handleIpdSearch}
+                            disabled={isEditMode}>
                             Search
                         </Button>
                     </div>
                 </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4 space-y-0 border-primary/10 ">
+                <Card className="p-4 space-y-0 bg-overview-card border-overview-strong ">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-primary">
                         <User className="h-5 w-5" />
                         Patient Information
@@ -386,7 +535,7 @@ export default function PathologyBillingForm() {
                         value={selectedPatient}
                         onSelect={handlePatientSelect}
                         title="Search Existing Patient"
-                        disabled={!!ipdId}
+                        disabled={!!ipdId || isEditMode}
                     />
 
                     <div className="pt-2 border-t border-dashed">
@@ -395,13 +544,16 @@ export default function PathologyBillingForm() {
                             onSelect={handleDoctorSelect}
                             title="Referring Doctor"
                             appMode={appMode}
-                            disabled={!!ipdId}
+                            disabled={!!ipdId || isEditMode}
                         />
                     </div>
                 </Card>
 
-                <Card className="p-4 space-y-4">
-                    <h2 className="text-lg font-semibold">Add Test / Medicine</h2>
+                <Card className="p-4 space-y-4 bg-overview-card border-overview-strong">
+                    <div className="text-lg font-semibold flex items-center gap-2 text-primary">
+                        <TestTubeDiagonal className="h-5 w-5" />
+                        <h2>Add Test</h2>
+                    </div>
                     <div className="grid grid-cols-1 gap-4">
                         <div className="flex flex-col gap-2">
                             <Label>Select Test</Label>
@@ -422,7 +574,7 @@ export default function PathologyBillingForm() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             <div className="flex flex-col gap-2">
                                 <Label>Price</Label>
                                 <Input
@@ -450,8 +602,14 @@ export default function PathologyBillingForm() {
             </div>
             <div className="flex gap-4 w-full flex-col lg:flex-row">
                 <div className="w-full lg:w-[65%]">
-                    <Card className="p-4">
-                        <h2 className="text-lg font-semibold mb-4">Bill Items</h2>
+                    <Card className="p-4 bg-overview-card border-overview-strong">
+                        <div className="">
+                            <h2 className="text-lg font-semibold flex items-center gap-2 text-primary">
+                                <ClipboardList className="h-5 w-5" />
+                                Bill Items
+                            </h2>
+
+                        </div>
                         {items.length === 0 ? (
                             <div className="h-40 flex items-center justify-center border-2 border-dashed rounded text-muted-foreground text-lg">
                                 No items added yet
@@ -465,7 +623,19 @@ export default function PathologyBillingForm() {
                                             <TableHead className="text-right">Price</TableHead>
                                             <TableHead className="text-right">Tax</TableHead>
                                             <TableHead className="text-right">Total</TableHead>
-                                            <TableHead className="text-center">Action</TableHead>
+                                            <TableHead className="text-center flex gap-1 justify-center items-center">
+                                                Action
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <BadgeInfo className="h-4 w-4 text-black/40 dark:text-white/40 cursor-pointer" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            Items can't be removed <br />after sample collection
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -480,13 +650,25 @@ export default function PathologyBillingForm() {
                                                     ₹{item.total.toFixed(2)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleRemoveItem(item.id)}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleRemoveItem(item.id)}
+                                                                    disabled={isEditMode && item.isLocked}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            {isEditMode && item.isLocked && (
+                                                                <TooltipContent>
+                                                                    Cannot remove items after sample collection
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -498,8 +680,11 @@ export default function PathologyBillingForm() {
                 </div>
 
                 <div className="w-full lg:w-[35%]">
-                    <Card className="p-4">
-                        <h2 className="text-lg font-semibold">Summary</h2>
+                    <Card className="p-4 bg-overview-card border-overview-strong">
+                        <div className="text-lg font-semibold flex items-center gap-2 text-primary">
+                            <ReceiptIndianRupee />
+                            Summary
+                        </div>
                         <div className="space-y-2">
                             <div className="flex justify-between">
                                 <Label>Total (Incl. Tax)</Label>
@@ -621,7 +806,7 @@ export default function PathologyBillingForm() {
                                     handleSubmit(false);
                                 }}
                             >
-                                {isSubmitting ? "Creating Bill..." : "Generate Bill"}
+                                {isSubmitting ? (isEditMode ? "Updating Bill..." : "Creating Bill...") : (isEditMode ? "Update Bill" : "Generate Bill")}
                             </Button>
                         </div>
 

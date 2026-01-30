@@ -2,6 +2,14 @@ import PathologyBillingForm from "@/Components/doctor/pathology/pathologyBilling
 
 export const dynamic = "force-dynamic";
 
-export default function GenerateBillPage() {
-    return <PathologyBillingForm />;
+type Props = {
+    searchParams: Promise<{
+        billId?: string;
+        mode?: string;
+    }>;
+};
+
+export default async function GenerateBillPage({ searchParams }: Props) {
+    const params = await searchParams;
+    return <PathologyBillingForm billId={params.billId} mode={params.mode} />;
 }

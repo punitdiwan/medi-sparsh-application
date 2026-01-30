@@ -44,7 +44,7 @@ export type PathologyTest = {
     categoryName?: string;
     subCategoryId: string;
     method: string;
-    reportHours: number | string;
+    reportHours: string;
     chargeCategoryId: string;
     chargeId: string;
     chargeName: string;
