@@ -88,6 +88,7 @@ const items: SidebarItem[] = [
     icon: FlaskConical,
     children: [
       { title: 'Billing', url: '/doctor/pathology', subject: 'PathologyBilling', action: 'read', },
+      { title: 'Payments', url: '/doctor/pathology/payments', subject: 'PathologyBilling', action: 'read', },
       { title: 'Pathology Test', url: '/doctor/pathology/pathologyTest', subject: 'PathologyTest', action: 'read', },
     ],
   },
