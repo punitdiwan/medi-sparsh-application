@@ -757,6 +757,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                                     onChange={(e) =>
                                         setSampleCollectionType(e.target.checked ? "home" : "lab")
                                     }
+                                    disabled={isEditMode}
                                     className="h-4 w-4 accent-primary"
                                 />
                             </div>
