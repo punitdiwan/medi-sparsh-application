@@ -10,7 +10,7 @@ import {
   patients,
   pathologySamples,
 } from "@/drizzle/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { getActiveOrganization } from "@/lib/getActiveOrganization";
 import { revalidatePath } from "next/cache";
 
@@ -98,6 +98,7 @@ export async function getBillsByHospital(searchTerm?: string, status?: string) {
         billTotalAmount: pathologyBills.billTotalAmount,
         billNetAmount: pathologyBills.billNetAmount,
         billStatus: pathologyBills.billStatus,
+
         patientName: patients.name,
         patientPhone: patients.mobileNumber,
         patientEmail: patients.email,
@@ -105,6 +106,14 @@ export async function getBillsByHospital(searchTerm?: string, status?: string) {
         patientDob: patients.dob,
         patientAddress: patients.address,
         createdAt: pathologyBills.createdAt,
+        hasSampleCollected: sql<boolean>`
+          EXISTS (
+            SELECT 1 FROM pathology_samples ps
+            INNER JOIN pathology_order_tests pot 
+              ON pot.id = ps.order_test_id
+            WHERE pot.order_id = ${pathologyBills.orderId}
+          )
+        `
       })
       .from(pathologyBills)
       .leftJoin(pathologyOrders, eq(pathologyBills.orderId, pathologyOrders.id))
@@ -112,7 +121,7 @@ export async function getBillsByHospital(searchTerm?: string, status?: string) {
       .where(eq(pathologyBills.hospitalId, org.id))
       .orderBy(desc(pathologyBills.createdAt));
 
-    // Apply filters
+    // Filters
     let filteredBills = bills;
 
     if (status && status !== "") {
@@ -129,11 +138,13 @@ export async function getBillsByHospital(searchTerm?: string, status?: string) {
     }
 
     return { success: true, data: filteredBills };
+
   } catch (error) {
     console.error("Error fetching bills:", error);
     return { error: "Failed to fetch bills", success: false };
   }
 }
+
 
 export async function getBillById(billId: string) {
   try {

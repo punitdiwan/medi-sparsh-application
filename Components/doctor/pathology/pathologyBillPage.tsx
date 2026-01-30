@@ -51,6 +51,7 @@ type Bill = {
     patientAddress: string | null;
     createdAt: string | Date;
     items?: BillItem[];
+    hasSampleCollected:boolean ;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -82,6 +83,7 @@ export default function PathologyBillPage() {
                 setLoading(true);
                 const result = await getBillsByHospital(search, statusFilter);
                 if (result.success && result.data) {
+                    console.log("TOtal bills",result.data)
                     setBills(result.data as any);
                 } else {
                     toast.error(result.error || "Failed to load bills");
@@ -282,6 +284,7 @@ export default function PathologyBillPage() {
                             <DropdownMenuItem
                                 onClick={() => console.log("Cancel bill clicked")}
                                 className="group gap-2 cursor-pointer text-destructive focus:text-destructive"
+                                disabled={!!row?.original?.hasSampleCollected}
                             >
                                 <Trash2 size={14} className="text-destructive group-hover:text-red-600" />
                                 Cancel Bill
