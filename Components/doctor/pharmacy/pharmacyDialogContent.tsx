@@ -224,7 +224,6 @@ export default function MedicineDialog({
       allocations: updatedAllocations,
     };
 
-    console.log("🧪 Medicine Payload Preview:", payload);
 
     // STOP actual save for now
     onSave(payload);

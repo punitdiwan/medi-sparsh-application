@@ -45,6 +45,7 @@ type Item = {
     baseAmount: number;  // without tax
     taxAmount: number;   // tax value
     total: number;       // with tax
+    isLocked:boolean;
 };
 
 
@@ -137,7 +138,6 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
 
     const [usePatientAddress, setUsePatientAddress] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hasSampleCollected, setHasSampleCollected] = useState(false);
 
     const router = useRouter();
 
@@ -180,9 +180,6 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
 
                 const billData = result.data;
 
-                // Set sample collected flag
-                setHasSampleCollected(billData.hasSampleCollected || false);
-
                 // Set patient - create a mock patient object from bill data
                 if (billData.orderId) {
                     setSelectedPatient({
@@ -214,7 +211,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                     const discountPercentage = (discount / totalAmount) * 100;
                     setDiscountPercent(discountPercentage);
                 }
-
+                
                 // Convert tests to items
                 const billItems: Item[] = billData.tests.map((test: any) => {
                     const price = Number(test.price) || 0;
@@ -232,9 +229,9 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                         baseAmount,
                         taxAmount,
                         total,
+                        isLocked: test.hasSampleCollected === true
                     };
                 });
-
                 setItems(billItems);
                 toast.success("Bill loaded for editing");
             } catch (error) {
@@ -312,6 +309,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
             baseAmount: basePaise / 100,
             taxAmount: taxPaise / 100,
             total: totalPaise / 100,
+            isLocked: false,
         };
 
         setItems(prev => [...prev, newItem]);
@@ -341,7 +339,6 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
 
     const handlePatientSelect = (patient: any) => {
         setSelectedPatient(patient);
-        console.log("selected patients details", patient);
         if (patient) {
             toast.success(`Patient ${patient.name} selected`);
         }
@@ -377,7 +374,6 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                 billNetAmount: Number(finalNetAmount.toFixed(2)),
                 remarks,
             };
-
             let result;
 
             if (isEditMode && billId) {
@@ -399,7 +395,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
 
             if (result.success) {
                 const successMessage = isEditMode ? "Bill updated successfully" : "Bill created successfully";
-                toast.success(result.message || successMessage);
+                toast.success(successMessage);
                 // Reset form
                 setSelectedPatient(null);
                 setSelectedDoctor(null);
@@ -460,6 +456,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                 baseAmount: basePaise / 100,
                 taxAmount: taxPaise / 100,
                 total: (basePaise + taxPaise) / 100,
+                isLocked:false
             };
         });
 
@@ -618,12 +615,12 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => handleRemoveItem(item.id)}
-                                                                    disabled={isEditMode && hasSampleCollected}
+                                                                    disabled={isEditMode && item.isLocked}
                                                                 >
                                                                     <Trash2 size={16} />
                                                                 </Button>
                                                             </TooltipTrigger>
-                                                            {isEditMode && hasSampleCollected && (
+                                                            {isEditMode && item.isLocked && (
                                                                 <TooltipContent>
                                                                     Cannot remove items after sample collection
                                                                 </TooltipContent>

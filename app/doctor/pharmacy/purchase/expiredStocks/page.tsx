@@ -28,7 +28,6 @@ export default function ExpiredMedicinePage() {
         if (res?.error) {
             toast.error(res.error);
         } else if (res?.data) {
-            console.log("res", res.data)
             setData(res.data);
         }
     };
