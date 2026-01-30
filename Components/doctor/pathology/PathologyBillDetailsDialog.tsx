@@ -1006,7 +1006,7 @@ export default function PathologyBillDetailsDialog({
                                                                 <TooltipContent>Add/Edit Sample Collector</TooltipContent>
                                                             </Tooltip>
 
-                                                            <Tooltip>
+                                                            { item.sampleCollectedBy && <Tooltip>
                                                                 <TooltipTrigger asChild>
                                                                     <Button
                                                                         variant="outline"
@@ -1016,14 +1016,15 @@ export default function PathologyBillDetailsDialog({
                                                                             setSelectedTest(item);
                                                                             setIsReportOpen(true);
                                                                         }}
+                                                                        disabled={!item.sampleCollectedBy}
                                                                     >
                                                                         <Edit className="h-4 w-4" />
                                                                     </Button>
                                                                 </TooltipTrigger>
                                                                 <TooltipContent>Add/Edit Report</TooltipContent>
-                                                            </Tooltip>
+                                                            </Tooltip>}
 
-                                                            <Tooltip>
+                                                            {item.sampleCollectedBy && item.approvedBy && ( <Tooltip>
                                                                 <TooltipTrigger asChild>
                                                                     <Button
                                                                         variant="outline"
@@ -1036,7 +1037,7 @@ export default function PathologyBillDetailsDialog({
                                                                     </Button>
                                                                 </TooltipTrigger>
                                                                 <TooltipContent>Print Test Report</TooltipContent>
-                                                            </Tooltip>
+                                                            </Tooltip>)}
                                                         </TooltipProvider>
                                                     </div>
                                                 </TableCell>
