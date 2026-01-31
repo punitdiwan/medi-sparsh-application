@@ -186,7 +186,12 @@ export function AppSidebar() {
   };
   // Recursive check for active item (works for nested submenus)
   const isItemActive = (item: SidebarItem | SidebarChildItem): boolean => {
-    if (item.url && pathname.startsWith(item.url)) return true;
+    if (item.url) {
+      // For exact URL match or when it's the base path
+      if (pathname === item.url) return true;
+      // For child pages, check if pathname starts with the URL and has more segments
+      if (pathname.startsWith(item.url + '/')) return true;
+    }
     if ('children' in item && item.children) {
       return item.children.some((child) => isItemActive(child));
     }
@@ -325,7 +330,7 @@ export function AppSidebar() {
                                       {item.title}
                                     </div>
                                     {item.children!.map((subItem) => {
-                                      const isSubActive = pathname === subItem.url;
+                                      const isSubActive = pathname === subItem.url || pathname.startsWith(subItem.url + '/');
                                       return (
                                         <Link
                                           key={subItem.title}
@@ -386,7 +391,7 @@ export function AppSidebar() {
                             {!isCollapsed && isOpen && (
                               <div className="ml-6 mt-1 space-y-1">
                                 {item.children!.map((subItem) => {
-                                  const isSubActive = pathname === subItem.url;
+                                  const isSubActive = pathname === subItem.url || pathname.startsWith(subItem.url + '/');
                                   return (
                                     <Link
                                       key={subItem.title}

@@ -389,57 +389,6 @@ export default function IPDOverviewPage() {
         </Card>
         <BillingCreditCard creditLimit={totalCredit} used={creditUsed} />
 
-        {/* <Card className="bg-overview-card border-overview-strong">
-          <CardHeader>
-            <CardTitle className="text-overview-label">
-              Billing Status
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <Progress
-              value={overallPercentage}
-              className="h-2"
-              color="bg-emerald-600 "
-            />
-
-            <div className="flex justify-between text-sm">
-              <span className="text-black dark:text-white">Total</span>
-              <span className="font-medium ">
-                ₹{totalAmount}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-sm">
-              <span className="text-overview-success">Paid</span>
-              <span className="font-semibold text-overview-success">
-                ₹{totalPaid}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-sm">
-              <span className="text-overview-warning">Pending</span>
-              <span className="font-semibold text-overview-warning">
-                ₹{totalPending}
-              </span>
-            </div>
-
-            {overallPercentage === 100 ? (
-              <Badge className="bg-emerald-600 text-overview-success">
-                Fully Paid
-              </Badge>
-            ) : overallPercentage >= 50 ? (
-              <Badge className=" border border-overview-base bg-white dark:bg-amber-600 text-amber-600 dark:text-white">
-                Partially Paid
-              </Badge>
-            ) : (
-              <Badge className="bg-gray-300 dark:bg-rose-700 text-overview-danger">
-                Payment Due
-              </Badge>
-            )}
-          </CardContent>
-        </Card> */}
-
         {/* <BillingSingleSummaryCard
           totalAmount={totalAmount}
           totalPaid={totalPaid}
