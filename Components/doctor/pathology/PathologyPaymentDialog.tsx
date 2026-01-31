@@ -422,9 +422,12 @@ export default function PathologyPaymentDialog({
                                                 <Label className="text-xs">Amount (₹) *</Label>
                                                 <Input
                                                     type="number"
-                                                    value={paymentData.amount}
-                                                    onChange={(e) => setPaymentData({ ...paymentData, amount: Number(e.target.value) })}
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={paymentData.amount || ""}
+                                                    onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })}
                                                     disabled={dueAmount <= 0}
+                                                    placeholder="0.00"
                                                 />
                                             </div>
 
