@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -51,7 +51,7 @@ type Bill = {
     patientAddress: string | null;
     createdAt: string | Date;
     items?: BillItem[];
-    hasSampleCollected:boolean ;
+    hasSampleCollected: boolean;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -77,24 +77,24 @@ export default function PathologyBillPage() {
         "createdAt",
     ]);
 
-    useEffect(() => {
-        const loadBills = async () => {
-            try {
-                setLoading(true);
-                const result = await getBillsByHospital(search, statusFilter);
-                if (result.success && result.data) {
-                    console.log("TOtal bills",result.data)
-                    setBills(result.data as any);
-                } else {
-                    toast.error(result.error || "Failed to load bills");
-                }
-            } catch (error) {
-                console.error("Error loading bills:", error);
-                toast.error("An error occurred while loading bills");
-            } finally {
-                setLoading(false);
+    const loadBills = async () => {
+        try {
+            setLoading(true);
+            const result = await getBillsByHospital(search, statusFilter);
+            if (result.success && result.data) {
+                setBills(result.data as any);
+            } else {
+                toast.error(result.error || "Failed to load bills");
             }
-        };
+        } catch (error) {
+            console.error("Error loading bills:", error);
+            toast.error("An error occurred while loading bills");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadBills();
     }, [search, statusFilter]);
 
@@ -168,13 +168,26 @@ export default function PathologyBillPage() {
 
     const allColumns: ColumnDef<Bill>[] = [
         { accessorKey: "id", header: "Bill ID", cell: ({ row }) => row.original.id.substring(0, 8) },
-        {
-            accessorKey: "createdAt",
+        { accessorKey: "createdAt",
             header: "Bill Date",
-            cell: ({ row }) => {
-                const date = new Date(row.original.createdAt);
-                return format(date, "dd/MM/yyyy");
-            }
+            cell: ({ row }) => (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-sm font-medium">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "dd MMM yyyy")
+                            : "-"
+                        }
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Clock className="h-2.5 w-2.5" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "hh:mm a")
+                            : "-"
+                        }
+                    </div>
+                </div>
+            )
         },
         { accessorKey: "patientName", header: "Patient Name" },
         { accessorKey: "patientPhone", header: "Phone" },
@@ -255,7 +268,7 @@ export default function PathologyBillPage() {
                                 className="group gap-2 cursor-pointer"
                             >
                                 <BsCash className="text-muted-foreground group-hover:text-primary" />
-                                Add / Edit Payment
+                                Payments
                             </DropdownMenuItem>
 
                             {/* Print */}
@@ -403,6 +416,7 @@ export default function PathologyBillPage() {
                 onClose={() => {
                     setIsViewOpen(false);
                     setSelectedBill("");
+                    loadBills();
                 }}
                 bill={selectedBill as string}
             />
@@ -412,6 +426,7 @@ export default function PathologyBillPage() {
                 onClose={() => {
                     setIsPaymentOpen(false);
                     setSelectedBill("");
+                    loadBills();
                 }}
                 bill={selectedBill as string}
             />

@@ -12,16 +12,11 @@ import {
     Search,
     IndianRupee,
     Calendar,
-    User,
     CreditCard,
-    ArrowUpDown,
     Download,
-    Eye,
-    Trash2,
     Clock,
     CheckCircle2,
     Printer,
-    ReceiptIndianRupee,
     Wallet
 } from "lucide-react";
 import {
