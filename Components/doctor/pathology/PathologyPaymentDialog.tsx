@@ -381,29 +381,29 @@ export default function PathologyPaymentDialog({
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Amount</span>
-                                                    <span className="font-semibold">₹{bill.totalAmount}</span>
+                                                    <span className="font-semibold">₹{bill.totalAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Discount</span>
-                                                    <span className="font-semibold text-destructive">-₹{bill.totalDiscount}</span>
+                                                    <span className="font-semibold text-destructive">-₹{bill.totalDiscount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Tax</span>
-                                                    <span className="font-semibold">+₹{bill.totalTax}</span>
+                                                    <span className="font-semibold">+₹{bill.totalTax.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                             <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Net Amount</span>
-                                                    <span className="font-bold">₹{bill.netAmount}</span>
+                                                    <span className="font-bold">₹{bill.netAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Paid Amount</span>
-                                                    <span className="font-bold text-green-600">₹{totalPaid}</span>
+                                                    <span className="font-bold text-green-600">₹{totalPaid.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center border-t border-muted-foreground/20 pt-2">
                                                     <span className="text-sm font-bold uppercase text-primary">Due Amount</span>
-                                                    <span className="text-lg font-black text-primary">₹{dueAmount}</span>
+                                                    <span className="text-lg font-black text-primary">₹{dueAmount.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -533,7 +533,7 @@ export default function PathologyPaymentDialog({
                                                                 {t.mode}
                                                             </Badge>
                                                         </TableCell>
-                                                        <TableCell className="text-xs font-bold font-mono">₹{t.amount}</TableCell>
+                                                        <TableCell className="text-xs font-bold font-mono">₹{t.amount.toFixed(2)}</TableCell>
                                                         <TableCell className="text-right pr-6">
                                                             <div className="flex justify-end gap-1">
                                                                 <TooltipProvider>
@@ -573,15 +573,15 @@ export default function PathologyPaymentDialog({
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Net Amount</span>
-                            <span className="text-sm font-semibold">₹{bill.netAmount}</span>
+                            <span className="text-sm font-semibold">₹{bill.netAmount.toFixed(2)}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Paid</span>
-                            <span className="text-sm font-bold text-green-600">₹{totalPaid}</span>
+                            <span className="text-sm font-bold text-green-600">₹{totalPaid.toFixed(2)}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Due Amount</span>
-                            <span className="text-sm font-bold text-destructive">₹{dueAmount}</span>
+                            <span className="text-sm font-bold text-destructive">₹{dueAmount.toFixed(2)}</span>
                         </div>
                     </div>
                     <Button variant="outline" onClick={onClose} className="gap-2">
