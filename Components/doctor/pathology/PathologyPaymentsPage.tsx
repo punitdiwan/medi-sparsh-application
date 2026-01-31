@@ -377,14 +377,27 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
                             <div className="flex flex-col items-center lg:flex-row gap-6">
                                 <div className="flex-1 space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Search </label>
-                                    <div className="relative group">
+                                    <div className="relative group max-w-74">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                         <Input
                                             placeholder="Search by Patient, Bill No, or Reference ID..."
-                                            className="pl-10 w-auto bg-background/50 border-primary/10 focus:border-primary transition-all shadow-sm"
+                                            className="pl-10 pr-10 w-auto bg-background/50 border-primary/10 focus:border-primary transition-all shadow-sm"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
+                                        {searchTerm && (
+                                          <button
+                                            type="button"
+                                            onClick={() => setSearchTerm("")}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center justify-center"
+                                            title="Clear search"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                          </button>
+                                        )}
                                     </div>
                                 </div>
 

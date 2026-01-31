@@ -18,6 +18,7 @@ import autoTable from "jspdf-autotable";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 type OrganizationMetaData = { address?: string; phone?: string; email?: string; };
 type Transaction = {
@@ -50,8 +51,9 @@ export default function BillingPage() {
   const [visibleFields, setVisibleFields] = useState<string[]>(["patientPhone", "patientGender", "appointmentDate"]);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
-  const [activeTab, setActiveTab] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+  const [activeTab, setActiveTab] = useState<"today" | "week" | "month" | "custom">("today");
   const [customRange, setCustomRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { state } = useSidebar();
 
@@ -74,21 +76,36 @@ export default function BillingPage() {
 
   const filteredData = useMemo(() => {
     const today = new Date();
-    const startOfWeek = new Date(); startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfWeek = new Date();
+    startOfWeek.setDate(today.getDate() - today.getDay());
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     return transactions.filter((t) => {
       const date = new Date(t.createdAt);
-      if (activeTab === "today") return date.toDateString() === today.toDateString();
-      if (activeTab === "week") return date >= startOfWeek && date <= today;
-      if (activeTab === "month") return date >= startOfMonth && date <= today;
-      if (activeTab === "custom" && customRange.from && customRange.to) {
-        const from = new Date(customRange.from); const to = new Date(customRange.to);
-        return date >= from && date <= to;
+
+      const matchesSearch =
+        t.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.patientPhone?.includes(searchTerm) ||
+        t.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.status?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      let matchesDate = true;
+
+      if (activeTab === "today") matchesDate = date.toDateString() === today.toDateString();
+      if (activeTab === "week") matchesDate = date >= startOfWeek && date <= today;
+      if (activeTab === "month") matchesDate = date >= startOfMonth && date <= today;
+      if (activeTab === "custom") {
+        if (!customRange.from || !customRange.to) return false;
+        const from = new Date(customRange.from);
+        const to = new Date(customRange.to);
+        matchesDate = date >= from && date <= to;
       }
-      return true;
+      return matchesSearch && matchesDate;
     });
-  }, [transactions, activeTab, customRange]);
+  }, [transactions, activeTab, customRange, searchTerm]);
+
+
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -223,44 +240,56 @@ export default function BillingPage() {
           </div>
         </CardHeader>
       </Card>
-          <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as typeof activeTab); setCurrentPage(1); }}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All Transactions</TabsTrigger>
-              <TabsTrigger value="today">Today</TabsTrigger>
-              <TabsTrigger value="week">This Week</TabsTrigger>
-              <TabsTrigger value="month">This Month</TabsTrigger>
-              <TabsTrigger value="custom">Custom</TabsTrigger>
-            </TabsList>
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as typeof activeTab); setCurrentPage(1); }}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="today">Today</TabsTrigger>
+          <TabsTrigger value="week">This Week</TabsTrigger>
+          <TabsTrigger value="month">This Month</TabsTrigger>
+          <TabsTrigger value="custom">Custom</TabsTrigger>
+        </TabsList>
 
-            {["all", "today", "week", "month", "custom"].map(tab => (
-              <TabsContent key={tab} value={tab}>
+        {["today", "week", "month", "custom"].map(tab => (
+          <TabsContent key={tab} value={tab}>
+
+            <div className="flex justify-between gap-4 items-center mb-4">
+              <div className="flex flex-wrap gap-4">
+                <Input
+                  placeholder="Search by Patient, Phone, Txn ID, Status..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-64"
+                />
                 {tab === "custom" && (
-                  <div className="flex flex-wrap gap-4 justify-center mb-4">
-                    <input type="date" className="border rounded-md p-2" value={customRange.from ?? ""} onChange={e => setCustomRange(p => ({ ...p, from: e.target.value }))} />
-                    <input type="date" className="border rounded-md p-2" value={customRange.to ?? ""} onChange={e => setCustomRange(p => ({ ...p, to: e.target.value }))} />
+                  <div className="flex flex-wrap gap-2">
+                    <Input type="date" className="border rounded-md w-40" value={customRange.from ?? ""} onChange={e => setCustomRange(p => ({ ...p, from: e.target.value }))} />
+                    <Input type="date" className="border rounded-md w-40" value={customRange.to ?? ""} onChange={e => setCustomRange(p => ({ ...p, to: e.target.value }))} />
                   </div>
                 )}
-
-                <div className="flex justify-between items-center mb-4">
-                  <FieldSelectorDropdown columns={optionalColumns} visibleFields={visibleFields} onToggle={(key, checked) => setVisibleFields(p => checked ? [...p, key] : p.filter(f => f !== key))} />
-                  <div className="flex gap-2">
-                    <Button onClick={exportBulk}><FaFileDownload /> Download {tab}</Button>
-                    {/* <Button onClick={exportBulk}><MdLocalPrintshop/> Print {tab}</Button> */}
-                  </div>
+              </div>
+              <div className="flex gap-4" >
+                <FieldSelectorDropdown columns={optionalColumns} visibleFields={visibleFields} onToggle={(key, checked) => setVisibleFields(p => checked ? [...p, key] : p.filter(f => f !== key))} />
+                <div className="flex gap-2">
+                  <Button onClick={exportBulk}><FaFileDownload /> Download {tab}</Button>
+                  {/* <Button onClick={exportBulk}><MdLocalPrintshop/> Print {tab}</Button> */}
                 </div>
+              </div>
+            </div>
 
-                <div className="rounded-xl overflow-hidden bg-background shadow-sm border">
-                  <Table data={paginatedData} columns={columns} fallback={"No transactions found."} />
-                </div>
+            <div className="rounded-xl overflow-hidden bg-background shadow-sm border">
+              <Table data={paginatedData} columns={columns} fallback={"No transactions found."} />
+            </div>
 
-                {(
-                  <div className="flex justify-center mt-4">
-                    <PaginationControl currentPage={currentPage} totalPages={totalPages} rowsPerPage={rowsPerPage} onPageChange={setCurrentPage} onRowsPerPageChange={val => { setRowsPerPage(val); setCurrentPage(1); }} />
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
+            {(
+              <div className="flex justify-center mt-4">
+                <PaginationControl currentPage={currentPage} totalPages={totalPages} rowsPerPage={rowsPerPage} onPageChange={setCurrentPage} onRowsPerPageChange={val => { setRowsPerPage(val); setCurrentPage(1); }} />
+              </div>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
 
     </div>
   );
