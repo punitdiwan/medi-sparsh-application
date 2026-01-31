@@ -257,9 +257,13 @@ export function AppSidebar() {
                   })
                   .map((item) => {
 
-                    const hasChildren = item.children?.length ?? 0 > 0;
+                    const hasChildren = (item.children?.length ?? 0) > 0;
                     const isActive = isItemActive(item);
-                    const isOpen = openMenus[item.title] || isItemActive(item);
+                    // If the user has explicitly toggled this menu, respect that value.
+                    // Otherwise default to open when the current route makes it active.
+                    const isOpen = Object.prototype.hasOwnProperty.call(openMenus, item.title)
+                      ? openMenus[item.title]
+                      : isItemActive(item);
 
 
                     return (
