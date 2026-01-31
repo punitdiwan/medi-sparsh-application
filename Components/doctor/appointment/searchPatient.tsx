@@ -64,7 +64,12 @@ export default function PatientSearchBox({
 
       setLoading(true);
       try {
-        const res = await fetch(`/api/patients?is_IPD_Patient=${is_IPD_Patient}&search=${encodeURIComponent(term)}`);
+        const queryParams = new URLSearchParams();
+        queryParams.append('search', term);
+        if (is_IPD_Patient !== undefined) {
+          queryParams.append('is_IPD_Patient', String(is_IPD_Patient));
+        }
+        const res = await fetch(`/api/patients?${queryParams.toString()}`);
         const data = await res.json();
         setPatientResults(data.success ? data.data || [] : []);
       } catch (error) {

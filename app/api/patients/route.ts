@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const searchTerm = searchParams.get("search");
-    const is_IPD_Patient = Boolean(searchParams.get("is_IPD_Patient"));
+    const is_IPD_PatientParam = searchParams.get("is_IPD_Patient");
+    
+    // Only filter by IPD status if the parameter is explicitly provided
+    const is_IPD_Patient = is_IPD_PatientParam !== null ? is_IPD_PatientParam === "true" : undefined;
 
     const patients = await getPatientsByHospital(hospital.hospitalId, is_IPD_Patient);
 

@@ -230,7 +230,7 @@ export default function AppointmentModal({
 
         <div className="space-y-4 px-6">
           {/* Patient Search Box */}
-          <PatientSearchBox onSelect={handlePatientSelect} />
+          <PatientSearchBox is_IPD_Patient={true} onSelect={handlePatientSelect} />
 
           {/* Appointment Form */}
           <Form {...form}>
