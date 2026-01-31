@@ -209,7 +209,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                 const totalAmount = Number(billData.billTotalAmount) || 0;
                 if (totalAmount > 0) {
                     const discountPercentage = (discount / totalAmount) * 100;
-                    setDiscountPercent(discountPercentage);
+                    setDiscountPercent(Math.round(discountPercentage * 100) / 100);
                 }
 
                 // Convert tests to items
@@ -702,11 +702,12 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
                                     type="number"
                                     min="0"
                                     max="100"
-                                    value={discountPercent}
+                                    step="0.01"
+                                    value={Math.round(discountPercent * 100) / 100}
                                     onChange={(e) => {
                                         const val = Number(e.target.value);
                                         if (val >= 0 && val <= 100) {
-                                            setDiscountPercent(val);
+                                            setDiscountPercent(Math.round(val * 100) / 100);
                                         } else if (val > 100) {
                                             setDiscountPercent(100);
                                         } else {

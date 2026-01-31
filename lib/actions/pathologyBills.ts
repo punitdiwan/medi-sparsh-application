@@ -211,15 +211,15 @@ export async function getBillById(billId: string) {
       )
       .where(eq(pathologyOrderTests.orderId, bill.orderId));
 
-      const tests = orderTests.map((t) => ({
-        id: t.id,
-        testId: t.testId,
-        price: t.price,
-        tax: t.tax,
-        testName: t.testName,
-        reportHours: t.reportHours,
-        hasSampleCollected: Boolean(t.sampleId), 
-      }));
+    const tests = orderTests.map((t) => ({
+      id: t.id,
+      testId: t.testId,
+      price: t.price,
+      tax: t.tax,
+      testName: t.testName,
+      reportHours: t.reportHours,
+      hasSampleCollected: Boolean(t.sampleId),
+    }));
 
     // Get payments
     const payments = await db
@@ -611,5 +611,38 @@ export async function deletePayment(paymentId: string, billId: string) {
   } catch (error) {
     console.error("Error deleting payment:", error);
     return { error: "Failed to delete payment", success: false };
+  }
+}
+
+export async function getAllPathologyPayments() {
+  try {
+    const org = await getActiveOrganization();
+    if (!org) {
+      return { error: "Unauthorized", success: false };
+    }
+
+    const payments = await db
+      .select({
+        id: pathologyPayments.id,
+        billId: pathologyPayments.billId,
+        paymentDate: pathologyPayments.paymentDate,
+        paymentAmount: pathologyPayments.paymentAmount,
+        paymentMode: pathologyPayments.paymentMode,
+        referenceNo: pathologyPayments.referenceNo,
+        patientName: patients.name,
+        patientPhone: patients.mobileNumber,
+        billNo: sql<string>`SUBSTRING(${pathologyBills.id}, 1, 8)`
+      })
+      .from(pathologyPayments)
+      .leftJoin(pathologyBills, eq(pathologyPayments.billId, pathologyBills.id))
+      .leftJoin(pathologyOrders, eq(pathologyBills.orderId, pathologyOrders.id))
+      .leftJoin(patients, eq(pathologyOrders.patientId, patients.id))
+      .where(eq(pathologyPayments.hospitalId, org.id))
+      .orderBy(desc(pathologyPayments.paymentDate));
+
+    return { success: true, data: payments };
+  } catch (error) {
+    console.error("Error fetching all pathology payments:", error);
+    return { error: "Failed to fetch payments", success: false };
   }
 }

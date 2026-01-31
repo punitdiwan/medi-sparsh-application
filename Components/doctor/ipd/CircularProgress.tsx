@@ -15,9 +15,12 @@ export function CircularProgress({
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  // ✅ Clamp values
-  const safeValue = Math.min(value, max);
-  const percentage = Math.min((safeValue / max) * 100, 100);
+  // ✅ Safe handling when credit not available
+  const safeValue = Math.min(value || 0, max || 0);
+  const percentage = max > 0 
+    ? Math.min((safeValue / max) * 100, 100)
+    : 0;
+
   const offset = circumference * (1 - percentage / 100);
 
   // 🎨 Color logic
@@ -42,7 +45,7 @@ export function CircularProgress({
           stroke="currentColor"
           strokeWidth={strokeWidth}
           fill="transparent"
-          className="text-gray-300 "
+          className="text-gray-300"
         />
 
         {/* Progress circle */}
@@ -63,8 +66,11 @@ export function CircularProgress({
       {/* Center text */}
       <div className="absolute text-center">
         <p className="text-lg font-semibold">{percentage.toFixed(0)}%</p>
-        <p className="text-xs text-muted-foreground">Used</p>
+        <p className="text-xs text-muted-foreground">
+          {max > 0 ? "Used" : "No Credit"}
+        </p>
       </div>
     </div>
   );
 }
+

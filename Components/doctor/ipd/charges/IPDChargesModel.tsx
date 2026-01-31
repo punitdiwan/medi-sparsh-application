@@ -479,7 +479,7 @@ export default function IPDChargesModel({
                 <div className="flex justify-between"><span>Total</span><span className="font-medium">₹ {total.toFixed(2)}</span></div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1 text-orange-600"><Percent className="h-4 w-4" /> Discount</span>
-                  <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(+e.target.value)} className="w-24 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />
+                  <Input type="number" min="0" max="100" step="0.01" value={discountPercent} onChange={(e) => setDiscountPercent(+e.target.value)} className="w-24 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" />
                 </div>
                 <div className="flex justify-between text-blue-600"><span>Tax ({taxPercent}%)</span><span>₹ {taxAmount.toFixed(2)}</span></div>
                 <div className="flex justify-between font-semibold text-green-600"><span>Net Amount</span><span>₹ {netAmount.toFixed(2)}</span></div>
