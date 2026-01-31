@@ -77,23 +77,24 @@ export default function PathologyBillPage() {
         "createdAt",
     ]);
 
-    useEffect(() => {
-        const loadBills = async () => {
-            try {
-                setLoading(true);
-                const result = await getBillsByHospital(search, statusFilter);
-                if (result.success && result.data) {
-                    setBills(result.data as any);
-                } else {
-                    toast.error(result.error || "Failed to load bills");
-                }
-            } catch (error) {
-                console.error("Error loading bills:", error);
-                toast.error("An error occurred while loading bills");
-            } finally {
-                setLoading(false);
+    const loadBills = async () => {
+        try {
+            setLoading(true);
+            const result = await getBillsByHospital(search, statusFilter);
+            if (result.success && result.data) {
+                setBills(result.data as any);
+            } else {
+                toast.error(result.error || "Failed to load bills");
             }
-        };
+        } catch (error) {
+            console.error("Error loading bills:", error);
+            toast.error("An error occurred while loading bills");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         loadBills();
     }, [search, statusFilter]);
 
@@ -415,6 +416,7 @@ export default function PathologyBillPage() {
                 onClose={() => {
                     setIsViewOpen(false);
                     setSelectedBill("");
+                    loadBills();
                 }}
                 bill={selectedBill as string}
             />
@@ -424,6 +426,7 @@ export default function PathologyBillPage() {
                 onClose={() => {
                     setIsPaymentOpen(false);
                     setSelectedBill("");
+                    loadBills();
                 }}
                 bill={selectedBill as string}
             />
