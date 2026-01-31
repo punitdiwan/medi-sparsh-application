@@ -72,7 +72,7 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [visibleFields, setVisibleFields] = useState<string[]>(["billNo", "patientName", "paymentDate", "paymentMode", "paymentAmount", "actions"]);
-    const [activeTab, setActiveTab] = useState<"all" | "today" | "week" | "month">("all");
+    const [activeTab, setActiveTab] = useState< "today" | "week" | "month">("today");
 
     // Filter Logic
     const filteredPayments = useMemo(() => {
@@ -172,12 +172,19 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
                 accessorKey: "paymentMode",
                 cell: ({ row }) => {
                     const mode = row.original.paymentMode;
-                    let variant: "default" | "secondary" | "outline" | "destructive" = "outline";
-                    if (mode === "Cash") variant = "default";
-                    if (mode === "UPI") variant = "secondary";
+
+                    const colorMap: Record<string, string> = {
+                        Online: "bg-green-500 dark:text-green-600 ",
+                        Card: "bg-blue-500 dark:text-blue-600 ",
+                        Cash: "bg-orange-500 dark:text-orange-600 ",
+                    };
+
+                    const colorClass = colorMap[mode] || "bg-muted text-muted-foreground border-muted";
 
                     return (
-                        <Badge variant={variant} className="rounded-md font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
+                        <Badge
+                            className={`rounded-md font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 text-white dark:bg-primary ${colorClass}`}
+                        >
                             {mode}
                         </Badge>
                     );
@@ -206,12 +213,12 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
                 header: () => <div className="text-right pr-4">Actions</div>,
                 cell: ({ row }) => {
                     const payment = row.original;
-                    
+
                     const handlePrint = async () => {
                         try {
                             toast.loading("Preparing PDF...", { id: "print-pdf" });
                             const pdfDoc = (
-                                <PathologyPaymentPDF 
+                                <PathologyPaymentPDF
                                     payment={payment}
                                 />
                             );
@@ -232,7 +239,7 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
                         try {
                             toast.loading("Preparing download...", { id: "download-pdf" });
                             const pdfDoc = (
-                                <PathologyPaymentPDF 
+                                <PathologyPaymentPDF
                                     payment={payment}
                                 />
                             );
@@ -285,19 +292,19 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
     const handleBulkExport = async () => {
         try {
             toast.loading("Preparing PDF...", { id: "bulk-export" });
-            
+
             if (filteredPayments.length === 0) {
                 toast.error("No payments to export", { id: "bulk-export" });
                 return;
             }
 
             const pdfDoc = (
-                <PathologyPaymentsTablePDF 
+                <PathologyPaymentsTablePDF
                     payments={filteredPayments}
                     title={`Pathology Payments - ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
                 />
             );
-            
+
             const blob = await pdf(pdfDoc).toBlob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -307,7 +314,7 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
+
             toast.success(`PDF exported successfully (${filteredPayments.length} payments)`, { id: "bulk-export" });
         } catch (error) {
             console.error("Error exporting PDF:", error);
@@ -340,13 +347,10 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
             </div>
 
             <Tabs value={activeTab} onValueChange={(v) => {
-                setActiveTab(v as "all" | "today" | "week" | "month");
+                setActiveTab(v as | "today" | "week" | "month");
                 setCurrentPage(1);
             }} className="w-full space-y-2">
                 <TabsList className="shadow-xl bg-overview-card border-overview-strong">
-                    <TabsTrigger value="all" >
-                        All
-                    </TabsTrigger>
                     <TabsTrigger value="today" >
                         Today
                     </TabsTrigger>
@@ -362,9 +366,9 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatsCard title="Total Payments" value={`${totalAmount.toLocaleString()}`} icon={Wallet} color="primary" />
-                        <StatsCard title="Cash Collection" value={`${filteredPayments.filter(p => p.paymentMode === 'Cash').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={IndianRupee}  color="orange" />
-                        <StatsCard title="UPI/Digital" value={`${filteredPayments.filter(p => p.paymentMode === 'Online').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={CheckCircle2}  color="green" />
-                        <StatsCard title="Card" value={`${filteredPayments.filter(p => p.paymentMode === 'Card').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={CreditCard}  color="blue" />
+                        <StatsCard title="Cash Collection" value={`${filteredPayments.filter(p => p.paymentMode === 'Cash').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={IndianRupee} color="orange" />
+                        <StatsCard title="UPI/Digital" value={`${filteredPayments.filter(p => p.paymentMode === 'Online').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={CheckCircle2} color="green" />
+                        <StatsCard title="Card" value={`${filteredPayments.filter(p => p.paymentMode === 'Card').reduce((sum, p) => sum + Number(p.paymentAmount), 0).toLocaleString()}`} icon={CreditCard} color="blue" />
                     </div>
 
                     {/* Filters Section */}
@@ -465,7 +469,7 @@ export default function PathologyPaymentsPage({ payments: initialPayments }: Pat
 
 /* -------------------- HELPERS -------------------- */
 
-function StatsCard({ title, value, icon: Icon,  color }: { title: string, value: string, icon: any, color: string }) {
+function StatsCard({ title, value, icon: Icon, color }: { title: string, value: string, icon: any, color: string }) {
     const colorMap: Record<string, string> = {
         primary: "bg-primary/10 text-primary border-primary/20",
         orange: "bg-orange-500/10 text-orange-600 border-orange-500/20",
@@ -485,7 +489,7 @@ function StatsCard({ title, value, icon: Icon,  color }: { title: string, value:
                 </div>
                 <div className="space-y-1">
                     <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">{title}</p>
-                    <p className="text-2xl font-black tracking-tighter flex items-center"><IndianRupee size={20}/>{value}</p>
+                    <p className="text-2xl font-black tracking-tighter flex items-center"><IndianRupee size={20} />{value}</p>
                 </div>
             </CardContent>
         </Card>

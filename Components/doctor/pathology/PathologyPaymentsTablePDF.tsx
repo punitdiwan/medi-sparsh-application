@@ -141,18 +141,11 @@ interface PathologyPayment {
 
 interface PathologyPaymentsTablePDFProps {
   payments: PathologyPayment[];
-  hospitalInfo?: {
-    name?: string | null;
-    address?: string | null;
-    phone?: string | null;
-    email?: string | null;
-  };
   title?: string;
 }
 
 export const PathologyPaymentsTablePDF: React.FC<PathologyPaymentsTablePDFProps> = ({
   payments,
-  hospitalInfo,
   title = "Pathology Payments Report",
 }) => {
   const formatDate = (dateString: string) => {
@@ -183,21 +176,6 @@ export const PathologyPaymentsTablePDF: React.FC<PathologyPaymentsTablePDFProps>
     <Document>
       {pageChunks.map((pagePayments, pageIndex) => (
         <Page key={pageIndex} style={styles.page} size="A4">
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.hospitalName}>
-              {hospitalInfo?.name || "Pathology Laboratory"}
-            </Text>
-            {hospitalInfo?.address && (
-              <Text style={styles.headerInfo}>Address: {hospitalInfo.address}</Text>
-            )}
-            {hospitalInfo?.phone && (
-              <Text style={styles.headerInfo}>Phone: {hospitalInfo.phone}</Text>
-            )}
-            {hospitalInfo?.email && (
-              <Text style={styles.headerInfo}>Email: {hospitalInfo.email}</Text>
-            )}
-          </View>
 
           {/* Title */}
           <Text style={styles.title}>
