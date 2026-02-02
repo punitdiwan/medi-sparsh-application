@@ -5,7 +5,9 @@ export const dynamic = "force-dynamic";
 
 const page = () => {
     return (
-        <RadiologyCategoryManager />
+        <div className="space-y-6">
+            <RadiologyCategoryManager />
+        </div>
     );
 };
 

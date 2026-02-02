@@ -372,6 +372,13 @@
       "when": 1769861510330,
       "tag": "0052_new_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1770037917036,
+      "tag": "0053_glamorous_doorman",
+      "breakpoints": true
     }
   ]
 }

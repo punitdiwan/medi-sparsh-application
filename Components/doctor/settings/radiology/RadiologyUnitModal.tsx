@@ -1,17 +1,21 @@
 "use client";
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Scaling } from "lucide-react";
+import {
+  createRadiologyUnit,
+  updateRadiologyUnit,
+} from "@/lib/actions/radiologyUnits";
 
 /* -------------------- TYPE -------------------- */
 export type RadiologyUnit = {
@@ -23,7 +27,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   unit?: RadiologyUnit;
-  onSaveSuccess: (data: RadiologyUnit) => void; // pass saved unit
+  onSaveSuccess: () => void;
 };
 
 /* -------------------- MODAL -------------------- */
@@ -40,19 +44,24 @@ export default function RadiologyUnitModal({
     if (open) setName(unit?.name || "");
   }, [unit, open]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) return toast.error("Unit Name is required");
 
     setLoading(true);
     try {
-      const newUnit: RadiologyUnit = {
-        id: unit?.id || crypto.randomUUID(),
-        name: name.trim(),
-      };
+      const formData = { name: name.trim() };
 
-      toast.success(unit ? "Unit updated successfully" : "Unit added successfully");
-      onSaveSuccess(newUnit);
-    } catch {
+      const result = unit
+        ? await updateRadiologyUnit(unit.id, formData)
+        : await createRadiologyUnit(formData);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(unit ? "Unit updated successfully" : "Unit added successfully");
+        onSaveSuccess();
+      }
+    } catch (error) {
       toast.error("An error occurred");
     } finally {
       setLoading(false);

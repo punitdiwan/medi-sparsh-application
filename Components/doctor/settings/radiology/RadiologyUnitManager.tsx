@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import {
@@ -22,20 +22,38 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import RadiologyUnitModal, { RadiologyUnit } from "./RadiologyUnitModal";
-
-
-/* -------------------- DUMMY DATA -------------------- */
-const DUMMY_RADIOLOGY_UNITS: RadiologyUnit[] = [
-  { id: "1", name: "mg/dL" },
-  { id: "2", name: "mL" },
-  { id: "3", name: "cm" },
-];
+import {
+  getRadiologyUnits,
+  deleteRadiologyUnit,
+} from "@/lib/actions/radiologyUnits";
+import { toast } from "sonner";
 
 export default function RadiologyUnitManager() {
-  const [units, setUnits] = useState<RadiologyUnit[]>(DUMMY_RADIOLOGY_UNITS);
+  const [units, setUnits] = useState<RadiologyUnit[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<RadiologyUnit | undefined>();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  const fetchUnits = async () => {
+    setLoading(true);
+    try {
+      const result = await getRadiologyUnits();
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        setUnits(result.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch units");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* -------------------- FILTER -------------------- */
   const filteredUnits = units.filter((u) =>
@@ -53,18 +71,22 @@ export default function RadiologyUnitManager() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setUnits((prev) => prev.filter((u) => u.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deleteRadiologyUnit(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Unit deleted successfully");
+        fetchUnits();
+      }
+    } catch (error) {
+      toast.error("Failed to delete unit");
+    }
   };
 
-  const handleSaveSuccess = (data: RadiologyUnit) => {
-    setUnits((prev) => {
-      const exists = prev.find((u) => u.id === data.id);
-      if (exists) {
-        return prev.map((u) => (u.id === data.id ? data : u));
-      }
-      return [...prev, { ...data, id: crypto.randomUUID() }];
-    });
+  const handleSaveSuccess = () => {
+    fetchUnits();
     setOpen(false);
   };
 
@@ -106,7 +128,16 @@ export default function RadiologyUnitManager() {
               </TableHeader>
 
               <TableBody>
-                {filteredUnits.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUnits.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground py-6">
                       No units found

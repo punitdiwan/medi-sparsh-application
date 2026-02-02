@@ -31,6 +31,10 @@ import {
   pathologyOrderTests,
   pathologyBills,
   pathologyPayments,
+  radiologyCategories,
+  radiologyUnits,
+  radiologyTests,
+  radiologyParameters,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -2224,6 +2228,385 @@ export async function restorePathologyTest(id: string) {
       updatedAt: new Date(),
     })
     .where(eq(pathologyTests.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Radiology Category Queries
+// ===================================================
+
+export async function getRadiologyCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(radiologyCategories)
+    .where(eq(radiologyCategories.hospitalId, hospitalId))
+    .orderBy(desc(radiologyCategories.createdAt));
+}
+
+export async function getRadiologyCategoryById(id: string) {
+  const result = await db
+    .select()
+    .from(radiologyCategories)
+    .where(eq(radiologyCategories.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createRadiologyCategory(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(radiologyCategories)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateRadiologyCategory(id: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(radiologyCategories)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteRadiologyCategory(id: string) {
+  const result = await db
+    .delete(radiologyCategories)
+    .where(eq(radiologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Radiology Unit Queries
+// ===================================================
+
+export async function getRadiologyUnitsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(radiologyUnits)
+    .where(eq(radiologyUnits.hospitalId, hospitalId))
+    .orderBy(desc(radiologyUnits.createdAt));
+}
+
+export async function getRadiologyUnitById(id: string) {
+  const result = await db
+    .select()
+    .from(radiologyUnits)
+    .where(eq(radiologyUnits.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createRadiologyUnit(data: {
+  hospitalId: string;
+  name: string;
+}) {
+  const result = await db
+    .insert(radiologyUnits)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateRadiologyUnit(id: string, data: {
+  name: string;
+}) {
+  const result = await db
+    .update(radiologyUnits)
+    .set({
+      name: data.name,
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyUnits.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteRadiologyUnit(id: string) {
+  const result = await db
+    .delete(radiologyUnits)
+    .where(eq(radiologyUnits.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Radiology Test Queries
+// ===================================================
+
+export async function getRadiologyTestsByHospital(hospitalId: string) {
+  const result = await db
+    .select({
+      id: radiologyTests.id,
+      testName: radiologyTests.testName,
+      shortName: radiologyTests.shortName,
+      testType: radiologyTests.testType,
+      description: radiologyTests.description,
+      categoryId: radiologyTests.categoryId,
+      categoryName: radiologyCategories.name,
+      subCategoryId: radiologyTests.subCategoryId,
+      reportHours: radiologyTests.reportHours,
+      chargeCategoryId: radiologyTests.chargeCategoryId,
+      chargeId: radiologyTests.chargeId,
+      chargeName: radiologyTests.chargeName,
+      isDeleted: radiologyTests.isDeleted,
+      createdAt: radiologyTests.createdAt,
+      updatedAt: radiologyTests.updatedAt,
+      amount: charges.amount,
+      taxPercent: taxCategories.percent,
+    })
+    .from(radiologyTests)
+    .leftJoin(
+      radiologyCategories,
+      eq(radiologyTests.categoryId, radiologyCategories.id)
+    )
+    .leftJoin(charges, eq(radiologyTests.chargeId, charges.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
+    .where(eq(radiologyTests.hospitalId, hospitalId))
+    .orderBy(desc(radiologyTests.createdAt));
+
+  const testsWithParameters = await Promise.all(
+    result.map(async (test) => {
+      const parameters = await db
+        .select({
+          id: radiologyParameters.id,
+          paramName: radiologyParameters.paramName,
+          fromRange: radiologyParameters.fromRange,
+          toRange: radiologyParameters.toRange,
+          unitId: radiologyParameters.unitId,
+          description: radiologyParameters.description,
+          unitName: radiologyUnits.name,
+        })
+        .from(radiologyParameters)
+        .leftJoin(radiologyUnits, eq(radiologyParameters.unitId, radiologyUnits.id))
+        .where(eq(radiologyParameters.testId, test.id));
+      return { ...test, parameters };
+    })
+  );
+
+  return testsWithParameters;
+}
+
+export async function getRadiologyTestById(id: string) {
+  const result = await db
+    .select({
+      id: radiologyTests.id,
+      testName: radiologyTests.testName,
+      shortName: radiologyTests.shortName,
+      testType: radiologyTests.testType,
+      description: radiologyTests.description,
+      categoryId: radiologyTests.categoryId,
+      categoryName: radiologyCategories.name,
+      subCategoryId: radiologyTests.subCategoryId,
+      reportHours: radiologyTests.reportHours,
+      chargeCategoryId: radiologyTests.chargeCategoryId,
+      chargeId: radiologyTests.chargeId,
+      chargeName: radiologyTests.chargeName,
+      isDeleted: radiologyTests.isDeleted,
+      createdAt: radiologyTests.createdAt,
+      updatedAt: radiologyTests.updatedAt,
+      amount: charges.amount,
+      taxPercent: taxCategories.percent,
+    })
+    .from(radiologyTests)
+    .leftJoin(
+      radiologyCategories,
+      eq(radiologyTests.categoryId, radiologyCategories.id)
+    )
+    .leftJoin(charges, eq(radiologyTests.chargeId, charges.id))
+    .leftJoin(taxCategories, eq(charges.taxCategoryId, taxCategories.id))
+    .where(eq(radiologyTests.id, id));
+
+  if (result.length === 0) return null;
+
+  const test = result[0];
+  const parameters = await db
+    .select({
+      id: radiologyParameters.id,
+      paramName: radiologyParameters.paramName,
+      fromRange: radiologyParameters.fromRange,
+      toRange: radiologyParameters.toRange,
+      unitId: radiologyParameters.unitId,
+      description: radiologyParameters.description,
+      unitName: radiologyUnits.name,
+    })
+    .from(radiologyParameters)
+    .leftJoin(radiologyUnits, eq(radiologyParameters.unitId, radiologyUnits.id))
+    .where(eq(radiologyParameters.testId, test.id));
+
+  return { ...test, parameters };
+}
+
+export async function createRadiologyTest(data: {
+  hospitalId: string;
+  testName: string;
+  shortName?: string;
+  testType?: string;
+  description?: string;
+  categoryId: string;
+  subCategoryId?: string;
+  reportHours: number;
+  chargeCategoryId: string;
+  chargeId: string;
+  chargeName: string;
+  parameters: {
+    paramName: string;
+    fromRange: string;
+    toRange: string;
+    unitId: string;
+    description?: string;
+  }[];
+}) {
+  return await db.transaction(async (tx) => {
+    const [newTest] = await tx
+      .insert(radiologyTests)
+      .values({
+        hospitalId: data.hospitalId,
+        testName: data.testName,
+        shortName: data.shortName,
+        testType: data.testType,
+        description: data.description,
+        categoryId: data.categoryId,
+        subCategoryId: data.subCategoryId,
+        reportHours: data.reportHours,
+        chargeCategoryId: data.chargeCategoryId,
+        chargeId: data.chargeId,
+        chargeName: data.chargeName,
+      })
+      .returning();
+
+    if (data.parameters && data.parameters.length > 0) {
+      await tx.insert(radiologyParameters).values(
+        data.parameters.map((p) => ({
+          ...p,
+          hospitalId: data.hospitalId,
+          testId: newTest.id,
+        }))
+      );
+    }
+
+    return newTest;
+  });
+}
+
+export async function updateRadiologyTest(
+  id: string,
+  data: {
+    hospitalId: string;
+    testName?: string;
+    shortName?: string;
+    testType?: string;
+    description?: string;
+    categoryId?: string;
+    subCategoryId?: string;
+    reportHours?: number;
+    chargeCategoryId?: string;
+    chargeId?: string;
+    chargeName?: string;
+    parameters?: {
+      id?: string;
+      paramName: string;
+      fromRange: string;
+      toRange: string;
+      unitId: string;
+      description?: string;
+    }[];
+  }
+) {
+  return await db.transaction(async (tx) => {
+    const [updatedTest] = await tx
+      .update(radiologyTests)
+      .set({
+        ...(data.testName && { testName: data.testName }),
+        ...(data.shortName !== undefined && { shortName: data.shortName }),
+        ...(data.testType !== undefined && { testType: data.testType }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.categoryId && { categoryId: data.categoryId }),
+        ...(data.subCategoryId !== undefined && {
+          subCategoryId: data.subCategoryId,
+        }),
+        ...(data.reportHours && { reportHours: data.reportHours }),
+        ...(data.chargeCategoryId && { chargeCategoryId: data.chargeCategoryId }),
+        ...(data.chargeId && { chargeId: data.chargeId }),
+        ...(data.chargeName && { chargeName: data.chargeName }),
+        updatedAt: new Date(),
+      })
+      .where(eq(radiologyTests.id, id))
+      .returning();
+
+    if (data.parameters) {
+      // Simple sync: delete all and re-insert
+      await tx
+        .delete(radiologyParameters)
+        .where(eq(radiologyParameters.testId, id));
+
+      if (data.parameters.length > 0) {
+        await tx.insert(radiologyParameters).values(
+          data.parameters.map((p) => ({
+            paramName: p.paramName,
+            fromRange: p.fromRange,
+            toRange: p.toRange,
+            unitId: p.unitId,
+            description: p.description,
+            hospitalId: data.hospitalId,
+            testId: id,
+          }))
+        );
+      }
+    }
+
+    return updatedTest;
+  });
+}
+
+export async function deleteRadiologyTest(id: string) {
+  const result = await db
+    .update(radiologyTests)
+    .set({
+      isDeleted: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyTests.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function restoreRadiologyTest(id: string) {
+  const result = await db
+    .update(radiologyTests)
+    .set({
+      isDeleted: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyTests.id, id))
     .returning();
 
   return result[0];

@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import RadiologyTestModal, { RadiologyTest } from "./RadiologyTestModal";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
+import { getRadiologyTests, deleteRadiologyTest, restoreRadiologyTest } from "@/lib/actions/radiologyTests";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -19,73 +20,43 @@ import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-// Dummy data for radiology tests
-const INITIAL_DUMMY_DATA: RadiologyTest[] = [
-    {
-        id: "1",
-        testName: "X-Ray Chest PA View",
-        shortName: "XRAY-CHEST",
-        testType: "X-Ray",
-        description: "Chest radiography for pulmonary examination",
-        categoryId: "cat1",
-        categoryName: "Radiography",
-        subCategoryId: "sub1",
-        method: "Digital Radiography",
-        reportDays: 1,
-        chargeCategoryId: "cc1",
-        chargeId: "ch1",
-        chargeName: "X-Ray Charge",
-        tax: 5,
-        standardCharge: 1500,
-        amount: 1575,
-        parameters: [
-            { id: "p1", paramName: "PA View", fromRange: "Standard", toRange: "Standard", unitId: "unit1" },
-        ],
-        unitId: "unit1",
-        isDeleted: false,
-    },
-    {
-        id: "2",
-        testName: "CT Scan Abdomen",
-        shortName: "CT-ABD",
-        testType: "CT",
-        description: "CT imaging of abdominal region with contrast",
-        categoryId: "cat2",
-        categoryName: "CT Imaging",
-        subCategoryId: "sub2",
-        method: "Helical CT",
-        reportDays: 2,
-        chargeCategoryId: "cc2",
-        chargeId: "ch2",
-        chargeName: "CT Charge",
-        tax: 12,
-        standardCharge: 4000,
-        amount: 4480,
-        parameters: [
-            { id: "p2", paramName: "Axial Images", fromRange: "5mm", toRange: "Standard", unitId: "unit1" },
-        ],
-        unitId: "unit1",
-        isDeleted: false,
-    },
-];
-
 export default function RadiologyTestPage() {
-    const [tests, setTests] = useState<RadiologyTest[]>(INITIAL_DUMMY_DATA);
+    const [tests, setTests] = useState<RadiologyTest[]>([]);
     const [search, setSearch] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTest, setSelectedTest] = useState<RadiologyTest | undefined>(undefined);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [showDeleted, setShowDeleted] = useState(false);
     const [visibleFields, setVisibleFields] = useState<string[]>([
         "testName",
         "shortName",
         "testType",
         "categoryName",
-        "reportDays",
+        "reportHours",
         "amount",
     ]);
 
     const ability = useAbility();
+
+    const fetchTests = async () => {
+        setLoading(true);
+        try {
+            const result = await getRadiologyTests();
+            if (result.error) {
+                toast.error(result.error);
+            } else if (result.data) {
+                setTests(result.data as any);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch radiology tests");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTests();
+    }, []);
 
     const filteredTests = useMemo(() => {
         const query = search.toLowerCase().trim();
@@ -115,18 +86,19 @@ export default function RadiologyTestPage() {
         { accessorKey: "testType", header: "Test Type" },
         { accessorKey: "categoryName", header: "Category" },
         { accessorKey: "subCategoryId", header: "Sub Category" },
-        { accessorKey: "method", header: "Method" },
         {
-            accessorKey: "reportDays",
-            header: "Report Days",
-            cell: ({ row }) => Number(row.original.reportDays)
+            accessorKey: "reportHours",
+            header: "Report Hours",
+            cell: ({ row }) => Number(row.original.reportHours)
         },
         {
             accessorKey: "amount",
             header: "Amount",
             cell: ({ row }) => {
                 const amount = Number((row.original as any).amount || 0);
-                return amount.toFixed(2);
+                const taxPercent = Number((row.original as any).taxPercent || 0);
+                const total = amount + (amount * taxPercent / 100);
+                return total.toFixed(2);
             }
         },
         { accessorKey: "chargeName", header: "Charge Name" },
@@ -211,22 +183,36 @@ export default function RadiologyTestPage() {
         setIsModalOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        setTests(tests.map(t => t.id === id ? { ...t, isDeleted: true } : t));
-        toast.success("Test deleted successfully");
-    };
-
-    const handleRestore = (id: string) => {
-        setTests(tests.map(t => t.id === id ? { ...t, isDeleted: false } : t));
-        toast.success("Test restored successfully");
-    };
-
-    const handleSaveSuccess = (newTest: RadiologyTest) => {
-        if (selectedTest) {
-            setTests(tests.map(t => t.id === selectedTest.id ? newTest : t));
-        } else {
-            setTests([...tests, { ...newTest, id: Date.now().toString(), isDeleted: false }]);
+    const handleDelete = async (id: string) => {
+        try {
+            const result = await deleteRadiologyTest(id);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Test deleted successfully");
+                fetchTests();
+            }
+        } catch (error) {
+            toast.error("Failed to delete test");
         }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            const result = await restoreRadiologyTest(id);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Test restored successfully");
+                fetchTests();
+            }
+        } catch (error) {
+            toast.error("Failed to restore test");
+        }
+    };
+
+    const handleSaveSuccess = () => {
+        fetchTests();
         setIsModalOpen(false);
     };
 
