@@ -14,6 +14,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FlaskConical } from "lucide-react";
 import { RadiologyCategory } from "./RadiologyCategoryManager";
+import {
+  createRadiologyCategory,
+  updateRadiologyCategory,
+} from "@/lib/actions/radiologyCategories";
 
 /* -------------------- TYPE -------------------- */
 
@@ -21,7 +25,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category?: RadiologyCategory;
-  onSaveSuccess: (data: RadiologyCategory) => void; // local save
+  onSaveSuccess: () => void;
 };
 
 /* -------------------- MODAL -------------------- */
@@ -42,21 +46,27 @@ export default function RadiologyCategoryModal({
     }
   }, [category, open]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) return toast.error("Category Name is required");
 
     setLoading(true);
 
     try {
-      // Dummy "save" logic
-      const newCategory: RadiologyCategory = {
-        id: category?.id || crypto.randomUUID(),
+      const formData = {
         name: name.trim(),
         description: description.trim() || undefined,
       };
 
-      toast.success(category ? "Category updated successfully" : "Category added successfully");
-      onSaveSuccess(newCategory);
+      const result = category
+        ? await updateRadiologyCategory(category.id, formData)
+        : await createRadiologyCategory(formData);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(category ? "Category updated successfully" : "Category added successfully");
+        onSaveSuccess();
+      }
     } catch (error) {
       toast.error("An error occurred");
     } finally {

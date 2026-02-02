@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import {
@@ -22,40 +22,45 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import RadiologyCategoryModal from "./RadiologyCategoryModal";
+import {
+  getRadiologyCategories,
+  deleteRadiologyCategory,
+} from "@/lib/actions/radiologyCategories";
+import { toast } from "sonner";
 
 /* -------------------- TYPES -------------------- */
 export type RadiologyCategory = {
   id: string;
   name: string;
-  description?: string; 
+  description: string | null;
 };
 
-/* -------------------- DUMMY DATA -------------------- */
-const DUMMY_RADIOLOGY_CATEGORIES: RadiologyCategory[] = [
-  {
-    id: "1",
-    name: "X-Ray",
-    description: "Basic X-Ray imaging services",
-  },
-  {
-    id: "2",
-    name: "CT Scan",
-    description: "Computed Tomography scans",
-  },
-  {
-    id: "3",
-    name: "MRI",
-    description: "Magnetic Resonance Imaging",
-  },
-];
-
 export default function RadiologyCategoryManager() {
-  const [categories, setCategories] = useState<RadiologyCategory[]>(
-    DUMMY_RADIOLOGY_CATEGORIES
-  );
+  const [categories, setCategories] = useState<RadiologyCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<RadiologyCategory | undefined>();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const result = await getRadiologyCategories();
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        setCategories(result.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /* -------------------- FILTER -------------------- */
   const filteredCategories = categories.filter((c) =>
@@ -73,18 +78,22 @@ export default function RadiologyCategoryManager() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deleteRadiologyCategory(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Category deleted successfully");
+        fetchCategories();
+      }
+    } catch (error) {
+      toast.error("Failed to delete category");
+    }
   };
 
-  const handleSaveSuccess = (data: RadiologyCategory) => {
-    setCategories((prev) => {
-      const exists = prev.find((c) => c.id === data.id);
-      if (exists) {
-        return prev.map((c) => (c.id === data.id ? data : c));
-      }
-      return [...prev, { ...data, id: crypto.randomUUID() }];
-    });
+  const handleSaveSuccess = () => {
+    fetchCategories();
     setOpen(false);
   };
 
@@ -127,7 +136,16 @@ export default function RadiologyCategoryManager() {
               </TableHeader>
 
               <TableBody>
-                {filteredCategories.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredCategories.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={4}

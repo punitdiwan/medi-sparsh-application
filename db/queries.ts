@@ -31,6 +31,8 @@ import {
   pathologyOrderTests,
   pathologyBills,
   pathologyPayments,
+  radiologyCategories,
+  radiologyUnits,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import type {
@@ -2224,6 +2226,130 @@ export async function restorePathologyTest(id: string) {
       updatedAt: new Date(),
     })
     .where(eq(pathologyTests.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Radiology Category Queries
+// ===================================================
+
+export async function getRadiologyCategoriesByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(radiologyCategories)
+    .where(eq(radiologyCategories.hospitalId, hospitalId))
+    .orderBy(desc(radiologyCategories.createdAt));
+}
+
+export async function getRadiologyCategoryById(id: string) {
+  const result = await db
+    .select()
+    .from(radiologyCategories)
+    .where(eq(radiologyCategories.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createRadiologyCategory(data: {
+  hospitalId: string;
+  name: string;
+  description?: string;
+}) {
+  const result = await db
+    .insert(radiologyCategories)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+      description: data.description || null,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateRadiologyCategory(id: string, data: {
+  name?: string;
+  description?: string;
+}) {
+  const result = await db
+    .update(radiologyCategories)
+    .set({
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteRadiologyCategory(id: string) {
+  const result = await db
+    .delete(radiologyCategories)
+    .where(eq(radiologyCategories.id, id))
+    .returning();
+
+  return result[0];
+}
+
+// ===================================================
+// Radiology Unit Queries
+// ===================================================
+
+export async function getRadiologyUnitsByHospital(hospitalId: string) {
+  return await db
+    .select()
+    .from(radiologyUnits)
+    .where(eq(radiologyUnits.hospitalId, hospitalId))
+    .orderBy(desc(radiologyUnits.createdAt));
+}
+
+export async function getRadiologyUnitById(id: string) {
+  const result = await db
+    .select()
+    .from(radiologyUnits)
+    .where(eq(radiologyUnits.id, id))
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function createRadiologyUnit(data: {
+  hospitalId: string;
+  name: string;
+}) {
+  const result = await db
+    .insert(radiologyUnits)
+    .values({
+      hospitalId: data.hospitalId,
+      name: data.name,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function updateRadiologyUnit(id: string, data: {
+  name: string;
+}) {
+  const result = await db
+    .update(radiologyUnits)
+    .set({
+      name: data.name,
+      updatedAt: new Date(),
+    })
+    .where(eq(radiologyUnits.id, id))
+    .returning();
+
+  return result[0];
+}
+
+export async function deleteRadiologyUnit(id: string) {
+  const result = await db
+    .delete(radiologyUnits)
+    .where(eq(radiologyUnits.id, id))
     .returning();
 
   return result[0];
