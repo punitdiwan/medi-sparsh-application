@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Microscope, Plus, Trash2, X } from "lucide-react";
+import { FlaskConical, Plus, Trash2, X } from "lucide-react";
+import { getRadiologyCategories } from "@/lib/actions/radiologyCategories";
+import { getRadiologyUnits } from "@/lib/actions/radiologyUnits";
+import { createRadiologyTest, updateRadiologyTest } from "@/lib/actions/radiologyTests";
+import { getChargeCategories, getCharges } from "@/lib/actions/chargeActions";
 
 export type ParameterRow = {
     id: string;
@@ -38,8 +42,7 @@ export type RadiologyTest = {
     categoryId: string;
     categoryName?: string;
     subCategoryId: string;
-    method: string;
-    reportDays: number | string;
+    reportHours: string;
     chargeCategoryId: string;
     chargeId: string;
     chargeName: string;
@@ -47,7 +50,6 @@ export type RadiologyTest = {
     standardCharge: number;
     amount: number;
     parameters: ParameterRow[];
-    unitId: string;
     isDeleted?: boolean;
 };
 
@@ -55,32 +57,8 @@ type Props = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     test?: RadiologyTest;
-    onSaveSuccess: (test: RadiologyTest) => void;
+    onSaveSuccess: () => void;
 };
-
-// Dummy data for dropdowns
-const DUMMY_CATEGORIES = [
-    { id: "cat1", name: "Radiography" },
-    { id: "cat2", name: "CT Imaging" },
-    { id: "cat3", name: "Ultrasonography" },
-    { id: "cat4", name: "MRI Imaging" },
-];
-
-const DUMMY_UNITS = [
-    { id: "unit1", name: "Images" },
-    { id: "unit2", name: "Studies" },
-    { id: "unit3", name: "Sequences" },
-];
-
-const DUMMY_CHARGE_CATEGORIES = [
-    { id: "cc1", name: "Radiology Services" },
-];
-
-const DUMMY_CHARGES = [
-    { id: "ch1", name: "X-Ray Charge", chargeCategoryId: "cc1", amount: 1500, taxPercent: 5 },
-    { id: "ch2", name: "CT Charge", chargeCategoryId: "cc1", amount: 4000, taxPercent: 12 },
-    { id: "ch3", name: "USG Charge", chargeCategoryId: "cc1", amount: 800, taxPercent: 5 },
-];
 
 export default function RadiologyTestModal({
     open,
@@ -96,8 +74,7 @@ export default function RadiologyTestModal({
         description: "",
         categoryId: "",
         subCategoryId: "",
-        method: "",
-        reportDays: "",
+        reportHours: "",
         chargeCategoryId: "",
         chargeId: "",
         chargeName: "",
@@ -107,18 +84,51 @@ export default function RadiologyTestModal({
         parameters: [
             { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
         ],
-        unitId: "",
     });
 
+    const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+    const [units, setUnits] = useState<{ id: string, name: string }[]>([]);
+    const [chargeCats, setChargeCats] = useState<{ id: string, name: string }[]>([]);
+    const [allCharges, setAllCharges] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [catRes, unitRes, chargeCatRes, chargeRes] = await Promise.all([
+                    getRadiologyCategories(),
+                    getRadiologyUnits(),
+                    getChargeCategories(),
+                    getCharges()
+                ]);
+
+                if (catRes.data) setCategories(catRes.data);
+                if (unitRes.data) setUnits(unitRes.data);
+                if (chargeCatRes.data) {
+                    const chargeData = chargeCatRes.data.filter((item: any) =>
+                        item.categoryType?.toLowerCase() === "radiology"
+                    );
+
+                    setChargeCats(chargeData);
+                }
+                if (chargeRes.data) setAllCharges(chargeRes.data);
+            } catch (error) {
+                console.error("Error fetching modal data:", error);
+            }
+        };
+
+        if (open) {
+            fetchData();
+        }
+    }, [open]);
 
     useEffect(() => {
         if (open) {
             if (test) {
                 setForm({
                     ...test,
-                    reportDays: test.reportDays ?? "",
-                    parameters: Array.isArray(test.parameters) ? test.parameters : []
+                    reportHours: test.reportHours ?? "",
+                    parameters: Array.isArray(test.parameters) ? test.parameters : (test as any).testParameters || []
                 });
             } else {
                 setForm({
@@ -129,8 +139,7 @@ export default function RadiologyTestModal({
                     description: "",
                     categoryId: "",
                     subCategoryId: "",
-                    method: "",
-                    reportDays: "",
+                    reportHours: "",
                     chargeCategoryId: "",
                     chargeId: "",
                     chargeName: "",
@@ -140,14 +149,35 @@ export default function RadiologyTestModal({
                     parameters: [
                         { id: Date.now().toString(), paramName: "", fromRange: "", toRange: "", unitId: "", description: "" }
                     ],
-                    unitId: "",
                 });
             }
         }
     }, [test, open]);
 
-    const availableCharges = DUMMY_CHARGES.filter(c => c.chargeCategoryId === form.chargeCategoryId);
+    const availableCharges = allCharges.filter(c => c.chargeCategoryId === form.chargeCategoryId);
 
+    useEffect(() => {
+        if (!open) return;
+        if (!test) return;
+        if (!form.chargeId) return;
+        if (allCharges.length === 0) return;
+
+        const selectedCharge = allCharges.find(c => c.id === form.chargeId);
+        if (!selectedCharge) return;
+
+        const taxAmount =
+            (Number(selectedCharge.amount) * (selectedCharge.taxPercent || 0)) / 100;
+
+        setForm(prev => ({
+            ...prev,
+            chargeName: selectedCharge.name,
+            tax: selectedCharge.taxPercent || 0,
+            standardCharge: Number(selectedCharge.amount),
+            amount: Number(selectedCharge.amount) + taxAmount,
+        }));
+    }, [open, test, form.chargeId, allCharges]);
+
+    // Handle Charge Category Change
     const handleChargeCategoryChange = (val: string) => {
         setForm({
             ...form,
@@ -160,6 +190,7 @@ export default function RadiologyTestModal({
         });
     };
 
+    // Handle Charge Name Change
     const handleChargeNameChange = (val: string) => {
         const selectedCharge = availableCharges.find(c => c.id === val);
         if (selectedCharge) {
@@ -176,6 +207,7 @@ export default function RadiologyTestModal({
         }
     };
 
+    // Handle Parameter Row Change
     const handleParameterRowUpdate = (rowId: string, field: keyof ParameterRow, value: string) => {
         setForm({
             ...form,
@@ -203,24 +235,41 @@ export default function RadiologyTestModal({
     const handleSubmit = async () => {
         if (!form.testName) return toast.error("Test Name is required");
         if (!form.categoryId) return toast.error("Category is required");
-        if (!form.reportDays) return toast.error("Report Days is required");
+        if (!form.reportHours) return toast.error("Report Hours is required");
         if (!form.chargeId) return toast.error("Charge is required");
 
         setLoading(true);
         try {
-            // Simulated delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const category = DUMMY_CATEGORIES.find(c => c.id === form.categoryId);
-
-            const finalData: RadiologyTest = {
-                ...form,
-                categoryName: category?.name || "",
-                reportDays: Number(form.reportDays),
+            const payload = {
+                testName: form.testName,
+                shortName: form.shortName,
+                testType: form.testType,
+                description: form.description,
+                categoryId: form.categoryId,
+                subCategoryId: form.subCategoryId,
+                reportHours: Number(form.reportHours),
+                chargeCategoryId: form.chargeCategoryId,
+                chargeId: form.chargeId,
+                chargeName: form.chargeName,
+                parameters: form.parameters.map(p => ({
+                    paramName: p.paramName,
+                    fromRange: p.fromRange,
+                    toRange: p.toRange,
+                    unitId: p.unitId,
+                    description: p.description,
+                })),
             };
 
-            toast.success(test ? "Test updated successfully (Dummy)" : "Test added successfully (Dummy)");
-            onSaveSuccess(finalData);
+            const result = test
+                ? await updateRadiologyTest(test.id, payload)
+                : await createRadiologyTest(payload as any);
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success(test ? "Test updated successfully" : "Test added successfully");
+                onSaveSuccess();
+            }
         } catch (error) {
             toast.error("An error occurred while saving");
         } finally {
@@ -235,7 +284,7 @@ export default function RadiologyTestModal({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center rounded-lg">
-                                <Microscope className="text-dialog-icon" />
+                                <FlaskConical className="text-dialog-icon" />
                             </div>
                             <DialogTitle>
                                 {test ? "Edit Radiology Test" : "Add Radiology Test"}
@@ -290,7 +339,7 @@ export default function RadiologyTestModal({
                                     <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {DUMMY_CATEGORIES.map(c => (
+                                    {categories.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -306,40 +355,18 @@ export default function RadiologyTestModal({
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium">Method</label>
+                            <label className="text-sm font-medium">Report Hours *</label>
                             <Input
-                                placeholder="Method"
-                                value={form.method ?? ""}
-                                onChange={(e) => setForm({ ...form, method: e.target.value })}
+                                type="number"
+                                placeholder="Report Hours"
+                                value={form.reportHours ?? ""}
+                                onChange={(e) => setForm({ ...form, reportHours: e.target.value })}
                                 disabled={loading}
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium">Report Days *</label>
-                            <Input
-                                type="number"
-                                placeholder="Report Days"
-                                value={form.reportDays ?? ""}
-                                onChange={(e) => setForm({ ...form, reportDays: e.target.value })}
-                                disabled={loading}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium">Unit *</label>
-                            <Select value={form.unitId ?? ""} onValueChange={(v) => setForm({ ...form, unitId: v })} disabled={loading}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {DUMMY_UNITS.map(u => (
-                                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Charge Category *</label>
                             <Select value={form.chargeCategoryId ?? ""} onValueChange={handleChargeCategoryChange} disabled={loading}>
@@ -347,15 +374,12 @@ export default function RadiologyTestModal({
                                     <SelectValue placeholder="Select Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {DUMMY_CHARGE_CATEGORIES.map(c => (
+                                    {chargeCats.map(c => (
                                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Charge Name *</label>
                             <Select
@@ -373,6 +397,9 @@ export default function RadiologyTestModal({
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Tax (%)</label>
                             <Input value={form.tax ?? 0} disabled className="bg-muted" />
@@ -381,22 +408,20 @@ export default function RadiologyTestModal({
                             <label className="text-sm font-medium">Standard Charge ($) *</label>
                             <Input value={form.standardCharge ?? 0} disabled className="bg-muted" />
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Amount ($) *</label>
                             <Input value={form.amount ?? 0} disabled className="bg-muted" />
                         </div>
-                        <div className="col-span-2 space-y-1">
-                            <label className="text-sm font-medium">Description</label>
-                            <Input
-                                placeholder="Description"
-                                value={form.description ?? ""}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                disabled={loading}
-                            />
-                        </div>
+                    </div>
+
+                    <div className="col-span-3 space-y-1">
+                        <label className="text-sm font-medium">Description</label>
+                        <Input
+                            placeholder="Description"
+                            value={form.description ?? ""}
+                            onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            disabled={loading}
+                        />
                     </div>
 
                     <div className="space-y-4">
@@ -441,7 +466,7 @@ export default function RadiologyTestModal({
                                             <SelectValue placeholder="Select Unit" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {DUMMY_UNITS.map(u => (
+                                            {units.map(u => (
                                                 <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                                             ))}
                                         </SelectContent>
