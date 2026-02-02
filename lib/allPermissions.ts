@@ -1,7 +1,9 @@
+import { profile } from "console";
 
 
 export const ALL_PERMISSIONS: Record<string, string[]> = {
   project: ["create", "read", "update", "delete"],
+  profile: ["read", "update"],
   appointment: ["create", "read", "update", "delete"],
   ipd:["create", "read", "update", "delete"],
   role: ["create", "read", "update", "delete"],

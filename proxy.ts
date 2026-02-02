@@ -37,7 +37,22 @@ export async function proxy(req: NextRequest) {
   const permissionSegments = segments.slice(1);
   
   if (permissionSegments.length === 0) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    // SECURITY: Store full session in HTTP-only cookie (secure, server-side only)
+    response.cookies.set("session", JSON.stringify(session), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+    // Store permissions in HTTP-only cookie
+    response.cookies.set("permissions", JSON.stringify(permissions), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return response;
   }
 
   for (const rawSegment of permissionSegments) {
@@ -50,7 +65,22 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  // SECURITY: Store full session in HTTP-only cookie (secure, server-side only)
+  response.cookies.set("session", JSON.stringify(session), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+  // Store permissions in HTTP-only cookie
+  response.cookies.set("permissions", JSON.stringify(permissions), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  return response;
 }
 
 export const config = {

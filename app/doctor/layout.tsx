@@ -1,13 +1,11 @@
 import { AppSidebar } from "@/Components/AppSidebar";
 import Navbar from "@/Components/docNavbar";
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { redirect } from "next/navigation";
-import { validateServerSession } from "@/lib/validateSession";
+import { cookies } from "next/headers";
 import type { Metadata } from 'next';
 import { AuthProvider } from "@/context/AuthContext";
 
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/db/queries";
 import { AbilityProvider } from "@/components/providers/AbilityProvider"
 
 export const metadata: Metadata = {
@@ -15,70 +13,35 @@ export const metadata: Metadata = {
   description: 'Basic dashboard for EMR'
 };
 
- type AppSession = {
-  permissionsData?: Record<string, string[]>;
-  role?: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  session: {
-    id: string;
-    userId: string;
-    expiresAt: Date | string;
-    activeOrganizationId: string;
-  };
-};
+//Force dynamic rendering to get fresh middleware cookies
+export const dynamic = "force-dynamic";
+
 export default async function DashboardLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
-
-  const sessionData = await validateServerSession() as AppSession;
-  if (!sessionData) redirect("/sign-in");
+  // SECURITY: Read full session from HTTP-only cookie (server-side only)
+  const cookieStore = cookies();
+  const sessionStr = (await cookieStore).get("session")?.value || "{}";
+  const session = JSON.parse(sessionStr);
+  const permissionsStr = (await cookieStore).get("permissions")?.value || "{}";
+  
+  const permissions = JSON.parse(permissionsStr);
   const hospital = await getCurrentHospital();
-  if (sessionData?.session?.activeOrganizationId !== hospital?.hospitalId) {
-    redirect("/sign-in")
-  }
-
-  const RData={
-    "role": "receptionist",
-    "permission": {
-      "appointment": ["read"],
-      "patient": ["read"],
-      "payment": ["read"],
-      "bed": ["read"],
-      "services": ["read"],
-      "members": ["read"],
-      "reports": ["read"]
-    }
-  }
-  const rawPermissions = sessionData.permissionsData;
-
-  const permissions =
-    typeof rawPermissions === "string"
-      ? JSON.parse(rawPermissions)
-      : rawPermissions;
-
-  const RolePermission = permissions || RData.permission;
-
   const userData = {
-    userData: sessionData?.user,
+    userData: session?.user || {},
     hospital,
-    memberRole: sessionData?.role,
+    memberRole: session?.role || [],
   };
-  // const userData = null;
-
+  
   return (
-    <AbilityProvider permissions={RolePermission}>
+    <AbilityProvider permissions={permissions}>
       <AuthProvider initialUser={userData}>
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
             <Navbar />
-
             {/* page main content */}
             {children}
             {/* page main content ends */}
