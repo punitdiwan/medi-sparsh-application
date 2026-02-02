@@ -11,8 +11,8 @@ export default function SymptomLayout({ children }: { children: React.ReactNode 
 
   const tabs = [
     { name: "Symptoms", href: "/doctor/settings/symptom",action: "read",
-    subject: "symptoms", },
-    { name: "Symptoms Type", href: "/doctor/settings/symptom/SymptomType",action: "read",
+    subject: "symptom", },
+    { name: "Symptoms Type", href: "/doctor/settings/symptom/symptomsType",action: "read",
     subject: "symptomsType", },
 
   ];

@@ -165,7 +165,7 @@ export default function MedicinePurchaseListPage() {
           
           <Button
             variant="default"
-            onClick={() => route.push("/doctor/pharmacy/purchase/medicine")}
+            onClick={() => route.push("/doctor/pharmacy/stock/stockpurchase")}
           >
             <Plus size={16} /> Purchase Medicine
           </Button>

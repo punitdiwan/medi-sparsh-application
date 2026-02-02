@@ -220,7 +220,7 @@ export default function BedGroupManager() {
                 Show Deleted Only
               </Label>
             </div>
-            <Can I="create" a="bedGroups" ability={ability}>
+            <Can I="create" a="BedGroup" ability={ability}>
               <Button onClick={() => {
                 setEditingBedGroup(null);
                 setOpen(true);
@@ -255,7 +255,7 @@ export default function BedGroupManager() {
                     <TableCell>{b.description || "-"}</TableCell>
                     <TableCell className="text-right space-x-2">
                       {!b.isDeleted && (
-                        <Can I="update" a="bedGroups" ability={ability}>
+                        <Can I="update" a="BedGroup" ability={ability}>
                           <Button
                             variant="outline"
                             size="sm"
@@ -268,7 +268,7 @@ export default function BedGroupManager() {
                           </Button>
                         </Can>
                       )}
-                      <Can I="delete" a="bedGroups" ability={ability}>
+                      <Can I="delete" a="BedGroup" ability={ability}>
                         {b.isDeleted ? (
                           <div className="inline-flex gap-2">
                             <ConfirmDialog

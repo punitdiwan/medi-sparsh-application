@@ -222,7 +222,7 @@ export default function PharmacyBillPage() {
         />
 
         <div className="flex gap-3">
-          <Can I="create" a="billing" ability={ability}>
+          <Can I="create" a="pharmacy" ability={ability}>
             <Button variant="default" onClick={() => route.push("/doctor/pharmacy/genrateBill")}><Plus size={16} /> Generate Bill</Button>
           </Can>
           <FieldSelectorDropdown

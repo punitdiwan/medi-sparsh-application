@@ -172,7 +172,7 @@ export default function SymptomManager() {
             className="max-w-sm"
           />
           <div className="flex flex-row flex-wrap items-center gap-3">
-            <Can I="create" a="symptoms" ability={ability}>
+            <Can I="create" a="symptom" ability={ability}>
               <Button onClick={() => setOpen(true)}>Add Symptom</Button>
               <TooltipProvider>
                 <Tooltip>
@@ -231,7 +231,7 @@ export default function SymptomManager() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <Can I="update" a="symptoms" ability={ability}>
+                          <Can I="update" a="symptom" ability={ability}>
                             <DropdownMenuItem
                               onClick={() => {
                                 setEditingSymptom(s);
@@ -241,7 +241,7 @@ export default function SymptomManager() {
                               Edit
                             </DropdownMenuItem>
                           </Can>
-                          <Can I="delete" a="symptoms" ability={ability}>
+                          <Can I="delete" a="symptom" ability={ability}>
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => handleDeleteClick(s.id)}

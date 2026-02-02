@@ -23,7 +23,7 @@ export default function RadiologySettingsLayout({
     },
     {
       name: "Unit",
-      href: "/doctor/settings/radiology/unit",
+      href: "/doctor/settings/radiology/radiologyUnit",
       action: "read",
       subject: "radiologyUnit",
     },

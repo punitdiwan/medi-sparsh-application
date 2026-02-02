@@ -11,14 +11,14 @@ export default function AppointmentLayout({ children }: { children: React.ReactN
   const tabs = [
     {
       name: "Medicine", href: "/doctor/settings/medicineRecord", action: "read",
-      subject: "medicineRedord"
+      subject: "medicineRecord"
     },
     {
-      name: "Medicine Category", href: "/doctor/settings/medicineRecord/medicinCategory", action: "read",
+      name: "Medicine Category", href: "/doctor/settings/medicineRecord/medicineCategory", action: "read",
       subject: "medicineCategory"
     },
     {
-      name: "Supplier", href: "/doctor/settings/medicineRecord/supplierManager", action: "read",
+      name: "Supplier", href: "/doctor/settings/medicineRecord/medicineSupplier", action: "read",
       subject: "medicineSupplier"
     },
     {

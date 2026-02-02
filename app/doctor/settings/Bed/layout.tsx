@@ -15,7 +15,7 @@ export default function BedLayout({ children }: { children: React.ReactNode }) {
     { name: "Bed Status", href: "/doctor/settings/Bed/BedStatus",action: "read",
     subject: "bedStatus", },
     { name: "Bed Group", href: "/doctor/settings/Bed/BedGroup",action: "read",
-    subject: "bedGroups", },
+    subject: "BedGroup", },
     { name: "Bed Type", href: "/doctor/settings/Bed/BedType",action: "read",
     subject: "bedType", },
     { name: "Floor", href: "/doctor/settings/Bed/Floor",action: "read",

@@ -10,23 +10,23 @@ export default function HospitalChargesLayout({ children }: { children: React.Re
   const ability = useAbility();
   const tabs = [
     {
-      name: "Charges", href: "/doctor/settings/hospitalCharges", action: "read",
-      subject: "hospitalCharger"
+      name: "Charges", href: "/doctor/settings/hospitalCharge", action: "read",
+      subject: "hospitalCharge"
     },
     {
-      name: "Charges Category", href: "/doctor/settings/hospitalCharges/chargeCategory", action: "read",
-      subject: "ChargesCategory"
+      name: "Charges Category", href: "/doctor/settings/hospitalCharge/chargeCategory", action: "read",
+      subject: "chargeCategory"
     },
     {
-      name: "Charge Type", href: "/doctor/settings/hospitalCharges/chargeType", action: "read",
-      subject: "ChargesType"
+      name: "Charge Type", href: "/doctor/settings/hospitalCharge/chargeType", action: "read",
+      subject: "chargeType"
     },
     {
-      name: "Tax Category", href: "/doctor/settings/hospitalCharges/taxCategory", action: "read",
+      name: "Tax Category", href: "/doctor/settings/hospitalCharge/taxCategory", action: "read",
       subject: "TaxCategory"
     },
     {
-      name: "Unit Type", href: "/doctor/settings/hospitalCharges/unitType", action: "read",
+      name: "Unit Type", href: "/doctor/settings/hospitalCharge/ChargesUnit", action: "read",
       subject: "ChargesUnit"
     },
   ];

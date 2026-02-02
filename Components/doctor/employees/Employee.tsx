@@ -458,7 +458,7 @@ export default function Employee() {
           <Button
             variant="outline"
             onClick={() =>
-              router.push("/doctor/employees/manageSpecialization")
+              router.push("/doctor/members/manageSpecialization")
             }
             className="flex items-center gap-2 bg-white/20 border-white/20 text-gray-300 hover:bg-indigo-50"
           >

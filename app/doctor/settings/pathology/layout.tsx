@@ -18,7 +18,7 @@ export default function PathologySettingsLayout({ children }: { children: React.
         },
         {
             name: "Unit",
-            href: "/doctor/settings/pathology/unit",
+            href: "/doctor/settings/pathology/pathologyunit",
             action: "read",
             subject: "pathologyunit",
         },

@@ -217,7 +217,7 @@ export default function ChargeManager() {
               />
               <Label htmlFor="deleted-filter">Show Deleted Only</Label>
             </div>
-            <Can I="create" a="hospitalCharger" ability={ability}>
+            <Can I="create" a="hospitalCharge" ability={ability}>
               <div className="flex justify-center gap-2 items-center">
                 <Button
                   onClick={() => {
@@ -281,7 +281,7 @@ export default function ChargeManager() {
 
                         {!item.isDeleted ? (
                           <>
-                            <Can I="update" a="hospitalCharger" ability={ability}>
+                            <Can I="update" a="hospitalCharge" ability={ability}>
                               {/* Edit */}
                               <Button
                                 size="sm"
@@ -294,7 +294,7 @@ export default function ChargeManager() {
                                 Edit
                               </Button>
                             </Can>
-                            <Can I="delete" a="hospitalCharger" ability={ability}>
+                            <Can I="delete" a="hospitalCharge" ability={ability}>
                               <ConfirmDialog
                                 title="Delete Charge?"
                                 description="This will soft-delete the charge."
@@ -309,7 +309,7 @@ export default function ChargeManager() {
                           </>
                         ) : (
                           <>
-                            <Can I="delete" a="hospitalCharger" ability={ability}>
+                            <Can I="delete" a="hospitalCharge" ability={ability}>
                               <ConfirmDialog
                                 title="Restore Charge?"
                                 description="This will reactivate the charge."

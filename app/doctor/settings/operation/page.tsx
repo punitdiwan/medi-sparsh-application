@@ -23,7 +23,7 @@ export default function OperationTabs() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    router.push(`/doctor/settings/operations?tab=${value}`, { scroll: false });
+    router.push(`/doctor/settings/operation?tab=${value}`, { scroll: false });
   };
 
   return (

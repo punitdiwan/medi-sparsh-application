@@ -13,7 +13,7 @@ export default function StockManagerLayout({
     const pathname = usePathname();
     const ability = useAbility();
 
-     if (pathname.startsWith("/doctor/pharmacy/purchase/medicine")) {
+     if (pathname.startsWith("/doctor/pharmacy/stock/medicine")) {
         return (
             <div className="bg-background text-foreground rounded-md shadow-sm">
                 {children}
@@ -24,15 +24,15 @@ export default function StockManagerLayout({
     const tabs = [
         {
             name: "Current Stock",
-            href: "/doctor/pharmacy/purchase",
+            href: "/doctor/pharmacy/stock",
             action: "read",
             subject: "pharmacyMedicine",
         },
         {
             name: "Expired Stock",
-            href: "/doctor/pharmacy/purchase/expiredStocks",
+            href: "/doctor/pharmacy/stock/expiredStocks",
             action: "read",
-            subject: "pharmacyMedicine",
+            subject: "expiredStocks",
         },
         // {
         //   name: "Return Expired Stock",

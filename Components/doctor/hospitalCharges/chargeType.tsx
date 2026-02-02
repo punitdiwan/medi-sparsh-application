@@ -188,7 +188,7 @@ export default function ChargeTypeManager() {
       <CardContent>
         <div className="p-4 space-y-4">
           <div className="flex justify-end items-center">
-            <Can I="create" a="ChargesType" ability={ability}>
+            <Can I="create" a="chargeType" ability={ability}>
               <Button
                 onClick={() => {
                   setEditItem(null);
@@ -246,7 +246,7 @@ export default function ChargeTypeManager() {
 
                       <td className="border p-2 sticky right-0 bg-background z-10">
                         <div className="flex gap-2 justify-center">
-                          <Can I="update" a="ChargesType" ability={ability}>
+                          <Can I="update" a="chargeType" ability={ability}>
                             <Button
                               variant="outline"
                               size="sm"
@@ -258,7 +258,7 @@ export default function ChargeTypeManager() {
                               <MdEdit />
                             </Button>
                           </Can>
-                          <Can I="delete" a="ChargesType" ability={ability}>
+                          <Can I="delete" a="chargeType" ability={ability}>
                             <ConfirmDialog
                               title={`Delete Charge Type "${item.name}"?`}
                               description="This action cannot be undone. Are you sure you want to permanently delete this charge type?"

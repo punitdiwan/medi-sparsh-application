@@ -370,10 +370,10 @@ export default function PathologyBillPage() {
                             );
                         }}
                     />
-                    <Can I="create" a="PathologyBilling" ability={ability}>
+                    <Can I="create" a="pathology" ability={ability}>
                         <Button
                             variant="default"
-                            onClick={() => route.push("/doctor/pathology/genrateBill")}
+                            onClick={() => route.push("/doctor/pathology/genratePathologyBill")}
                         >
                             <Plus size={16} /> Generate Bill
                         </Button>

@@ -331,7 +331,7 @@ export default function RadiologyBillPage() {
                             );
                         }}
                     />
-                    <Can I="create" a="RadiologyBilling" ability={ability}>
+                    <Can I="create" a="radiology" ability={ability}>
                         <Button
                             variant="default"
                             onClick={() => route.push("/doctor/radiology/genrateBill")}
