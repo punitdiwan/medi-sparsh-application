@@ -1,0 +1,357 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table } from "@/components/Table/Table";
+import { ColumnDef } from "@tanstack/react-table";
+import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
+import { PaginationControl } from "@/components/pagination";
+import { useRouter } from "next/navigation";
+import { MoreVertical, Plus, Printer, Eye, Edit, Trash2, Calendar, Clock, Ambulance, CreditCard } from "lucide-react";
+import { format } from "date-fns";
+import { useAbility } from "@/components/providers/AbilityProvider";
+import { Can } from "@casl/react";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import AmbulanceDetailsDialog from "./AmbulanceDetailsDialog";
+import AmbulancePaymentDialog from "./AmbulancePaymentDialog";
+
+type AmbulanceBill = {
+    id: string;
+    patientName: string;
+    patientPhone: string;
+    vehicleNumber: string;
+    driverName: string;
+    pickupLocation: string;
+    dropoffLocation: string;    
+    billTotalAmount: number;
+    discountPercentage: number;
+    taxPercentage: number;
+    netAmount?: number;
+    paidAmount?: number;
+    balanceAmount?: number;
+    billStatus: "paid" | "pending" | "partially_paid";
+    createdAt: string;
+};
+
+type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
+
+const DUMMY_DATA: AmbulanceBill[] = [
+    {
+        id: "AMB-2024-001",
+        patientName: "John Doe",
+        patientPhone: "1234567890",
+        vehicleNumber: "KA-01-AB-1234",
+        driverName: "Michael Smith",
+        pickupLocation: "123 Main St, Anytown, USA",
+        dropoffLocation: "123 Main St, Anytown, USA",
+        billTotalAmount: 1500,
+        discountPercentage: 10,
+        taxPercentage: 5,
+        billStatus: "paid",
+        paidAmount: 500,
+        createdAt: "2024-02-01T10:00:00Z",
+    },
+    {
+        id: "AMB-2024-002",
+        patientName: "Jane Smith",
+        patientPhone: "9876543210",
+        vehicleNumber: "KA-05-XY-5678",
+        driverName: "David Johnson",
+        pickupLocation: "123 Main St, Anytown, USA",
+        dropoffLocation: "123 Main St, Anytown, USA",
+        billTotalAmount: 2500,
+        discountPercentage: 10,
+        taxPercentage: 5,
+        billStatus: "pending",
+        paidAmount: 1500,
+        createdAt: "2024-02-02T14:30:00Z",
+    },
+    {
+        id: "AMB-2024-003",
+        patientName: "Robert Brown",
+        patientPhone: "5556667777",
+        vehicleNumber: "KA-01-AB-1234",
+        driverName: "Michael Smith",
+        pickupLocation: "123 Main St, Anytown, USA",
+        dropoffLocation: "123 Main St, Anytown, USA",
+        billTotalAmount: 1200,
+        discountPercentage: 10,
+        taxPercentage: 5,
+        paidAmount: 700,
+        billStatus: "partially_paid",
+        createdAt: "2024-02-03T09:15:00Z",
+    },
+];
+
+export default function AmbulancePage() {
+    const [bills, setBills] = useState<AmbulanceBill[]>(DUMMY_DATA);
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [selectedAmbulance, setSelectedAmbulance] = useState<AmbulanceBill | null>(null);
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const route = useRouter();
+    const ability = useAbility();
+    const [visibleFields, setVisibleFields] = useState<string[]>([
+        "id",
+        "patientName",
+        "vehicleNumber",
+        "driverName",
+        "pickupLocation",
+        "balanceAmount",
+        "billStatus",
+        "createdAt",
+    ]);
+
+    const filteredData = useMemo(() => {
+        return bills.filter((b) =>
+            search
+                ? b.id.toLowerCase().includes(search.toLowerCase()) ||
+                b.patientName.toLowerCase().includes(search.toLowerCase()) ||
+                b.vehicleNumber.toLowerCase().includes(search.toLowerCase())
+                : true
+        );
+    }, [search, bills]);
+
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    const paginated = filteredData.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
+
+    const allColumns: ColumnDef<AmbulanceBill>[] = [
+        { accessorKey: "id", header: "Bill ID", cell: ({ row }) => row.original.id },
+        { accessorKey: "patientName", header: "Patient Name" },
+        { accessorKey: "patientPhone", header: "Patient Phone" },
+        { accessorKey: "vehicleNumber", header: "Vehicle No" },
+        { accessorKey: "driverName", header: "Driver" },
+        { accessorKey: "driverContact", header: "Driver Contact" },
+        { accessorKey: "pickupLocation", header: "Pickup Location" },
+        { accessorKey: "dropoffLocation", header: "Dropoff Location" },
+        {
+            accessorKey: "PickUpDate", header: "Pickup Date", cell: ({ row }) => (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-sm font-medium">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        {format(new Date(row.original.createdAt), "dd MMM yyyy")}
+                    </div>
+                </div>
+            )
+        },
+        {
+            accessorKey: "billTotalAmount",
+            header: "Amount",
+            cell: ({ row }) => `₹${row.original.billTotalAmount.toFixed(2)}`
+        },
+        {
+            accessorKey: "discountPercentage",
+            header: "Discount",
+            cell: ({ row }) => `${row.original.discountPercentage.toFixed(2)}%`
+        },
+        {
+            accessorKey: "taxPercentage",
+            header: "Tax",
+            cell: ({ row }) => `${row.original.taxPercentage.toFixed(2)}%`
+        },
+        {
+            accessorKey: "netAmount",
+            header: "Net Amount",
+            cell: ({ row }) => {
+                const bill = row.original.billTotalAmount || 0;
+                const discountPercent = row.original.discountPercentage || 0;
+                const taxPercent = row.original.taxPercentage || 0;
+
+                const discountAmount = bill * (discountPercent / 100);
+                const taxableAmount = bill - discountAmount;
+                const taxAmount = taxableAmount * (taxPercent / 100);
+
+                const netAmount = taxableAmount + taxAmount;
+
+                return `₹${netAmount.toFixed(2)}`;
+            }
+        },
+        {
+            accessorKey: "paidAmount",
+            header: "Paid Amount",
+            cell: ({ row }) => `₹${row.original.paidAmount?.toFixed(2)}`
+        },
+        {
+            accessorKey: "balanceAmount",
+            header: "Balance Amount",
+            cell: ({ row }) => {
+                const bill = row.original.billTotalAmount || 0;
+                const discountPercent = row.original.discountPercentage || 0;
+                const taxPercent = row.original.taxPercentage || 0;
+                const paid = row.original.paidAmount || 0;
+
+                const discountAmount = bill * (discountPercent / 100);
+                const taxableAmount = bill - discountAmount;
+                const taxAmount = taxableAmount * (taxPercent / 100);
+                const netAmount = taxableAmount + taxAmount;
+
+                const balance = netAmount - paid;
+
+                return `₹${balance.toFixed(2)}`;
+            }
+        },
+        {
+            accessorKey: "billStatus",
+            header: "Status",
+            cell: ({ row }) => {
+                const status = row.original.billStatus;
+                const statusColor = {
+                    pending: "bg-yellow-100 text-yellow-800",
+                    paid: "bg-green-100 text-green-800",
+                    partially_paid: "bg-blue-100 text-blue-800",
+                };
+                return (
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor[status]}`}>
+                        {status.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                    </span>
+                );
+            }
+        },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => (
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreVertical size={18} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem 
+                                className="group gap-2 cursor-pointer"
+                                onClick={() => {
+                                    setSelectedAmbulance(row.original);
+                                    setIsDetailsDialogOpen(true);
+                                }}
+                            >
+                                <Eye size={14} className="text-muted-foreground group-hover:text-primary" />
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="group gap-2 cursor-pointer">
+                                <Edit size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Edit Bill
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                className="group gap-2 cursor-pointer"
+                                onClick={() => {
+                                    setSelectedAmbulance(row.original);
+                                    setIsPaymentDialogOpen(true);
+                                }}
+                            >
+                                <CreditCard size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Payments
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="group gap-2 cursor-pointer">
+                                <Printer size={14} className="text-muted-foreground group-hover:text-primary" />
+                                Print Bill
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="group gap-2 cursor-pointer text-destructive focus:text-destructive">
+                                <Trash2 size={14} className="text-destructive group-hover:text-red-600" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            ),
+        },
+    ];
+
+    const columns = useMemo(() => {
+        const filtered = allColumns.filter((col) => {
+            if (col.id === "actions") return false;
+            const key = (col as any).accessorKey || col.id;
+            return key && visibleFields.includes(key as string);
+        });
+
+        const actionCol = allColumns.find((c) => c.id === "actions");
+        if (actionCol) filtered.push(actionCol);
+
+        return filtered;
+    }, [visibleFields]);
+
+
+    return (
+        <div className="p-6">
+            <Card className="bg-Module-header text-white shadow-lg mb-4 px-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-bold tracking-tight">Ambulance Billing</h1>
+                    <p className="text-sm text-white/80 max-w-2xl">
+                        Manage ambulance services, generate bills, and track vehicle usage.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+                <div className="flex gap-3 flex-1">
+                    <Input
+                        placeholder="Search Bill / Patient / Vehicle"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="max-w-sm"
+                    />
+                </div>
+
+                <div className="flex gap-3">
+                    <FieldSelectorDropdown
+                        columns={allColumns as TypedColumn<AmbulanceBill>[]}
+                        visibleFields={visibleFields}
+                        onToggle={(key, checked) => {
+                            setVisibleFields((prev) =>
+                                checked ? [...prev, key] : prev.filter((f) => f !== key)
+                            );
+                        }}
+                    />
+                    {/* <Can I="create" a="ambulance" ability={ability}> */}
+                    <Button
+                        variant="default"
+                        onClick={() => route.push("/doctor/ambulance/generateBill")}
+                    >
+                        <Plus size={16} /> Add Ambulance
+                    </Button>
+                    {/* </Can> */}
+                </div>
+            </div>
+
+            <Table data={paginated} columns={columns} fallback={"No Ambulance Bills found"} />
+
+            <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(val) => {
+                    setRowsPerPage(val);
+                    setCurrentPage(1);
+                }}
+            />
+
+            <AmbulanceDetailsDialog
+                isOpen={isDetailsDialogOpen}
+                onClose={() => setIsDetailsDialogOpen(false)}
+                ambulance={selectedAmbulance}
+            />
+
+            <AmbulancePaymentDialog
+                open={isPaymentDialogOpen}
+                onClose={() => setIsPaymentDialogOpen(false)}
+                bill={selectedAmbulance}
+            />
+        </div>
+    );
+}

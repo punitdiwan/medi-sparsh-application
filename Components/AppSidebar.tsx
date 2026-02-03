@@ -19,7 +19,8 @@ import {
   BriefcaseMedical,
   TestTube,
   FlaskConical,
-  Microscope
+  Microscope,
+  Ambulance
 } from 'lucide-react';
 
 import {
@@ -98,6 +99,14 @@ const items: SidebarItem[] = [
     children: [
       { title: 'Billing', url: '/doctor/radiology', subject: 'RadiologyBilling', action: 'read', },
       { title: 'Radiology Test', url: '/doctor/radiology/radiologyTest', subject: 'RadiologyTest', action: 'read', },
+    ],
+  },
+  {
+    title: 'Ambulance',
+    icon: Ambulance,
+    children: [
+      { title: 'Billing', url: '/doctor/ambulance', subject: 'ambulance', action: 'read', },
+      { title: 'Ambulance Management', url: '/doctor/ambulance/ambulanceManagement', subject: 'ambulanceManagement', action: 'read', },
     ],
   },
   {
