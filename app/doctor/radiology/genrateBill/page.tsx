@@ -2,6 +2,11 @@ import RadiologyBillingForm from "@/Components/doctor/radiology/radiologyBilling
 
 export const dynamic = "force-dynamic";
 
-export default function GenerateBillPage() {
-    return <RadiologyBillingForm />;
+interface Props {
+    searchParams: Promise<{ billId?: string; mode?: string }>;
+}
+
+export default async function GenerateBillPage({ searchParams }: Props) {
+    const params = await searchParams;
+    return <RadiologyBillingForm billId={params.billId} mode={params.mode} />;
 }

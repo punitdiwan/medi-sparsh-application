@@ -27,6 +27,8 @@ import { BsCash } from "react-icons/bs";
 import RadiologyBillDetailsDialog from "./RadiologyBillDetailsDialog";
 import RadiologyPaymentDialog from "./RadiologyPaymentDialog";
 
+import { getBillsByHospital } from "@/lib/actions/radiologyBills";
+
 type Bill = {
     id: string;
     createdAt: string | Date;
@@ -41,44 +43,9 @@ type Bill = {
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-const DUMMY_BILLS: Bill[] = [
-    {
-        id: "RAD-00100200",
-        createdAt: "2024-01-20T10:00:00Z",
-        patientName: "Rajesh Kumar",
-        patientPhone: "9876543210",
-        patientEmail: "rajesh@example.com",
-        billTotalAmount: 3500,
-        billNetAmount: 3500,
-        billStatus: "paid",
-        paymentMode: "Cash",
-    },
-    {
-        id: "RAD-00200300",
-        createdAt: "2024-01-21T11:30:00Z",
-        patientName: "Priya Sharma",
-        patientPhone: "8765432109",
-        patientEmail: "priya@example.com",
-        billTotalAmount: 4500,
-        billNetAmount: 4200,
-        billStatus: "partially_paid",
-        paymentMode: "UPI",
-    },
-    {
-        id: "RAD-00300400",
-        createdAt: "2024-01-22T14:15:00Z",
-        patientName: "Amit Patel",
-        patientPhone: "7654321098",
-        billTotalAmount: 2800,
-        billNetAmount: 2800,
-        billStatus: "pending",
-        paymentMode: "Card",
-    },
-];
-
 export default function RadiologyBillPage() {
-    const [bills, setBills] = useState<Bill[]>(DUMMY_BILLS);
-    const [loading, setLoading] = useState(false);
+    const [bills, setBills] = useState<Bill[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -97,17 +64,25 @@ export default function RadiologyBillPage() {
         "createdAt",
     ]);
 
-    const filteredData = useMemo(() => {
-        return bills.filter((b) => {
-            const matchesSearch = search
-                ? b.id.toLowerCase().includes(search.toLowerCase()) ||
-                b.patientName.toLowerCase().includes(search.toLowerCase()) ||
-                b.patientPhone.includes(search)
-                : true;
-            const matchesStatus = statusFilter ? b.billStatus === statusFilter : true;
-            return matchesSearch && matchesStatus;
-        });
-    }, [search, statusFilter, bills]);
+    const fetchBills = async () => {
+        setLoading(true);
+        try {
+            const res = await getBillsByHospital(search, statusFilter);
+            if (res.success && res.data) {
+                setBills(res.data as any);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch bills");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchBills();
+    }, [search, statusFilter]);
+
+    const filteredData = bills; // Search and filter are handled server-side now
 
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     const paginated = filteredData.slice(

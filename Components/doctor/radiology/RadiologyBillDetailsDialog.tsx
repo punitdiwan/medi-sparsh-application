@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     X,
     User,
@@ -47,6 +47,13 @@ import { toast } from "sonner";
 
 /* -------------------- TYPES -------------------- */
 
+interface TestParameter {
+    id: string;
+    name: string;
+    value: string;
+    range: string;
+}
+
 interface TestItem {
     id: string;
     testName: string;
@@ -57,6 +64,7 @@ interface TestItem {
     reportHours?: number;
     approvedBy?: string;
     approveDate?: string;
+    findings?: string;
     tax: number;
     netAmount: number;
     status: "Pending" | "Scanned" | "Reported" | "Approved";
@@ -97,18 +105,28 @@ function TechnicianDialog({
     open,
     onClose,
     onSave,
-    testName,
+    test,
 }: {
     open: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
-    testName: string;
+    test: TestItem | null;
 }) {
     const [formData, setFormData] = useState({
         personName: "",
         scanDate: new Date().toISOString().split("T")[0],
         imagingCenter: "Main Radiology Wing",
     });
+
+    useEffect(() => {
+        if (open && test) {
+            setFormData({
+                personName: test.technicianName || "",
+                scanDate: test.scanDate || new Date().toISOString().split("T")[0],
+                imagingCenter: "Main Radiology Wing",
+            });
+        }
+    }, [open, test]);
 
     const handleSave = () => {
         if (!formData.personName) {
@@ -125,7 +143,7 @@ function TechnicianDialog({
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Assign Technician / Scan Info</DialogTitle>
-                    <p className="text-sm text-muted-foreground">{testName}</p>
+                    {test && <p className="text-sm text-muted-foreground">{test.testName}</p>}
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="space-y-2">
@@ -161,50 +179,212 @@ function ReportEditorDialog({
         approvedBy: "Dr. Radiology Expert",
         approveDate: new Date().toISOString().split("T")[0],
         findings: "",
+        parameterValues: [] as TestParameter[],
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingParams, setIsLoadingParams] = useState(false);
 
-    const handleSave = () => {
-        onSave(formData);
-        toast.success("Report approved successfully");
-        onClose();
+    useEffect(() => {
+        if (!open || !test) {
+            setFormData({
+                approvedBy: "Dr. Radiology Expert",
+                approveDate: new Date().toISOString().split("T")[0],
+                findings: "",
+                parameterValues: [],
+            });
+            return;
+        }
+
+        const loadData = async () => {
+            setIsLoadingParams(true);
+            try {
+                // Fetch default parameters for this test
+                const paramsRes = await getParametersByOrderTest(test.id);
+                let parameters: TestParameter[] = [];
+                if (paramsRes.success && paramsRes.data) {
+                    parameters = paramsRes.data.map((p: any) => ({
+                        id: p.id,
+                        name: p.paramName,
+                        value: "",
+                        range: `${p.fromRange} - ${p.toRange}`,
+                    }));
+                }
+
+                // Fetch existing result data
+                const reportRes = await getReportByOrderTest(test.id);
+                if (reportRes.success && reportRes.data) {
+                    const reportData = reportRes.data;
+                    const savedValues = reportData.parameterValues || [];
+
+                    setFormData({
+                        approvedBy: reportData.approvedBy || "Dr. Radiology Expert",
+                        approveDate: reportData.approvedAt
+                            ? new Date(reportData.approvedAt).toISOString().split("T")[0]
+                            : new Date().toISOString().split("T")[0],
+                        findings: reportData.remarks || "",
+                        parameterValues: parameters.map(p => {
+                            const savedVal = savedValues.find((sv: any) => sv.parameterID === p.id);
+                            return { ...p, value: savedVal?.resultValue || "" };
+                        }),
+                    });
+                } else {
+                    setFormData(prev => ({ ...prev, parameterValues: parameters }));
+                }
+            } catch (error) {
+                console.error("Error loading report data:", error);
+                toast.error("Failed to load parameters");
+            } finally {
+                setIsLoadingParams(false);
+            }
+        };
+
+        loadData();
+    }, [open, test]);
+
+    const handleSave = async () => {
+        if (!formData.approvedBy || !formData.approveDate) {
+            toast.error("Please fill in Approved By and Approve Date");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await onSave(formData);
+            onClose();
+        } catch (error) {
+            console.error("Error saving report:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    if (!test) return null;
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-3xl border border-dialog bg-dialog-surface p-0 overflow-y-auto">
+                <DialogHeader className="p-6 bg-dialog-header text-header border-b border-dialog">
                     <DialogTitle>Add/Edit Radiology Report</DialogTitle>
-                    {test && <p className="text-sm text-muted-foreground">{test.testName}</p>}
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Approved By</Label>
-                            <Input value={formData.approvedBy} onChange={(e) => setFormData({ ...formData, approvedBy: e.target.value })} />
+                <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto bg-dialog-surface text-dialog">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Test Name</Label>
+                            <p className="font-medium text-sm">{test.testName}</p>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Approve Date</Label>
-                            <Input type="date" value={formData.approveDate} onChange={(e) => setFormData({ ...formData, approveDate: e.target.value })} />
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Technician</Label>
+                            <p className="font-medium text-sm">{test.technicianName || "N/A"}</p>
+                        </div>
+                        <div>
+                            <Label className="text-xs text-muted-foreground">Scan Date</Label>
+                            <p className="font-medium text-sm">{test.scanDate || "N/A"}</p>
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Findings / Remarks</Label>
-                        <textarea
-                            className="w-full min-h-[100px] p-2 border rounded-md text-sm"
-                            placeholder="Enter findings..."
-                            value={formData.findings}
-                            onChange={(e) => setFormData({ ...formData, findings: e.target.value })}
-                        />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div className="space-y-2">
+                            <Label>Approved By *</Label>
+                            <Input
+                                value={formData.approvedBy}
+                                onChange={(e) => setFormData({ ...formData, approvedBy: e.target.value })}
+                                placeholder="Dr. Name"
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Approve Date *</Label>
+                            <Input
+                                type="date"
+                                value={formData.approveDate}
+                                onChange={(e) => setFormData({ ...formData, approveDate: e.target.value })}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                            <Label>Findings / Remarks</Label>
+                            <textarea
+                                className="w-full min-h-[100px] p-2 border rounded-md text-sm bg-background"
+                                placeholder="Enter findings..."
+                                value={formData.findings}
+                                onChange={(e) => setFormData({ ...formData, findings: e.target.value })}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="font-semibold flex items-center gap-2">
+                            <FlaskConical className="h-4 w-4 text-primary" />
+                            Test Parameters
+                        </h3>
+                        {isLoadingParams ? (
+                            <div className="border rounded-lg p-4 bg-muted/30 flex items-center justify-center">
+                                <p className="text-muted-foreground animate-pulse">Loading parameters...</p>
+                            </div>
+                        ) : formData.parameterValues.length === 0 ? (
+                            <div className="border rounded-lg p-4 bg-muted/30 text-center">
+                                <p className="text-muted-foreground text-sm">No parameters found for this test</p>
+                            </div>
+                        ) : (
+                            <div className="border rounded-lg overflow-hidden border-dialog">
+                                <Table>
+                                    <TableHeader className="bg-muted/50 border-b border-dialog">
+                                        <TableRow>
+                                            <TableHead className="w-[50px]">#</TableHead>
+                                            <TableHead>Test Parameter Name</TableHead>
+                                            <TableHead className="w-[200px]">Report Value *</TableHead>
+                                            <TableHead>Reference Range</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {formData.parameterValues.map((p, idx) => (
+                                            <TableRow key={p.id}>
+                                                <TableCell>{idx + 1}</TableCell>
+                                                <TableCell className="font-medium">{p.name}</TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        value={p.value}
+                                                        onChange={(e) => {
+                                                            const newVals = [...formData.parameterValues];
+                                                            newVals[idx].value = e.target.value;
+                                                            setFormData({ ...formData, parameterValues: newVals });
+                                                        }}
+                                                        className="h-8"
+                                                        disabled={isLoading}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">{p.range}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSave}>Approve Report</Button>
+                <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+                    <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
+                    <Button
+                        onClick={handleSave}
+                        className="bg-primary text-primary-foreground hover:opacity-90"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Saving..." : "Approve Report"}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+import { getBillById } from "@/lib/actions/radiologyBills";
+import {
+    saveRadiologyTechnician,
+    saveRadiologyReport,
+    getParametersByOrderTest,
+    getReportByOrderTest
+} from "@/lib/actions/radiologyResults";
 
 /* -------------------- MAIN DIALOG -------------------- */
 
@@ -217,72 +397,80 @@ export default function RadiologyBillDetailsDialog({
     const [selectedTest, setSelectedTest] = useState<TestItem | null>(null);
     const [isCollectorOpen, setIsCollectorOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // Dummy Data
-    const bill = {
-        id: billId || "RAD-00100200",
-        billNo: (billId || "RAD-00100200").substring(0, 8).toUpperCase(),
-        date: "20/01/2024",
-        customerName: "Rajesh Kumar",
-        customerPhone: "9876543210",
-        age: "35 Years",
-        gender: "Male",
-        email: "rajesh@example.com",
-        address: "123, Street Name, City",
-        bloodGroup: "O+",
-        doctorName: "Dr. Amit Sharma",
-        generatedBy: "System",
-        note: "Patient has history of cough",
-        totalAmount: 3500,
-        totalDiscount: 0,
-        totalTax: 175,
-        netAmount: 3675,
-        totalDeposit: 3675,
-        balanceAmount: 0,
-        prescriptionNo: "PR-2024-001",
+    const [billData, setBillData] = useState<any>(null);
+    const [items, setItems] = useState<TestItem[]>([]);
+
+    const fetchBill = async () => {
+        setLoading(true);
+        const res = await getBillById(billId);
+        if (res.success && res.data) {
+            setBillData(res.data);
+            setItems(res.data.tests.map((t: any) => ({
+                id: t.id,
+                testName: t.testName,
+                status: t.status || "Pending",
+                reportHours: t.reportHours,
+                tax: Number(t.tax),
+                netAmount: Number(t.price) + (Number(t.price) * Number(t.tax) / 100),
+                technicianName: t.technicianName,
+                scanDate: t.scanDate ? new Date(t.scanDate).toISOString().split("T")[0] : undefined,
+                approvedBy: t.approvedBy,
+                approveDate: t.approveDate ? new Date(t.approveDate).toISOString().split("T")[0] : undefined,
+                findings: t.findings,
+            })));
+        }
+        setLoading(false);
     };
 
-    const [items, setItems] = useState<TestItem[]>([
-        {
-            id: "1",
-            testName: "X-Ray Chest PA View",
-            status: "Approved",
-            technicianName: "John Doe",
-            scanDate: "20/01/2024",
-            approvedBy: "Dr. Smith",
-            approveDate: "20/01/2024",
-            reportHours: 2,
-            tax: 5,
-            netAmount: 1575
-        },
-        {
-            id: "2",
-            testName: "CT Scan Whole Abdomen",
-            status: "Pending",
-            tax: 5,
-            netAmount: 2100
-        },
-    ]);
+    useEffect(() => {
+        if (open && billId) {
+            fetchBill();
+        }
+    }, [open, billId]);
 
-    const handleSaveTechnician = (data: any) => {
+    const handleSaveTechnician = async (data: any) => {
         if (!selectedTest) return;
-        setItems(prev => prev.map(item =>
-            item.id === selectedTest.id
-                ? { ...item, technicianName: data.personName, scanDate: data.scanDate, status: "Scanned" as const }
-                : item
-        ));
+
+        const res = await saveRadiologyTechnician({
+            orderTestId: selectedTest.id,
+            technicianName: data.personName,
+            scanDate: new Date(data.scanDate),
+        });
+
+        if (res.success) {
+            toast.success(res.message);
+            fetchBill();
+        } else {
+            toast.error(res.error || "Failed to save technician");
+        }
     };
 
-    const handleSaveReport = (data: any) => {
+    const handleSaveReport = async (data: any) => {
         if (!selectedTest) return;
-        setItems(prev => prev.map(item =>
-            item.id === selectedTest.id
-                ? { ...item, approvedBy: data.approvedBy, approveDate: data.approveDate, status: "Approved" as const }
-                : item
-        ));
+
+        const res = await saveRadiologyReport({
+            orderTestId: selectedTest.id,
+            approvedBy: data.approvedBy,
+            approveDate: new Date(data.approveDate),
+            findings: data.findings,
+            parameterValues: data.parameterValues,
+        });
+
+        if (res.success) {
+            toast.success(res.message);
+            fetchBill();
+        } else {
+            toast.error(res.error || "Failed to save report");
+        }
     };
 
-    if (!open) return null;
+    if (!open || !billData) return null;
+
+    const bill = billData;
+    const billNo = bill.id.substring(0, 8).toUpperCase();
+    const formattedDate = bill.billDate ? new Date(bill.billDate).toLocaleDateString() : "";
 
     return (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
@@ -296,9 +484,9 @@ export default function RadiologyBillDetailsDialog({
                         <div>
                             <h2 className="text-xl font-bold">Radiology Bill Details</h2>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {bill.customerName}</span>
-                                <span className="flex items-center gap-1 font-medium"><Calendar className="h-3 w-3" /> {bill.date}</span>
-                                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {bill.billNo}</span>
+                                <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {bill.patientName}</span>
+                                <span className="flex items-center gap-1 font-medium"><Calendar className="h-3 w-3" /> {formattedDate}</span>
+                                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {billNo}</span>
                             </div>
                         </div>
                     </div>
@@ -330,8 +518,8 @@ export default function RadiologyBillDetailsDialog({
                                         <h3 className="text-sm font-bold uppercase tracking-wider">Patient & Billing Summary</h3>
                                         <div className="h-4 w-px bg-border hidden md:block" />
                                         <div className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Patient:</span> {bill.customerName}</span>
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.netAmount}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Patient:</span> {bill.patientName}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.billNetAmount}</span>
                                             <span><span className="text-[10px] uppercase opacity-70 mr-1">Due:</span> ₹{bill.balanceAmount}</span>
                                         </div>
                                     </div>
@@ -344,36 +532,36 @@ export default function RadiologyBillDetailsDialog({
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                         {/* Patient Details */}
                                         <SummarySection title="Patient Information" icon={User}>
-                                            <SummaryItem label="Patient Name" value={bill.customerName} />
-                                            <SummaryItem label="Mobile No" value={bill.customerPhone} />
-                                            <SummaryItem label="Age" value={bill.age} />
-                                            <SummaryItem label="Gender" value={bill.gender} />
-                                            <SummaryItem label="Blood Group" value={bill.bloodGroup} />
-                                            <SummaryItem label="Prescription No" value={bill.prescriptionNo} />
-                                            <SummaryItem label="Email" value={bill.email} />
+                                            <SummaryItem label="Patient Name" value={bill.patientName} />
+                                            <SummaryItem label="Mobile No" value={bill.patientPhone} />
+                                            <SummaryItem label="Age" value={bill.patientDob ? `${new Date().getFullYear() - new Date(bill.patientDob).getFullYear()} Years` : "-"} />
+                                            <SummaryItem label="Gender" value={bill.patientGender} />
+                                            <SummaryItem label="Blood Group" value={bill.patientBloodGroup} />
+                                            <SummaryItem label="Prescription No" value={"-"} />
+                                            <SummaryItem label="Email" value={bill.patientEmail} />
                                             <div className="col-span-2">
-                                                <SummaryItem label="Address" value={bill.address} />
+                                                <SummaryItem label="Address" value={bill.patientAddress} />
                                             </div>
                                         </SummarySection>
 
                                         {/* Billing Details */}
                                         <SummarySection title="Billing Details" icon={Building2}>
                                             <SummaryItem label="Doctor Name" value={bill.doctorName} />
-                                            <SummaryItem label="Generated By" value={bill.generatedBy} />
-                                            <SummaryItem label="Bill No" value={bill.billNo} />
-                                            <SummaryItem label="Bill Date" value={bill.date} />
+                                            <SummaryItem label="Generated By" value={"System"} />
+                                            <SummaryItem label="Bill No" value={billNo} />
+                                            <SummaryItem label="Bill Date" value={formattedDate} />
                                             <div className="col-span-2">
-                                                <SummaryItem label="Note" value={bill.note} />
+                                                <SummaryItem label="Note" value={bill.remarks} />
                                             </div>
                                         </SummarySection>
 
                                         {/* Payment Summary */}
                                         <SummarySection title="Payment Summary" icon={ClipboardCheck}>
-                                            <SummaryItem label="Total" value={`₹${bill.totalAmount}`} />
-                                            <SummaryItem label="Total Discount" value={`₹${bill.totalDiscount || 0}`} />
+                                            <SummaryItem label="Total" value={`₹${bill.billTotalAmount}`} />
+                                            <SummaryItem label="Total Discount" value={`₹${bill.billDiscount || 0}`} />
                                             <SummaryItem label="Total Tax" value={`₹${bill.totalTax || 0}`} />
-                                            <SummaryItem label="Net Amount" value={`₹${bill.netAmount}`} />
-                                            <SummaryItem label="Total Deposit" value={`₹${bill.totalDeposit || 0}`} />
+                                            <SummaryItem label="Net Amount" value={`₹${bill.billNetAmount}`} />
+                                            <SummaryItem label="Total Deposit" value={`₹${bill.totalPaid || 0}`} />
                                             <div className="col-span-2">
                                                 <div className="flex items-center justify-between p-2 bg-primary/5 rounded border border-primary/20 mt-1">
                                                     <span className="text-xs font-bold uppercase text-primary">Balance Amount</span>
@@ -542,7 +730,7 @@ export default function RadiologyBillDetailsDialog({
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Customer</span>
-                            <span className="text-sm font-semibold">{bill.customerName}</span>
+                            <span className="text-sm font-semibold">{bill.patientName}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Balance Amount</span>
@@ -562,7 +750,7 @@ export default function RadiologyBillDetailsDialog({
                     open={isCollectorOpen}
                     onClose={() => setIsCollectorOpen(false)}
                     onSave={handleSaveTechnician}
-                    testName={selectedTest?.testName || ""}
+                    test={selectedTest}
                 />
 
                 <ReportEditorDialog
