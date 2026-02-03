@@ -27,7 +27,7 @@ import { BsCash } from "react-icons/bs";
 import RadiologyBillDetailsDialog from "./RadiologyBillDetailsDialog";
 import RadiologyPaymentDialog from "./RadiologyPaymentDialog";
 
-import { getBillsByHospital } from "@/lib/actions/radiologyBills";
+import { getBillsByHospital, getBillById } from "@/lib/actions/radiologyBills";
 
 type Bill = {
     id: string;
@@ -91,30 +91,48 @@ export default function RadiologyBillPage() {
     );
 
     const handlePrint = async (billId: string) => {
-        const bill = bills.find((b) => b.id === billId);
-        if (!bill) return;
-
         try {
             toast.loading("Preparing PDF...", { id: "print-pdf" });
-            const blob = await pdf(
+            const result = await getBillById(billId);
+            if (!result.success || !result.data) {
+                toast.error(result.error || "Failed to fetch bill details", { id: "print-pdf" });
+                return;
+            }
+            const billData = result.data;
+            const pdfDoc = (
                 <RadiologyBillPdf
-                    billNumber={bill.id.substring(0, 8).toUpperCase()}
-                    billDate={format(new Date(bill.createdAt), "dd/MM/yyyy")}
-                    patientName={bill.patientName}
-                    patientPhone={bill.patientPhone}
-                    paymentMode={bill.paymentMode}
-                    items={[
-                        { testName: "X-Ray Chest", quantity: 1, price: 1500, total: 1500 },
-                        { testName: "CT Scan", quantity: 1, price: 2000, total: 2000 },
-                    ]}
-                    totalAmount={bill.billTotalAmount}
-                    discount={bill.billTotalAmount - bill.billNetAmount}
-                    tax={0}
-                    organization={{ name: "Medi Sparsh Radiology", metadata: { address: "Test Address", phone: "1234567890", email: "radiology@test.com" } }}
+                    billNumber={billData.id.substring(0, 8).toUpperCase()}
+                    billDate={format(new Date(billData.billDate), "dd/MM/yyyy")}
+                    customerName={billData.patientName}
+                    customerPhone={billData.patientPhone}
+                    paymentMode={billData.payments?.[0]?.paymentMode || "Cash"}
+                    items={billData.tests.map((t: any) => {
+                        const price = Number(t.price) || 0;
+                        const taxPercent = Number(t.tax) || 0;
+                        const taxAmount = (price * taxPercent) / 100;
+                        const total = price + taxAmount;
+                        return {
+                            testName: t.testName,
+                            price,
+                            tax: taxPercent,
+                            total,
+                        };
+                    })}
+                    discount={Number(billData.billDiscount)}
+                    organization={billData.organization}
                     orgModeCheck={true}
+                    payments={billData.payments?.map((p: any) => ({
+                        date: format(new Date(p.paymentDate), "dd/MM/yyyy"),
+                        amount: Number(p.paymentAmount),
+                        mode: p.paymentMode,
+                    })) || []}
+                    totalPaid={billData.totalPaid}
+                    balanceAmount={billData.balanceAmount}
+                    doctorName={billData.doctorName || ""}
                 />
-            ).toBlob();
+            );
 
+            const blob = await pdf(pdfDoc).toBlob();
             const url = URL.createObjectURL(blob);
             window.open(url, "_blank");
             toast.success("PDF ready for printing", { id: "print-pdf" });
@@ -352,6 +370,7 @@ export default function RadiologyBillPage() {
                 onClose={() => {
                     setIsViewOpen(false);
                     setSelectedBill("");
+                    fetchBills();
                 }}
                 bill={selectedBill as string}
             />
@@ -361,6 +380,7 @@ export default function RadiologyBillPage() {
                 onClose={() => {
                     setIsPaymentOpen(false);
                     setSelectedBill("");
+                    fetchBills();
                 }}
                 bill={selectedBill as string}
             />

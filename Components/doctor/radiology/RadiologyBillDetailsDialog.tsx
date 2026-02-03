@@ -44,6 +44,10 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { pdf } from "@react-pdf/renderer";
+import { RadiologyTestReportPdf } from "@/Components/pdf/RadiologyTestReportPdf";
+import { RadiologyBillPdf } from "@/Components/pdf/radiologyBillPdf";
+import { format } from "date-fns";
 
 /* -------------------- TYPES -------------------- */
 
@@ -398,6 +402,7 @@ export default function RadiologyBillDetailsDialog({
     const [isCollectorOpen, setIsCollectorOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
 
     const [billData, setBillData] = useState<any>(null);
     const [items, setItems] = useState<TestItem[]>([]);
@@ -463,6 +468,122 @@ export default function RadiologyBillDetailsDialog({
             fetchBill();
         } else {
             toast.error(res.error || "Failed to save report");
+        }
+    };
+
+    const handlePrintReport = async (testItems: TestItem[]) => {
+        try {
+            setIsPrinting(true);
+            toast.loading("Preparing Radiology Report PDF...", { id: "print-report" });
+
+            // Ensure all test items have parameters loaded
+            const reportsData = await Promise.all(testItems.map(async (item) => {
+                let parameters: any[] = [];
+
+                const paramsResult = await getParametersByOrderTest(item.id);
+                const reportResult = await getReportByOrderTest(item.id);
+
+                if (paramsResult.success && paramsResult.data) {
+                    const reportData = reportResult.success ? reportResult.data : null;
+                    const paramValues = reportData?.parameterValues || [];
+
+                    parameters = paramsResult.data.map((p: any) => {
+                        const valObj = paramValues.find((pv: any) => pv.parameterID === p.id);
+                        return {
+                            id: p.id,
+                            name: p.paramName,
+                            value: valObj?.resultValue || "N/A",
+                            range: `${p.fromRange} - ${p.toRange}`,
+                        };
+                    });
+                }
+
+                return {
+                    testName: item.testName,
+                    technicianName: item.technicianName,
+                    scanDate: item.scanDate,
+                    approvedBy: item.approvedBy,
+                    approveDate: item.approveDate,
+                    findings: item.findings,
+                    parameters: parameters
+                };
+            }));
+
+            const pdfDoc = (
+                <RadiologyTestReportPdf
+                    patient={{
+                        name: bill.patientName,
+                        phone: bill.patientPhone,
+                        age: bill.patientDob ? `${new Date().getFullYear() - new Date(bill.patientDob).getFullYear()} Years` : "-",
+                        gender: bill.patientGender,
+                        address: bill.patientAddress
+                    }}
+                    billDetails={{
+                        billNo: bill.id.substring(0, 8).toUpperCase(),
+                        date: format(new Date(bill.billDate), "dd/MM/yyyy")
+                    }}
+                    reports={reportsData}
+                    organization={billData.organization}
+                    orgModeCheck={true}
+                    doctorName={bill.doctorName}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            toast.success("Radiology report ready", { id: "print-report" });
+        } catch (error) {
+            console.error("Error generating report PDF:", error);
+            toast.error("Failed to generate report PDF", { id: "print-report" });
+        } finally {
+            setIsPrinting(false);
+        }
+    };
+
+    const handlePrintBill = async () => {
+        try {
+            toast.loading("Preparing Bill PDF...", { id: "print-bill" });
+            const pdfDoc = (
+                <RadiologyBillPdf
+                    billNumber={bill.id.substring(0, 8).toUpperCase()}
+                    billDate={format(new Date(bill.billDate), "dd/MM/yyyy")}
+                    customerName={bill.patientName}
+                    customerPhone={bill.patientPhone}
+                    paymentMode={bill.payments?.[0]?.paymentMode || "Cash"}
+                    items={bill.tests.map((t: any) => {
+                        const price = Number(t.price) || 0;
+                        const taxPercent = Number(t.tax) || 0;
+                        const taxAmount = (price * taxPercent) / 100;
+                        const total = price + taxAmount;
+                        return {
+                            testName: t.testName,
+                            price,
+                            tax: taxPercent,
+                            total,
+                        };
+                    })}
+                    discount={Number(bill.billDiscount)}
+                    organization={billData.organization}
+                    orgModeCheck={true}
+                    payments={billData.payments?.map((p: any) => ({
+                        date: format(new Date(p.paymentDate), "dd/MM/yyyy"),
+                        amount: Number(p.paymentAmount),
+                        mode: p.paymentMode,
+                    })) || []}
+                    totalPaid={billData.totalPaid}
+                    balanceAmount={billData.balanceAmount}
+                    doctorName={billData.doctorName || ""}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            toast.success("Bill ready for printing", { id: "print-bill" });
+        } catch (error) {
+            console.error("Print error:", error);
+            toast.error("Failed to generate PDF", { id: "print-bill" });
         }
     };
 
@@ -589,7 +710,8 @@ export default function RadiologyBillDetailsDialog({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => toast.info("Printing all reports...")}
+                                            onClick={() => handlePrintReport(items.filter(i => i.status === "Approved"))}
+                                            disabled={isPrinting || items.filter(i => i.status === "Approved").length === 0}
                                         >
                                             <Printer className="h-4 w-4" />
                                         </Button>
@@ -704,7 +826,8 @@ export default function RadiologyBillDetailsDialog({
                                                                                 variant="outline"
                                                                                 size="icon"
                                                                                 className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                                                                                onClick={() => toast.info("Printing report...")}
+                                                                                onClick={() => handlePrintReport([item])}
+                                                                                disabled={isPrinting}
                                                                             >
                                                                                 <Printer className="h-4 w-4" />
                                                                             </Button>
@@ -739,7 +862,7 @@ export default function RadiologyBillDetailsDialog({
                     </div>
                     <div className="flex gap-3">
                         <Button variant="outline" onClick={onClose}>Close View</Button>
-                        <Button className="gap-2" onClick={() => toast.success("Printing bill...")}>
+                        <Button className="gap-2" onClick={handlePrintBill}>
                             <Printer size={16} /> Print Bill
                         </Button>
                     </div>
