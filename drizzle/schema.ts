@@ -1509,3 +1509,23 @@ export const radiologyPayments = pgTable("radiology_payments", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
+
+// ambulance table
+export const ambulanceStatusEnum = pgEnum("ambulance_status", ["active", "inactive", "maintenance"]);
+export const ambulanceTypeEnum = pgEnum("ambulance_type", ["rented", "owned"]);
+
+export const ambulance = pgTable("ambulance", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	vehicleNumber: text("vehicle_number").notNull(),
+	vehicleType: ambulanceTypeEnum("vehicle_type").notNull(),
+	vehicleModel: text("vehicle_model").notNull(),
+	vehicleYear: text("vehicle_year").notNull(),
+	driverName: text("driver_name").notNull(),
+	driverContactNo: text("driver_contact_no").notNull(),
+	driverLicenseNo: text("driver_license_no").notNull(),
+	status: ambulanceStatusEnum("status").notNull().default("active"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
