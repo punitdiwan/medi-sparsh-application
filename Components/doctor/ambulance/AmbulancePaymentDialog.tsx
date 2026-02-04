@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* -------------------- TYPES -------------------- */
 
@@ -202,280 +203,344 @@ export default function AmbulancePaymentDialog({
 
     return (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="fixed inset-0 flex flex-col bg-dialog max-h-screen overflow-hidden">
+            <div className="fixed inset-0 flex flex-col bg-background max-h-screen overflow-hidden">
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-6 py-4 bg-dialog-header border-b border-dialog shadow-md">
                     <div className="flex items-center gap-4">
-                        <CreditCard className="h-5 w-5 text-overview-info" />
+                        <div className="flex items-center justify-center rounded-lg">
+                            <CreditCard className="bg-dialog-header text-dialog-icon" />
+                        </div>
                         <div>
-                            <h1 className="text-xl font-bold text-header">Payment Receipt</h1>
-                            <p className="text-xs text-header/70">{billData.id}</p>
+                            <h2 className="text-xl font-bold">Ambulance Payments</h2>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                                <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {billData.patientName}</span>
+                                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {billData.id}</span>
+                            </div>
                         </div>
                     </div>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={onClose}
-                        className="h-8 w-8 text-header hover:bg-dialog"
+                        className="hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-6 w-6" />
                     </Button>
                 </div>
 
-                {/* SCROLLABLE CONTENT */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* SUMMARY SECTION */}
-                    <Card className="bg-dialog-surface border-dialog">
-                        <CardHeader
-                            className="pb-3 cursor-pointer hover:bg-overview-muted transition-colors"
-                            onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                        >
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-sm font-bold text-dialog flex items-center gap-2">
-                                    <User className="h-4 w-4" />
-                                    BILL INFORMATION
-                                </CardTitle>
-                                {isSummaryExpanded ? (
-                                    <ChevronUp className="h-4 w-4 text-dialog-muted" />
-                                ) : (
-                                    <ChevronDown className="h-4 w-4 text-dialog-muted" />
-                                )}
-                            </div>
-                        </CardHeader>
-                        {isSummaryExpanded && (
-                            <CardContent className="pt-4 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-dialog-muted font-bold">Patient Name</Label>
-                                        <p className="text-sm font-semibold text-dialog">{billData.patientName}</p>
+                {/* CONTENT */}
+                <div className="flex-1 overflow-y-auto p-6 bg-dialog-surface text-dialog">
+                    <div className="space-y-6">
+                        {/* Expandable Bill Summary Card */}
+                        <Card className="border-overview-strong bg-overview-card/30 shadow-sm overflow-hidden transition-all duration-300">
+                            <button
+                                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                                className="w-full flex items-center justify-between px-6 py-3 bg-overview-card hover:bg-muted/10 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-1.5 bg-primary/10 rounded-md">
+                                        <Info className="h-4 w-4 text-primary" />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-dialog-muted font-bold">Phone</Label>
-                                        <p className="text-sm font-semibold text-dialog">{billData.patientPhone}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-dialog-muted font-bold">Vehicle Number</Label>
-                                        <p className="text-sm font-semibold text-dialog">{billData.vehicleNumber}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs text-dialog-muted font-bold">Driver Name</Label>
-                                        <p className="text-sm font-semibold text-dialog">{billData.driverName}</p>
+                                    <div className="flex items-center gap-4">
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Bill Summary Details</h3>
+                                        <div className="h-4 w-px bg-border hidden md:block" />
+                                        <div className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Bill:</span> {billData.id}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Patient:</span> {billData.patientName}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{netAmount.toFixed(2)}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </CardContent>
-                        )}
-                    </Card>
+                                {isSummaryExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                            </button>
 
-                    {/* BILLING SUMMARY */}
-                    <Card className="bg-dialog-surface border-dialog">
-                        <CardHeader>
-                            <CardTitle className="text-sm font-bold text-dialog flex items-center gap-2">
-                                <IndianRupee className="h-4 w-4" />
-                                AMOUNT SUMMARY
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <div className="flex justify-between text-sm border-b border-dialog/30 pb-2">
-                                <span className="text-dialog-muted">Total Amount</span>
-                                <span className="font-semibold text-dialog">₹{bill.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm border-b border-dialog/30 pb-2">
-                                <span className="text-dialog-muted">Discount ({discountPercent}%)</span>
-                                <span className="font-semibold text-overview-danger">-₹{discountAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm border-b border-dialog/30 pb-2">
-                                <span className="text-dialog-muted">Tax ({taxPercent}%)</span>
-                                <span className="font-semibold text-overview-success">+₹{taxAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-base font-bold bg-dialog p-3 rounded-lg border border-dialog/50">
-                                <span className="text-dialog">Net Amount</span>
-                                <span className="text-overview-teal">₹{netAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm border-b border-dialog/30 pb-2">
-                                <span className="text-dialog-muted">Paid Amount</span>
-                                <span className="font-semibold text-overview-success">₹{totalPaid.toFixed(2)}</span>
-                            </div>
-                            <div className={`flex justify-between text-base font-bold p-3 rounded-lg border ${dueAmount > 0 ? "bg-overview-danger/10 border-overview-danger/30" : "bg-overview-success/10 border-overview-success/30"}`}>
-                                <span className={dueAmount > 0 ? "text-overview-danger" : "text-overview-success"}>Due Amount</span>
-                                <span className={dueAmount > 0 ? "text-overview-danger" : "text-overview-success"}>₹{dueAmount.toFixed(2)}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            {isSummaryExpanded && (
+                                <CardContent className="p-6 border-t border-overview-strong animate-in slide-in-from-top-2 duration-300">
+                                    <SummarySection title="Detailed Bill Overview" icon={Building2}>
+                                        <SummaryItem label="Bill No" value={billData.id} />
+                                        <SummaryItem label="Patient Name" value={billData.patientName} />
+                                        <SummaryItem label="Patient Phone" value={billData.patientPhone} />
+                                        <SummaryItem label="Vehicle Number" value={billData.vehicleNumber} />
+                                        <SummaryItem label="Driver Name" value={billData.driverName} />
+                                        <SummaryItem label="Pickup Location" value={billData.pickupLocation} />
+                                        <div className="col-span-2">
+                                            <SummaryItem label="Dropoff Location" value={billData.dropoffLocation} />
+                                        </div>
+                                    </SummarySection>
+                                </CardContent>
+                            )}
+                        </Card>
 
-                    {/* PAYMENT FORM */}
-                    <Card className="bg-dialog-surface border-dialog">
-                        <CardHeader>
-                            <CardTitle className="text-sm font-bold text-dialog flex items-center gap-2">
-                                <CreditCard className="h-4 w-4" />
-                                ADD PAYMENT
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="payment-date" className="text-xs text-dialog-muted font-bold">Payment Date</Label>
-                                    <Input
-                                        id="payment-date"
-                                        type="date"
-                                        value={paymentData.date}
-                                        onChange={(e) => setPaymentData({ ...paymentData, date: e.target.value })}
-                                        className="bg-dialog-input border-dialog text-dialog"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="payment-amount" className="text-xs text-dialog-muted font-bold">Amount</Label>
-                                    <Input
-                                        id="payment-amount"
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={paymentData.amount}
-                                        onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })}
-                                        className="bg-dialog-input border-dialog text-dialog"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="payment-mode" className="text-xs text-dialog-muted font-bold">Payment Mode</Label>
-                                    <Select value={paymentData.mode} onValueChange={(mode) => setPaymentData({ ...paymentData, mode })}>
-                                        <SelectTrigger id="payment-mode" className="bg-dialog-input border-dialog text-dialog">
-                                            <SelectValue placeholder="Select mode" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-dialog-surface border-dialog">
-                                            <SelectItem value="Cash">Cash</SelectItem>
-                                            <SelectItem value="Card">Card</SelectItem>
-                                            <SelectItem value="Online">Online</SelectItem>
-                                            <SelectItem value="Cheque">Cheque</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="reference-no" className="text-xs text-dialog-muted font-bold">Reference No</Label>
-                                    <Input
-                                        id="reference-no"
-                                        placeholder="Trans ID / Cheque No"
-                                        value={paymentData.referenceNo}
-                                        onChange={(e) => setPaymentData({ ...paymentData, referenceNo: e.target.value })}
-                                        disabled={paymentData.mode === "Cash"}
-                                        className="bg-dialog-input border-dialog text-dialog"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="payment-note" className="text-xs text-dialog-muted font-bold">Note</Label>
-                                <Input
-                                    id="payment-note"
-                                    placeholder="Additional notes"
-                                    value={paymentData.note}
-                                    onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
-                                    className="bg-dialog-input border-dialog text-dialog"
-                                />
-                            </div>
-                            <Button onClick={handleAddPayment} className="w-full bg-overview-info hover:bg-overview-info/90 text-white font-semibold gap-2">
-                                <Save className="h-4 w-4" />
-                                Record Payment
-                            </Button>
-                        </CardContent>
-                    </Card>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Payment Summary & Form */}
+                            <div className="space-y-6">
+                                <Card className="border-overview-strong bg-overview-card shadow-sm">
+                                    <CardHeader className="py-3 px-4 border-b border-overview-strong">
+                                        <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                                            <IndianRupee className="h-4 w-4 text-primary" />
+                                            Payment Details
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6">
+                                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-8 pb-6 border-b border-dashed">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-muted-foreground">Total Amount</span>
+                                                    <span className="font-semibold">₹{bill.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-muted-foreground">Discount ({discountPercent}%)</span>
+                                                    <span className="font-semibold text-destructive">-₹{discountAmount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-muted-foreground">Tax ({taxPercent}%)</span>
+                                                    <span className="font-semibold">+₹{taxAmount.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-muted-foreground">Net Amount</span>
+                                                    <span className="font-bold">₹{netAmount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-muted-foreground">Paid Amount</span>
+                                                    <span className="font-bold text-green-600">₹{totalPaid.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center border-t border-muted-foreground/20 pt-2">
+                                                    <span className="text-sm font-bold uppercase text-primary">Due Amount</span>
+                                                    <span className="text-lg font-black text-primary">₹{dueAmount.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                    {/* TRANSACTION HISTORY */}
-                    {transactions.length > 0 && (
-                        <Card className="bg-dialog-surface border-dialog">
-                            <CardHeader>
-                                <CardTitle className="text-sm font-bold text-dialog flex items-center gap-2">
-                                    <History className="h-4 w-4" />
-                                    PAYMENT HISTORY
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="overflow-x-auto">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs">Date *</Label>
+                                                <Input
+                                                    type="date"
+                                                    value={paymentData.date}
+                                                    onChange={(e) => setPaymentData({ ...paymentData, date: e.target.value })}
+                                                    disabled={dueAmount <= 0}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="text-xs">Amount (₹) *</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={paymentData.amount || ""}
+                                                    onChange={(e) => setPaymentData({ ...paymentData, amount: parseFloat(e.target.value) || 0 })}
+                                                    disabled={dueAmount <= 0}
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="text-xs">Payment Mode</Label>
+                                                <Select
+                                                    value={paymentData.mode}
+                                                    onValueChange={(val) => setPaymentData({ ...paymentData, mode: val })}
+                                                    disabled={dueAmount <= 0}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Mode" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Cash">Cash</SelectItem>
+                                                        <SelectItem value="Card">Card</SelectItem>
+                                                        <SelectItem value="Online">Online / UPI</SelectItem>
+                                                        <SelectItem value="Cheque">Cheque</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Either show Note (for Cash) or Reference # (for other modes) */}
+                                            {paymentData.mode === "Cash" ? (
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs">Note</Label>
+                                                    <Input
+                                                        placeholder="Optional note"
+                                                        value={paymentData.note}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    <Label className="text-xs">Reference #</Label>
+                                                    <Input
+                                                        placeholder="Reference number / transaction id"
+                                                        value={paymentData.referenceNo}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, referenceNo: e.target.value })}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Shift note to next row for non-cash modes */}
+                                            {paymentData.mode !== "Cash" && (
+                                                <div className="col-span-2 mt-2">
+                                                    <Label className="text-xs">Note</Label>
+                                                    <Input
+                                                        placeholder="Optional note"
+                                                        value={paymentData.note}
+                                                        onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {dueAmount <= 0 ? (
+                                            <div className="w-full mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center gap-2">
+                                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                                <span className="text-sm font-semibold text-green-700">Bill Paid Successfully</span>
+                                            </div>
+                                        ) : (
+                                            <Button 
+                                                className="w-full mt-6 gap-2" 
+                                                onClick={handleAddPayment}
+                                                disabled={paymentData.amount <= 0}
+                                            >
+                                                <Save className="h-4 w-4" /> Save Transaction
+                                            </Button>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            {/* Transaction History */}
+                            <Card className="border-overview-strong bg-overview-card shadow-sm overflow-hidden flex flex-col">
+                                <CardHeader className="py-3 px-4 border-b border-overview-strong bg-muted/20">
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                                            <History className="h-4 w-4 text-primary" />
+                                            Transactions History
+                                        </CardTitle>
+                                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                                            {transactions.length} Records
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-0 flex-1">
                                     <Table>
-                                        <TableHeader>
-                                            <TableRow className="border-dialog hover:bg-transparent">
-                                                <TableHead className="text-dialog-muted text-xs font-bold">Date</TableHead>
-                                                <TableHead className="text-dialog-muted text-xs font-bold">Mode</TableHead>
-                                                <TableHead className="text-dialog-muted text-xs font-bold">Amount</TableHead>
-                                                <TableHead className="text-dialog-muted text-xs font-bold">Reference</TableHead>
-                                                <TableHead className="text-right text-dialog-muted text-xs font-bold">Actions</TableHead>
+                                        <TableHeader className="bg-muted/40">
+                                            <TableRow>
+                                                <TableHead className="text-xs">TRX ID</TableHead>
+                                                <TableHead className="text-xs">Date</TableHead>
+                                                <TableHead className="text-xs">Mode</TableHead>
+                                                <TableHead className="text-xs">Amount</TableHead>
+                                                <TableHead className="text-right text-xs pr-6">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {transactions.map((trx) => (
-                                                <TableRow key={trx.id} className="border-dialog hover:bg-overview-muted">
-                                                    <TableCell className="text-sm text-dialog font-medium">
-                                                        {format(new Date(trx.date), "dd MMM yyyy")}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge className="text-[10px] uppercase font-bold" variant="secondary">
-                                                            {trx.mode}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm font-bold text-overview-success">₹{trx.amount.toFixed(2)}</TableCell>
-                                                    <TableCell className="text-xs text-dialog-muted font-mono">{trx.note || "-"}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleDeleteTrx(trx.id, trx.amount)}
-                                                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
+                                            {transactions.length > 0 ? (
+                                                transactions.map((t) => (
+                                                    <TableRow key={t.id} className="hover:bg-muted/30 transition-colors">
+                                                        <TableCell className="text-xs font-mono">{t.id.substring(0, 8)}</TableCell>
+                                                        <TableCell className="text-xs">{t.date}</TableCell>
+                                                        <TableCell className="text-xs">
+                                                            <Badge variant="secondary" className="px-1.5 h-5 text-[10px]">
+                                                                {t.mode}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs font-bold font-mono">₹{t.amount.toFixed(2)}</TableCell>
+                                                        <TableCell className="text-right pr-6">
+                                                            <div className="flex justify-end gap-1">
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                                                                                onClick={() => handleDeleteTrx(t.id, t.amount)}>
+                                                                                <Trash2 className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            Delete
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic text-sm">
+                                                        No transactions found for this bill.
                                                     </TableCell>
                                                 </TableRow>
-                                            ))}
+                                            )}
                                         </TableBody>
                                     </Table>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
                 </div>
 
-                {/* DELETE CONFIRMATION */}
+                {/* FOOTER */}
+                <div className="bg-dialog-header border-t border-dialog text-dialog-muted px-6 py-4 flex justify-between items-center shadow-lg relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Net Amount</span>
+                            <span className="text-sm font-semibold">₹{netAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Paid</span>
+                            <span className="text-sm font-bold text-green-600">₹{totalPaid.toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Due Amount</span>
+                            <span className="text-sm font-bold text-destructive">₹{dueAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <Button variant="outline" onClick={onClose} className="gap-2">
+                        Close Payment View
+                    </Button>
+                </div>
+
+                {/* Delete Confirmation Dialog */}
                 {deleteConfirm && (
-                    <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                        <Card className="bg-dialog border-dialog max-w-sm">
+                    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                        <Card className="w-full max-w-md border-destructive">
                             <CardHeader>
-                                <CardTitle className="text-dialog flex items-center gap-2">
-                                    <Info className="h-5 w-5 text-overview-warning" />
-                                    Confirm Delete
+                                <CardTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                                    <Trash2 className="h-5 w-5" />
+                                    Delete Transaction
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <p className="text-sm text-dialog-muted">
-                                    Are you sure you want to delete this transaction of <span className="font-bold text-overview-danger">₹{deleteConfirm.amount.toFixed(2)}</span>?
+                                <p className="text-sm text-muted-foreground">
+                                    Are you sure you want to delete this transaction?
                                 </p>
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setDeleteConfirm(null)}
-                                        className="flex-1 border-dialog text-dialog hover:bg-dialog-surface"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        onClick={confirmDelete}
-                                        disabled={isDeleting}
-                                        className="flex-1"
-                                    >
-                                        {isDeleting ? "Deleting..." : "Delete"}
-                                    </Button>
+                                <div className="bg-muted/30 rounded-lg p-3 border border-muted">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium">Amount to be deleted:</span>
+                                        <span className="text-lg font-bold text-destructive">₹{deleteConfirm.amount}</span>
+                                    </div>
                                 </div>
+                                <p className="text-xs text-muted-foreground">
+                                    This action will update the bill status and due amount. This cannot be undone.
+                                </p>
                             </CardContent>
+                            <div className="flex gap-3 p-6 border-t">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => setDeleteConfirm(null)}
+                                    disabled={isDeleting}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    variant="destructive"
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="flex-1 gap-2"
+                                >
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                </Button>
+                            </div>
                         </Card>
                     </div>
                 )}
-
-                {/* FOOTER */}
-                <div className="flex gap-3 px-6 py-4 bg-dialog-header border-t border-dialog">
-                    <Button variant="outline" onClick={onClose} className="flex-1 border-dialog text-dialog hover:bg-dialog-surface">
-                        Close
-                    </Button>
-                    <Button className="flex-1 bg-overview-info hover:bg-overview-info/90 text-white font-semibold gap-2">
-                        <Printer className="h-4 w-4" />
-                        Save & Print
-                    </Button>
-                </div>
             </div>
         </div>
     );
