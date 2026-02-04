@@ -37,7 +37,7 @@ import {
   radiologyParameters,
   ambulance,
 } from "@/drizzle/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, ne, or } from "drizzle-orm";
 import type {
   NewPatient,
   NewStaff,
@@ -2618,21 +2618,30 @@ export async function restoreRadiologyTest(id: string) {
 // Ambulance Queries
 // ============================================
 
-export async function getAmbulancesByHospital(hospitalId: string) {
-  return await db
-    .select()
-    .from(ambulance)
-    .where(and(eq(ambulance.hospitalId, hospitalId), eq(ambulance.isDeleted, false)))
-    .orderBy(desc(ambulance.createdAt));
+export async function getAmbulancesByHospital(hospitalId: string, activeOnly = true) {
+  if (activeOnly) {
+    return await db
+      .select()
+      .from(ambulance)
+      .where(and(
+        eq(ambulance.hospitalId, hospitalId),
+        eq(ambulance.status, 'active')
+      ))
+      .orderBy(desc(ambulance.createdAt));
+  } else {
+    // Show all non-active: maintenance, inactive (including deleted ones)
+    return await db
+      .select()
+      .from(ambulance)
+      .where(and(
+        eq(ambulance.hospitalId, hospitalId),
+        ne(ambulance.status, 'active')
+      ))
+      .orderBy(desc(ambulance.updatedAt));
+  }
 }
 
-export async function getDeletedAmbulancesByHospital(hospitalId: string) {
-  return await db
-    .select()
-    .from(ambulance)
-    .where(and(eq(ambulance.hospitalId, hospitalId), eq(ambulance.isDeleted, true)))
-    .orderBy(desc(ambulance.updatedAt));
-}
+// Removing getDeletedAmbulancesByHospital as it's merged into the above
 
 export async function createAmbulance(data: NewAmbulance) {
   const result = await db.insert(ambulance).values(data).returning();
@@ -2648,19 +2657,11 @@ export async function updateAmbulance(id: string, data: Partial<NewAmbulance>) {
   return result[0];
 }
 
-export async function deleteAmbulance(id: string) {
-  const result = await db
-    .update(ambulance)
-    .set({ isDeleted: true, updatedAt: new Date(), status: 'inactive' })
-    .where(eq(ambulance.id, id))
-    .returning();
-  return result[0];
-}
 
 export async function restoreAmbulance(id: string) {
   const result = await db
     .update(ambulance)
-    .set({ isDeleted: false, updatedAt: new Date(), status: 'active' })
+    .set({ updatedAt: new Date(), status: 'active' })
     .where(eq(ambulance.id, id))
     .returning();
   return result[0];

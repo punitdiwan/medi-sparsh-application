@@ -18,8 +18,6 @@ import { AmbulanceManagementDialog, AmbulanceVehicleFormData } from "./Ambulance
 import {
     getAmbulances,
     saveAmbulance,
-    deleteAmbulance,
-    restoreAmbulance,
 } from "@/lib/actions/ambulanceActions";
 import {
     DropdownMenu,
@@ -38,7 +36,6 @@ type AmbulanceVehicle = {
     driverLicenseNo: string;
     status: "active" | "maintenance" | "inactive";
     vehicleYear: string;
-    isDeleted: boolean;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -47,7 +44,7 @@ export default function AmbulanceManagementPage() {
     const [vehicles, setVehicles] = useState<AmbulanceVehicle[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [showDeleted, setShowDeleted] = useState(false);
+    const [isActiveOnly, setIsActiveOnly] = useState(true);
     const ability = useAbility();
     const [visibleFields, setVisibleFields] = useState<string[]>([
         "vehicleNumber",
@@ -64,7 +61,7 @@ export default function AmbulanceManagementPage() {
 
     const fetchVehicles = async () => {
         setLoading(true);
-        const res = await getAmbulances(showDeleted);
+        const res = await getAmbulances(isActiveOnly);
         if (res.data) {
             setVehicles(res.data as AmbulanceVehicle[]);
         } else {
@@ -75,7 +72,7 @@ export default function AmbulanceManagementPage() {
 
     useEffect(() => {
         fetchVehicles();
-    }, [showDeleted]);
+    }, [isActiveOnly]);
 
     const filteredVehicles = useMemo(() => {
         const query = search.toLowerCase().trim();
@@ -106,6 +103,7 @@ export default function AmbulanceManagementPage() {
         if (res.data) {
             setVehicles(prev => prev.map(v => v.id === id ? { ...v, status: newStatus } : v));
             toast.success(`Vehicle status updated to ${newStatus}`);
+            fetchVehicles();
         } else {
             toast.error(res.error || "Failed to update status");
         }
@@ -131,27 +129,6 @@ export default function AmbulanceManagementPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        const res = await deleteAmbulance(id);
-        if (res.data) {
-            setVehicles(prev => prev.map(v => v.id === id ? { ...v, isDeleted: true } : v));
-            fetchVehicles();
-            toast.success("Vehicle deleted successfully");
-        } else {
-            toast.error(res.error || "Failed to delete vehicle");
-        }
-    };
-
-    const handleRestore = async (id: string) => {
-        const res = await restoreAmbulance(id);
-        if (res.data) {
-            setVehicles(prev => prev.map(v => v.id === id ? { ...v, isDeleted: false } : v));
-            fetchVehicles();
-            toast.success("Vehicle restored successfully");
-        } else {
-            toast.error(res.error || "Failed to restore vehicle");
-        }
-    };
 
     const allColumns: ColumnDef<AmbulanceVehicle>[] = [
         {
@@ -204,45 +181,18 @@ export default function AmbulanceManagementPage() {
             header: "Actions",
             cell: ({ row }) => (
                 <div className="flex gap-2">
-                    {!row.original.isDeleted ? (
-                        <>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEditVehicle(row.original)}>
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Edit Vehicle</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <ConfirmDialog
-                                title="Delete Vehicle"
-                                description={`Are you sure you want to delete ${row.original.vehicleNumber}?`}
-                                onConfirm={() => handleDelete(row.original.id)}
-                                trigger={
-                                    <Button variant="ghost" size="icon">
-                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                    </Button>
-                                }
-                            />
-                        </>
-                    ) : (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRestore(row.original.id)}>
-                                        <RotateCcw className="w-4 h-4 text-green-500" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Restore Vehicle</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handleEditVehicle(row.original)}>
+                                    <Edit className="w-4 h-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Edit Vehicle</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             ),
         },
@@ -284,11 +234,13 @@ export default function AmbulanceManagementPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                         <Switch
-                            id="show-deleted"
-                            checked={showDeleted}
-                            onCheckedChange={setShowDeleted}
+                            id="view-mode"
+                            checked={isActiveOnly}
+                            onCheckedChange={setIsActiveOnly}
                         />
-                        <Label htmlFor="show-deleted">Show Deleted Only</Label>
+                        <Label htmlFor="view-mode">
+                            {isActiveOnly ? "Active" : "In Active"}
+                        </Label>
                     </div>
                 </div>
                 <div className="flex gap-3 items-center">

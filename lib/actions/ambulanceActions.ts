@@ -4,24 +4,19 @@ import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 import {
     getAmbulancesByHospital,
-    getDeletedAmbulancesByHospital,
     createAmbulance as dbCreateAmbulance,
     updateAmbulance as dbUpdateAmbulance,
-    deleteAmbulance as dbDeleteAmbulance,
-    restoreAmbulance as dbRestoreAmbulance,
 } from "@/db/queries";
 import { NewAmbulance } from "@/db/types";
 
-export async function getAmbulances(showDeleted = false) {
+export async function getAmbulances(activeOnly = true) {
     try {
         const org = await getActiveOrganization();
         if (!org) {
             return { error: "Unauthorized" };
         }
 
-        const data = showDeleted
-            ? await getDeletedAmbulancesByHospital(org.id)
-            : await getAmbulancesByHospital(org.id);
+        const data = await getAmbulancesByHospital(org.id, activeOnly);
 
         return { data };
     } catch (error) {
@@ -62,34 +57,3 @@ export async function saveAmbulance(data: Partial<NewAmbulance> & { id?: string 
     }
 }
 
-export async function deleteAmbulance(id: string) {
-    try {
-        const org = await getActiveOrganization();
-        if (!org) {
-            return { error: "Unauthorized" };
-        }
-
-        const deleted = await dbDeleteAmbulance(id);
-        revalidatePath("/doctor/ambulance/ambulanceManagement");
-        return { data: deleted };
-    } catch (error) {
-        console.error("Error deleting ambulance:", error);
-        return { error: "Failed to delete ambulance" };
-    }
-}
-
-export async function restoreAmbulance(id: string) {
-    try {
-        const org = await getActiveOrganization();
-        if (!org) {
-            return { error: "Unauthorized" };
-        }
-
-        const restored = await dbRestoreAmbulance(id);
-        revalidatePath("/doctor/ambulance/ambulanceManagement");
-        return { data: restored };
-    } catch (error) {
-        console.error("Error restoring ambulance:", error);
-        return { error: "Failed to restore ambulance" };
-    }
-}
