@@ -407,6 +407,13 @@
       "when": 1770204873229,
       "tag": "0057_sparkling_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1770209723164,
+      "tag": "0058_hot_meggan",
+      "breakpoints": true
     }
   ]
 }
