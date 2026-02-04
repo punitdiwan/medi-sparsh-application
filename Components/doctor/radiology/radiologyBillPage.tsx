@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -27,6 +27,8 @@ import { BsCash } from "react-icons/bs";
 import RadiologyBillDetailsDialog from "./RadiologyBillDetailsDialog";
 import RadiologyPaymentDialog from "./RadiologyPaymentDialog";
 
+import { getBillsByHospital, getBillById } from "@/lib/actions/radiologyBills";
+
 type Bill = {
     id: string;
     createdAt: string | Date;
@@ -41,44 +43,9 @@ type Bill = {
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-const DUMMY_BILLS: Bill[] = [
-    {
-        id: "RAD-00100200",
-        createdAt: "2024-01-20T10:00:00Z",
-        patientName: "Rajesh Kumar",
-        patientPhone: "9876543210",
-        patientEmail: "rajesh@example.com",
-        billTotalAmount: 3500,
-        billNetAmount: 3500,
-        billStatus: "paid",
-        paymentMode: "Cash",
-    },
-    {
-        id: "RAD-00200300",
-        createdAt: "2024-01-21T11:30:00Z",
-        patientName: "Priya Sharma",
-        patientPhone: "8765432109",
-        patientEmail: "priya@example.com",
-        billTotalAmount: 4500,
-        billNetAmount: 4200,
-        billStatus: "partially_paid",
-        paymentMode: "UPI",
-    },
-    {
-        id: "RAD-00300400",
-        createdAt: "2024-01-22T14:15:00Z",
-        patientName: "Amit Patel",
-        patientPhone: "7654321098",
-        billTotalAmount: 2800,
-        billNetAmount: 2800,
-        billStatus: "pending",
-        paymentMode: "Card",
-    },
-];
-
 export default function RadiologyBillPage() {
-    const [bills, setBills] = useState<Bill[]>(DUMMY_BILLS);
-    const [loading, setLoading] = useState(false);
+    const [bills, setBills] = useState<Bill[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -97,17 +64,25 @@ export default function RadiologyBillPage() {
         "createdAt",
     ]);
 
-    const filteredData = useMemo(() => {
-        return bills.filter((b) => {
-            const matchesSearch = search
-                ? b.id.toLowerCase().includes(search.toLowerCase()) ||
-                b.patientName.toLowerCase().includes(search.toLowerCase()) ||
-                b.patientPhone.includes(search)
-                : true;
-            const matchesStatus = statusFilter ? b.billStatus === statusFilter : true;
-            return matchesSearch && matchesStatus;
-        });
-    }, [search, statusFilter, bills]);
+    const fetchBills = async () => {
+        setLoading(true);
+        try {
+            const res = await getBillsByHospital(search, statusFilter);
+            if (res.success && res.data) {
+                setBills(res.data as any);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch bills");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchBills();
+    }, [search, statusFilter]);
+
+    const filteredData = bills; // Search and filter are handled server-side now
 
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     const paginated = filteredData.slice(
@@ -116,30 +91,48 @@ export default function RadiologyBillPage() {
     );
 
     const handlePrint = async (billId: string) => {
-        const bill = bills.find((b) => b.id === billId);
-        if (!bill) return;
-
         try {
             toast.loading("Preparing PDF...", { id: "print-pdf" });
-            const blob = await pdf(
+            const result = await getBillById(billId);
+            if (!result.success || !result.data) {
+                toast.error(result.error || "Failed to fetch bill details", { id: "print-pdf" });
+                return;
+            }
+            const billData = result.data;
+            const pdfDoc = (
                 <RadiologyBillPdf
-                    billNumber={bill.id.substring(0, 8).toUpperCase()}
-                    billDate={format(new Date(bill.createdAt), "dd/MM/yyyy")}
-                    patientName={bill.patientName}
-                    patientPhone={bill.patientPhone}
-                    paymentMode={bill.paymentMode}
-                    items={[
-                        { testName: "X-Ray Chest", quantity: 1, price: 1500, total: 1500 },
-                        { testName: "CT Scan", quantity: 1, price: 2000, total: 2000 },
-                    ]}
-                    totalAmount={bill.billTotalAmount}
-                    discount={bill.billTotalAmount - bill.billNetAmount}
-                    tax={0}
-                    organization={{ name: "Medi Sparsh Radiology", metadata: { address: "Test Address", phone: "1234567890", email: "radiology@test.com" } }}
+                    billNumber={billData.id.substring(0, 8).toUpperCase()}
+                    billDate={format(new Date(billData.billDate), "dd/MM/yyyy")}
+                    customerName={billData.patientName}
+                    customerPhone={billData.patientPhone}
+                    paymentMode={billData.payments?.[0]?.paymentMode || "Cash"}
+                    items={billData.tests.map((t: any) => {
+                        const price = Number(t.price) || 0;
+                        const taxPercent = Number(t.tax) || 0;
+                        const taxAmount = (price * taxPercent) / 100;
+                        const total = price + taxAmount;
+                        return {
+                            testName: t.testName,
+                            price,
+                            tax: taxPercent,
+                            total,
+                        };
+                    })}
+                    discount={Number(billData.billDiscount)}
+                    organization={billData.organization}
                     orgModeCheck={true}
+                    payments={billData.payments?.map((p: any) => ({
+                        date: format(new Date(p.paymentDate), "dd/MM/yyyy"),
+                        amount: Number(p.paymentAmount),
+                        mode: p.paymentMode,
+                    })) || []}
+                    totalPaid={billData.totalPaid}
+                    balanceAmount={billData.balanceAmount}
+                    doctorName={billData.doctorName || ""}
                 />
-            ).toBlob();
+            );
 
+            const blob = await pdf(pdfDoc).toBlob();
             const url = URL.createObjectURL(blob);
             window.open(url, "_blank");
             toast.success("PDF ready for printing", { id: "print-pdf" });
@@ -154,10 +147,24 @@ export default function RadiologyBillPage() {
         {
             accessorKey: "createdAt",
             header: "Bill Date",
-            cell: ({ row }) => {
-                const date = new Date(row.original.createdAt);
-                return format(date, "dd/MM/yyyy");
-            }
+            cell: ({ row }) => (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-sm font-medium">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "dd MMM yyyy")
+                            : "-"
+                        }
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Clock className="h-2.5 w-2.5" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "hh:mm a")
+                            : "-"
+                        }
+                    </div>
+                </div>
+            )
         },
         { accessorKey: "patientName", header: "Patient Name" },
         { accessorKey: "patientPhone", header: "Phone" },
@@ -377,6 +384,7 @@ export default function RadiologyBillPage() {
                 onClose={() => {
                     setIsViewOpen(false);
                     setSelectedBill("");
+                    fetchBills();
                 }}
                 bill={selectedBill as string}
             />
@@ -386,6 +394,7 @@ export default function RadiologyBillPage() {
                 onClose={() => {
                     setIsPaymentOpen(false);
                     setSelectedBill("");
+                    fetchBills();
                 }}
                 bill={selectedBill as string}
             />
