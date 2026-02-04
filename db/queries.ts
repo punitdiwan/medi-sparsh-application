@@ -36,6 +36,7 @@ import {
   radiologyTests,
   radiologyParameters,
   ambulance,
+  ambulanceBooking,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql, ne, or } from "drizzle-orm";
 import type {
@@ -45,6 +46,7 @@ import type {
   NewAppointment,
   NewPrescription,
   NewAmbulance,
+  NewAmbulanceBooking,
 } from "./types";
 
 // ============================================
@@ -2645,6 +2647,69 @@ export async function getAmbulancesByHospital(hospitalId: string, activeOnly = t
 
 export async function createAmbulance(data: NewAmbulance) {
   const result = await db.insert(ambulance).values(data).returning();
+  return result[0];
+}
+
+
+// Ambulance Booking Queries
+
+export async function getAmbulanceBookingsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: ambulanceBooking.id,
+      patientId: ambulanceBooking.patientId,
+      patientName: patients.name,
+      patientPhone: patients.mobileNumber, // Corrected from patients.phone
+      ambulanceId: ambulanceBooking.ambulanceId,
+      vehicleNumber: ambulance.vehicleNumber,
+      driverName: ambulanceBooking.driverName,
+      driverContactNo: ambulanceBooking.driverContactNo,
+      pickupLocation: ambulanceBooking.pickupLocation,
+      dropLocation: ambulanceBooking.dropLocation,
+      standardCharge: ambulanceBooking.standardCharge,
+      taxPercent: ambulanceBooking.taxPercent,
+      discountPercent: ambulanceBooking.discountPercent,
+      paymentMode: ambulanceBooking.paymentMode,
+      referenceNo: ambulanceBooking.referenceNo,
+      bookingDate: ambulanceBooking.bookingDate,
+      bookingTime: ambulanceBooking.bookingTime,
+      createdAt: ambulanceBooking.createdAt,
+    })
+    .from(ambulanceBooking)
+    .innerJoin(patients, eq(ambulanceBooking.patientId, patients.id))
+    .innerJoin(ambulance, eq(ambulanceBooking.ambulanceId, ambulance.id))
+    .where(eq(ambulanceBooking.hospitalId, hospitalId))
+    .orderBy(desc(ambulanceBooking.createdAt));
+}
+
+export async function createAmbulanceBooking(data: NewAmbulanceBooking) {
+  const result = await db.insert(ambulanceBooking).values(data).returning();
+  return result[0];
+}
+
+export async function updateAmbulanceBooking(id: string, data: Partial<NewAmbulanceBooking>) {
+  const result = await db
+    .update(ambulanceBooking)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(ambulanceBooking.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteAmbulanceBooking(id: string) {
+  const result = await db
+    .delete(ambulanceBooking)
+    .where(eq(ambulanceBooking.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function getAmbulanceBookingById(id: string) {
+  const result = await db
+    .select()
+    .from(ambulanceBooking)
+    .where(eq(ambulanceBooking.id, id))
+    .limit(1);
   return result[0];
 }
 

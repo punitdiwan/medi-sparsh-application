@@ -6,8 +6,13 @@ import {
     getAmbulancesByHospital,
     createAmbulance as dbCreateAmbulance,
     updateAmbulance as dbUpdateAmbulance,
+    getAmbulanceBookingsByHospital,
+    createAmbulanceBooking,
+    updateAmbulanceBooking,
+    deleteAmbulanceBooking as dbDeleteAmbulanceBooking,
+    getAmbulanceBookingById,
 } from "@/db/queries";
-import { NewAmbulance } from "@/db/types";
+import { NewAmbulance, NewAmbulanceBooking } from "@/db/types";
 
 export async function getAmbulances(activeOnly = true) {
     try {
@@ -54,6 +59,79 @@ export async function saveAmbulance(data: Partial<NewAmbulance> & { id?: string 
     } catch (error) {
         console.error("Error saving ambulance:", error);
         return { error: "Failed to save ambulance" };
+    }
+}
+
+export async function getAmbulanceBookings() {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const data = await getAmbulanceBookingsByHospital(org.id);
+        return { data };
+    } catch (error) {
+        console.error("Error fetching ambulance bookings:", error);
+        return { error: "Failed to fetch ambulance bookings" };
+    }
+}
+
+export async function saveAmbulanceBooking(data: Partial<NewAmbulanceBooking> & { id?: string }) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const { id, ...bookingData } = data;
+
+        if (id) {
+            // Update
+            const updated = await updateAmbulanceBooking(id, {
+                ...bookingData as any,
+                hospitalId: org.id,
+            });
+            revalidatePath("/doctor/ambulance");
+            return { data: updated };
+        } else {
+            // Create
+            const created = await createAmbulanceBooking({
+                ...bookingData as any,
+                hospitalId: org.id,
+            });
+            revalidatePath("/doctor/ambulance");
+            return { data: created };
+        }
+    } catch (error) {
+        console.error("Error saving ambulance booking:", error);
+        return { error: "Failed to save ambulance booking" };
+    }
+}
+
+export async function deleteAmbulanceBooking(id: string) {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized" };
+        }
+
+        const deleted = await dbDeleteAmbulanceBooking(id);
+        revalidatePath("/doctor/ambulance");
+        return { data: deleted };
+    } catch (error) {
+        console.error("Error deleting ambulance booking:", error);
+        return { error: "Failed to delete ambulance booking" };
+    }
+}
+
+export async function getBookingById(id: string) {
+    try {
+        const data = await getAmbulanceBookingById(id);
+        return { data };
+    } catch (error) {
+        console.error("Error fetching booking:", error);
+        return { error: "Failed to fetch booking" };
     }
 }
 

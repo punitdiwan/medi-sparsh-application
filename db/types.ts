@@ -12,6 +12,7 @@ import type {
   radiologyTests,
   radiologyParameters,
   ambulance,
+  ambulanceBooking,
 } from "@/drizzle/schema";
 
 // Infer types from Drizzle schemas (Better Auth)
@@ -134,3 +135,6 @@ export type CurrentMedication = {
   frequency: string;
   startDate?: string;
 };
+
+export type AmbulanceBooking = typeof ambulanceBooking.$inferSelect;
+export type NewAmbulanceBooking = typeof ambulanceBooking.$inferInsert;

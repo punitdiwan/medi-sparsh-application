@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import AmbulanceDetailsDialog from "./AmbulanceDetailsDialog";
 import AmbulancePaymentDialog from "./AmbulancePaymentDialog";
+import { getAmbulanceBookings, deleteAmbulanceBooking } from "@/lib/actions/ambulanceActions";
 
 type AmbulanceBill = {
     id: string;
@@ -30,7 +31,7 @@ type AmbulanceBill = {
     vehicleNumber: string;
     driverName: string;
     pickupLocation: string;
-    dropoffLocation: string;    
+    dropoffLocation: string;
     billTotalAmount: number;
     discountPercentage: number;
     taxPercentage: number;
@@ -43,56 +44,9 @@ type AmbulanceBill = {
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-const DUMMY_DATA: AmbulanceBill[] = [
-    {
-        id: "AMB-2024-001",
-        patientName: "John Doe",
-        patientPhone: "1234567890",
-        vehicleNumber: "KA-01-AB-1234",
-        driverName: "Michael Smith",
-        pickupLocation: "123 Main St, Anytown, USA",
-        dropoffLocation: "123 Main St, Anytown, USA",
-        billTotalAmount: 1500,
-        discountPercentage: 10,
-        taxPercentage: 5,
-        billStatus: "paid",
-        paidAmount: 500,
-        createdAt: "2024-02-01T10:00:00Z",
-    },
-    {
-        id: "AMB-2024-002",
-        patientName: "Jane Smith",
-        patientPhone: "9876543210",
-        vehicleNumber: "KA-05-XY-5678",
-        driverName: "David Johnson",
-        pickupLocation: "123 Main St, Anytown, USA",
-        dropoffLocation: "123 Main St, Anytown, USA",
-        billTotalAmount: 2500,
-        discountPercentage: 10,
-        taxPercentage: 5,
-        billStatus: "pending",
-        paidAmount: 1500,
-        createdAt: "2024-02-02T14:30:00Z",
-    },
-    {
-        id: "AMB-2024-003",
-        patientName: "Robert Brown",
-        patientPhone: "5556667777",
-        vehicleNumber: "KA-01-AB-1234",
-        driverName: "Michael Smith",
-        pickupLocation: "123 Main St, Anytown, USA",
-        dropoffLocation: "123 Main St, Anytown, USA",
-        billTotalAmount: 1200,
-        discountPercentage: 10,
-        taxPercentage: 5,
-        paidAmount: 700,
-        billStatus: "partially_paid",
-        createdAt: "2024-02-03T09:15:00Z",
-    },
-];
 
 export default function AmbulancePage() {
-    const [bills, setBills] = useState<AmbulanceBill[]>(DUMMY_DATA);
+    const [bills, setBills] = useState<AmbulanceBill[]>([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -102,6 +56,34 @@ export default function AmbulancePage() {
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const route = useRouter();
     const ability = useAbility();
+
+    const fetchBookings = async () => {
+        setLoading(true);
+        const res = await getAmbulanceBookings();
+        if (res.data) {
+            const formatted: AmbulanceBill[] = res.data.map((b: any) => ({
+                id: b.id,
+                patientName: b.patientName,
+                patientPhone: b.patientPhone,
+                vehicleNumber: b.vehicleNumber,
+                driverName: b.driverName,
+                pickupLocation: b.pickupLocation,
+                dropoffLocation: b.dropLocation,
+                billTotalAmount: Number(b.standardCharge),
+                discountPercentage: Number(b.discountPercent),
+                taxPercentage: Number(b.taxPercent),
+                paidAmount: 0, // Need payments table for real paid amount
+                billStatus: "pending", // Need payments table or status in booking
+                createdAt: b.createdAt.toISOString(),
+            }));
+            setBills(formatted);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchBookings();
+    }, []);
     const [visibleFields, setVisibleFields] = useState<string[]>([
         "id",
         "patientName",
@@ -233,7 +215,7 @@ export default function AmbulancePage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => {
                                     setSelectedAmbulance(row.original);
@@ -247,7 +229,7 @@ export default function AmbulancePage() {
                                 <Edit size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Edit Bill
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => {
                                     setSelectedAmbulance(row.original);
@@ -261,7 +243,20 @@ export default function AmbulancePage() {
                                 <Printer size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Print Bill
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="group gap-2 cursor-pointer text-destructive focus:text-destructive">
+                            <DropdownMenuItem
+                                className="group gap-2 cursor-pointer text-destructive focus:text-destructive"
+                                onClick={async () => {
+                                    if (confirm("Are you sure you want to delete this booking?")) {
+                                        const res = await deleteAmbulanceBooking(row.original.id);
+                                        if (res.data) {
+                                            toast.success("Booking deleted successfully");
+                                            fetchBookings();
+                                        } else {
+                                            toast.error(res.error || "Failed to delete booking");
+                                        }
+                                    }
+                                }}
+                            >
                                 <Trash2 size={14} className="text-destructive group-hover:text-red-600" />
                                 Delete
                             </DropdownMenuItem>
