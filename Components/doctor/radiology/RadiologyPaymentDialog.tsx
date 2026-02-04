@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     X,
     User,
@@ -85,6 +85,8 @@ function SummaryItem({ label, value }: { label: string; value: string | number |
     );
 }
 
+import { getBillById, getRadiologyPaymentsByBillId, recordRadiologyPayment, deleteRadiologyPayment } from "@/lib/actions/radiologyBills";
+
 /* -------------------- MAIN DIALOG -------------------- */
 
 export default function RadiologyPaymentDialog({
@@ -94,32 +96,9 @@ export default function RadiologyPaymentDialog({
 }: RadiologyPaymentDialogProps) {
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(true);
     const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; amount: number } | null>(null);
-
-    // Dummy Data
-    const bill = {
-        id: billId || "RAD-00100200",
-        billNo: (billId || "RAD-00100200").substring(0, 8).toUpperCase(),
-        date: "20/01/2024",
-        customerName: "Rajesh Kumar",
-        customerPhone: "9876543210",
-        age: "35 Years",
-        gender: "Male",
-        email: "rajesh@example.com",
-        address: "123, Street Name, City",
-        bloodGroup: "O+",
-        doctorName: "Dr. Amit Sharma",
-        generatedBy: "System",
-        totalAmount: 3500,
-        totalDiscount: 0,
-        totalTax: 175,
-        netAmount: 3675,
-        totalPaid: 3675,
-        balanceAmount: 0,
-    };
-
-    const [transactions, setTransactions] = useState<Transaction[]>([
-        { id: "TXN001", date: "2024-01-20", mode: "Cash", note: "Initial Payment", amount: 3675 },
-    ]);
+    const [loading, setLoading] = useState(false);
+    const [billData, setBillData] = useState<any>(null);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     const [paymentData, setPaymentData] = useState({
         date: new Date().toISOString().split("T")[0],
@@ -129,19 +108,101 @@ export default function RadiologyPaymentDialog({
         note: "",
     });
 
-    if (!open) return null;
+    const fetchBillAndPayments = async () => {
+        if (!billId) return;
+        setLoading(true);
+        const [billRes, paymentsRes] = await Promise.all([
+            getBillById(billId),
+            getRadiologyPaymentsByBillId(billId)
+        ]);
+
+        if (billRes.success && billRes.data) {
+            setBillData(billRes.data);
+        }
+        if (paymentsRes.success && paymentsRes.data) {
+            setTransactions(paymentsRes.data.map((p: any) => ({
+                id: p.id,
+                date: new Date(p.paymentDate).toLocaleDateString(),
+                mode: p.paymentMode,
+                note: p.note || "",
+                amount: Number(p.paymentAmount),
+            })));
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        if (open && billId) {
+            fetchBillAndPayments();
+        }
+    }, [open, billId]);
+
+    if (!open || !billData) return null;
+
+    const bill = billData;
+    const billNo = bill.id.substring(0, 8).toUpperCase();
 
     const totalPaid = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const dueAmount = bill.netAmount - totalPaid;
+    const billNetAmount = Number(bill.billNetAmount) || 0;
+    const dueAmount = billNetAmount - totalPaid;
+
+    // Calculate detailed summary amounts
+    const totalBaseAmount = bill.tests?.reduce((sum: number, t: any) => sum + Number(t.price || 0), 0) || 0;
+    const totalTaxAmount = bill.tests?.reduce((sum: number, t: any) => sum + (Number(t.price || 0) * Number(t.tax || 0) / 100), 0) || 0;
+    const totalDiscountAmount = (Number(bill.billTotalAmount || 0) * Number(bill.billDiscount || 0)) / 100;
+
+    const handleSaveTrx = async () => {
+        if (paymentData.amount <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+        if (paymentData.amount > dueAmount) {
+            toast.error("Payment amount cannot exceed due amount");
+            return;
+        }
+
+        try {
+            const res = await recordRadiologyPayment(billId, {
+                amount: paymentData.amount,
+                mode: paymentData.mode,
+                referenceNo: paymentData.referenceNo,
+            });
+
+            if (res.success) {
+                toast.success("Payment recorded successfully");
+                setPaymentData({
+                    date: new Date().toISOString().split("T")[0],
+                    amount: 0,
+                    mode: "Cash",
+                    referenceNo: "",
+                    note: "",
+                });
+                fetchBillAndPayments();
+            } else {
+                toast.error(res.error || "Failed to record payment");
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        }
+    };
 
     const handleDeleteTrx = (id: string, amount: number) => {
         setDeleteConfirm({ id, amount });
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (!deleteConfirm) return;
-        setTransactions(prev => prev.filter(t => t.id !== deleteConfirm.id));
-        toast.success("Transaction deleted successfully");
+        try {
+            const res = await deleteRadiologyPayment(deleteConfirm.id, billId);
+            if (res.success) {
+                toast.success("Transaction deleted successfully");
+                fetchBillAndPayments();
+            } else {
+                toast.error(res.error || "Failed to delete transaction");
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        }
         setDeleteConfirm(null);
     };
 
@@ -157,8 +218,8 @@ export default function RadiologyPaymentDialog({
                         <div>
                             <h2 className="text-xl font-bold">Radiology Payments</h2>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {bill.customerName}</span>
-                                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {bill.billNo}</span>
+                                <span className="flex items-center gap-1 font-medium"><User className="h-3 w-3" /> {bill.patientName}</span>
+                                <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">Bill: {billNo}</span>
                             </div>
                         </div>
                     </div>
@@ -190,9 +251,9 @@ export default function RadiologyPaymentDialog({
                                         <h3 className="text-sm font-bold uppercase tracking-wider">Bill Summary Details</h3>
                                         <div className="h-4 w-px bg-border hidden md:block" />
                                         <div className="hidden md:flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Bill:</span> {bill.billNo}</span>
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Name:</span> {bill.customerName}</span>
-                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.netAmount}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Bill:</span> {billNo}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Name:</span> {bill.patientName}</span>
+                                            <span><span className="text-[10px] uppercase opacity-70 mr-1">Net:</span> ₹{bill.billNetAmount}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -202,17 +263,17 @@ export default function RadiologyPaymentDialog({
                             {isSummaryExpanded && (
                                 <CardContent className="p-6 border-t border-overview-strong animate-in slide-in-from-top-2 duration-300">
                                     <SummarySection title="Detailed Bill Overview" icon={Building2}>
-                                        <SummaryItem label="Bill No" value={bill.billNo} />
-                                        <SummaryItem label="Patient Name" value={bill.customerName} />
+                                        <SummaryItem label="Bill No" value={billNo} />
+                                        <SummaryItem label="Patient Name" value={bill.patientName} />
                                         <SummaryItem label="Doctor Name" value={bill.doctorName} />
-                                        <SummaryItem label="Generated By" value={bill.generatedBy} />
-                                        <SummaryItem label="Age" value={bill.age} />
-                                        <SummaryItem label="Gender" value={bill.gender} />
-                                        <SummaryItem label="Blood Group" value={bill.bloodGroup} />
-                                        <SummaryItem label="Mobile No" value={bill.customerPhone} />
-                                        <SummaryItem label="Email" value={bill.email} />
+                                        <SummaryItem label="Generated By" value={"System"} />
+                                        <SummaryItem label="Age" value={bill.patientDob ? `${new Date().getFullYear() - new Date(bill.patientDob).getFullYear()} Years` : "-"} />
+                                        <SummaryItem label="Gender" value={bill.patientGender} />
+                                        <SummaryItem label="Blood Group" value={bill.patientBloodGroup} />
+                                        <SummaryItem label="Mobile No" value={bill.patientPhone} />
+                                        <SummaryItem label="Email" value={bill.patientEmail} />
                                         <div className="col-span-2 lg:col-span-3">
-                                            <SummaryItem label="Address" value={bill.address} />
+                                            <SummaryItem label="Address" value={bill.patientAddress} />
                                         </div>
                                     </SummarySection>
                                 </CardContent>
@@ -234,21 +295,21 @@ export default function RadiologyPaymentDialog({
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Amount</span>
-                                                    <span className="font-semibold">₹{bill.totalAmount}</span>
+                                                    <span className="font-semibold">₹{totalBaseAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Discount</span>
-                                                    <span className="font-semibold text-destructive">-₹{bill.totalDiscount}</span>
+                                                    <span className="font-semibold text-destructive">-₹{totalDiscountAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Total Tax</span>
-                                                    <span className="font-semibold">+₹{bill.totalTax}</span>
+                                                    <span className="font-semibold">+₹{totalTaxAmount.toFixed(2)}</span>
                                                 </div>
                                             </div>
                                             <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Net Amount</span>
-                                                    <span className="font-bold">₹{bill.netAmount}</span>
+                                                    <span className="font-bold">₹{bill.billNetAmount}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                     <span className="text-muted-foreground">Paid Amount</span>
@@ -292,8 +353,8 @@ export default function RadiologyPaymentDialog({
                                                 <span className="text-sm font-semibold text-green-700">Bill Paid Successfully</span>
                                             </div>
                                         ) : (
-                                            <Button className="w-full mt-6 gap-2" onClick={() => toast.success("Dummy payment recorded")}>
-                                                <Save className="h-4 w-4" /> Save Transaction
+                                            <Button className="w-full mt-6 gap-2" onClick={handleSaveTrx}>
+                                                <Save className="h-4 w-4" /> Record Payment
                                             </Button>
                                         )}
                                     </CardContent>
@@ -356,7 +417,7 @@ export default function RadiologyPaymentDialog({
                     <div className="flex gap-8">
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Net Amount</span>
-                            <span className="text-sm font-semibold">₹{bill.netAmount}</span>
+                            <span className="text-sm font-semibold">₹{bill.billNetAmount}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Paid</span>
