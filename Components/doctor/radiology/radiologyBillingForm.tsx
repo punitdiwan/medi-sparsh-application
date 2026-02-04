@@ -19,7 +19,7 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import { Info, Plus, Trash2, User, Printer, ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText, Scan } from "lucide-react";
+import {  Plus, Trash2, User,  ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText, } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -288,19 +288,6 @@ export default function RadiologyBillingForm({ billId, mode }: RadiologyBillingF
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
             <BackButton />
-            <Card className="bg-Module-header text-white shadow-lg px-6 py-5 rounded-2xl mb-4">
-                <div className="flex items-start gap-3">
-                    <FileText className="h-6 w-6 text-white/90 mt-0.5" />
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Generate Radiology Bill
-                        </h1>
-                        <p className="text-sm text-white/80 mt-1 max-w-2xl leading-relaxed">
-                            Add patient, assign doctor, select radiology tests, and apply discounts.
-                        </p>
-                    </div>
-                </div>
-            </Card>
 
             {appMode === "hospital" && (
                 <div className="space-y-2 mb-6">
