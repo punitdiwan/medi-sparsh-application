@@ -596,3 +596,37 @@ export async function deleteRadiologyPayment(paymentId: string, billId: string) 
         return { error: "Failed to delete payment", success: false };
     }
 }
+
+export async function getAllRadiologyPayments() {
+    try {
+        const org = await getActiveOrganization();
+        if (!org) {
+            return { error: "Unauthorized", success: false };
+        }
+
+        const payments = await db
+            .select({
+                id: radiologyPayments.id,
+                billId: radiologyPayments.billId,
+                paymentDate: radiologyPayments.paymentDate,
+                paymentAmount: radiologyPayments.paymentAmount,
+                paymentMode: radiologyPayments.paymentMode,
+                referenceNo: radiologyPayments.referenceNo,
+                patientName: patients.name,
+                patientPhone: patients.mobileNumber,
+                billNo: sql<string>`SUBSTRING(${radiologyBills.id}, 1, 8)`
+            })
+            .from(radiologyPayments)
+            .leftJoin(radiologyBills, eq(radiologyPayments.billId, radiologyBills.id))
+            .leftJoin(radiologyOrders, eq(radiologyBills.orderId, radiologyOrders.id))
+            .leftJoin(patients, eq(radiologyOrders.patientId, patients.id))
+            .where(eq(radiologyPayments.hospitalId, org.id))
+            .orderBy(desc(radiologyPayments.paymentDate));
+
+        return { success: true, data: payments };
+    } catch (error) {
+        console.error("Error fetching all radiology payments:", error);
+        return { error: "Failed to fetch payments", success: false };
+    }
+}
+
