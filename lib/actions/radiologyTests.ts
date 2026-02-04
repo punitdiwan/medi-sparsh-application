@@ -1,7 +1,6 @@
 "use server";
 
-import { getActiveOrganization } from "../getActiveOrganization";
-import { revalidatePath } from "next/cache";
+import { getActiveOrganization } from "@/lib/getActiveOrganization";
 import {
     getRadiologyTestsByHospital,
     createRadiologyTest as dbCreateRadiologyTest,
@@ -9,19 +8,20 @@ import {
     deleteRadiologyTest as dbDeleteRadiologyTest,
     restoreRadiologyTest as dbRestoreRadiologyTest,
 } from "@/db/queries";
+import { revalidatePath } from "next/cache";
 
 export async function getRadiologyTests() {
     try {
         const org = await getActiveOrganization();
         if (!org) {
-            return { error: "Unauthorized" };
+            return { error: "Unauthorized", success: false };
         }
 
         const data = await getRadiologyTestsByHospital(org.id);
-        return { data };
+        return { success: true, data };
     } catch (error) {
         console.error("Error fetching radiology tests:", error);
-        return { error: "Failed to fetch radiology tests" };
+        return { error: "Failed to fetch radiology tests", success: false };
     }
 }
 
@@ -47,11 +47,11 @@ export async function createRadiologyTest(formData: {
     try {
         const org = await getActiveOrganization();
         if (!org) {
-            return { error: "Unauthorized" };
+            return { error: "Unauthorized", success: false };
         }
 
         if (!formData.testName || !formData.testName.trim()) {
-            return { error: "Test name is required" };
+            return { error: "Test name is required", success: false };
         }
 
         const newTest = await dbCreateRadiologyTest({
@@ -60,10 +60,10 @@ export async function createRadiologyTest(formData: {
         });
 
         revalidatePath("/doctor/radiology/radiologyTest");
-        return { data: newTest };
+        return { success: true, data: newTest };
     } catch (error) {
         console.error("Error creating radiology test:", error);
-        return { error: "Failed to create radiology test" };
+        return { error: "Failed to create radiology test", success: false };
     }
 }
 
@@ -74,7 +74,7 @@ export async function updateRadiologyTest(id: string, formData: {
     description?: string;
     categoryId?: string;
     subCategoryId?: string;
-    reportDays?: number;
+    reportHours?: number;
     chargeCategoryId?: string;
     chargeId?: string;
     chargeName?: string;
@@ -90,24 +90,23 @@ export async function updateRadiologyTest(id: string, formData: {
     try {
         const org = await getActiveOrganization();
         if (!org) {
-            return { error: "Unauthorized" };
+            return { error: "Unauthorized", success: false };
         }
 
         const updatedTest = await dbUpdateRadiologyTest(id, {
             ...formData,
             hospitalId: org.id,
-            ...(formData.reportDays !== undefined && { reportHours: formData.reportDays * 24 }),
         });
 
         if (!updatedTest) {
-            return { error: "Radiology test not found" };
+            return { error: "Radiology test not found", success: false };
         }
 
         revalidatePath("/doctor/radiology/radiologyTest");
-        return { data: updatedTest };
+        return { success: true, data: updatedTest };
     } catch (error) {
         console.error("Error updating radiology test:", error);
-        return { error: "Failed to update radiology test" };
+        return { error: "Failed to update radiology test", success: false };
     }
 }
 
@@ -115,20 +114,20 @@ export async function deleteRadiologyTest(id: string) {
     try {
         const org = await getActiveOrganization();
         if (!org) {
-            return { error: "Unauthorized" };
+            return { error: "Unauthorized", success: false };
         }
 
         const deletedTest = await dbDeleteRadiologyTest(id);
 
         if (!deletedTest) {
-            return { error: "Radiology test not found" };
+            return { error: "Radiology test not found", success: false };
         }
 
         revalidatePath("/doctor/radiology/radiologyTest");
-        return { data: deletedTest };
+        return { success: true, data: deletedTest };
     } catch (error) {
         console.error("Error deleting radiology test:", error);
-        return { error: "Failed to delete radiology test" };
+        return { error: "Failed to delete radiology test", success: false };
     }
 }
 
@@ -136,19 +135,19 @@ export async function restoreRadiologyTest(id: string) {
     try {
         const org = await getActiveOrganization();
         if (!org) {
-            return { error: "Unauthorized" };
+            return { error: "Unauthorized", success: false };
         }
 
         const restoredTest = await dbRestoreRadiologyTest(id);
 
         if (!restoredTest) {
-            return { error: "Radiology test not found" };
+            return { error: "Radiology test not found", success: false };
         }
 
         revalidatePath("/doctor/radiology/radiologyTest");
-        return { data: restoredTest };
+        return { success: true, data: restoredTest };
     } catch (error) {
         console.error("Error restoring radiology test:", error);
-        return { error: "Failed to restore radiology test" };
+        return { error: "Failed to restore radiology test", success: false };
     }
 }

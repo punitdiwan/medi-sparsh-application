@@ -98,6 +98,7 @@ const items: SidebarItem[] = [
     icon: Microscope,
     children: [
       { title: 'Billing', url: '/doctor/radiology', subject: 'RadiologyBilling', action: 'read', },
+      { title: 'Payments', url: '/doctor/radiology/RadiologyPayments', subject: 'RadiologyPayments', action: 'read', },
       { title: 'Radiology Test', url: '/doctor/radiology/radiologyTest', subject: 'RadiologyTest', action: 'read', },
     ],
   },

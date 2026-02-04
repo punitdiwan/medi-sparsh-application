@@ -47,6 +47,7 @@ export const ALL_PERMISSIONS: Record<string, string[]> = {
   pathologyParameter:["create", "read", "update", "delete"],
   RadiologyTest:["create", "read", "update", "delete"],
   RadiologyBilling:["create", "read", "update", "delete"],
+  RadiologyPayments:["create", "read", "update", "delete"],
   radiologySettings:["create", "read", "update", "delete"],
   radiologyCategory:["create", "read", "update", "delete"],
   radiologyUnit:["create", "read", "update", "delete"],

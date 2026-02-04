@@ -1,0 +1,1 @@
+ALTER TABLE "radiology_results" ADD COLUMN "tecnnician_name" text;
