@@ -19,7 +19,7 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import {  Plus, Trash2, User,  ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText, } from "lucide-react";
+import { Plus, Trash2, User, ReceiptIndianRupee, ClipboardList, BadgeInfo, Scan } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
