@@ -144,12 +144,12 @@ function TechnicianDialog({
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-md border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+                <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
                     <DialogTitle>Assign Technician / Scan Info</DialogTitle>
                     {test && <p className="text-sm text-muted-foreground">{test.testName}</p>}
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="px-6 py-4 space-y-4 max-h-[65vh] overflow-y-auto ">
                     <div className="space-y-2">
                         <Label>Technician Name *</Label>
                         <Input value={formData.personName} onChange={(e) => setFormData({ ...formData, personName: e.target.value })} placeholder="Enter name" />
@@ -159,9 +159,11 @@ function TechnicianDialog({
                         <Input type="date" value={formData.scanDate} onChange={(e) => setFormData({ ...formData, scanDate: e.target.value })} />
                     </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSave}>Save Details</Button>
+                <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+                    <Button variant="outline" onClick={onClose}
+                        className="text-dialog-muted">Cancel</Button>
+                    <Button onClick={handleSave}
+                        className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">Save Details</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
