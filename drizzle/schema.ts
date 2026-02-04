@@ -1526,6 +1526,7 @@ export const ambulance = pgTable("ambulance", {
 	driverContactNo: text("driver_contact_no").notNull(),
 	driverLicenseNo: text("driver_license_no").notNull(),
 	status: ambulanceStatusEnum("status").notNull().default("active"),
+	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
