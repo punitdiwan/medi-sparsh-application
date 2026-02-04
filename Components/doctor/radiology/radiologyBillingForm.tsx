@@ -27,6 +27,9 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { getRadiologyTests } from "@/lib/actions/radiologyTests";
+import { createRadiologyBill, getBillById, updateRadiologyBill } from "@/lib/actions/radiologyBills";
+
 type Item = {
     id: string; // for list keys
     testId: string; // from database
@@ -39,93 +42,13 @@ type Item = {
     isLocked: boolean;
 };
 
-const radiologyTests = [
-    {
-        id: "1",
-        testName: "X-Ray Chest",
-        shortName: "XRAY-CHEST",
-        tax: 5,
-        standardCharge: 1500,
-        amount: 1575,
-    },
-    {
-        id: "2",
-        testName: "CT Scan Abdomen",
-        shortName: "CT-ABD",
-        tax: 12,
-        standardCharge: 4000,
-        amount: 4480,
-    },
-    {
-        id: "3",
-        testName: "Ultrasound Abdomen",
-        shortName: "USG-ABD",
-        tax: 5,
-        standardCharge: 800,
-        amount: 840,
-    },
-    {
-        id: "4",
-        testName: "MRI Brain",
-        shortName: "MRI-BRAIN",
-        tax: 12,
-        standardCharge: 5000,
-        amount: 5600,
-    },
-];
+interface RadiologyBillingFormProps {
+    billId?: string;
+    mode?: string;
+}
 
-const dummyIpdData = [
-    {
-        ipdId: "IPD-001",
-        patient: {
-            id: "pat1",
-            name: "Rahul Kumar",
-            phone: "9999999999",
-        },
-        doctor: {
-            id: "doc1",
-            name: "Dr. Amit Sharma",
-        },
-        tests: [
-            {
-                id: "1",
-                testName: "X-Ray Chest",
-                amount: 1500,
-                tax: 5,
-            },
-            {
-                id: "3",
-                testName: "Ultrasound Abdomen",
-                amount: 800,
-                tax: 5,
-            },
-        ],
-    },
-    {
-        ipdId: "IPD-002",
-        patient: {
-            id: "pat2",
-            name: "Sita Devi",
-            phone: "8888888888",
-        },
-        doctor: {
-            id: "doc2",
-            name: "Dr. Neha Verma",
-        },
-        tests: [
-            {
-                id: "2",
-                testName: "CT Scan Abdomen",
-                amount: 4000,
-                tax: 12,
-            },
-        ],
-    },
-];
-
-const HOME_COLLECTION_CHARGE = 100;
-
-export default function RadiologyBillingForm() {
+export default function RadiologyBillingForm({ billId, mode }: RadiologyBillingFormProps) {
+    const [radiologyTests, setRadiologyTests] = useState<any[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [remarks, setRemarks] = useState("");
@@ -141,11 +64,65 @@ export default function RadiologyBillingForm() {
 
     const [ipdId, setIpdId] = useState("");
 
-    const [sampleCollectionType, setSampleCollectionType] =
-        useState<"lab" | "home">("lab");
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
+
+    // Fetch tests on mount
+    useEffect(() => {
+        const fetchTests = async () => {
+            const res = await getRadiologyTests();
+            if (res.success && res.data) {
+                setRadiologyTests(res.data);
+            }
+        };
+        fetchTests();
+    }, []);
+
+    // Fetch bill data for edit mode
+    useEffect(() => {
+        if (billId) {
+            const fetchBill = async () => {
+                const res = await getBillById(billId);
+                if (res.success && res.data) {
+                    const bill = res.data;
+                    setSelectedPatient({
+                        id: bill.patientId,
+                        name: bill.patientName,
+                        phone: bill.patientPhone,
+                    });
+                    setSelectedDoctor({
+                        id: bill.doctorId,
+                        name: bill.doctorName,
+                        isInternal: true,
+                    });
+                    setRemarks(bill.remarks || "");
+                    setDiscountPercent(Number(bill.billDiscount));
+
+                    const billItems: Item[] = bill.tests.map((t: any) => {
+                        const price = Number(t.price);
+                        const taxPercent = Number(t.tax);
+                        const basePaise = Math.round(price * 100);
+                        const taxPaise = Math.round(basePaise * taxPercent / 100);
+
+                        return {
+                            id: t.id,
+                            testId: t.testId,
+                            name: t.testName,
+                            price,
+                            taxPercent,
+                            baseAmount: price,
+                            taxAmount: (price * taxPercent) / 100,
+                            total: price + (price * taxPercent) / 100,
+                            isLocked: t.technicianName ? true : false,
+                        };
+                    });
+                    setItems(billItems);
+                }
+            };
+            fetchBill();
+        }
+    }, [billId]);
 
     useEffect(() => {
         const basePaise = items.reduce(
@@ -161,16 +138,13 @@ export default function RadiologyBillingForm() {
         const totalWithoutDiscountPaise = basePaise + taxPaise;
         const discountAmountPaise = Math.round(totalWithoutDiscountPaise * (discountPercent / 100));
 
-        const homeChargePaise =
-            sampleCollectionType === "home" ? HOME_COLLECTION_CHARGE * 100 : 0;
-
         const netPaise =
-            totalWithoutDiscountPaise + homeChargePaise - discountAmountPaise;
+            totalWithoutDiscountPaise - discountAmountPaise;
 
         setTotalAmount(totalWithoutDiscountPaise / 100);
         setTaxAmount(taxPaise / 100);
         setNetAmount(netPaise / 100);
-    }, [items, discountPercent, sampleCollectionType]);
+    }, [items, discountPercent]);
 
     const selectedTest = radiologyTests.find(t => t.id === selectedTestId);
 
@@ -187,8 +161,9 @@ export default function RadiologyBillingForm() {
             return;
         }
 
-        const price = Number(selectedTest.standardCharge || 0);
-        const taxPercent = Number(selectedTest.tax || 0);
+        const price = Number(selectedTest.amount || 0);
+        // Map category tax or use a default if not found
+        const taxPercent = Number(selectedTest.taxPercent || 0);
 
         const basePaise = Math.round(price * 100);
         const taxPaise = Math.round(basePaise * taxPercent / 100);
@@ -200,9 +175,9 @@ export default function RadiologyBillingForm() {
             name: selectedTest.testName,
             price,
             taxPercent,
-            baseAmount: basePaise / 100,
-            taxAmount: taxPaise / 100,
-            total: totalPaise / 100,
+            baseAmount: price,
+            taxAmount: (price * taxPercent) / 100,
+            total: price + (price * taxPercent) / 100,
             isLocked: false,
         };
 
@@ -237,10 +212,35 @@ export default function RadiologyBillingForm() {
 
         try {
             setIsSubmitting(true);
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success("Radiology bill generated successfully (Dummy Data)");
-            router.push("/doctor/radiology");
+
+            const billData = {
+                patientId: selectedPatient.id,
+                doctorId: selectedDoctor.id,
+                doctorName: selectedDoctor.name,
+                remarks,
+                tests: items.map(item => ({
+                    testId: item.testId,
+                    price: item.price,
+                    tax: item.taxPercent,
+                })),
+                billDiscount: discountPercent,
+                billTotalAmount: totalAmount,
+                billNetAmount: netAmount,
+            };
+
+            let res;
+            if (billId && mode === "edit") {
+                res = await updateRadiologyBill(billId, billData);
+            } else {
+                res = await createRadiologyBill(billData);
+            }
+
+            if (res.success) {
+                toast.success((res as any).message);
+                router.push("/doctor/radiology");
+            } else {
+                toast.error(res.error || "Failed to save bill");
+            }
         } catch (error) {
             toast.error("An error occurred while saving the bill");
         } finally {
@@ -251,41 +251,36 @@ export default function RadiologyBillingForm() {
     const handleIpdSearch = () => {
         if (!ipdId) return;
 
-        const ipd = dummyIpdData.find(
-            (i) => i.ipdId.toLowerCase() === ipdId.toLowerCase()
-        );
 
-        if (!ipd) {
-            toast.error("IPD ID not found");
-            return;
-        }
 
-        setSelectedPatient(ipd.patient);
-        setSelectedDoctor({
-            id: ipd.doctor.id,
-            name: ipd.doctor.name,
-            isInternal: true,
-        });
 
-        const ipdItems: Item[] = ipd.tests.map((t) => {
-            const basePaise = Math.round(t.amount * 100);
-            const taxPaise = Math.round(basePaise * t.tax / 100);
 
-            return {
-                id: crypto.randomUUID(),
-                testId: t.id,
-                name: t.testName,
-                price: t.amount,
-                taxPercent: t.tax,
-                baseAmount: basePaise / 100,
-                taxAmount: taxPaise / 100,
-                total: (basePaise + taxPaise) / 100,
-                isLocked: false
-            };
-        });
+        // setSelectedPatient(ipd.patient);
+        // setSelectedDoctor({
+        //     id: ipd.doctor.id,
+        //     name: ipd.doctor.name,
+        //     isInternal: true,
+        // });
 
-        setItems(ipdItems);
-        toast.success("IPD data auto-filled");
+        // const ipdItems: Item[] = ipd.tests.map((t) => {
+        //     const basePaise = Math.round(t.amount * 100);
+        //     const taxPaise = Math.round(basePaise * t.tax / 100);
+
+        //     return {
+        //         id: crypto.randomUUID(),
+        //         testId: t.id,
+        //         name: t.testName,
+        //         price: t.amount,
+        //         taxPercent: t.tax,
+        //         baseAmount: basePaise / 100,
+        //         taxAmount: taxPaise / 100,
+        //         total: (basePaise + taxPaise) / 100,
+        //         isLocked: false
+        //     };
+        // });
+
+        // setItems(ipdItems);
+        // toast.success("IPD data auto-filled");
     };
 
     const appMode = "hospital";
@@ -301,8 +296,7 @@ export default function RadiologyBillingForm() {
                             Generate Radiology Bill
                         </h1>
                         <p className="text-sm text-white/80 mt-1 max-w-2xl leading-relaxed">
-                            Add patient, assign doctor, select radiology tests, apply discounts,
-                            and enable home sample collection if required.
+                            Add patient, assign doctor, select radiology tests, and apply discounts.
                         </p>
                     </div>
                 </div>
@@ -376,7 +370,7 @@ export default function RadiologyBillingForm() {
                                 <Label>Price</Label>
                                 <Input
                                     type="number"
-                                    value={Number(selectedTest?.standardCharge || 0).toFixed(2)}
+                                    value={Number(selectedTest?.amount || 0).toFixed(2)}
                                     disabled
                                     className="bg-muted"
                                 />
@@ -385,7 +379,7 @@ export default function RadiologyBillingForm() {
                                 <Label>Tax (%)</Label>
                                 <Input
                                     type="number"
-                                    value={Number(selectedTest?.tax || 0).toFixed(2)}
+                                    value={Number(selectedTest?.taxPercent || 0).toFixed(2)}
                                     disabled
                                     className="bg-muted"
                                 />
@@ -445,13 +439,25 @@ export default function RadiologyBillingForm() {
                                                     ₹{item.total.toFixed(2)}
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleRemoveItem(item.id)}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleRemoveItem(item.id)}
+                                                                    disabled={mode === "edit" && item.isLocked}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            {mode === "edit" && item.isLocked && (
+                                                                <TooltipContent>
+                                                                    Cannot remove items after processing
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -517,40 +523,6 @@ export default function RadiologyBillingForm() {
                             />
                         </div>
 
-                        <div className="border-t pt-3 space-y-2 mt-2">
-                            <div className="flex gap-2">
-                                <div className="flex items-center gap-1">
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-[200px] whitespace-normal wrap-break-word">
-                                                Tick this box to include a home collection charge in the bill.
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                    <Label className="font-medium text-gray-700 dark:text-gray-300 cursor-default">
-                                        Home Sample Collection
-                                    </Label>
-                                </div>
-                                <input
-                                    type="checkbox"
-                                    checked={sampleCollectionType === "home"}
-                                    onChange={(e) =>
-                                        setSampleCollectionType(e.target.checked ? "home" : "lab")
-                                    }
-                                    className="h-4 w-4 accent-primary"
-                                />
-                            </div>
-
-                            {sampleCollectionType === "home" && (
-                                <div className="flex justify-between text-sm text-muted-foreground">
-                                    <span>Home Collection Charge</span>
-                                    <span>₹{HOME_COLLECTION_CHARGE.toFixed(2)}</span>
-                                </div>
-                            )}
-                        </div>
 
                         <Button
                             size="lg"
