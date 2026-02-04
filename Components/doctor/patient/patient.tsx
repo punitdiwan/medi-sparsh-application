@@ -25,7 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 // import { AbilityContext } from "@/lib/casl/AbilityContext";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeleteConfirmationDialog } from "../medicine/deleteConfirmationDialog";
+
 type Patient = {
   id: string;
   name: string;
@@ -53,8 +53,6 @@ function PatientPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [open, setOpen] = useState(false);
-  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
-  const [patientToRestore, setPatientToRestore] = useState<string | null>(null);
 
   const ability = useAbility();
 
@@ -137,7 +135,7 @@ function PatientPage() {
           ? item.isDeleted === true
           : filters.isDeleted === "false"
             ? item.isDeleted !== true
-            : true;
+            : item.isDeleted !== true;
 
       return matchesSearch && matchesDate && matchesFrequency && matchesDeleted;
     });
@@ -208,8 +206,10 @@ function PatientPage() {
                     const result = await response.json();
 
                     if (!response.ok || !result.success) {
-                      throw new Error(result.error || "Failed to delete patient");
+                      toast.error(result.error || "Cannot delete patient");
+                      return;
                     }
+
 
                     // Refresh the patient list to show updated status
                     await fetchPatients();
@@ -221,25 +221,42 @@ function PatientPage() {
                 }}
               />
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          setPatientToRestore(row.original.id);
-                          setRestoreDialogOpen(true);
-                        }}
-                      >
-                        <MdRestore className="text-green-500" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Restore Patient</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <ConfirmDialog
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="icon"
+                    >
+                      <MdRestore className="text-green-500" />
+                    </Button>
+                  }
+                  title="Restore Patient"
+                  description="Are you sure you want to restore this patient? This will make the patient record active again."
+                  actionLabel="Restore"
+                  onConfirm={async () => {
+                    try {
+                      const response = await fetch(`/api/patients/${row.original.id}`, {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ isDeleted: false }),
+                      });
+                      const result = await response.json();
+
+                      if (!response.ok || !result.success) {
+                        toast.error(result.error || "Failed to restore patient");
+                        return;
+                      }
+
+                      await fetchPatients();
+                      toast.success("Patient restored successfully!");
+                    } catch (err) {
+                      console.error("Error restoring patient:", err);
+                      toast.error(err instanceof Error ? err.message : "Failed to restore patient");
+                    }
+                  }}
+                />
               )
             }
           </Can>
@@ -281,7 +298,7 @@ function PatientPage() {
 
           <div className="flex items-center gap-3 flex-wrap">
             <FieldSelectorDropdown
-              columns={allColumns as TypedColumn<Patient>[]}
+              columns={allColumns.filter(col => col.id !== "action") as TypedColumn<Patient>[]}
               visibleFields={visibleFields}
               onToggle={(key, checked) => {
                 setVisibleFields((prev) =>
@@ -335,42 +352,6 @@ function PatientPage() {
             setCurrentPage(1);
           }}
         />
-
-        <DeleteConfirmationDialog
-          open={restoreDialogOpen}
-          onOpenChange={setRestoreDialogOpen}
-          title="Restore Patient"
-          description="Are you sure you want to restore this patient? This will make the patient record active again."
-          onConfirm={async () => {
-            if (!patientToRestore) return;
-
-            try {
-              const response = await fetch(`/api/patients/${patientToRestore}`, {
-                method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ isDeleted: false }),
-              });
-              const result = await response.json();
-
-              if (!response.ok || !result.success) {
-                throw new Error(result.error || "Failed to restore patient");
-              }
-
-              // Refresh the patient list
-              await fetchPatients();
-              toast.success("Patient restored successfully!");
-              setRestoreDialogOpen(false);
-              setPatientToRestore(null);
-            } catch (err) {
-              console.error("Error restoring patient:", err);
-              toast.error(err instanceof Error ? err.message : "Failed to restore patient");
-            }
-          }}
-          isLoading={loading}
-        />
-
 
       </div>
 

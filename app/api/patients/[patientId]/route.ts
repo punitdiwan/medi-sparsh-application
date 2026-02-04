@@ -6,6 +6,9 @@ import {
   updatePatient,
   deletePatient,
 } from "@/db/queries";
+import { db } from "@/db/index";
+import { appointments, ipdAdmission } from "@/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 // GET /api/patients/[patientId] - Get a specific patient
 export async function GET(
@@ -132,6 +135,7 @@ export async function DELETE(
 
     // Verify patient exists and belongs to current hospital
     const existingPatient = await getPatientById(patientId);
+
     if (!existingPatient) {
       return NextResponse.json(
         {
@@ -149,6 +153,48 @@ export async function DELETE(
           error: "Unauthorized access to patient data",
         },
         { status: 403 }
+      );
+    }
+
+    if (existingPatient.isAdmitted) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot delete patient with active IPD.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if patient has active appointments
+    const patientAppointments = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.patientId, patientId))
+      .limit(1)
+      .orderBy(desc(appointments.appointmentDate));
+    if (patientAppointments.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot delete patient with appointments.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const activeIpdAdmissions = await db
+      .select()
+      .from(ipdAdmission)
+      .where(eq(ipdAdmission.patientId, patientId))
+      .limit(1);
+    if (activeIpdAdmissions.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cannot delete patient with IPD admissions.",
+        },
+        { status: 400 }
       );
     }
 

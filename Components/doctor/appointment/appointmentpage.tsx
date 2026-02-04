@@ -330,23 +330,34 @@ export default function AppointmentPage() {
               </Can>
 
               <Can I="delete" a="appointment" ability={ability}>
-                <ConfirmDialog
-                  title="Cancel Appointment"
-                  description="Are you sure you want to cancel this appointment?"
-                  actionLabel="Yes, Cancel"
-                  onConfirm={() => handleCancelAppointment(ap.id)}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`${ap.status === "cancelled" ||
-                        ap.status === "completed" ||
-                        cancellingId === ap.id ? "cursor-not-allowed opacity-50" : "cursor-pointer"} text-destructive hover:text-destructive hover:bg-destructive/10`}
+                {isCancelled || isCompleted ? (
+                      <span className="cursor-not-allowed">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled
+                          className="text-destructive opacity-50 pointer-events-none"
+                        >
+                          <X size={16} />
+                        </Button>
+                      </span>
+                ) : (
+                  <ConfirmDialog
+                    title="Cancel Appointment"
+                    description="Are you sure you want to cancel this appointment?"
+                    actionLabel="Yes, Cancel"
+                    onConfirm={() => handleCancelAppointment(ap.id)}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                      <X size={16} />
-                    </Button>
-                  }
-                />
+                        <X size={16} />
+                      </Button>
+                    }
+                  />
+                )}
               </Can>
             </TooltipProvider>
           </div>
