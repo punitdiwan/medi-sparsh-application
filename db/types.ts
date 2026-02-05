@@ -1,6 +1,6 @@
 import type {
   user,
-  session ,
+  session,
   organization,
   member,
   patients,
@@ -9,6 +9,10 @@ import type {
   specializations,
   appointments,
   prescriptions,
+  radiologyTests,
+  radiologyParameters,
+  ambulance,
+  ambulanceBooking,
 } from "@/drizzle/schema";
 
 // Infer types from Drizzle schemas (Better Auth)
@@ -42,6 +46,9 @@ export type NewAppointment = typeof appointments.$inferInsert;
 export type Prescription = typeof prescriptions.$inferSelect;
 export type NewPrescription = typeof prescriptions.$inferInsert;
 
+export type Ambulance = typeof ambulance.$inferSelect;
+export type NewAmbulance = typeof ambulance.$inferInsert;
+
 // Note: Medical history types removed as table is commented out in schema
 
 // Role types
@@ -52,28 +59,28 @@ export type BloodGroup = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
 export type AppointmentStatus = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
 export type CustomeSession = {
-    user: {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        email: string;
-        emailVerified: boolean;
-        name: string;
-        image?: string | null | undefined;
-    };
-    session: {
-        expiresAt: string;
-        createdAt: string;
-        updatedAt: string;
-        activeOrganizationId: string;
-        id: string;
-        userId: string;
-        token: string;
-        ipAddress?: string | null | undefined;
-        userAgent?: string | undefined;
-    };
-    permissionsData?: undefined;
-    role?: undefined;
+  user: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    email: string;
+    emailVerified: boolean;
+    name: string;
+    image?: string | null | undefined;
+  };
+  session: {
+    expiresAt: string;
+    createdAt: string;
+    updatedAt: string;
+    activeOrganizationId: string;
+    id: string;
+    userId: string;
+    token: string;
+    ipAddress?: string | null | undefined;
+    userAgent?: string | undefined;
+  };
+  permissionsData?: undefined;
+  role?: undefined;
 }
 
 
@@ -128,3 +135,6 @@ export type CurrentMedication = {
   frequency: string;
   startDate?: string;
 };
+
+export type AmbulanceBooking = typeof ambulanceBooking.$inferSelect;
+export type NewAmbulanceBooking = typeof ambulanceBooking.$inferInsert;

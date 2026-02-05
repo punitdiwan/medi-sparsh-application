@@ -19,7 +19,7 @@ import PatientSelector from "../patient/PatientSelector";
 import DoctorSelector from "../patient/DoctorSelector";
 import { toast } from "sonner";
 import BackButton from "@/Components/BackButton";
-import { Info, Plus, Trash2, User, Printer, TestTubeDiagonal, ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText } from "lucide-react";
+import { Info, Plus, Trash2, User, TestTubeDiagonal, ReceiptIndianRupee, ClipboardList, BadgeInfo, FileText } from "lucide-react";
 import { getPathologyTests } from "@/lib/actions/pathologyTests";
 import { createPathologyBill, updatePathologyBill, getBillById } from "@/lib/actions/pathologyBills";
 import {
@@ -484,29 +484,7 @@ export default function PathologyBillingForm({ billId, mode }: PathologyBillingF
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
             <BackButton />
-            <Card className="bg-Module-header text-white shadow-lg px-6 py-5 rounded-2xl mb-4">
-                <div className="flex items-start gap-3">
-                    <FileText className="h-6 w-6 text-white/90 mt-0.5" />
-
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            {isEditMode ? "Edit Pathology Bill" : "Generate Pathology Bill"}
-                        </h1>
-
-                        <p className="text-sm text-white/80 mt-1 max-w-2xl leading-relaxed">
-                            {isEditMode ? (<>
-                                You can modify test selection and update discounts.
-                                Patient, doctor, and home collection details are locked.
-                                    Tests cannot be deleted once the sample has been collected.
-                            </>) : (<>
-                                Add patient, assign doctor, select tests, apply discounts,
-                                and enable home sample collection if required.
-                            </>
-                            )}
-                        </p>
-                    </div>
-                </div>
-            </Card>
+            
             {appMode === "hospital" && (
                 <div className="space-y-2 mb-6">
                     <Label>IPD ID</Label>
