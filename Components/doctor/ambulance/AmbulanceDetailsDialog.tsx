@@ -78,9 +78,13 @@ export default function AmbulanceDetailsDialog({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-dialog p-0 border-dialog">
-                <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
-                    <DialogTitle className="text-2xl font-bold text-dialog">Ambulance Details</DialogTitle>
+                <DialogHeader className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-b">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                        <Truck className="h-5 w-5" />
+                        Ambulance Bill Details
+                    </DialogTitle>
                 </DialogHeader>
+
 
                 <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto ">
                     {/* Header with Bill ID and Status */}
@@ -91,19 +95,19 @@ export default function AmbulanceDetailsDialog({
                                 {format(new Date(ambulance.createdAt), "dd MMM yyyy, hh:mm a")}
                             </p>
                         </div>
-                        <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${getStatusColor(ambulance.billStatus)}`}>
+                        <span className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide ${getStatusColor(ambulance.billStatus)}`}>
                             {getStatusLabel(ambulance.billStatus)}
                         </span>
                     </div>
 
                     {/* Patient Details Section */}
-                    <Card className="p-4 bg-dialog-surface border-dialog">
-                        <h4 className="font-semibold text-lg mb-4 flex items-center gap-3 text-dialog">
-                            <div className="p-2 rounded-lg bg-blue-500/20">
-                                <User className="h-5 w-5 text-overview-info" />
-                            </div>
+                    <Card className="p-5 rounded-xl border border-dialog shadow-sm bg-dialog-surface">
+
+                        <h4 className="font-semibold text-lg mb-4 flex items-center gap-2 text-dialog">
+                            <User className="h-5 w-5 text-blue-500" />
                             Patient Information
                         </h4>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-dialog-muted uppercase tracking-wide">Patient Name</p>
@@ -120,12 +124,10 @@ export default function AmbulanceDetailsDialog({
                     </Card>
 
                     {/* Vehicle and Driver Details Section */}
-                    <Card className="p-4 bg-dialog-surface border-dialog">
-                        <h4 className="font-semibold text-lg mb-4 flex items-center gap-3 text-dialog">
-                            <div className="p-2 rounded-lg bg-orange-500/20">
-                                <Truck className="h-5 w-5 text-overview-warning" />
-                            </div>
-                            Vehicle & Driver Information
+                    <Card className="p-5 rounded-xl border border-dialog shadow-sm bg-dialog-surface">
+                        <h4 className="font-semibold text-lg mb-4 flex items-center gap-2 text-dialog">
+                            <Truck className="h-5 w-5 text-orange-500" />
+                            Vehicle & Driver
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
@@ -150,9 +152,10 @@ export default function AmbulanceDetailsDialog({
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <p className="text-xs font-semibold text-dialog-muted uppercase tracking-wide">Pickup Location</p>
-                                <p className="text-sm font-semibold bg-dialog-input p-3 rounded-lg border border-dialog text-dialog">
+                                <p className="text-sm font-medium bg-muted/40 p-3 rounded-lg border border-border text-dialog leading-relaxed">
                                     {ambulance.pickupLocation}
                                 </p>
+
                             </div>
                             <div className="space-y-2">
                                 <p className="text-xs font-semibold text-dialog-muted uppercase tracking-wide">Dropoff Location</p>
@@ -164,8 +167,11 @@ export default function AmbulanceDetailsDialog({
                     </Card>
 
                     {/* Billing Details Section */}
-                    <Card className="p-4 bg-dialog-surface border-dialog">
-                        <h4 className="font-semibold text-lg mb-5 text-dialog">Billing Summary</h4>
+                    <Card className="p-5 rounded-xl border border-dialog shadow-sm bg-dialog-surface">
+                        <h4 className="font-semibold text-lg mb-4 flex items-center gap-2 text-dialog">
+                            <Calendar className="h-5 w-5 text-green-500" />
+                            Billing Summary
+                        </h4>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center py-2 border-b border-dialog/30">
                                 <span className="text-sm font-semibold text-dialog-muted">Total Amount</span>
@@ -179,9 +185,9 @@ export default function AmbulanceDetailsDialog({
                                 <span className="text-sm font-semibold text-dialog-muted">Tax ({taxPercent}%)</span>
                                 <span className="text-sm font-bold text-overview-success">+₹{taxAmount.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center py-3 px-3 rounded-lg bg-dialog border border-dialog/50 my-3">
-                                <span className="font-semibold text-dialog">Net Amount</span>
-                                <span className="text-lg font-bold text-overview-teal">₹{netAmount.toFixed(2)}</span>
+                            <div className="flex justify-between items-center py-3 px-4 rounded-xl bg-green-50 dark:bg-green-900/20 border font-semibold">
+                                <span className="text-dialog">Net Amount</span>
+                                <span className="text-lg font-bold text-green-600">₹{netAmount.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dialog/30">
                                 <span className="text-sm font-semibold text-dialog-muted">Paid Amount</span>
@@ -197,19 +203,17 @@ export default function AmbulanceDetailsDialog({
                     </Card>
                 </div>
 
-                <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
-                    <Button 
-                        variant="outline" 
-                        onClick={onClose} 
-                        className="text-dialog-muted"
-                    >
+                <DialogFooter className="px-6 py-4 bg-muted/40 border-t flex justify-between">
+                    <Button variant="ghost" onClick={onClose}>
                         Close
                     </Button>
-                    <Button className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90">
+
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
                         <Printer className="h-4 w-4" />
-                        Print Details
+                        Print Bill
                     </Button>
                 </DialogFooter>
+
             </DialogContent>
         </Dialog>
     );

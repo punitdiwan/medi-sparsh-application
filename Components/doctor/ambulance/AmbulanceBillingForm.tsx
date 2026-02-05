@@ -49,6 +49,8 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
     const [vehicleId, setVehicleId] = useState("");
     const [driverName, setDriverName] = useState("");
+    const [driverContactNo, setDriverContactNo] = useState("");
+
     const [pickupLocation, setPickupLocation] = useState("");
     const [dropoffLocation, setDropoffLocation] = useState("");
     const [pickupDate, setPickupDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -63,8 +65,8 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     const [paymentMode, setPaymentMode] = useState("Cash");
     const [referenceNo, setReferenceNo] = useState("");
 
-    const [remarks, setRemarks] = useState("");
     const [bookingTime, setBookingTime] = useState(format(new Date(), "HH:mm"));
+    const [tripType, setTripType] = useState("pickup");
 
     // Fetch master data
     useEffect(() => {
@@ -76,7 +78,13 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
             ]);
 
             if (vRes.data) setVehicles(vRes.data);
-            if (catRes.data) setChargeCategories(catRes.data);
+            if (catRes.data) {
+                const ambulanceCategories = catRes.data.filter(
+                    (cat) => cat.categoryType === "Ambulance"
+                );
+                setChargeCategories(ambulanceCategories);
+            }
+
             if (chRes.data) setCharges(chRes.data);
         };
         fetchMasterData();
@@ -91,6 +99,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                     const booking = res.data;
                     setVehicleId(booking.ambulanceId);
                     setDriverName(booking.driverName);
+                    setDriverContactNo(booking.driverContactNo || "");
                     setPickupLocation(booking.pickupLocation);
                     setDropoffLocation(booking.dropLocation);
                     setPickupDate(format(new Date(booking.bookingDate), "yyyy-MM-dd"));
@@ -102,6 +111,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                     setDiscountPercent(Number(booking.discountPercent));
                     setPaymentMode(booking.paymentMode);
                     setReferenceNo(booking.referenceNo || "");
+                    // setTripType(booking.tripType || "one_way");
                 }
             };
             fetchBooking();
@@ -111,9 +121,11 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     useEffect(() => {
         const vehicle = vehicles.find(v => v.id === vehicleId);
         if (vehicle) {
-            setDriverName(vehicle.driverName);
+            setDriverName(vehicle.driverName || "");
+            setDriverContactNo(vehicle.driverContactNo || "");
         }
     }, [vehicleId, vehicles]);
+
 
     // Auto-fill pickup location from patient address
     useEffect(() => {
@@ -179,7 +191,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 bookingDate: pickupDate,
                 bookingTime: bookingTime,
                 driverName: driverName,
-                driverContactNo: "", // We might need to add this to the form if it's required in schema
+                driverContactNo: driverContactNo,
             });
 
             if (res.data) {
@@ -241,16 +253,30 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <Label>Pickup Date</Label>
-                                <div className="relative mt-1">
-                                    <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="date"
-                                        className="pl-9"
-                                        value={pickupDate}
-                                        onChange={(e) => setPickupDate(e.target.value)}
-                                    />
+                            <div className="flex justify-between gap-4">
+                                <div className="flex-1">
+                                    <Label>Pickup Date</Label>
+                                    <div className="relative mt-1">
+                                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="date"
+                                            className="pl-9"
+                                            value={pickupDate}
+                                            onChange={(e) => setPickupDate(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <Label>Pickup Time</Label>
+                                    <div className="relative mt-1">
+                                        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="time"
+                                            className="pl-9"
+                                            value={bookingTime}
+                                            onChange={(e) => setBookingTime(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -265,21 +291,26 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                             Ambulance & Charge Details
                         </h2>
 
-                        <div className="grid grid-cols-1 gap-4 flex-grow">
+                        <div className="grid grid-cols-1 gap-4 grow">
                             <div className="grid grid-cols-2 gap-4">
+                                {/* Vehicle */}
                                 <div>
                                     <Label>Vehicle Number</Label>
                                     <Select value={vehicleId} onValueChange={setVehicleId}>
-                                        <SelectTrigger className="mt-1">
+                                        <SelectTrigger className="w-full mt-1">
                                             <SelectValue placeholder="Select Vehicle" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {vehicles.map(v => (
-                                                <SelectItem key={v.id} value={v.id}>{v.vehicleNumber}</SelectItem>
+                                                <SelectItem key={v.id} value={v.id}>
+                                                    {v.vehicleNumber}
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* Driver Name */}
                                 <div>
                                     <Label>Driver Name</Label>
                                     <Input
@@ -291,11 +322,42 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                 </div>
                             </div>
 
+                            {/* Driver Phone */}
+                            <div className="grid grid-cols-2 gap-4 items-end">
+                                {/* Driver Phone */}
+                                <div className="col-span-1">
+                                    <Label>Driver Phone Number</Label>
+                                    <Input
+                                        placeholder="Driver mobile number"
+                                        className="mt-1 "
+                                        value={driverContactNo}
+                                        onChange={(e) => setDriverContactNo(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Trip Type */}
+                                <div className="col-span-1">
+                                    <Label>Trip Type</Label>
+                                    <Select value={tripType} onValueChange={setTripType}>
+                                        <SelectTrigger className="w-full mt-1 h-10">
+                                            <SelectValue placeholder="Select Trip Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pickup">Pickup</SelectItem>
+                                            <SelectItem value="drop">Drop</SelectItem>
+                                            <SelectItem value="emergency">Emergency</SelectItem>
+                                            <SelectItem value="transfer">Transfer</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+
                             <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-dashed">
-                                <div>
+                                <div className="col-span-1">
                                     <Label>Charge Category</Label>
                                     <Select value={chargeCategoryId} onValueChange={setChargeCategoryId}>
-                                        <SelectTrigger className="mt-1">
+                                        <SelectTrigger className="w-full mt-1">
                                             <SelectValue placeholder="Category" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -305,14 +367,14 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div>
+                                <div className="col-span-1">
                                     <Label>Select Charge</Label>
                                     <Select
                                         value={chargeId}
                                         onValueChange={setChargeId}
                                         disabled={!chargeCategoryId}
                                     >
-                                        <SelectTrigger className="mt-1">
+                                        <SelectTrigger className="w-full mt-1">
                                             <SelectValue placeholder="Charge" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -343,16 +405,6 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                         onChange={(e) => setTaxPercent(Number(e.target.value))}
                                     />
                                 </div>
-                            </div>
-
-                            <div className="pt-4 border-t border-dashed">
-                                <Label>Internal Remarks</Label>
-                                <Textarea
-                                    placeholder="Add any specific instructions or remarks here..."
-                                    className="min-h-[80px] mt-1"
-                                    value={remarks}
-                                    onChange={(e) => setRemarks(e.target.value)}
-                                />
                             </div>
                         </div>
                     </Card>
