@@ -37,6 +37,7 @@ interface IPDPatient {
   isAntenatal: boolean;
   previousMedicalIssue: string;
   creditLimit: string;
+  availableCredit: string; // Available balance (credit left)
 }
 
 /* ---------- Page ---------- */
@@ -53,7 +54,7 @@ export default function IPDPatientListPage() {
     "gender",
     "phone",
     "consultantDoctor",
-    "creditLimit",
+    "availableCredit",
   ]);
 
   useEffect(() => {
@@ -73,6 +74,7 @@ export default function IPDPatientListPage() {
           isAntenatal: false, // Placeholder
           previousMedicalIssue: item.medicalHistory || "None",
           creditLimit: item.creditLimit ? `₹${item.creditLimit}` : "₹0",
+          availableCredit: item.availableCredit ? `₹${Number(item.availableCredit).toLocaleString()}` : "₹0",
         }));
         setAllData(mappedData);
       }
@@ -132,7 +134,7 @@ export default function IPDPatientListPage() {
         ),
     },
     { accessorKey: "previousMedicalIssue", header: "Medical Issue" },
-    { accessorKey: "creditLimit", header: "Credit Limit" },
+    { accessorKey: "availableCredit", header: "Credit" },
   ];
 
   const displayedOptionalCols = optionalColumns.filter(
