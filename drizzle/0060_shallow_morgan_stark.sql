@@ -1,0 +1,1 @@
+ALTER TABLE "ambulance_booking" ADD COLUMN "trip_type" text NOT NULL;

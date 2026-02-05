@@ -1572,7 +1572,7 @@ export const ambulance = pgTable("ambulance", {
 // payment_mode enum
 export const paymentModeEnum = pgEnum("payment_mode", ["cash", "card", "upi", "cheque", "dd"]);
 // payment_status enum
-export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid"]);
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "partially_paid"]);
 // booking_status enum
 export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "cancelled"]);
 
@@ -1593,10 +1593,12 @@ export const ambulanceBooking = pgTable("ambulance_booking", {
 	taxPercent: numeric("tax_percent").notNull(),
 	discountAmt: numeric("discount_amt").notNull(),
 	totalAmount: numeric("total_amount").notNull(),
+	paidAmount: numeric("paid_amount").notNull().default("0"),
 	paymentMode: paymentModeEnum("payment_mode").notNull(),
 	paymentStatus: paymentStatusEnum("payment_status").notNull(),
 	bookingStatus: bookingStatusEnum("booking_status").notNull(),
 	referenceNo: text("reference_no"),
+	tripType: text("trip_type").notNull(),
 	pickupLocation: text("pickup_location").notNull(),
 	dropLocation: text("drop_location").notNull(),
 	bookingDate: date("booking_date").notNull(),

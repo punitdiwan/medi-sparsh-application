@@ -59,10 +59,10 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     const [chargeId, setChargeId] = useState("");
 
     const [standardCharge, setStandardCharge] = useState(0);
-    const [discountPercent, setDiscountPercent] = useState(0);
+    const [discountAmt, setDiscountAmt] = useState(0);
     const [taxPercent, setTaxPercent] = useState(5); // Default 5% tax
     const [paidAmount, setPaidAmount] = useState(0);
-    const [paymentMode, setPaymentMode] = useState("Cash");
+    const [paymentMode, setPaymentMode] = useState("cash");
     const [referenceNo, setReferenceNo] = useState("");
 
     const [bookingTime, setBookingTime] = useState(format(new Date(), "HH:mm"));
@@ -97,6 +97,12 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 const res = await getBookingById(id);
                 if (res.data) {
                     const booking = res.data;
+                    setSelectedPatient({
+                        id: booking.patientId,
+                        name: booking.patientName,
+                        mobileNumber: booking.patientMobile,
+                        email: booking.patientEmail
+                    });
                     setVehicleId(booking.ambulanceId);
                     setDriverName(booking.driverName);
                     setDriverContactNo(booking.driverContactNo || "");
@@ -108,10 +114,11 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                     setChargeId(booking.chargeId);
                     setStandardCharge(Number(booking.standardCharge));
                     setTaxPercent(Number(booking.taxPercent));
-                    setDiscountPercent(Number(booking.discountPercent));
+                    setDiscountAmt(Number(booking.discountAmt));
+                    setPaidAmount(Number(booking.paidAmount || 0));
                     setPaymentMode(booking.paymentMode);
                     setReferenceNo(booking.referenceNo || "");
-                    // setTripType(booking.tripType || "one_way");
+                    setTripType(booking.tripType || "pickup");
                 }
             };
             fetchBooking();
@@ -120,35 +127,33 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
 
     useEffect(() => {
         const vehicle = vehicles.find(v => v.id === vehicleId);
-        if (vehicle) {
+        // Only auto-fill if NOT in edit mode OR if fields are currently empty
+        if (vehicle && (!id || !driverName)) {
             setDriverName(vehicle.driverName || "");
             setDriverContactNo(vehicle.driverContactNo || "");
         }
-    }, [vehicleId, vehicles]);
+    }, [vehicleId, vehicles, id]);
 
 
     // Auto-fill pickup location from patient address
     useEffect(() => {
-        if (selectedPatient?.address) {
+        // Only auto-fill if we have an address AND we are NOT in edit mode (or location is empty)
+        if (selectedPatient?.address && (!id || !pickupLocation)) {
             setPickupLocation(selectedPatient.address);
-        } else {
-            setPickupLocation("");
         }
-    }, [selectedPatient]);
+    }, [selectedPatient, id]);
 
     useEffect(() => {
         const charge = charges.find(c => c.id === chargeId);
-        if (charge) {
+        // Only auto-fill amount if NOT in edit mode OR if standardCharge is still 0
+        if (charge && (!id || standardCharge === 0)) {
             setStandardCharge(Number(charge.amount));
-        } else {
-            setStandardCharge(0);
         }
-    }, [chargeId, charges]);
+    }, [chargeId, charges, id]);
 
     // Calculate Totals
     const calculation = useMemo(() => {
         const base = standardCharge;
-        const discountAmt = base * (discountPercent / 100);
         const taxableAmt = base - discountAmt;
         const taxAmt = taxableAmt * (taxPercent / 100);
         const netAmt = taxableAmt + taxAmt;
@@ -165,7 +170,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
             balanceAmt,
             status
         };
-    }, [standardCharge, discountPercent, taxPercent, paidAmount]);
+    }, [standardCharge, discountAmt, taxPercent, paidAmount]);
 
     const handleSubmit = async () => {
         if (!selectedPatient || !vehicleId || !chargeId) {
@@ -183,8 +188,12 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 chargeId: chargeId,
                 standardCharge: standardCharge.toString(),
                 taxPercent: taxPercent.toString(),
-                discountPercent: discountPercent.toString(),
-                paymentMode: paymentMode.toLowerCase() as any,
+                discountAmt: discountAmt.toString(),
+                totalAmount: calculation.netAmt.toString(),
+                paidAmount: paidAmount.toString(),
+                paymentMode: paymentMode as any,
+                paymentStatus: calculation.status as any,
+                bookingStatus: "confirmed",
                 referenceNo: referenceNo,
                 pickupLocation: pickupLocation,
                 dropLocation: dropoffLocation,
@@ -192,6 +201,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 bookingTime: bookingTime,
                 driverName: driverName,
                 driverContactNo: driverContactNo,
+                tripType: tripType,
             });
 
             if (res.data) {
@@ -427,17 +437,16 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs text-muted-foreground">Discount (%)</span>
+                                    <span className="text-xs text-muted-foreground">Discount (₹)</span>
                                     <Input
                                         type="number"
                                         min={0}
-                                        max={100}
                                         className="h-6 w-14 text-xs px-1"
-                                        value={discountPercent}
-                                        onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                                        value={discountAmt}
+                                        onChange={(e) => setDiscountAmt(Number(e.target.value))}
                                     />
                                 </div>
-                                <span className="text-lg font-semibold text-destructive">- ₹{calculation.discountAmt.toFixed(2)}</span>
+                                <span className="text-lg font-semibold text-destructive">- ₹{discountAmt.toFixed(2)}</span>
                             </div>
                             <div>
                                 <span className="text-xs text-muted-foreground block">Tax ({taxPercent}%)</span>
@@ -468,27 +477,30 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Payment Mode</Label>
-                                <Select value={paymentMode} onValueChange={setPaymentMode}>
+                                <Select value={paymentMode} onValueChange={setPaymentMode} disabled={calculation.balanceAmt <= 0 && !!id}>
                                     <SelectTrigger>
                                         <div className="flex items-center gap-2">
                                             <SelectValue />
                                         </div>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Cash">Cash</SelectItem>
-                                        <SelectItem value="Online">Online</SelectItem>
-                                        <SelectItem value="Card">Card</SelectItem>
+                                        <SelectItem value="cash">Cash</SelectItem>
+                                        <SelectItem value="card">Card</SelectItem>
+                                        <SelectItem value="upi">UPI</SelectItem>
+                                        <SelectItem value="cheque">Cheque</SelectItem>
+                                        <SelectItem value="dd">DD</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {paymentMode !== "Cash" && (
+                            {paymentMode !== "cash" && (
                                 <div className="space-y-2 animate-in fade-in slide-in-from-left-2">
                                     <Label>Reference No.</Label>
                                     <Input
                                         placeholder="Transaction ID / Ref"
                                         value={referenceNo}
                                         onChange={(e) => setReferenceNo(e.target.value)}
+                                        disabled={calculation.balanceAmt <= 0 && !!id}
                                     />
                                 </div>
                             )}
@@ -500,16 +512,17 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                     className="font-bold border-primary/20 bg-primary/5"
                                     value={paidAmount}
                                     onChange={(e) => setPaidAmount(Number(e.target.value))}
+                                    disabled={calculation.balanceAmt <= 0 && !!id}
                                 />
                             </div>
 
                             <div className="flex items-end">
                                 <Button
                                     className="w-full h-10 shadow-lg hover:shadow-xl transition-all font-semibold"
-                                    disabled={isSubmitting || !selectedPatient || standardCharge === 0}
+                                    disabled={isSubmitting || !selectedPatient || standardCharge === 0 || (calculation.balanceAmt <= 0 && !!id)}
                                     onClick={handleSubmit}
                                 >
-                                    {isSubmitting ? "Processing..." : "Generate Bill"}
+                                    {isSubmitting ? "Processing..." : (id ? "Pay Bill" : "Generate Bill")}
                                 </Button>
                             </div>
                         </div>

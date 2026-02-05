@@ -8,6 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MoreVertical, Plus, Printer, Eye, Edit, Trash2, Calendar, Clock, Ambulance, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
@@ -33,12 +34,13 @@ type AmbulanceBill = {
     pickupLocation: string;
     dropoffLocation: string;
     billTotalAmount: number;
-    discountPercentage: number;
+    discountAmount: number;
     taxPercentage: number;
     netAmount?: number;
     paidAmount?: number;
     balanceAmount?: number;
     billStatus: "paid" | "pending" | "partially_paid";
+    tripType: string;
     createdAt: string;
 };
 
@@ -70,10 +72,11 @@ export default function AmbulancePage() {
                 pickupLocation: b.pickupLocation,
                 dropoffLocation: b.dropLocation,
                 billTotalAmount: Number(b.standardCharge),
-                discountPercentage: Number(b.discountPercent),
+                discountAmount: Number(b.discountAmt),
                 taxPercentage: Number(b.taxPercent),
-                paidAmount: 0, // Need payments table for real paid amount
-                billStatus: "pending", // Need payments table or status in booking
+                paidAmount: Number(b.paidAmount || 0),
+                billStatus: b.paymentStatus as any,
+                tripType: b.tripType,
                 createdAt: b.createdAt.toISOString(),
             }));
             setBills(formatted);
@@ -112,7 +115,18 @@ export default function AmbulancePage() {
     );
 
     const allColumns: ColumnDef<AmbulanceBill>[] = [
-        { accessorKey: "id", header: "Bill ID", cell: ({ row }) => row.original.id },
+        {
+            accessorKey: "id",
+            header: "Bill No",
+            cell: ({ row }) => (
+                <Link
+                    href={`/doctor/ambulance/generateBill?id=${row.original.id}`}
+                    className="text-primary hover:underline font-medium"
+                >
+                    {row.original.id.substring(0, 13)}
+                </Link>
+            )
+        },
         { accessorKey: "patientName", header: "Patient Name" },
         { accessorKey: "patientPhone", header: "Patient Phone" },
         { accessorKey: "vehicleNumber", header: "Vehicle No" },
@@ -136,9 +150,9 @@ export default function AmbulancePage() {
             cell: ({ row }) => `₹${row.original.billTotalAmount.toFixed(2)}`
         },
         {
-            accessorKey: "discountPercentage",
+            accessorKey: "discountAmount",
             header: "Discount",
-            cell: ({ row }) => `${row.original.discountPercentage.toFixed(2)}%`
+            cell: ({ row }) => `₹${row.original.discountAmount.toFixed(2)}`
         },
         {
             accessorKey: "taxPercentage",
@@ -150,10 +164,9 @@ export default function AmbulancePage() {
             header: "Net Amount",
             cell: ({ row }) => {
                 const bill = row.original.billTotalAmount || 0;
-                const discountPercent = row.original.discountPercentage || 0;
+                const discountAmount = row.original.discountAmount || 0;
                 const taxPercent = row.original.taxPercentage || 0;
 
-                const discountAmount = bill * (discountPercent / 100);
                 const taxableAmount = bill - discountAmount;
                 const taxAmount = taxableAmount * (taxPercent / 100);
 
@@ -172,11 +185,10 @@ export default function AmbulancePage() {
             header: "Balance Amount",
             cell: ({ row }) => {
                 const bill = row.original.billTotalAmount || 0;
-                const discountPercent = row.original.discountPercentage || 0;
+                const discountAmount = row.original.discountAmount || 0;
                 const taxPercent = row.original.taxPercentage || 0;
                 const paid = row.original.paidAmount || 0;
 
-                const discountAmount = bill * (discountPercent / 100);
                 const taxableAmount = bill - discountAmount;
                 const taxAmount = taxableAmount * (taxPercent / 100);
                 const netAmount = taxableAmount + taxAmount;
@@ -215,7 +227,7 @@ export default function AmbulancePage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
+                            {/* <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => {
                                     setSelectedAmbulance(row.original);
@@ -224,8 +236,11 @@ export default function AmbulancePage() {
                             >
                                 <Eye size={14} className="text-muted-foreground group-hover:text-primary" />
                                 View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="group gap-2 cursor-pointer">
+                            </DropdownMenuItem> */}
+                            <DropdownMenuItem
+                                className="group gap-2 cursor-pointer"
+                                onClick={() => route.push(`/doctor/ambulance/generateBill?id=${row.original.id}`)}
+                            >
                                 <Edit size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Edit Bill
                             </DropdownMenuItem>

@@ -23,12 +23,13 @@ interface AmbulanceBill {
     pickupLocation: string;
     dropoffLocation: string;
     billTotalAmount: number;
-    discountPercentage: number;
+    discountAmount: number;
     taxPercentage: number;
     netAmount?: number;
     paidAmount?: number;
     balanceAmount?: number;
     billStatus: "paid" | "pending" | "partially_paid";
+    tripType: string;
     createdAt: string;
 }
 
@@ -47,9 +48,8 @@ export default function AmbulanceDetailsDialog({
 
     // Calculate net amount
     const bill = ambulance.billTotalAmount || 0;
-    const discountPercent = ambulance.discountPercentage || 0;
+    const discountAmount = ambulance.discountAmount || 0;
     const taxPercent = ambulance.taxPercentage || 0;
-    const discountAmount = bill * (discountPercent / 100);
     const taxableAmount = bill - discountAmount;
     const taxAmount = taxableAmount * (taxPercent / 100);
     const netAmount = taxableAmount + taxAmount;
@@ -138,6 +138,10 @@ export default function AmbulanceDetailsDialog({
                                 <p className="text-xs font-semibold text-dialog-muted uppercase tracking-wide">Driver Name</p>
                                 <p className="text-base font-bold text-dialog">{ambulance.driverName}</p>
                             </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-dialog-muted uppercase tracking-wide">Trip Type</p>
+                                <p className="text-base font-bold text-dialog capitalize">{ambulance.tripType}</p>
+                            </div>
                         </div>
                     </Card>
 
@@ -178,7 +182,7 @@ export default function AmbulanceDetailsDialog({
                                 <span className="text-sm font-bold text-dialog">₹{bill.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dialog/30">
-                                <span className="text-sm font-semibold text-dialog-muted">Discount ({discountPercent}%)</span>
+                                <span className="text-sm font-semibold text-dialog-muted">Discount</span>
                                 <span className="text-sm font-bold text-overview-danger">-₹{discountAmount.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-dialog/30">

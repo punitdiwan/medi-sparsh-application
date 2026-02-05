@@ -59,7 +59,7 @@ interface AmbulanceBill {
     pickupLocation: string;
     dropoffLocation: string;
     billTotalAmount: number;
-    discountPercentage: number;
+    discountAmount: number;
     taxPercentage: number;
     netAmount?: number;
     paidAmount?: number;
@@ -122,16 +122,15 @@ export default function AmbulancePaymentDialog({
     useEffect(() => {
         if (billData && open) {
             const bill = billData.billTotalAmount || 0;
-            const discountPercent = billData.discountPercentage || 0;
+            const discountAmount = billData.discountAmount || 0;
             const taxPercent = billData.taxPercentage || 0;
-            const discountAmount = bill * (discountPercent / 100);
             const taxableAmount = bill - discountAmount;
             const taxAmount = taxableAmount * (taxPercent / 100);
             const netAmount = taxableAmount + taxAmount;
 
-            setPaymentData(prev => ({ 
-                ...prev, 
-                amount: billData.balanceAmount || (netAmount - (billData.paidAmount || 0)) 
+            setPaymentData(prev => ({
+                ...prev,
+                amount: billData.balanceAmount || (netAmount - (billData.paidAmount || 0))
             }));
         }
     }, [billData, open]);
@@ -140,9 +139,8 @@ export default function AmbulancePaymentDialog({
 
     // Calculate net amount
     const bill = billData.billTotalAmount || 0;
-    const discountPercent = billData.discountPercentage || 0;
+    const discountAmount = billData.discountAmount || 0;
     const taxPercent = billData.taxPercentage || 0;
-    const discountAmount = bill * (discountPercent / 100);
     const taxableAmount = bill - discountAmount;
     const taxAmount = taxableAmount * (taxPercent / 100);
     const netAmount = taxableAmount + taxAmount;
@@ -289,7 +287,7 @@ export default function AmbulancePaymentDialog({
                                                     <span className="font-semibold">₹{bill.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
-                                                    <span className="text-muted-foreground">Discount ({discountPercent}%)</span>
+                                                    <span className="text-muted-foreground">Discount</span>
                                                     <span className="font-semibold text-destructive">-₹{discountAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
@@ -394,8 +392,8 @@ export default function AmbulancePaymentDialog({
                                                 <span className="text-sm font-semibold text-green-700">Bill Paid Successfully</span>
                                             </div>
                                         ) : (
-                                            <Button 
-                                                className="w-full mt-6 gap-2" 
+                                            <Button
+                                                className="w-full mt-6 gap-2"
                                                 onClick={handleAddPayment}
                                                 disabled={paymentData.amount <= 0}
                                             >
@@ -521,15 +519,15 @@ export default function AmbulancePaymentDialog({
                                 </p>
                             </CardContent>
                             <div className="flex gap-3 p-6 border-t">
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     onClick={() => setDeleteConfirm(null)}
                                     disabled={isDeleting}
                                     className="flex-1"
                                 >
                                     Cancel
                                 </Button>
-                                <Button 
+                                <Button
                                     variant="destructive"
                                     onClick={confirmDelete}
                                     disabled={isDeleting}

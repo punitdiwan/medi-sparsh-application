@@ -2668,9 +2668,14 @@ export async function getAmbulanceBookingsByHospital(hospitalId: string) {
       dropLocation: ambulanceBooking.dropLocation,
       standardCharge: ambulanceBooking.standardCharge,
       taxPercent: ambulanceBooking.taxPercent,
-      discountPercent: ambulanceBooking.discountPercent,
+      discountAmt: ambulanceBooking.discountAmt,
+      totalAmount: ambulanceBooking.totalAmount,
+      paidAmount: ambulanceBooking.paidAmount,
       paymentMode: ambulanceBooking.paymentMode,
+      paymentStatus: ambulanceBooking.paymentStatus,
+      bookingStatus: ambulanceBooking.bookingStatus,
       referenceNo: ambulanceBooking.referenceNo,
+      tripType: ambulanceBooking.tripType,
       bookingDate: ambulanceBooking.bookingDate,
       bookingTime: ambulanceBooking.bookingTime,
       createdAt: ambulanceBooking.createdAt,
@@ -2706,8 +2711,35 @@ export async function deleteAmbulanceBooking(id: string) {
 
 export async function getAmbulanceBookingById(id: string) {
   const result = await db
-    .select()
+    .select({
+      id: ambulanceBooking.id,
+      patientId: ambulanceBooking.patientId,
+      patientName: patients.name,
+      patientMobile: patients.mobileNumber,
+      patientEmail: patients.email,
+      ambulanceId: ambulanceBooking.ambulanceId,
+      chargeCategory: ambulanceBooking.chargeCategory,
+      chargeId: ambulanceBooking.chargeId,
+      standardCharge: ambulanceBooking.standardCharge,
+      taxPercent: ambulanceBooking.taxPercent,
+      discountAmt: ambulanceBooking.discountAmt,
+      totalAmount: ambulanceBooking.totalAmount,
+      paidAmount: ambulanceBooking.paidAmount,
+      paymentMode: ambulanceBooking.paymentMode,
+      paymentStatus: ambulanceBooking.paymentStatus,
+      bookingStatus: ambulanceBooking.bookingStatus,
+      referenceNo: ambulanceBooking.referenceNo,
+      pickupLocation: ambulanceBooking.pickupLocation,
+      dropLocation: ambulanceBooking.dropLocation,
+      bookingDate: ambulanceBooking.bookingDate,
+      bookingTime: ambulanceBooking.bookingTime,
+      driverName: ambulanceBooking.driverName,
+      driverContactNo: ambulanceBooking.driverContactNo,
+      tripType: ambulanceBooking.tripType,
+      createdAt: ambulanceBooking.createdAt,
+    })
     .from(ambulanceBooking)
+    .innerJoin(patients, eq(ambulanceBooking.patientId, patients.id))
     .where(eq(ambulanceBooking.id, id))
     .limit(1);
   return result[0];
