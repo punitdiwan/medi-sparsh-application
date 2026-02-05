@@ -78,7 +78,7 @@ export default function AmbulanceDetailsDialog({
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-dialog p-0 border-dialog">
-                <DialogHeader className="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-b">
+                <DialogHeader className="px-6 py-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white border-b">
                     <DialogTitle className="text-xl font-bold flex items-center gap-2">
                         <Truck className="h-5 w-5" />
                         Ambulance Bill Details

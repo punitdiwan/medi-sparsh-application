@@ -330,7 +330,7 @@ export default function RadiologyBillPage() {
 
                 <div className="flex gap-3">
                     <FieldSelectorDropdown
-                        columns={allColumns as TypedColumn<Bill>[]}
+                        columns={allColumns.filter(col => col.id !== "actions") as TypedColumn<Bill>[]}
                         visibleFields={visibleFields}
                         onToggle={(key, checked) => {
                             setVisibleFields((prev) =>

@@ -245,7 +245,7 @@ export default function AmbulanceManagementPage() {
                 </div>
                 <div className="flex gap-3 items-center">
                     <FieldSelectorDropdown
-                        columns={allColumns as TypedColumn<AmbulanceVehicle>[]}
+                        columns={allColumns.filter(col => col.id !== "actions") as TypedColumn<AmbulanceVehicle>[]}
                         visibleFields={visibleFields}
                         onToggle={(key, checked) => {
                             setVisibleFields((prev) =>

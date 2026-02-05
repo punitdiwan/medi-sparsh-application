@@ -304,7 +304,7 @@ export default function AmbulancePage() {
 
                 <div className="flex gap-3">
                     <FieldSelectorDropdown
-                        columns={allColumns as TypedColumn<AmbulanceBill>[]}
+                        columns={allColumns.filter(col => col.id !== "actions") as TypedColumn<AmbulanceBill>[]}
                         visibleFields={visibleFields}
                         onToggle={(key, checked) => {
                             setVisibleFields((prev) =>
