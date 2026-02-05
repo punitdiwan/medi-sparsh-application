@@ -33,12 +33,12 @@ import { Ambulance } from "lucide-react";
 const formSchema = z.object({
     vehicleNumber: z.string().min(1, "Vehicle number is required"),
     vehicleModel: z.string().min(1, "Vehicle model is required"),
-    ambulanceType: z.enum(["Owned", "Rented"]),
-    driverName: z.string().optional(),
-    yearMade: z.string().optional(),
-    driverContactNumber: z.string().optional(),
-    driverLicense: z.string().optional(),
-    Notes: z.string().optional(),
+    vehicleType: z.enum(["owned", "rented"]),
+    vehicleYear: z.string().min(1, "Vehicle year is required"),
+    driverName: z.string().min(1, "Driver name is required"),
+    driverContactNo: z.string().min(1, "Driver contact is required"),
+    driverLicenseNo: z.string().min(1, "Driver license is required"),
+    status: z.enum(["active", "inactive", "maintenance"]),
 });
 
 export type AmbulanceVehicleFormData = z.infer<typeof formSchema>;
@@ -63,26 +63,38 @@ export function AmbulanceManagementDialog({
         defaultValues: {
             vehicleNumber: "",
             vehicleModel: "",
-            ambulanceType: "Owned",
+            vehicleType: "owned",
+            vehicleYear: "",
             driverName: "",
-            yearMade: "",
-            driverContactNumber: "",
-            driverLicense: "",
+            driverContactNo: "",
+            driverLicenseNo: "",
+            status: "active",
         },
     });
 
     useEffect(() => {
         if (open) {
             if (mode === "edit" && defaultValues) {
-                form.reset(defaultValues);
+                form.reset({
+                    vehicleNumber: defaultValues.vehicleNumber || "",
+                    vehicleModel: defaultValues.vehicleModel || "",
+                    vehicleType: defaultValues.vehicleType || "owned",
+                    vehicleYear: defaultValues.vehicleYear || "",
+                    driverName: defaultValues.driverName || "",
+                    driverContactNo: defaultValues.driverContactNo || "",
+                    driverLicenseNo: defaultValues.driverLicenseNo || "",
+                    status: defaultValues.status || "active",
+                });
             } else {
                 form.reset({
                     vehicleNumber: "",
                     vehicleModel: "",
-                    ambulanceType: "Owned",
+                    vehicleType: "owned",
+                    vehicleYear: "",
                     driverName: "",
-                    driverContactNumber: "",
-                    driverLicense: "",
+                    driverContactNo: "",
+                    driverLicenseNo: "",
+                    status: "active",
                 });
             }
         }
@@ -90,7 +102,6 @@ export function AmbulanceManagementDialog({
 
     const handleSubmit = (data: AmbulanceVehicleFormData) => {
         onSubmit(data);
-        onOpenChange(false);
     };
 
     return (
@@ -115,7 +126,7 @@ export function AmbulanceManagementDialog({
                                     name="vehicleNumber"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Vehicle Number</FormLabel>
+                                            <FormLabel>Vehicle Number <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="KA-01-AB-1234" {...field} />
                                             </FormControl>
@@ -128,7 +139,7 @@ export function AmbulanceManagementDialog({
                                     name="vehicleModel"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Vehicle Model</FormLabel>
+                                            <FormLabel>Vehicle Model <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Toyota Innova" {...field} />
                                             </FormControl>
@@ -138,10 +149,10 @@ export function AmbulanceManagementDialog({
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="yearMade"
+                                    name="vehicleYear"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Year Made</FormLabel>
+                                            <FormLabel>Vehicle Year <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="2022" {...field} />
                                             </FormControl>
@@ -157,7 +168,7 @@ export function AmbulanceManagementDialog({
                                     name="driverName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Driver Name</FormLabel>
+                                            <FormLabel>Driver Name <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="John Doe" {...field} />
                                             </FormControl>
@@ -167,10 +178,10 @@ export function AmbulanceManagementDialog({
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="driverContactNumber"
+                                    name="driverContactNo"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Driver Contact</FormLabel>
+                                            <FormLabel>Driver Contact <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="9876543210" {...field} />
                                             </FormControl>
@@ -180,10 +191,10 @@ export function AmbulanceManagementDialog({
                                 />
                                 <FormField
                                     control={form.control}
-                                    name="driverLicense"
+                                    name="driverLicenseNo"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Driver License</FormLabel>
+                                            <FormLabel>Driver License <span className="text-red-500">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="DL-1234567890" {...field} />
                                             </FormControl>
@@ -193,49 +204,58 @@ export function AmbulanceManagementDialog({
                                 />
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="col-span-1">
-                                    <FormField
-                                        control={form.control}
-                                        name="ambulanceType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Ambulance Type</FormLabel>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    defaultValue={field.value}
-                                                    value={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select type" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Owned">Owned</SelectItem>
-                                                        <SelectItem value="Rented">Rented</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <div className="col-span-2">
-                                    <FormField
-                                        control={form.control}
-                                        name="Notes"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Notes (Optional)</FormLabel>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="vehicleType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Vehicle Type <span className="text-red-500">*</span></FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                value={field.value}
+                                            >
                                                 <FormControl>
-                                                    <Input placeholder="Notes" {...field} />
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
                                                 </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                                <SelectContent>
+                                                    <SelectItem value="owned">Owned</SelectItem>
+                                                    <SelectItem value="rented">Rented</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="status"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Status</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                value={field.value}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select status" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="active">Active</SelectItem>
+                                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
 
                             <DialogFooter className="pb-1 text-dialog-muted flex justify-between">

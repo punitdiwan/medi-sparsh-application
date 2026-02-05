@@ -8,7 +8,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { PaginationControl } from "@/components/pagination";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2 } from "lucide-react";
+import { MoreVertical, Plus, Printer, Eye, Mail, Edit, Trash2, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useAbility } from "@/components/providers/AbilityProvider";
 import { Can } from "@casl/react";
@@ -147,10 +147,24 @@ export default function RadiologyBillPage() {
         {
             accessorKey: "createdAt",
             header: "Bill Date",
-            cell: ({ row }) => {
-                const date = new Date(row.original.createdAt);
-                return format(date, "dd/MM/yyyy");
-            }
+            cell: ({ row }) => (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-sm font-medium">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "dd MMM yyyy")
+                            : "-"
+                        }
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Clock className="h-2.5 w-2.5" />
+                        {row.original.createdAt
+                            ? format(new Date(row.original.createdAt), "hh:mm a")
+                            : "-"
+                        }
+                    </div>
+                </div>
+            )
         },
         { accessorKey: "patientName", header: "Patient Name" },
         { accessorKey: "patientPhone", header: "Phone" },

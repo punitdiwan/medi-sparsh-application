@@ -1,4 +1,4 @@
-import { pgTable, unique, serial, text, timestamp, foreignKey, boolean, index, jsonb, date, integer, numeric, primaryKey, varchar, pgEnum } from "drizzle-orm/pg-core"
+import { pgTable, unique, serial, text, timestamp, foreignKey, boolean, index, jsonb, date, integer, numeric, primaryKey, varchar, time, pgEnum } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 const useUUIDv4 = sql`uuid_generate_v4()`;
@@ -1509,3 +1509,52 @@ export const radiologyPayments = pgTable("radiology_payments", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
+
+// ambulance table
+export const ambulanceStatusEnum = pgEnum("ambulance_status", ["active", "inactive", "maintenance"]);
+export const ambulanceTypeEnum = pgEnum("ambulance_type", ["rented", "owned"]);
+
+export const ambulance = pgTable("ambulance", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	vehicleNumber: text("vehicle_number").notNull(),
+	vehicleType: ambulanceTypeEnum("vehicle_type").notNull(),
+	vehicleModel: text("vehicle_model").notNull(),
+	vehicleYear: text("vehicle_year").notNull(),
+	driverName: text("driver_name").notNull(),
+	driverContactNo: text("driver_contact_no").notNull(),
+	driverLicenseNo: text("driver_license_no").notNull(),
+	status: ambulanceStatusEnum("status").notNull().default("active"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// ambulance_booking table
+export const paymentModeEnum = pgEnum("payment_mode", ["cash", "card", "upi", "cheque", "dd"]);
+export const ambulanceBooking = pgTable("ambulance_booking", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	patientId: text("patient_id").notNull()
+		.references(() => patients.id, { onDelete: "restrict" }),
+	ambulanceId: text("ambulance_id").notNull()
+		.references(() => ambulance.id, { onDelete: "restrict" }),
+	chargeCategory: text("charge_category").notNull()
+		.references(() => chargeCategories.id, { onDelete: "restrict" }),
+	chargeId: text("charge_id").notNull()
+		.references(() => charges.id, { onDelete: "restrict" }),
+	standardCharge: numeric("standard_charge").notNull(),
+	taxPercent: numeric("tax_percent").notNull(),
+	discountPercent: numeric("discount_percent").notNull(),
+	paymentMode: paymentModeEnum("payment_mode").notNull(),
+	referenceNo: text("reference_no"),
+	pickupLocation: text("pickup_location").notNull(),
+	dropLocation: text("drop_location").notNull(),
+	bookingDate: date("booking_date").notNull(),
+	bookingTime: time("booking_time").notNull(),
+	driverName: text("driver_name").notNull(),
+	driverContactNo: text("driver_contact_no").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});

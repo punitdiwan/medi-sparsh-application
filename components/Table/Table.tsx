@@ -10,9 +10,12 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import clsx from "clsx";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 type TableProps<TData> = {
   data: TData[];
   columns: ColumnDef<TData>[];
+  loading?: boolean;
   fallback?: React.ReactNode;
 
   /** Optional text color controls */
@@ -23,6 +26,7 @@ type TableProps<TData> = {
 export function Table<TData>({
   data,
   columns,
+  loading,
   fallback,
   headerTextClassName,
   bodyTextClassName,
@@ -69,9 +73,9 @@ export function Table<TData>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </th>
                 );
               })}
@@ -85,7 +89,17 @@ export function Table<TData>({
             bodyTextClassName ?? "text-foreground"
           )}
         >
-          {table.getRowModel().rows.length > 0 ? (
+          {loading ? (
+            Array.from({ length: 5 }).map((_, rowIndex) => (
+              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-background" : "bg-muted/50"}>
+                {columns.map((_, colIndex) => (
+                  <td key={colIndex} className="border-b px-6 py-4">
+                    <Skeleton className="h-4 w-full" />
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row, index) => (
               <tr
                 key={row.id}

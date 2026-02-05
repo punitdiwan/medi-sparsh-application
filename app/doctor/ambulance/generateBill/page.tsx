@@ -2,6 +2,10 @@ import AmbulanceBillingForm from "@/Components/doctor/ambulance/AmbulanceBilling
 
 export const dynamic = "force-dynamic";
 
-export default function GenerateBillPage() {
-    return <AmbulanceBillingForm />;
+export default function GenerateBillPage({
+    searchParams,
+}: {
+    searchParams: { id?: string };
+}) {
+    return <AmbulanceBillingForm id={searchParams.id} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table } from "@/components/Table/Table";
@@ -16,6 +16,10 @@ import { Label } from "@/components/ui/label";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
 import { AmbulanceManagementDialog, AmbulanceVehicleFormData } from "./AmbulanceManagementDialog";
 import {
+    getAmbulances,
+    saveAmbulance,
+} from "@/lib/actions/ambulanceActions";
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -26,69 +30,26 @@ type AmbulanceVehicle = {
     id: string;
     vehicleNumber: string;
     vehicleModel: string;
-    ambulanceType: "Owned" | "Rented";
-    driverName?: string;
-    driverContactNumber?: string;
-    driverLicense?: string;
-    status: "Active" | "Maintenance" | "Inactive";
-    yearMade: string;
-    notes?: string;
-    isDeleted: boolean;
+    vehicleType: "owned" | "rented";
+    driverName: string;
+    driverContactNo: string;
+    driverLicenseNo: string;
+    status: "active" | "maintenance" | "inactive";
+    vehicleYear: string;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
 
-const DUMMY_VEHICLES: AmbulanceVehicle[] = [
-    {
-        id: "1",
-        vehicleNumber: "KA-01-AB-1234",
-        vehicleModel: "Toyota Innova",
-        ambulanceType: "Owned",
-        driverName: "Michael Smith",
-        driverContactNumber: "9876543210",
-        driverLicense: "DL-1234567890",
-        status: "Active",
-        yearMade: "2010",
-        isDeleted: false,
-        notes: "This is a dummy vehicle",
-    },
-    {
-        id: "2",
-        vehicleNumber: "KA-05-XY-5678",
-        vehicleModel: "Force Traveller",
-        ambulanceType: "Rented",
-        driverName: "David Johnson",
-        driverContactNumber: "1234509876",
-        driverLicense: "DL-0987654321",
-        status: "Maintenance",
-        yearMade: "2012",
-        isDeleted: false,
-        notes: "This is a dummy vehicle",
-    },
-    {
-        id: "3",
-        vehicleNumber: "KA-02-CD-9999",
-        vehicleModel: "Maruti Omni",
-        ambulanceType: "Owned",
-        driverName: "Sarah Williams",
-        driverContactNumber: "5551234567",
-        driverLicense: "DL-1122334455",
-        status: "Active",
-        yearMade: "2008",
-        isDeleted: false,
-        notes: "This is a dummy vehicle",
-    },
-];
-
 export default function AmbulanceManagementPage() {
-    const [vehicles, setVehicles] = useState<AmbulanceVehicle[]>(DUMMY_VEHICLES);
+    const [vehicles, setVehicles] = useState<AmbulanceVehicle[]>([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [showDeleted, setShowDeleted] = useState(false);
+    const [isActiveOnly, setIsActiveOnly] = useState(true);
     const ability = useAbility();
     const [visibleFields, setVisibleFields] = useState<string[]>([
         "vehicleNumber",
         "vehicleModel",
-        "ambulanceType",
+        "vehicleType",
         "driverName",
         "status",
     ]);
@@ -98,13 +59,24 @@ export default function AmbulanceManagementPage() {
     const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
     const [editingVehicle, setEditingVehicle] = useState<AmbulanceVehicle | null>(null);
 
+    const fetchVehicles = async () => {
+        setLoading(true);
+        const res = await getAmbulances(isActiveOnly);
+        if (res.data) {
+            setVehicles(res.data as AmbulanceVehicle[]);
+        } else {
+            toast.error(res.error || "Failed to fetch vehicles");
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchVehicles();
+    }, [isActiveOnly]);
+
     const filteredVehicles = useMemo(() => {
         const query = search.toLowerCase().trim();
         let filtered = vehicles;
-
-        if (!showDeleted) {
-            filtered = filtered.filter(v => !v.isDeleted);
-        }
 
         if (!query) return filtered;
 
@@ -112,7 +84,7 @@ export default function AmbulanceManagementPage() {
             v.vehicleNumber.toLowerCase().includes(query) ||
             (v.driverName && v.driverName.toLowerCase().includes(query))
         );
-    }, [search, vehicles, showDeleted]);
+    }, [search, vehicles]);
 
     const handleAddVehicle = () => {
         setDialogMode("add");
@@ -126,37 +98,37 @@ export default function AmbulanceManagementPage() {
         setIsDialogOpen(true);
     };
 
-    const handleStatusChange = (id: string, newStatus: AmbulanceVehicle["status"]) => {
-        setVehicles(prev => prev.map(v => v.id === id ? { ...v, status: newStatus } : v));
-        toast.success(`Vehicle status updated to ${newStatus}`);
-    };
-
-    const handleDialogSubmit = (data: AmbulanceVehicleFormData) => {
-        if (dialogMode === "add") {
-            const newVehicle: AmbulanceVehicle = {
-                id: Math.random().toString(36).substr(2, 9),
-                ...data,
-                status: "Active",
-                yearMade: "2010",
-                isDeleted: false,
-            };
-            setVehicles([...vehicles, newVehicle]);
-            toast.success("Vehicle added successfully");
-        } else if (dialogMode === "edit" && editingVehicle) {
-            setVehicles(prev => prev.map(v => v.id === editingVehicle.id ? { ...v, ...data } : v));
-            toast.success("Vehicle updated successfully");
+    const handleStatusChange = async (id: string, newStatus: AmbulanceVehicle["status"]) => {
+        const res = await saveAmbulance({ id, status: newStatus });
+        if (res.data) {
+            setVehicles(prev => prev.map(v => v.id === id ? { ...v, status: newStatus } : v));
+            toast.success(`Vehicle status updated to ${newStatus}`);
+            fetchVehicles();
+        } else {
+            toast.error(res.error || "Failed to update status");
         }
     };
 
-    const handleDelete = (id: string) => {
-        setVehicles(prev => prev.map(v => v.id === id ? { ...v, isDeleted: true } : v));
-        toast.success("Vehicle deleted (dummy)");
+    const handleDialogSubmit = async (data: AmbulanceVehicleFormData) => {
+        const res = await saveAmbulance({
+            ...(editingVehicle && { id: editingVehicle.id }),
+            ...data,
+        });
+
+        if (res.data) {
+            if (dialogMode === "add") {
+                setVehicles([res.data as AmbulanceVehicle, ...vehicles]);
+                toast.success("Vehicle added successfully");
+            } else {
+                setVehicles(prev => prev.map(v => v.id === editingVehicle?.id ? (res.data as AmbulanceVehicle) : v));
+                toast.success("Vehicle updated successfully");
+            }
+            setIsDialogOpen(false);
+        } else {
+            toast.error(res.error || "Failed to save vehicle");
+        }
     };
 
-    const handleRestore = (id: string) => {
-        setVehicles(prev => prev.map(v => v.id === id ? { ...v, isDeleted: false } : v));
-        toast.success("Vehicle restored (dummy)");
-    };
 
     const allColumns: ColumnDef<AmbulanceVehicle>[] = [
         {
@@ -166,37 +138,37 @@ export default function AmbulanceManagementPage() {
         },
         { accessorKey: "vehicleNumber", header: "Vehicle Number" },
         { accessorKey: "vehicleModel", header: "Vehicle Model" },
-        { accessorKey: "yearMade", header: "Year Made" },
-        { accessorKey: "ambulanceType", header: "Ambulance Type" },
+        { accessorKey: "vehicleYear", header: "Year Made" },
+        { accessorKey: "vehicleType", header: "Ambulance Type" },
         { accessorKey: "driverName", header: "Driver Name" },
-        { accessorKey: "driverContactNumber", header: "Driver Contact" },
-        { accessorKey: "driverLicense", header: "Driver License" },
+        { accessorKey: "driverContactNo", header: "Driver Contact" },
+        { accessorKey: "driverLicenseNo", header: "Driver License" },
         {
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => {
                 const status = row.original.status;
                 const colors = {
-                    Active: "bg-green-100 text-green-800 hover:bg-green-200",
-                    Maintenance: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-                    Inactive: "bg-red-100 text-red-800 hover:bg-red-200",
+                    active: "bg-green-100 text-green-800 hover:bg-green-200",
+                    maintenance: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+                    inactive: "bg-red-100 text-red-800 hover:bg-red-200",
                 };
 
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className={`px-2 py-1 rounded text-xs font-medium cursor-pointer transition-colors ${colors[status] || "bg-gray-100"}`}>
+                            <button className={`px-2 py-1 rounded text-xs font-medium cursor-pointer transition-colors capitalize ${colors[status] || "bg-gray-100"}`}>
                                 {status}
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "Active")}>
+                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "active")}>
                                 Active
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "Maintenance")}>
+                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "maintenance")}>
                                 Maintenance
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "Inactive")}>
+                            <DropdownMenuItem onClick={() => handleStatusChange(row.original.id, "inactive")}>
                                 Inactive
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -205,59 +177,22 @@ export default function AmbulanceManagementPage() {
             }
         },
         {
-            accessorKey: "notes",
-            header: "Notes",
-        },
-        {
             id: "actions",
             header: "Actions",
             cell: ({ row }) => (
                 <div className="flex gap-2">
-                    {!row.original.isDeleted ? (
-                        <>
-                            {/* <Can I="update" a="ambulanceManagement" ability={ability}> */}
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEditVehicle(row.original)}>
-                                            <Edit className="w-4 h-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Edit Vehicle</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            {/* </Can> */}
-                            {/* <Can I="delete" a="ambulanceManagement" ability={ability}> */}
-                            <ConfirmDialog
-                                title="Delete Vehicle"
-                                description={`Are you sure you want to delete ${row.original.vehicleNumber}?`}
-                                onConfirm={() => handleDelete(row.original.id)}
-                                trigger={
-                                    <Button variant="ghost" size="icon">
-                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                    </Button>
-                                }
-                            />
-                            {/* </Can> */}
-                        </>
-                    ) : (
-                        // <Can I="update" a="ambulanceManagement" ability={ability}>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => handleRestore(row.original.id)}>
-                                        <RotateCcw className="w-4 h-4 text-green-500" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Restore Vehicle</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        // </Can>
-                    )}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handleEditVehicle(row.original)}>
+                                    <Edit className="w-4 h-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Edit Vehicle</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             ),
         },
@@ -299,11 +234,13 @@ export default function AmbulanceManagementPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                         <Switch
-                            id="show-deleted"
-                            checked={showDeleted}
-                            onCheckedChange={setShowDeleted}
+                            id="view-mode"
+                            checked={isActiveOnly}
+                            onCheckedChange={setIsActiveOnly}
                         />
-                        <Label htmlFor="show-deleted">Show Deleted</Label>
+                        <Label htmlFor="view-mode">
+                            {isActiveOnly ? "Active" : "In Active"}
+                        </Label>
                     </div>
                 </div>
                 <div className="flex gap-3 items-center">
@@ -316,28 +253,19 @@ export default function AmbulanceManagementPage() {
                             );
                         }}
                     />
-                    {/* <Can I="create" a="ambulanceManagement" ability={ability}> */}
                     <Button variant="default" onClick={handleAddVehicle}>
                         <Plus size={16} /> Add Vehicle
                     </Button>
-                    {/* </Can> */}
                 </div>
             </div>
 
-            <Table data={filteredVehicles} columns={columns} />
+            <Table data={filteredVehicles} columns={columns} loading={loading} />
 
             <AmbulanceManagementDialog
                 open={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
                 mode={dialogMode}
-                defaultValues={editingVehicle ? {
-                    vehicleNumber: editingVehicle.vehicleNumber,
-                    vehicleModel: editingVehicle.vehicleModel,
-                    ambulanceType: editingVehicle.ambulanceType,
-                    driverName: editingVehicle.driverName,
-                    driverContactNumber: editingVehicle.driverContactNumber,
-                    driverLicense: editingVehicle.driverLicense,
-                } : undefined}
+                defaultValues={editingVehicle || undefined}
                 onSubmit={handleDialogSubmit}
             />
         </div>

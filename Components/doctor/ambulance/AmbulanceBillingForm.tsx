@@ -28,28 +28,22 @@ import {
     Truck
 } from "lucide-react";
 import { format } from "date-fns";
+import {
+    getAmbulances,
+    saveAmbulanceBooking,
+    getBookingById,
+} from "@/lib/actions/ambulanceActions";
+import { getChargeCategories, getCharges } from "@/lib/actions/chargeActions";
 
-const DUMMY_VEHICLES = [
-    { id: "1", vehicleNumber: "KA-01-AB-1234", driverName: "Michael Smith" },
-    { id: "2", vehicleNumber: "KA-05-XY-5678", driverName: "David Johnson" },
-    { id: "3", vehicleNumber: "KA-02-CD-9999", driverName: "Sarah Williams" },
-];
 
-const CHARGE_CATEGORIES = [
-    { id: "cat1", name: "Distance Based" },
-    { id: "cat2", name: "Facility Based" },
-];
-
-const CHARGES = [
-    { id: "ch1", categoryId: "cat1", name: "Within City (Flat)", amount: 1000 },
-    { id: "ch2", categoryId: "cat1", name: "Outside City (Per KM)", amount: 3000 },
-    { id: "ch3", categoryId: "cat2", name: "Oxygen Support", amount: 500 },
-    { id: "ch4", categoryId: "cat2", name: "Ventilator Support (ICU)", amount: 2000 },
-];
-
-export default function AmbulanceBillingForm() {
+export default function AmbulanceBillingForm({ id }: { id?: string }) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Dynamic data state
+    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [chargeCategories, setChargeCategories] = useState<any[]>([]);
+    const [charges, setCharges] = useState<any[]>([]);
 
     // Form State
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
@@ -68,15 +62,58 @@ export default function AmbulanceBillingForm() {
     const [paidAmount, setPaidAmount] = useState(0);
     const [paymentMode, setPaymentMode] = useState("Cash");
     const [referenceNo, setReferenceNo] = useState("");
-    const [remarks, setRemarks] = useState("");
 
-    // Auto-fill driver name when vehicle is selected
+    const [remarks, setRemarks] = useState("");
+    const [bookingTime, setBookingTime] = useState(format(new Date(), "HH:mm"));
+
+    // Fetch master data
     useEffect(() => {
-        const vehicle = DUMMY_VEHICLES.find(v => v.id === vehicleId);
+        const fetchMasterData = async () => {
+            const [vRes, catRes, chRes] = await Promise.all([
+                getAmbulances(true),
+                getChargeCategories(),
+                getCharges()
+            ]);
+
+            if (vRes.data) setVehicles(vRes.data);
+            if (catRes.data) setChargeCategories(catRes.data);
+            if (chRes.data) setCharges(chRes.data);
+        };
+        fetchMasterData();
+    }, []);
+
+    // Fetch existing booking for edit mode
+    useEffect(() => {
+        if (id) {
+            const fetchBooking = async () => {
+                const res = await getBookingById(id);
+                if (res.data) {
+                    const booking = res.data;
+                    setVehicleId(booking.ambulanceId);
+                    setDriverName(booking.driverName);
+                    setPickupLocation(booking.pickupLocation);
+                    setDropoffLocation(booking.dropLocation);
+                    setPickupDate(format(new Date(booking.bookingDate), "yyyy-MM-dd"));
+                    setBookingTime(booking.bookingTime);
+                    setChargeCategoryId(booking.chargeCategory);
+                    setChargeId(booking.chargeId);
+                    setStandardCharge(Number(booking.standardCharge));
+                    setTaxPercent(Number(booking.taxPercent));
+                    setDiscountPercent(Number(booking.discountPercent));
+                    setPaymentMode(booking.paymentMode);
+                    setReferenceNo(booking.referenceNo || "");
+                }
+            };
+            fetchBooking();
+        }
+    }, [id]);
+
+    useEffect(() => {
+        const vehicle = vehicles.find(v => v.id === vehicleId);
         if (vehicle) {
             setDriverName(vehicle.driverName);
         }
-    }, [vehicleId]);
+    }, [vehicleId, vehicles]);
 
     // Auto-fill pickup location from patient address
     useEffect(() => {
@@ -87,15 +124,14 @@ export default function AmbulanceBillingForm() {
         }
     }, [selectedPatient]);
 
-    // Update standard charge when charge is selected
     useEffect(() => {
-        const charge = CHARGES.find(c => c.id === chargeId);
+        const charge = charges.find(c => c.id === chargeId);
         if (charge) {
-            setStandardCharge(charge.amount);
+            setStandardCharge(Number(charge.amount));
         } else {
             setStandardCharge(0);
         }
-    }, [chargeId]);
+    }, [chargeId, charges]);
 
     // Calculate Totals
     const calculation = useMemo(() => {
@@ -127,10 +163,31 @@ export default function AmbulanceBillingForm() {
 
         try {
             setIsSubmitting(true);
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success("Ambulance bill generated successfully");
-            router.push("/doctor/ambulance");
+            const res = await saveAmbulanceBooking({
+                ...(id && { id }),
+                patientId: selectedPatient.id,
+                ambulanceId: vehicleId,
+                chargeCategory: chargeCategoryId,
+                chargeId: chargeId,
+                standardCharge: standardCharge.toString(),
+                taxPercent: taxPercent.toString(),
+                discountPercent: discountPercent.toString(),
+                paymentMode: paymentMode.toLowerCase() as any,
+                referenceNo: referenceNo,
+                pickupLocation: pickupLocation,
+                dropLocation: dropoffLocation,
+                bookingDate: pickupDate,
+                bookingTime: bookingTime,
+                driverName: driverName,
+                driverContactNo: "", // We might need to add this to the form if it's required in schema
+            });
+
+            if (res.data) {
+                toast.success(id ? "Ambulance bill updated" : "Ambulance bill generated successfully");
+                router.push("/doctor/ambulance");
+            } else {
+                toast.error(res.error || "Failed to save bill");
+            }
         } catch (error) {
             toast.error("Failed to generate bill");
         } finally {
@@ -138,7 +195,7 @@ export default function AmbulanceBillingForm() {
         }
     };
 
-    const filteredCharges = CHARGES.filter(c => c.categoryId === chargeCategoryId);
+    const filteredCharges = charges.filter(c => c.chargeCategoryId === chargeCategoryId);
 
     return (
         <div className="p-6 space-y-6 w-full mx-auto mt-4">
@@ -217,7 +274,7 @@ export default function AmbulanceBillingForm() {
                                             <SelectValue placeholder="Select Vehicle" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {DUMMY_VEHICLES.map(v => (
+                                            {vehicles.map(v => (
                                                 <SelectItem key={v.id} value={v.id}>{v.vehicleNumber}</SelectItem>
                                             ))}
                                         </SelectContent>
@@ -242,7 +299,7 @@ export default function AmbulanceBillingForm() {
                                             <SelectValue placeholder="Category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {CHARGE_CATEGORIES.map(c => (
+                                            {chargeCategories.map(c => (
                                                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                             ))}
                                         </SelectContent>
