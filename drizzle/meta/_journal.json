@@ -414,6 +414,13 @@
       "when": 1770209723164,
       "tag": "0058_hot_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1770282008951,
+      "tag": "0059_striped_dagger",
+      "breakpoints": true
     }
   ]
 }
