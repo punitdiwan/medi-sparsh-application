@@ -433,7 +433,7 @@ export default function RadiologyPaymentDialog({
 
                 {/* Delete Confirmation Dialog */}
                 {deleteConfirm && (
-                    <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                    <div className="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm flex items-center justify-center">
                         <Card className="w-full max-w-md border-destructive">
                             <CardHeader>
                                 <CardTitle className="text-lg font-bold text-destructive flex items-center gap-2">

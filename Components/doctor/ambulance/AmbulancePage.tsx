@@ -24,6 +24,10 @@ import {
 import AmbulanceDetailsDialog from "./AmbulanceDetailsDialog";
 import AmbulancePaymentDialog from "./AmbulancePaymentDialog";
 import { getAmbulanceBookings, deleteAmbulanceBooking } from "@/lib/actions/ambulanceActions";
+import { pdf } from "@react-pdf/renderer";
+
+import AmbulanceBillPdf from "@/Components/pdf/ambulanceBillPdf";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 
 type AmbulanceBill = {
     id: string;
@@ -40,8 +44,12 @@ type AmbulanceBill = {
     paidAmount?: number;
     balanceAmount?: number;
     billStatus: "paid" | "pending" | "partially_paid";
+    paymentMode: string;
     tripType: string;
     createdAt: string;
+    organizationData: any;
+    chargeCategory: string;
+    chargeName: string;
 };
 
 type TypedColumn<T> = ColumnDef<T> & { accessorKey?: string };
@@ -76,8 +84,12 @@ export default function AmbulancePage() {
                 taxPercentage: Number(b.taxPercent),
                 paidAmount: Number(b.paidAmount || 0),
                 billStatus: b.paymentStatus as any,
+                paymentMode: b.paymentMode,
                 tripType: b.tripType,
                 createdAt: b.createdAt.toISOString(),
+                organizationData: res.org,
+                chargeCategory: b.chargeCategory,
+                chargeName: b.chargeName,
             }));
             setBills(formatted);
         }
@@ -87,6 +99,7 @@ export default function AmbulancePage() {
     useEffect(() => {
         fetchBookings();
     }, []);
+
     const [visibleFields, setVisibleFields] = useState<string[]>([
         "id",
         "patientName",
@@ -113,6 +126,55 @@ export default function AmbulancePage() {
         (currentPage - 1) * rowsPerPage,
         currentPage * rowsPerPage
     );
+
+    const handlePrint = async (bill: AmbulanceBill) => {
+        try {
+            toast.loading("Preparing Ambulance PDF...", { id: "print" });
+
+            const taxableAmount = bill.billTotalAmount - bill.discountAmount;
+            const taxAmount = taxableAmount * (bill.taxPercentage / 100);
+            const netAmount = taxableAmount + taxAmount;
+            const balanceAmount = netAmount - (bill.paidAmount || 0);
+
+            const pdfDoc = (
+                <AmbulanceBillPdf
+                    billNumber={bill.id.substring(0, 13)}
+                    billDate={format(new Date(bill.createdAt), "dd MMM yyyy")}
+                    patientName={bill.patientName}
+                    patientPhone={bill.patientPhone}
+                    vehicleNumber={bill.vehicleNumber}
+                    driverName={bill.driverName}
+                    pickupLocation={bill.pickupLocation}
+                    dropoffLocation={bill.dropoffLocation}
+                    tripType={bill.tripType}
+                    paymentMode={bill.paymentMode}
+                    standardCharge={bill.billTotalAmount}
+                    discountAmount={bill.discountAmount}
+                    taxPercent={bill.taxPercentage}
+                    netAmount={netAmount}
+                    paidAmount={bill.paidAmount || 0}
+                    balanceAmount={balanceAmount}
+                    status={bill.billStatus}
+                    organization={bill.organizationData}
+                    orgModeCheck={true}
+                    chargeCategory={bill.chargeCategory}
+                    chargeName={bill.chargeName}
+                />
+            );
+
+            const blob = await pdf(pdfDoc).toBlob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+
+            toast.success("PDF Ready", { id: "print" });
+
+        } catch (error) {
+            console.log("Print Error:", error);
+            toast.error("PDF generation failed", { id: "print" });
+        }
+    };
+
+
 
     const allColumns: ColumnDef<AmbulanceBill>[] = [
         {
@@ -227,7 +289,7 @@ export default function AmbulancePage() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            {/* <DropdownMenuItem
+                            <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => {
                                     setSelectedAmbulance(row.original);
@@ -236,7 +298,7 @@ export default function AmbulancePage() {
                             >
                                 <Eye size={14} className="text-muted-foreground group-hover:text-primary" />
                                 View Details
-                            </DropdownMenuItem> */}
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => route.push(`/doctor/ambulance/generateBill?id=${row.original.id}`)}
@@ -244,7 +306,7 @@ export default function AmbulancePage() {
                                 <Edit size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Edit Bill
                             </DropdownMenuItem>
-                            <DropdownMenuItem
+                            {/* <DropdownMenuItem
                                 className="group gap-2 cursor-pointer"
                                 onClick={() => {
                                     setSelectedAmbulance(row.original);
@@ -253,27 +315,45 @@ export default function AmbulancePage() {
                             >
                                 <CreditCard size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Payments
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="group gap-2 cursor-pointer">
+                            </DropdownMenuItem> */}
+                            <DropdownMenuItem
+                                className="group gap-2 cursor-pointer"
+                                onClick={() => handlePrint(row.original)}
+                            >
                                 <Printer size={14} className="text-muted-foreground group-hover:text-primary" />
                                 Print Bill
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="group gap-2 cursor-pointer text-destructive focus:text-destructive"
-                                onClick={async () => {
-                                    if (confirm("Are you sure you want to delete this booking?")) {
+                                onSelect={(e) => e.preventDefault()}
+                                disabled={row.original.billStatus === "paid"}
+                            >
+                                <ConfirmDialog
+                                    trigger={
+                                        <div
+                                            className="flex items-center gap-2 w-full"
+                                            onClick={(e) => e.stopPropagation()} 
+
+                                        >
+                                            <Trash2 size={14} className="text-destructive group-hover:text-red-600 transition" />
+                                            <span>Delete</span>
+                                        </div>
+                                    }
+                                    title="Delete Booking?"
+                                    description="This action cannot be undone. Are you sure you want to delete this booking?"
+                                    actionLabel="Delete"
+                                    cancelLabel="Cancel"
+                                    onConfirm={async () => {
                                         const res = await deleteAmbulanceBooking(row.original.id);
-                                        if (res.data) {
+
+                                        if (res?.data) {
                                             toast.success("Booking deleted successfully");
                                             fetchBookings();
                                         } else {
-                                            toast.error(res.error || "Failed to delete booking");
+                                            toast.error(res?.error || "Failed to delete booking");
                                         }
-                                    }
-                                }}
-                            >
-                                <Trash2 size={14} className="text-destructive group-hover:text-red-600" />
-                                Delete
+                                    }}
+                                />
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

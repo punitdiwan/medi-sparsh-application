@@ -2679,10 +2679,14 @@ export async function getAmbulanceBookingsByHospital(hospitalId: string) {
       bookingDate: ambulanceBooking.bookingDate,
       bookingTime: ambulanceBooking.bookingTime,
       createdAt: ambulanceBooking.createdAt,
+      chargeCategory: chargeCategories.name,
+      chargeName: charges.name,
     })
     .from(ambulanceBooking)
     .innerJoin(patients, eq(ambulanceBooking.patientId, patients.id))
     .innerJoin(ambulance, eq(ambulanceBooking.ambulanceId, ambulance.id))
+    .innerJoin(charges, eq(ambulanceBooking.chargeId, charges.id))
+    .innerJoin(chargeCategories, eq(ambulanceBooking.chargeCategory, chargeCategories.id))
     .where(eq(ambulanceBooking.hospitalId, hospitalId))
     .orderBy(desc(ambulanceBooking.createdAt));
 }

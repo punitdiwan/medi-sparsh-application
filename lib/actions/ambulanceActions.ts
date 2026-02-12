@@ -70,7 +70,7 @@ export async function getAmbulanceBookings() {
         }
 
         const data = await getAmbulanceBookingsByHospital(org.id);
-        return { data };
+        return { data, org: { name: org.name, metadata: org.metadata } };
     } catch (error) {
         console.error("Error fetching ambulance bookings:", error);
         return { error: "Failed to fetch ambulance bookings" };
@@ -85,6 +85,13 @@ export async function saveAmbulanceBooking(data: Partial<NewAmbulanceBooking> & 
         }
 
         const { id, ...bookingData } = data;
+
+        // Ensure referenceNo is empty if paidAmount is zero
+        if (Number(bookingData.paidAmount) === 0) {
+            bookingData.referenceNo = "";
+        }
+
+        console.log("bookingData", bookingData);
 
         if (id) {
             // Update
