@@ -1530,8 +1530,14 @@ export const ambulance = pgTable("ambulance", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
-// ambulance_booking table
+// payment_mode enum
 export const paymentModeEnum = pgEnum("payment_mode", ["cash", "card", "upi", "cheque", "dd"]);
+// payment_status enum
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid"]);
+// booking_status enum
+export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "cancelled"]);
+
+// ambulance_booking table
 export const ambulanceBooking = pgTable("ambulance_booking", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull()
@@ -1546,9 +1552,14 @@ export const ambulanceBooking = pgTable("ambulance_booking", {
 		.references(() => charges.id, { onDelete: "restrict" }),
 	standardCharge: numeric("standard_charge").notNull(),
 	taxPercent: numeric("tax_percent").notNull(),
-	discountPercent: numeric("discount_percent").notNull(),
+	discountAmt: numeric("discount_amt").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	paidAmount: numeric("paid_amount").notNull().default("0"),
 	paymentMode: paymentModeEnum("payment_mode").notNull(),
+	paymentStatus: paymentStatusEnum("payment_status").notNull(),
+	bookingStatus: bookingStatusEnum("booking_status").notNull(),
 	referenceNo: text("reference_no"),
+	tripType: text("trip_type").notNull(),
 	pickupLocation: text("pickup_location").notNull(),
 	dropLocation: text("drop_location").notNull(),
 	bookingDate: date("booking_date").notNull(),

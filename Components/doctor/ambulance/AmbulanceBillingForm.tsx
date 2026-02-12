@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -59,14 +58,12 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     const [chargeId, setChargeId] = useState("");
 
     const [standardCharge, setStandardCharge] = useState(0);
-    const [discountPercent, setDiscountPercent] = useState(0);
-    const [taxPercent, setTaxPercent] = useState(5); // Default 5% tax
-    const [paidAmount, setPaidAmount] = useState(0);
-    const [paymentMode, setPaymentMode] = useState("Cash");
-    const [referenceNo, setReferenceNo] = useState("");
-
+    const [discountAmt, setDiscountAmt] = useState(0);
+    const [taxPercent, setTaxPercent] = useState(0);
+    const [isPaid, setIsPaid] = useState(false);
+    const [paymentMode, setPaymentMode] = useState("cash");
+    const [referenceNo, setReferenceNo] = useState(""); const [tripType, setTripType] = useState("Emergency");
     const [bookingTime, setBookingTime] = useState(format(new Date(), "HH:mm"));
-    const [tripType, setTripType] = useState("pickup");
 
     // Fetch master data
     useEffect(() => {
@@ -97,6 +94,14 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 const res = await getBookingById(id);
                 if (res.data) {
                     const booking = res.data;
+                    // Set patient with available data
+                    setSelectedPatient({
+                        id: booking.patientId,
+                        name: booking.patientName,
+                        phone: booking.patientMobile,
+                        email: booking.patientEmail,
+                        address: booking.pickupLocation
+                    });
                     setVehicleId(booking.ambulanceId);
                     setDriverName(booking.driverName);
                     setDriverContactNo(booking.driverContactNo || "");
@@ -108,10 +113,11 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                     setChargeId(booking.chargeId);
                     setStandardCharge(Number(booking.standardCharge));
                     setTaxPercent(Number(booking.taxPercent));
-                    setDiscountPercent(Number(booking.discountPercent));
-                    setPaymentMode(booking.paymentMode);
+                    setDiscountAmt(Number(booking.discountAmt));
+                    setPaymentMode(booking.paymentMode || "cash");
                     setReferenceNo(booking.referenceNo || "");
-                    // setTripType(booking.tripType || "one_way");
+                    setTripType(booking.tripType || "Emergency");
+                    setIsPaid(booking.paymentStatus === "paid");
                 }
             };
             fetchBooking();
@@ -140,6 +146,10 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
         const charge = charges.find(c => c.id === chargeId);
         if (charge) {
             setStandardCharge(Number(charge.amount));
+            // Set tax percent from charge's tax category
+            if (charge.taxPercent) {
+                setTaxPercent(Number(charge.taxPercent));
+            }
         } else {
             setStandardCharge(0);
         }
@@ -148,24 +158,28 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
     // Calculate Totals
     const calculation = useMemo(() => {
         const base = standardCharge;
-        const discountAmt = base * (discountPercent / 100);
-        const taxableAmt = base - discountAmt;
+        const safeDiscount = Math.min(discountAmt, base);
+        const taxableAmt = Math.max(base - safeDiscount, 0);
         const taxAmt = taxableAmt * (taxPercent / 100);
         const netAmt = taxableAmt + taxAmt;
-        const balanceAmt = netAmt - paidAmount;
+        const paidAmt = isPaid ? netAmt : 0;
+        const balanceAmt = netAmt - paidAmt;
 
         let status: "paid" | "pending" | "partially_paid" = "pending";
-        if (paidAmount >= netAmt && netAmt > 0) status = "paid";
-        else if (paidAmount > 0) status = "partially_paid";
+        if (isPaid && netAmt > 0) status = "paid";
+        else if (paidAmt > 0) status = "partially_paid";
 
         return {
-            discountAmt,
+            discountAmt: safeDiscount,
             taxAmt,
+            totalAmount: netAmt,
             netAmt,
+            paidAmt,
             balanceAmt,
             status
         };
-    }, [standardCharge, discountPercent, taxPercent, paidAmount]);
+    }, [standardCharge, discountAmt, taxPercent, isPaid]);
+
 
     const handleSubmit = async () => {
         if (!selectedPatient || !vehicleId || !chargeId) {
@@ -183,8 +197,13 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                 chargeId: chargeId,
                 standardCharge: standardCharge.toString(),
                 taxPercent: taxPercent.toString(),
-                discountPercent: discountPercent.toString(),
-                paymentMode: paymentMode.toLowerCase() as any,
+                discountAmt: discountAmt.toString(),
+                totalAmount: calculation.totalAmount.toString(),
+                paidAmount: calculation.paidAmt.toString(),
+                paymentMode: paymentMode as any,
+                paymentStatus: calculation.status as any,
+                bookingStatus: "confirmed" as any,
+                tripType: tripType,
                 referenceNo: referenceNo,
                 pickupLocation: pickupLocation,
                 dropLocation: dropoffLocation,
@@ -226,6 +245,7 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                             value={selectedPatient}
                             onSelect={setSelectedPatient}
                             title="Select Patient"
+                            disabled={!!id}
                         />
 
                         <div className="grid grid-cols-1 gap-4 pt-4 border-t border-dashed">
@@ -334,19 +354,16 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                         onChange={(e) => setDriverContactNo(e.target.value)}
                                     />
                                 </div>
-
-                                {/* Trip Type */}
                                 <div className="col-span-1">
                                     <Label>Trip Type</Label>
                                     <Select value={tripType} onValueChange={setTripType}>
-                                        <SelectTrigger className="w-full mt-1 h-10">
+                                        <SelectTrigger className="w-full mt-1">
                                             <SelectValue placeholder="Select Trip Type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="pickup">Pickup</SelectItem>
-                                            <SelectItem value="drop">Drop</SelectItem>
-                                            <SelectItem value="emergency">Emergency</SelectItem>
-                                            <SelectItem value="transfer">Transfer</SelectItem>
+                                            <SelectItem value="Emergency">Emergency</SelectItem>
+                                            <SelectItem value="Scheduled">Scheduled</SelectItem>
+                                            <SelectItem value="Transfer">Transfer</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -400,8 +417,9 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                     <Label>Tax (%)</Label>
                                     <Input
                                         type="number"
-                                        className="mt-1"
+                                        className="mt-1 bg-muted"
                                         value={taxPercent}
+                                        disabled={!!chargeId}
                                         onChange={(e) => setTaxPercent(Number(e.target.value))}
                                     />
                                 </div>
@@ -427,17 +445,26 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                             </div>
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs text-muted-foreground">Discount (%)</span>
+                                    <span className="text-xs text-muted-foreground">Discount Amount (₹)</span>
                                     <Input
                                         type="number"
                                         min={0}
-                                        max={100}
-                                        className="h-6 w-14 text-xs px-1"
-                                        value={discountPercent}
-                                        onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                                        max={standardCharge}
+                                        className="h-6 w-20 text-xs px-1"
+                                        value={discountAmt}
+                                        onChange={(e) => {
+                                            let value = Number(e.target.value);
+                                            if (isNaN(value) || value < 0) value = 0;
+                                            if (value > standardCharge) {
+                                                value = standardCharge;
+                                                toast.warning("Discount cannot exceed total charge");
+                                            }
+                                            setDiscountAmt(value);
+                                        }}
                                     />
+
                                 </div>
-                                <span className="text-lg font-semibold text-destructive">- ₹{calculation.discountAmt.toFixed(2)}</span>
+                                <span className="text-lg font-semibold text-destructive">- ₹{discountAmt.toFixed(2)}</span>
                             </div>
                             <div>
                                 <span className="text-xs text-muted-foreground block">Tax ({taxPercent}%)</span>
@@ -475,14 +502,16 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                         </div>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Cash">Cash</SelectItem>
-                                        <SelectItem value="Online">Online</SelectItem>
-                                        <SelectItem value="Card">Card</SelectItem>
+                                        <SelectItem value="cash">Cash</SelectItem>
+                                        <SelectItem value="card">Card</SelectItem>
+                                        <SelectItem value="upi">UPI</SelectItem>
+                                        <SelectItem value="cheque">Cheque</SelectItem>
+                                        <SelectItem value="dd">DD</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {paymentMode !== "Cash" && (
+                            {paymentMode !== "cash" && (
                                 <div className="space-y-2 animate-in fade-in slide-in-from-left-2">
                                     <Label>Reference No.</Label>
                                     <Input
@@ -492,16 +521,26 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                     />
                                 </div>
                             )}
-
-                            <div className="space-y-2">
-                                <Label>Amount Paid (₹)</Label>
+                            <div className="flex items-center px-3 gap-3 rounded-md border">
                                 <Input
-                                    type="number"
-                                    className="font-bold border-primary/20 bg-primary/5"
-                                    value={paidAmount}
-                                    onChange={(e) => setPaidAmount(Number(e.target.value))}
+                                    id="paid"
+                                    type="checkbox"
+                                    checked={isPaid}
+                                    onChange={(e) => setIsPaid(e.target.checked)}
+                                    className="h-4 w-4 accent-green-600"
                                 />
+
+                                <Label htmlFor="paid" className="text-sm font-medium">
+                                    Mark as Paid
+                                </Label>
+
+                                <span className={`ml-auto px-2 py-0.5 rounded text-xs font-semibold 
+                                    ${isPaid ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                                    {isPaid ? "Paid" : "Pending"}
+                                </span>
                             </div>
+
+
 
                             <div className="flex items-end">
                                 <Button
@@ -509,7 +548,10 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
                                     disabled={isSubmitting || !selectedPatient || standardCharge === 0}
                                     onClick={handleSubmit}
                                 >
-                                    {isSubmitting ? "Processing..." : "Generate Bill"}
+                                    {isSubmitting
+                                        ? (id ? "Updating..." : "Processing...")
+                                        : (id ? "Update Bill" : "Generate Bill")
+                                    }
                                 </Button>
                             </div>
                         </div>
