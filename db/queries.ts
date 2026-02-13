@@ -37,6 +37,7 @@ import {
   radiologyParameters,
   ambulance,
   ambulanceBooking,
+  masterModules,
 } from "@/drizzle/schema";
 import { eq, and, desc, sql, ne, or } from "drizzle-orm";
 import type {
@@ -1372,21 +1373,69 @@ export async function deleteChargeType(id: string) {
 // Charge Category Queries
 // ===================================================
 
-export async function getChargeCategoriesByHospital(hospitalId: string) {
+export async function getChargeCategoriesByHospital(
+  hospitalId: string,
+  moduleCode?: string
+) {
+  let hospitalModuleId: string | null = null;
+
+  if (moduleCode?.trim()) {
+    // Step 1: Get master module id
+    const master = await db
+      .select({ id: masterModules.id })
+      .from(masterModules)
+      .where(eq(masterModules.code, moduleCode.trim()))
+      .limit(1);
+
+    if (!master.length) return [];
+
+    // Step 2: Get hospital module id
+    const hospitalModule = await db
+      .select({ id: modules.id })
+      .from(modules)
+      .where(
+        and(
+          eq(modules.moduleId, master[0].id),
+          eq(modules.hospitalId, hospitalId),
+          eq(modules.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    hospitalModuleId = hospitalModule[0]?.id ?? null;
+
+    if (!hospitalModuleId) return [];
+  }
+
+  const conditions = [
+    eq(chargeCategories.hospitalId, hospitalId),
+    eq(chargeCategories.isDeleted, false),
+    eq(chargeTypes.hospitalId, hospitalId),
+    eq(chargeTypes.isDeleted, false),
+  ];
+
+  if (hospitalModuleId) {
+    conditions.push(
+      sql`${chargeTypes.modules} ? ${hospitalModuleId}`
+    );
+  }
+
   return await db
     .select({
       id: chargeCategories.id,
       name: chargeCategories.name,
       description: chargeCategories.description,
       chargeTypeId: chargeCategories.chargeTypeId,
-      categoryType: chargeTypes.name, // Join to get Charge Type Name
-      isDeleted: chargeCategories.isDeleted,
+      categoryType: chargeTypes.name,
       createdAt: chargeCategories.createdAt,
       updatedAt: chargeCategories.updatedAt,
     })
     .from(chargeCategories)
-    .leftJoin(chargeTypes, eq(chargeCategories.chargeTypeId, chargeTypes.id))
-    .where(and(eq(chargeCategories.hospitalId, hospitalId), eq(chargeCategories.isDeleted, false)))
+    .leftJoin(
+      chargeTypes,
+      eq(chargeCategories.chargeTypeId, chargeTypes.id)
+    )
+    .where(and(...conditions))
     .orderBy(desc(chargeCategories.createdAt));
 }
 

@@ -375,10 +375,19 @@ export const medicineCategories = pgTable("medicine_categories", {
 	}).onDelete("restrict"),
 ]);
 
+export const masterModules = pgTable("master_modules", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	name: text().notNull(),
+	code: text().notNull().unique(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
 export const modules = pgTable("modules", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
+	moduleId : text("module_id"),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -387,7 +396,12 @@ export const modules = pgTable("modules", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "modules_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
+	foreignKey({
+		columns: [table.moduleId],
+		foreignColumns: [masterModules.id],
+		name: "modules_module_id_master_modules_id_fk"
+	}).onDelete("restrict"),
 ]);
 
 export const appointmentPriorities = pgTable("appointment_priorities", {

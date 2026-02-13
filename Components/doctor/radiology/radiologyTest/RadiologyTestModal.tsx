@@ -98,19 +98,13 @@ export default function RadiologyTestModal({
                 const [catRes, unitRes, chargeCatRes, chargeRes] = await Promise.all([
                     getRadiologyCategories(),
                     getRadiologyUnits(),
-                    getChargeCategories(),
+                    getChargeCategories({moduleName:"RAD"}),
                     getCharges()
                 ]);
 
                 if (catRes.data) setCategories(catRes.data);
                 if (unitRes.data) setUnits(unitRes.data);
-                if (chargeCatRes.data) {
-                    const chargeData = chargeCatRes.data.filter((item: any) =>
-                        item.categoryType?.toLowerCase() === "radiology"
-                    );
-
-                    setChargeCats(chargeData);
-                }
+                if (chargeCatRes.data) setChargeCats(chargeCatRes.data);
                 if (chargeRes.data) setAllCharges(chargeRes.data);
             } catch (error) {
                 console.error("Error fetching modal data:", error);

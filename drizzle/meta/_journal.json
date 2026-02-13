@@ -435,6 +435,13 @@
       "when": 1770293972984,
       "tag": "0061_third_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1770972974617,
+      "tag": "0062_true_big_bertha",
+      "breakpoints": true
     }
   ]
 }

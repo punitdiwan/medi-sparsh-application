@@ -70,18 +70,12 @@ export default function AmbulanceBillingForm({ id }: { id?: string }) {
         const fetchMasterData = async () => {
             const [vRes, catRes, chRes] = await Promise.all([
                 getAmbulances(true),
-                getChargeCategories(),
+                getChargeCategories({moduleName:"AMB"}),
                 getCharges()
             ]);
 
             if (vRes.data) setVehicles(vRes.data);
-            if (catRes.data) {
-                const ambulanceCategories = catRes.data.filter(
-                    (cat) => cat.categoryType === "Ambulance"
-                );
-                setChargeCategories(ambulanceCategories);
-            }
-
+            if (catRes.data) setChargeCategories(catRes.data);
             if (chRes.data) setCharges(chRes.data);
         };
         fetchMasterData();
