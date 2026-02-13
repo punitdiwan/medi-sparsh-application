@@ -2,7 +2,7 @@ import { Description } from "@radix-ui/react-alert-dialog";
 import { batched } from "better-auth/react";
 import { create } from "domain";
 import { desc, relations, sql } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, integer, varchar, primaryKey, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, foreignKey, jsonb, numeric, serial, unique, date, time, integer, varchar, primaryKey, pgEnum } from "drizzle-orm/pg-core";
 
 const useUUIDv4 = sql`uuid_generate_v4()`;
 
@@ -375,10 +375,19 @@ export const medicineCategories = pgTable("medicine_categories", {
 	}).onDelete("restrict"),
 ]);
 
+export const masterModules = pgTable("master_modules", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	name: text().notNull(),
+	code: text().notNull().unique(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
 export const modules = pgTable("modules", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
+	moduleId : text("module_id"),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -387,7 +396,12 @@ export const modules = pgTable("modules", {
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "modules_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
+	foreignKey({
+		columns: [table.moduleId],
+		foreignColumns: [masterModules.id],
+		name: "modules_module_id_master_modules_id_fk"
+	}).onDelete("restrict"),
 ]);
 
 export const appointmentPriorities = pgTable("appointment_priorities", {
@@ -1549,3 +1563,62 @@ export const radiologyPayments = pgTable("radiology_payments", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
 
+// ambulance table
+export const ambulanceStatusEnum = pgEnum("ambulance_status", ["active", "inactive", "maintenance"]);
+export const ambulanceTypeEnum = pgEnum("ambulance_type", ["rented", "owned"]);
+
+export const ambulance = pgTable("ambulance", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	vehicleNumber: text("vehicle_number").notNull(),
+	vehicleType: ambulanceTypeEnum("vehicle_type").notNull(),
+	vehicleModel: text("vehicle_model").notNull(),
+	vehicleYear: text("vehicle_year").notNull(),
+	driverName: text("driver_name").notNull(),
+	driverContactNo: text("driver_contact_no").notNull(),
+	driverLicenseNo: text("driver_license_no").notNull(),
+	status: ambulanceStatusEnum("status").notNull().default("active"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
+// payment_mode enum
+export const paymentModeEnum = pgEnum("payment_mode", ["cash", "card", "upi", "cheque", "dd"]);
+// payment_status enum
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "partially_paid"]);
+// booking_status enum
+export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "cancelled"]);
+
+// ambulance_booking table
+export const ambulanceBooking = pgTable("ambulance_booking", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull()
+		.references(() => organization.id, { onDelete: "restrict" }),
+	patientId: text("patient_id").notNull()
+		.references(() => patients.id, { onDelete: "restrict" }),
+	ambulanceId: text("ambulance_id").notNull()
+		.references(() => ambulance.id, { onDelete: "restrict" }),
+	chargeCategory: text("charge_category").notNull()
+		.references(() => chargeCategories.id, { onDelete: "restrict" }),
+	chargeId: text("charge_id").notNull()
+		.references(() => charges.id, { onDelete: "restrict" }),
+	standardCharge: numeric("standard_charge").notNull(),
+	taxPercent: numeric("tax_percent").notNull(),
+	discountAmt: numeric("discount_amt").notNull(),
+	totalAmount: numeric("total_amount").notNull(),
+	paidAmount: numeric("paid_amount").notNull().default("0"),
+	paymentMode: paymentModeEnum("payment_mode").notNull(),
+	paymentStatus: paymentStatusEnum("payment_status").notNull(),
+	bookingStatus: bookingStatusEnum("booking_status").notNull(),
+	referenceNo: text("reference_no"),
+	tripType: text("trip_type").notNull(),
+	pickupLocation: text("pickup_location").notNull(),
+	dropLocation: text("drop_location").notNull(),
+	bookingDate: date("booking_date").notNull(),
+	bookingTime: time("booking_time").notNull(),
+	driverName: text("driver_name").notNull(),
+	driverContactNo: text("driver_contact_no").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});

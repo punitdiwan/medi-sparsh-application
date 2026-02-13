@@ -3,12 +3,12 @@
 import { getActiveOrganization } from "../getActiveOrganization";
 import { getChargeCategoriesByHospital, getChargesByHospital } from "@/db/queries";
 
-export async function getChargeCategories() {
+export async function getChargeCategories({moduleName}: {moduleName?: string} = {}) {
     try {
         const org = await getActiveOrganization();
         if (!org) return { error: "Unauthorized" };
 
-        const data = await getChargeCategoriesByHospital(org.id);
+        const data = await getChargeCategoriesByHospital(org.id, moduleName);
         return { data };
     } catch (error) {
         console.error("Error fetching charge categories:", error);

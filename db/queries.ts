@@ -35,14 +35,19 @@ import {
   radiologyUnits,
   radiologyTests,
   radiologyParameters,
+  ambulance,
+  ambulanceBooking,
+  masterModules,
 } from "@/drizzle/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, ne, or } from "drizzle-orm";
 import type {
   NewPatient,
   NewStaff,
   NewDoctor,
   NewAppointment,
   NewPrescription,
+  NewAmbulance,
+  NewAmbulanceBooking,
 } from "./types";
 
 // ============================================
@@ -1368,21 +1373,69 @@ export async function deleteChargeType(id: string) {
 // Charge Category Queries
 // ===================================================
 
-export async function getChargeCategoriesByHospital(hospitalId: string) {
+export async function getChargeCategoriesByHospital(
+  hospitalId: string,
+  moduleCode?: string
+) {
+  let hospitalModuleId: string | null = null;
+
+  if (moduleCode?.trim()) {
+    // Step 1: Get master module id
+    const master = await db
+      .select({ id: masterModules.id })
+      .from(masterModules)
+      .where(eq(masterModules.code, moduleCode.trim()))
+      .limit(1);
+
+    if (!master.length) return [];
+
+    // Step 2: Get hospital module id
+    const hospitalModule = await db
+      .select({ id: modules.id })
+      .from(modules)
+      .where(
+        and(
+          eq(modules.moduleId, master[0].id),
+          eq(modules.hospitalId, hospitalId),
+          eq(modules.isDeleted, false)
+        )
+      )
+      .limit(1);
+
+    hospitalModuleId = hospitalModule[0]?.id ?? null;
+
+    if (!hospitalModuleId) return [];
+  }
+
+  const conditions = [
+    eq(chargeCategories.hospitalId, hospitalId),
+    eq(chargeCategories.isDeleted, false),
+    eq(chargeTypes.hospitalId, hospitalId),
+    eq(chargeTypes.isDeleted, false),
+  ];
+
+  if (hospitalModuleId) {
+    conditions.push(
+      sql`${chargeTypes.modules} ? ${hospitalModuleId}`
+    );
+  }
+
   return await db
     .select({
       id: chargeCategories.id,
       name: chargeCategories.name,
       description: chargeCategories.description,
       chargeTypeId: chargeCategories.chargeTypeId,
-      categoryType: chargeTypes.name, // Join to get Charge Type Name
-      isDeleted: chargeCategories.isDeleted,
+      categoryType: chargeTypes.name,
       createdAt: chargeCategories.createdAt,
       updatedAt: chargeCategories.updatedAt,
     })
     .from(chargeCategories)
-    .leftJoin(chargeTypes, eq(chargeCategories.chargeTypeId, chargeTypes.id))
-    .where(and(eq(chargeCategories.hospitalId, hospitalId), eq(chargeCategories.isDeleted, false)))
+    .leftJoin(
+      chargeTypes,
+      eq(chargeCategories.chargeTypeId, chargeTypes.id)
+    )
+    .where(and(...conditions))
     .orderBy(desc(chargeCategories.createdAt));
 }
 
@@ -2609,5 +2662,157 @@ export async function restoreRadiologyTest(id: string) {
     .where(eq(radiologyTests.id, id))
     .returning();
 
+  return result[0];
+}
+
+// ============================================
+// Ambulance Queries
+// ============================================
+
+export async function getAmbulancesByHospital(hospitalId: string, activeOnly = true) {
+  if (activeOnly) {
+    return await db
+      .select()
+      .from(ambulance)
+      .where(and(
+        eq(ambulance.hospitalId, hospitalId),
+        eq(ambulance.status, 'active')
+      ))
+      .orderBy(desc(ambulance.createdAt));
+  } else {
+    // Show all non-active: maintenance, inactive (including deleted ones)
+    return await db
+      .select()
+      .from(ambulance)
+      .where(and(
+        eq(ambulance.hospitalId, hospitalId),
+        ne(ambulance.status, 'active')
+      ))
+      .orderBy(desc(ambulance.updatedAt));
+  }
+}
+
+// Removing getDeletedAmbulancesByHospital as it's merged into the above
+
+export async function createAmbulance(data: NewAmbulance) {
+  const result = await db.insert(ambulance).values(data).returning();
+  return result[0];
+}
+
+
+// Ambulance Booking Queries
+
+export async function getAmbulanceBookingsByHospital(hospitalId: string) {
+  return await db
+    .select({
+      id: ambulanceBooking.id,
+      patientId: ambulanceBooking.patientId,
+      patientName: patients.name,
+      patientPhone: patients.mobileNumber, // Corrected from patients.phone
+      ambulanceId: ambulanceBooking.ambulanceId,
+      vehicleNumber: ambulance.vehicleNumber,
+      driverName: ambulanceBooking.driverName,
+      driverContactNo: ambulanceBooking.driverContactNo,
+      pickupLocation: ambulanceBooking.pickupLocation,
+      dropLocation: ambulanceBooking.dropLocation,
+      standardCharge: ambulanceBooking.standardCharge,
+      taxPercent: ambulanceBooking.taxPercent,
+      discountAmt: ambulanceBooking.discountAmt,
+      totalAmount: ambulanceBooking.totalAmount,
+      paidAmount: ambulanceBooking.paidAmount,
+      paymentMode: ambulanceBooking.paymentMode,
+      paymentStatus: ambulanceBooking.paymentStatus,
+      bookingStatus: ambulanceBooking.bookingStatus,
+      referenceNo: ambulanceBooking.referenceNo,
+      tripType: ambulanceBooking.tripType,
+      bookingDate: ambulanceBooking.bookingDate,
+      bookingTime: ambulanceBooking.bookingTime,
+      createdAt: ambulanceBooking.createdAt,
+      chargeCategory: chargeCategories.name,
+      chargeName: charges.name,
+    })
+    .from(ambulanceBooking)
+    .innerJoin(patients, eq(ambulanceBooking.patientId, patients.id))
+    .innerJoin(ambulance, eq(ambulanceBooking.ambulanceId, ambulance.id))
+    .innerJoin(charges, eq(ambulanceBooking.chargeId, charges.id))
+    .innerJoin(chargeCategories, eq(ambulanceBooking.chargeCategory, chargeCategories.id))
+    .where(eq(ambulanceBooking.hospitalId, hospitalId))
+    .orderBy(desc(ambulanceBooking.createdAt));
+}
+
+export async function createAmbulanceBooking(data: NewAmbulanceBooking) {
+  const result = await db.insert(ambulanceBooking).values(data).returning();
+  return result[0];
+}
+
+export async function updateAmbulanceBooking(id: string, data: Partial<NewAmbulanceBooking>) {
+  const result = await db
+    .update(ambulanceBooking)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(ambulanceBooking.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteAmbulanceBooking(id: string) {
+  const result = await db
+    .delete(ambulanceBooking)
+    .where(eq(ambulanceBooking.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function getAmbulanceBookingById(id: string) {
+  const result = await db
+    .select({
+      id: ambulanceBooking.id,
+      patientId: ambulanceBooking.patientId,
+      patientName: patients.name,
+      patientMobile: patients.mobileNumber,
+      patientEmail: patients.email,
+      ambulanceId: ambulanceBooking.ambulanceId,
+      chargeCategory: ambulanceBooking.chargeCategory,
+      chargeId: ambulanceBooking.chargeId,
+      standardCharge: ambulanceBooking.standardCharge,
+      taxPercent: ambulanceBooking.taxPercent,
+      discountAmt: ambulanceBooking.discountAmt,
+      totalAmount: ambulanceBooking.totalAmount,
+      paidAmount: ambulanceBooking.paidAmount,
+      paymentMode: ambulanceBooking.paymentMode,
+      paymentStatus: ambulanceBooking.paymentStatus,
+      bookingStatus: ambulanceBooking.bookingStatus,
+      referenceNo: ambulanceBooking.referenceNo,
+      pickupLocation: ambulanceBooking.pickupLocation,
+      dropLocation: ambulanceBooking.dropLocation,
+      bookingDate: ambulanceBooking.bookingDate,
+      bookingTime: ambulanceBooking.bookingTime,
+      driverName: ambulanceBooking.driverName,
+      driverContactNo: ambulanceBooking.driverContactNo,
+      tripType: ambulanceBooking.tripType,
+      createdAt: ambulanceBooking.createdAt,
+    })
+    .from(ambulanceBooking)
+    .innerJoin(patients, eq(ambulanceBooking.patientId, patients.id))
+    .where(eq(ambulanceBooking.id, id))
+    .limit(1);
+  return result[0];
+}
+
+export async function updateAmbulance(id: string, data: Partial<NewAmbulance>) {
+  const result = await db
+    .update(ambulance)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(ambulance.id, id))
+    .returning();
+  return result[0];
+}
+
+
+export async function restoreAmbulance(id: string) {
+  const result = await db
+    .update(ambulance)
+    .set({ updatedAt: new Date(), status: 'active' })
+    .where(eq(ambulance.id, id))
+    .returning();
   return result[0];
 }

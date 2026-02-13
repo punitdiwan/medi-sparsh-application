@@ -53,7 +53,7 @@ export default function RadiologyBillingForm({ billId, mode }: RadiologyBillingF
     const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
     const [remarks, setRemarks] = useState("");
     const [items, setItems] = useState<Item[]>([]);
-
+    const [isEditMode, setIsEditMode] = useState(mode === "edit" && !!billId);
     // Modal state for adding item
     const [selectedTestId, setSelectedTestId] = useState("");
 
@@ -317,7 +317,7 @@ export default function RadiologyBillingForm({ billId, mode }: RadiologyBillingF
                         value={selectedPatient}
                         onSelect={handlePatientSelect}
                         title="Search Existing Patient"
-                        disabled={!!ipdId}
+                        disabled={!!ipdId || isEditMode}
                     />
 
                     <div className="pt-2 border-t border-dashed">
@@ -326,7 +326,7 @@ export default function RadiologyBillingForm({ billId, mode }: RadiologyBillingF
                             onSelect={handleDoctorSelect}
                             title="Referring Doctor"
                             appMode={appMode}
-                            disabled={!!ipdId}
+                            disabled={!!ipdId || isEditMode}
                         />
                     </div>
                 </Card>

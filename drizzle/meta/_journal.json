@@ -393,6 +393,55 @@
       "when": 1770108118663,
       "tag": "0055_bitter_peter_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1770203525838,
+      "tag": "0056_brave_golden_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1770204873229,
+      "tag": "0057_sparkling_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1770209723164,
+      "tag": "0058_hot_meggan",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1770282008951,
+      "tag": "0059_striped_dagger",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1770293285216,
+      "tag": "0060_shallow_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1770293972984,
+      "tag": "0061_third_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1770972974617,
+      "tag": "0062_true_big_bertha",
+      "breakpoints": true
     }
   ]
 }

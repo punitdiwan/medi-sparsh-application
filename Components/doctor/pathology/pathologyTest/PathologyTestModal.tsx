@@ -101,19 +101,13 @@ export default function PathologyTestModal({
                 const [catRes, unitRes, chargeCatRes, chargeRes] = await Promise.all([
                     getPathologyCategories(),
                     getPathologyUnits(),
-                    getChargeCategories(),
+                    getChargeCategories({moduleName:"PAT"}),
                     getCharges()
                 ]);
 
                 if (catRes.data) setCategories(catRes.data);
                 if (unitRes.data) setUnits(unitRes.data);
-                if (chargeCatRes.data) {
-                    const chargeData = chargeCatRes.data.filter((item: any) =>
-                        item.categoryType?.toLowerCase() === "pathology"
-                    );
-
-                    setChargeCats(chargeData);
-                }
+                if (chargeCatRes.data) setChargeCats(chargeCatRes.data);
                 if (chargeRes.data) setAllCharges(chargeRes.data);
             } catch (error) {
                 console.error("Error fetching modal data:", error);
