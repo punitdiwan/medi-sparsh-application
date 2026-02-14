@@ -128,7 +128,7 @@ export default function RolesPage() {
                     sortOrder === "asc" ? a.localeCompare(b) : b.localeCompare(a));
 
               return (
-                <Card key={role.id} className="bg-gradient-to-br dark:from-gray-800 dark:via-gray-700 dark:to-gray-900">
+                <Card key={role.id} className="bg-linear-to-br dark:from-gray-800 dark:via-gray-700 dark:to-gray-900">
                   {/* ===== HEADER ROW ===== */}
                   <CardHeader className="flex flex-row items-center justify-between py-4">
                     <h2 className="text-lg font-semibold capitalize">
