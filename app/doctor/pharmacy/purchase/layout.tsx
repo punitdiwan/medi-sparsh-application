@@ -13,6 +13,14 @@ export default function StockManagerLayout({
     const pathname = usePathname();
     const ability = useAbility();
 
+     if (pathname.startsWith("/doctor/pharmacy/purchase/medicine")) {
+        return (
+            <div className="bg-background text-foreground rounded-md shadow-sm">
+                {children}
+            </div>
+        );
+    }
+    
     const tabs = [
         {
             name: "Current Stock",

@@ -1,0 +1,197 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ConfirmDialog } from "@/components/model/ConfirmationModel";
+import RadiologyUnitModal, { RadiologyUnit } from "./RadiologyUnitModal";
+import {
+  getRadiologyUnits,
+  deleteRadiologyUnit,
+} from "@/lib/actions/radiologyUnits";
+import { toast } from "sonner";
+
+export default function RadiologyUnitManager() {
+  const [units, setUnits] = useState<RadiologyUnit[]>([]);
+  const [selectedUnit, setSelectedUnit] = useState<RadiologyUnit | undefined>();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUnits();
+  }, []);
+
+  const fetchUnits = async () => {
+    setLoading(true);
+    try {
+      const result = await getRadiologyUnits();
+      if (result.error) {
+        toast.error(result.error);
+      } else if (result.data) {
+        setUnits(result.data);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch units");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* -------------------- FILTER -------------------- */
+  const filteredUnits = units.filter((u) =>
+    u.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* -------------------- HANDLERS -------------------- */
+  const handleAdd = () => {
+    setSelectedUnit(undefined);
+    setOpen(true);
+  };
+
+  const handleEdit = (unit: RadiologyUnit) => {
+    setSelectedUnit(unit);
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const result = await deleteRadiologyUnit(id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Unit deleted successfully");
+        fetchUnits();
+      }
+    } catch (error) {
+      toast.error("Failed to delete unit");
+    }
+  };
+
+  const handleSaveSuccess = () => {
+    fetchUnits();
+    setOpen(false);
+  };
+
+  /* -------------------- UI -------------------- */
+  return (
+    <>
+      <Card className="p-0">
+        <CardHeader className="px-6 py-4 text-white bg-Module-header rounded-t-xl">
+          <CardTitle className="text-2xl font-bold">Radiology Units</CardTitle>
+          <CardDescription className="mt-1 text-indigo-100">
+            Add, edit and manage Radiology measurement units.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4 pb-4">
+          {/* Search + Action */}
+          <div className="flex justify-between items-center gap-4">
+            <Input
+              placeholder="Search unit..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button onClick={handleAdd}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Unit
+            </Button>
+          </div>
+
+          {/* Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-20">S.No</TableHead>
+                  <TableHead>Unit Name</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUnits.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground py-6">
+                      No units found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUnits.map((unit, index) => (
+                    <TableRow key={unit.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">{unit.name}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEdit(unit)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit Unit</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <ConfirmDialog
+                            title="Delete Unit"
+                            description={`Are you sure you want to delete "${unit.name}"?`}
+                            onConfirm={() => handleDelete(unit.id)}
+                            trigger={
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            }
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <RadiologyUnitModal
+        open={open}
+        onOpenChange={setOpen}
+        unit={selectedUnit}
+        onSaveSuccess={handleSaveSuccess}
+      />
+    </>
+  );
+}

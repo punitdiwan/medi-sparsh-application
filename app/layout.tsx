@@ -30,14 +30,15 @@ export default function RootLayout({
     <html lang="en" className={`${notoSansKR.variable}`} suppressHydrationWarning>
       <body
         className={` antialiased`}
+        suppressHydrationWarning
       >
         <NextTopLoader showSpinner={false} height={6} color="#000000" />
         <Toaster richColors position="top-right" />
         <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
           <main className="min-h-screen">
             {children}

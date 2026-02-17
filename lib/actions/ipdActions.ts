@@ -2,7 +2,7 @@
 
 import { db } from "@/db/index";
 import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments, ipdPayments } from "@/db/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, sql } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 import { createIPDChargesBatch, getIPDChargesByAdmission } from "@/db/queries";
@@ -102,6 +102,14 @@ export async function getIPDAdmissions() {
             doctorName: user.name,
             bedName: beds.name,
             creditLimit: ipdAdmission.creditLimit,
+            // Compute available credit per admission using subqueries on ipd_payments
+            availableCredit: sql`COALESCE(
+                (
+                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.to_credit = true)
+                    -
+                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.payment_mode = 'Credit')
+                ), 0
+            )`,
             medicalHistory: ipdAdmission.medicalHistory,
             // isAntenatal: patients.isAntenatal, // Assuming this field exists or we default to false
             // For now, we don't have isAntenatal in the patient schema shown, so we'll omit or default it.

@@ -32,28 +32,54 @@ export default function SlotModal({
     initialData,
     shiftRange,
     selectedDay,
-    durationMins,
-    chargeId
+    chargeCategories = [],
+    charges = [],
 }) {
     const [timeFrom, setTimeFrom] = useState("");
     const [timeTo, setTimeTo] = useState("");
     const [day, setDay] = useState("Monday");
+
+    // Consultation Details state
+    const [durationMins, setDurationMins] = useState("");
+    const [categoryId, setCategoryId] = useState("");
+    const [chargeId, setChargeId] = useState("");
+    const [amount, setAmount] = useState("");
 
     useEffect(() => {
         setDay(selectedDay || "Monday");
         if (initialData) {
             setTimeFrom(initialData.timeFrom || "");
             setTimeTo(initialData.timeTo || "");
+            setDurationMins(String(initialData.durationMins || ""));
+            setCategoryId(initialData.categoryId || "");
+            setChargeId(initialData.chargeId || "");
+            setAmount(String(initialData.amount || ""));
         } else {
             setTimeFrom("");
             setTimeTo("");
+            setDurationMins("");
+            setCategoryId("");
+            setChargeId("");
+            setAmount("");
         }
     }, [isOpen, initialData, selectedDay]);
 
+    // Update amount when charge is selected
+    useEffect(() => {
+        if (!chargeId) {
+            setAmount("");
+            return;
+        }
+        const selectedCharge = charges.find((c) => c.id === chargeId);
+        if (selectedCharge) {
+            setAmount(String(selectedCharge.standardCharge || selectedCharge.amount || ""));
+        }
+    }, [chargeId, charges]);
+
     const handleSubmit = () => {
         if (!timeFrom || !timeTo) return toast.error("Please select both times.");
-        if (!durationMins) return toast.error("Please enter duration in Consultation Details.");
-        if (!chargeId) return toast.error("Please select a charge in Consultation Details.");
+        if (!durationMins) return toast.error("Please enter duration.");
+        if (!chargeId) return toast.error("Please select a charge.");
 
         // Validate shift range
         if (shiftRange) {
@@ -74,13 +100,16 @@ export default function SlotModal({
         onSave({
             day: day,
             timeFrom,
-            timeTo
+            timeTo,
+            durationMins,
+            chargeId,
+            categoryId // included if needed by onSave
         });
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
+            <DialogContent className="sm:max-w-xl border border-dialog bg-dialog-surface p-0 rounded-xl overflow-hidden shadow-lg">
                 <DialogHeader className="px-6 py-4 bg-dialog-header text-header border-b border-dialog">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center rounded-lg ">
@@ -102,22 +131,24 @@ export default function SlotModal({
                     </div>
                 </DialogHeader>
 
-                <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
-                    <div className="space-y-1">
-                        <label className="text-sm mb-1 block">Day *</label>
-                        <Select value={day} onValueChange={setDay}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select day" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {WEEK_DAYS.map((d) => (
-                                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
+                <div className="px-6 py-5 space-y-6 max-h-[75vh] overflow-y-auto">
                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-sm mb-1 block">Day *</label>
+                            <Select value={day} onValueChange={setDay}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select day" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {WEEK_DAYS.map((d) => (
+                                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-1">
+                            {/* Empty space for grid alignment or add another field if needed */}
+                        </div>
                         <div className="space-y-1">
                             <label className="text-sm mb-1 block">Time From *</label>
                             <Input type="time" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
@@ -127,9 +158,50 @@ export default function SlotModal({
                             <Input type="time" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
                         </div>
                     </div>
+
+                    <div className="pt-4 border-t">
+                        <h3 className="font-semibold mb-3 text-sm">Consultation Details</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Duration (mins) *</label>
+                                <Input type="number" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} placeholder="e.g. 15" />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Charge Category *</label>
+                                <Select value={categoryId} onValueChange={setCategoryId}>
+                                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                                    <SelectContent>
+                                        {chargeCategories.map((c) => (
+                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Charge *</label>
+                                <Select value={chargeId} disabled={!categoryId} onValueChange={setChargeId}>
+                                    <SelectTrigger><SelectValue placeholder="Select charge" /></SelectTrigger>
+                                    <SelectContent>
+                                        {charges
+                                            .filter(c => c.chargeCategoryId === categoryId)
+                                            .map((x) => (
+                                                <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Amount</label>
+                                <Input value={amount} readOnly className="bg-muted" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">
+                <DialogFooter className="px-6 py-4 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-end gap-2">
                     <Button variant="outline" onClick={onClose} className="text-dialog-muted">
                         Cancel
                     </Button>

@@ -17,7 +17,10 @@ import {
   Settings,
   ServerCog,
   BriefcaseMedical,
-  TestTube2
+  TestTube,
+  FlaskConical,
+  Microscope,
+  Ambulance
 } from 'lucide-react';
 
 import {
@@ -60,52 +63,79 @@ type SidebarChildItem = {
 type SidebarItem = {
   title: string;
   url?: string;
-  subject?: string;      
-  action?: string; 
+  subject?: string;
+  action?: string;
   icon: React.ElementType;
   children?: SidebarChildItem[];
 };
 
 const items: SidebarItem[] = [
   { title: 'Dashboard', url: '/doctor', icon: Home },
-  { title: 'Patients', url: '/doctor/patient', icon: User ,subject: 'patient',action: 'read',},
-  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar,subject: 'appointment',action: 'read', },
-  { title: 'IPD-In Patient' ,url: '/doctor/IPD',icon: Bed,subject:'ipd',action: 'read'},
-  { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen ,subject: 'prescription',action: 'read',},
+  { title: 'Patients', url: '/doctor/patient', icon: User, subject: 'patient', action: 'read', },
+  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar, subject: 'appointment', action: 'read', },
+  { title: 'IPD-In Patient', url: '/doctor/IPD', icon: Bed, subject: 'ipd', action: 'read' },
+  { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen, subject: 'prescription', action: 'read', },
   {
     title: 'Pharmacy',
     icon: BriefcaseMedical,
     children: [
-      { title: 'Billing', url: '/doctor/pharmacy' ,subject: 'billing',action: 'read',},
-      { title: 'Medicines', url: '/doctor/pharmacy/medicine',subject: 'pharmacyMedicine',action: 'read', },
-      { title: 'Stock', url: '/doctor/pharmacy/purchase',subject: 'stock',action: 'read', },
+      { title: 'Billing', url: '/doctor/pharmacy', subject: 'billing', action: 'read', },
+      { title: 'Medicines', url: '/doctor/pharmacy/medicine', subject: 'pharmacyMedicine', action: 'read', },
+      { title: 'Stock', url: '/doctor/pharmacy/purchase', subject: 'stock', action: 'read', },
     ],
   },
   {
     title: 'Pathology',
-    icon: TestTube2,
-    url: "",subject: 'patient',action: 'read',
+    icon: FlaskConical,
+    children: [
+      { title: 'Billing', url: '/doctor/pathology', subject: 'PathologyBilling', action: 'read', },
+      { title: 'Payments', url: '/doctor/pathology/payments', subject: 'PathologyBilling', action: 'read', },
+      { title: 'Pathology Test', url: '/doctor/pathology/pathologyTest', subject: 'PathologyTest', action: 'read', },
+    ],
   },
-  { title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus,subject: 'reports',
-    action: 'read', },
-  { title: 'Services', url: '/doctor/services', icon: ServerCog ,subject: 'services',
-        action: 'read',},
+  {
+    title: 'Radiology',
+    icon: Microscope,
+    children: [
+      { title: 'Billing', url: '/doctor/radiology', subject: 'RadiologyBilling', action: 'read', },
+      { title: 'Payments', url: '/doctor/radiology/RadiologyPayments', subject: 'RadiologyPayments', action: 'read', },
+      { title: 'Radiology Test', url: '/doctor/radiology/radiologyTest', subject: 'RadiologyTest', action: 'read', },
+    ],
+  },
+  {
+    title: 'Ambulance',
+    icon: Ambulance,
+    children: [
+      { title: 'Billing', url: '/doctor/ambulance', subject: 'ambulance', action: 'read', },
+      { title: 'Ambulance Management', url: '/doctor/ambulance/ambulanceManagement', subject: 'ambulanceManagement', action: 'read', },
+    ],
+  },
+  {
+    title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus, subject: 'reports',
+    action: 'read',
+  },
+  {
+    title: 'Services', url: '/doctor/services', icon: ServerCog, subject: 'services',
+    action: 'read',
+  },
   {
     title: 'Settings',
     icon: Settings,
     children: [
-      { title: 'Members', url: '/doctor/employees',subject: 'members',action: 'read', },
-      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges',subject: 'hospitalCharger',action: 'read', },
-      { title: 'Bed', url: '/doctor/settings/Bed',subject: 'bed',action: 'read', },
-      { title: 'Shift Management', url: '/doctor/settings/shifts',subject: 'doctorShift',action: 'read', },
-      { title: 'Symptoms', url: '/doctor/settings/symptom',subject: 'symptoms',action:'read'},
-      { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals',action: 'read',},
-      { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation' ,action: 'read'},
-      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord',subject: 'medicineRedord',action: 'read', },
-      { title: 'Stats', url: '/doctor/settings/stats',subject: 'stats',action: 'read', },
-      { title: 'Payments History', url: '/doctor/billing',subject: 'payment',action: 'read', },
-      { title: 'App Settings', url: '/doctor/settings/config',subject: 'appSetting',action: 'read', },
-      { title: 'Roles', url: '/doctor/settings/roles',subject: 'role',action: 'read', },
+      { title: 'Members', url: '/doctor/employees', subject: 'members', action: 'read', },
+      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges', subject: 'hospitalCharger', action: 'read', },
+      { title: 'Bed', url: '/doctor/settings/Bed', subject: 'bed', action: 'read', },
+      { title: 'Shift Management', url: '/doctor/settings/shifts', subject: 'doctorShift', action: 'read', },
+      { title: 'Symptoms', url: '/doctor/settings/symptom', subject: 'symptoms', action: 'read' },
+      { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals', action: 'read', },
+      { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation', action: 'read' },
+      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord', subject: 'medicineRedord', action: 'read', },
+      { title: 'Pathology', url: '/doctor/settings/pathology', subject: 'pathologySettings', action: 'read' },
+      { title: 'Radiology', url: '/doctor/settings/radiology', subject: 'radiologySettings', action: 'read' },
+      { title: 'Stats', url: '/doctor/settings/stats', subject: 'stats', action: 'read', },
+      { title: 'Payments History', url: '/doctor/billing', subject: 'payment', action: 'read', },
+      { title: 'App Settings', url: '/doctor/settings/config', subject: 'appSetting', action: 'read', },
+      { title: 'Roles', url: '/doctor/settings/roles', subject: 'role', action: 'read', },
     ],
   },
 ];
@@ -119,34 +149,34 @@ export function AppSidebar() {
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
   const [staffData, setStaffData] = useState<any>();
 
-    const ability = useAbility();
+  const ability = useAbility();
 
-    const canAccess = (
-      subject?: string,
-      action: string = 'read'
-    ) => {
-      if (!subject) return true; // dashboard, public items
-      return ability.can(action, subject);
-    };
-    const filterItemsByPermission = (items: SidebarItem[]) => {
-  return items
-    .map((item) => {
-      if (!canAccess(item.subject, item.action)) return null;
+  const canAccess = (
+    subject?: string,
+    action: string = 'read'
+  ) => {
+    if (!subject) return true; // dashboard, public items
+    return ability.can(action, subject);
+  };
+  const filterItemsByPermission = (items: SidebarItem[]) => {
+    return items
+      .map((item) => {
+        if (!canAccess(item.subject, item.action)) return null;
 
-      if (item.children) {
-        const filteredChildren = item.children.filter((child) =>
-          canAccess(child.subject, child.action)
-        );
+        if (item.children) {
+          const filteredChildren = item.children.filter((child) =>
+            canAccess(child.subject, child.action)
+          );
 
-        if (filteredChildren.length === 0) return null;
+          if (filteredChildren.length === 0) return null;
 
-        return { ...item, children: filteredChildren };
-      }
+          return { ...item, children: filteredChildren };
+        }
 
-      return item;
-    })
-    .filter(Boolean) as SidebarItem[];
-};
+        return item;
+      })
+      .filter(Boolean) as SidebarItem[];
+  };
 
   // Close all popovers when route changes
   useEffect(() => {
@@ -166,7 +196,12 @@ export function AppSidebar() {
   };
   // Recursive check for active item (works for nested submenus)
   const isItemActive = (item: SidebarItem | SidebarChildItem): boolean => {
-    if (item.url && pathname.startsWith(item.url)) return true;
+    if (item.url) {
+      // For exact URL match or when it's the base path
+      if (pathname === item.url) return true;
+      // For child pages, check if pathname starts with the URL and has more segments
+      if (pathname.startsWith(item.url + '/')) return true;
+    }
     if ('children' in item && item.children) {
       return item.children.some((child) => isItemActive(child));
     }
@@ -214,189 +249,135 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {filterItemsByPermission(items)
-  .filter((item) => {
-    // parent permission
-    if (!canAccess(item.subject, item.action)) return false;
+                  .filter((item) => {
+                    // parent permission
+                    if (!canAccess(item.subject, item.action)) return false;
 
-    // agar children hain to unko bhi filter karo
-    if (item.children) {
-      item.children = item.children.filter((child) =>
-        canAccess(child.subject, child.action)
-      );
-    }
+                    // agar children hain to unko bhi filter karo
+                    if (item.children) {
+                      item.children = item.children.filter((child) =>
+                        canAccess(child.subject, child.action)
+                      );
+                    }
 
-    // agar children empty ho gaye → parent hide
-    if (item.children && item.children.length === 0) return false;
+                    // agar children empty ho gaye → parent hide
+                    if (item.children && item.children.length === 0) return false;
 
-    return true;
-  })
-  .map((item) => {
+                    return true;
+                  })
+                  .map((item) => {
 
-                  const hasChildren = item.children?.length ?? 0 > 0;
-                  const isActive = isItemActive(item);
-                  const isOpen = openMenus[item.title] || isItemActive(item);
+                    const hasChildren = (item.children?.length ?? 0) > 0;
+                    const isActive = isItemActive(item);
+                    // If the user has explicitly toggled this menu, respect that value.
+                    // Otherwise default to open when the current route makes it active.
+                    const isOpen = Object.prototype.hasOwnProperty.call(openMenus, item.title)
+                      ? openMenus[item.title]
+                      : isItemActive(item);
 
 
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      {hasChildren ? (
-                        <>
-                          {/* Popover for collapsible menu when collapsed */}
-                          {isCollapsed ? (
-                            <Popover
-                              open={openPopovers[item.title] || false}
-                              onOpenChange={(open) => {
-                                setOpenPopovers((prev) => ({
-                                  ...prev,
-                                  [item.title]: open,
-                                }));
-                              }}
-                            >
-                              <PopoverTrigger asChild>
-                                <button
-                                  className={`flex items-center p-3 rounded-md w-full transition-all duration-150
-                                  ${isCollapsed
-                                      ? 'justify-center'
-                                      : 'justify-between gap-2'
-                                    }
-                                  ${isActive
-                                      ? 'bg-muted text-foreground font-semibold'
-                                      : 'hover:bg-muted text-muted-foreground'
-                                    }`}
-                                >
-                                  <div
-                                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
-                                      }`}
-                                  >
-                                    <item.icon
-                                      className={`w-5 h-5 ${isActive
-                                        ? 'text-foreground'
-                                        : 'text-muted-foreground'
-                                        }`}
-                                    />
-                                    {!isCollapsed && (
-                                      <span className="truncate font-semibold">
-                                        {item.title}
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {!isCollapsed &&
-                                    (isOpen ? (
-                                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                    ) : (
-                                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                    ))}
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                side="right"
-                                align="start"
-                                className="w-48 p-2"
-                                onMouseLeave={() => {
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        {hasChildren ? (
+                          <>
+                            {/* Popover for collapsible menu when collapsed */}
+                            {isCollapsed ? (
+                              <Popover
+                                open={openPopovers[item.title] || false}
+                                onOpenChange={(open) => {
                                   setOpenPopovers((prev) => ({
                                     ...prev,
-                                    [item.title]: false,
+                                    [item.title]: open,
                                   }));
                                 }}
                               >
-                                <div className="space-y-1">
-                                  <div className="px-2 py-1.5 text-sm font-semibold text-foreground">
-                                    {item.title}
-                                  </div>
-                                  {item.children!.map((subItem) => {
-                                    const isSubActive = pathname === subItem.url;
-                                    return (
-                                      <Link
-                                        key={subItem.title}
-                                        href={subItem.url}
-                                        className={`block px-2 py-1.5 rounded-md text-sm transition-colors
-                                          ${isSubActive
-                                            ? 'bg-muted text-foreground font-medium'
-                                            : 'text-muted-foreground hover:bg-muted'
-                                          }`}
-                                      >
-                                        {subItem.title}
-                                      </Link>
-                                    );
-                                  })}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          ) : (
-                            <button
-                              onClick={() => { toggleMenu(item.title) }}
-
-                              className={`flex items-center p-3 rounded-md w-full transition-all duration-150
-                                ${isCollapsed
-                                  ? 'justify-center'
-                                  : 'justify-between gap-2'
-                                }
-                                ${isActive
-                                  ? 'bg-muted text-foreground font-semibold'
-                                  : 'hover:bg-muted text-muted-foreground'
-                                }`}
-                            >
-                              <div
-                                className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
-                                  }`}
-                              >
-                                <item.icon
-                                  className={`w-5 h-5 ${isActive
-                                    ? 'text-foreground'
-                                    : 'text-muted-foreground'
-                                    }`}
-                                />
-                                {!isCollapsed && (
-                                  <span className="truncate font-semibold">
-                                    {item.title}
-                                  </span>
-                                )}
-                              </div>
-
-                              {!isCollapsed &&
-                                (isOpen ? (
-                                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                ))}
-                            </button>
-                          )}
-
-                          {!isCollapsed && isOpen && (
-                            <div className="ml-6 mt-1 space-y-1">
-                              {item.children!.map((subItem) => {
-                                const isSubActive = pathname === subItem.url;
-                                return (
-                                  <Link
-                                    key={subItem.title}
-                                    href={subItem.url}
-                                    className={`block px-4 py-2 rounded-md text-sm transition-colors
-                                      ${isSubActive
-                                        ? 'bg-muted text-foreground font-medium'
-                                        : 'text-muted-foreground hover:bg-muted'
+                                <PopoverTrigger asChild>
+                                  <button
+                                    className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                                  ${isCollapsed
+                                        ? 'justify-center'
+                                        : 'justify-between gap-2'
+                                      }
+                                  ${isActive
+                                        ? 'bg-muted text-foreground font-semibold'
+                                        : 'hover:bg-muted text-muted-foreground'
                                       }`}
                                   >
-                                    {subItem.title}
-                                  </Link>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        // Regular menu items
-                        isCollapsed ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <SidebarMenuButton asChild>
-                                <Link
-                                  href={item.url!}
-                                  className={`flex items-center p-3 rounded-md w-full transition-all duration-150
-                                  ${isCollapsed ? 'justify-center' : 'gap-2'}
-                                  ${isActive
-                                      ? 'bg-muted text-foreground font-semibold'
-                                      : 'text-muted-foreground hover:bg-muted'
+                                    <div
+                                      className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
+                                        }`}
+                                    >
+                                      <item.icon
+                                        className={`w-5 h-5 ${isActive
+                                          ? 'text-foreground'
+                                          : 'text-muted-foreground'
+                                          }`}
+                                      />
+                                      {!isCollapsed && (
+                                        <span className="truncate font-semibold">
+                                          {item.title}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {!isCollapsed &&
+                                      (isOpen ? (
+                                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                      ))}
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  side="right"
+                                  align="start"
+                                  className="w-48 p-2"
+                                  onMouseLeave={() => {
+                                    setOpenPopovers((prev) => ({
+                                      ...prev,
+                                      [item.title]: false,
+                                    }));
+                                  }}
+                                >
+                                  <div className="space-y-1">
+                                    <div className="px-2 py-1.5 text-sm font-semibold text-foreground">
+                                      {item.title}
+                                    </div>
+                                    {item.children!.map((subItem) => {
+                                      const isSubActive = pathname === subItem.url || pathname.startsWith(subItem.url + '/');
+                                      return (
+                                        <Link
+                                          key={subItem.title}
+                                          href={subItem.url}
+                                          className={`block px-2 py-1.5 rounded-md text-sm transition-colors
+                                          ${isSubActive
+                                              ? 'bg-muted text-foreground font-medium'
+                                              : 'text-muted-foreground hover:bg-muted'
+                                            }`}
+                                        >
+                                          {subItem.title}
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            ) : (
+                              <button
+                                onClick={() => { toggleMenu(item.title) }}
+
+                                className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                                ${isCollapsed
+                                    ? 'justify-center'
+                                    : 'justify-between gap-2'
+                                  }
+                                ${isActive
+                                    ? 'bg-muted text-foreground font-semibold'
+                                    : 'hover:bg-muted text-muted-foreground'
+                                  }`}
+                              >
+                                <div
+                                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'
                                     }`}
                                 >
                                   <item.icon
@@ -410,42 +391,100 @@ export function AppSidebar() {
                                       {item.title}
                                     </span>
                                   )}
-                                </Link>
-                              </SidebarMenuButton>
-                            </TooltipTrigger>
-                            <TooltipContent side="right" className="text-sm">
-                              {item.title}
-                            </TooltipContent>
-                          </Tooltip>
+                                </div>
+
+                                {!isCollapsed &&
+                                  (isOpen ? (
+                                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                  ))}
+                              </button>
+                            )}
+
+                            {!isCollapsed && isOpen && (
+                              <div className="ml-6 mt-1 space-y-1">
+                                {item.children!.map((subItem) => {
+                                  const isSubActive = pathname === subItem.url || pathname.startsWith(subItem.url + '/');
+                                  return (
+                                    <Link
+                                      key={subItem.title}
+                                      href={subItem.url}
+                                      className={`block px-4 py-2 rounded-md text-sm transition-colors
+                                      ${isSubActive
+                                          ? 'bg-muted text-foreground font-medium'
+                                          : 'text-muted-foreground hover:bg-muted'
+                                        }`}
+                                    >
+                                      {subItem.title}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </>
                         ) : (
-                          <SidebarMenuButton asChild>
-                            <Link
-                              href={item.url!}
-                              className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                          // Regular menu items
+                          isCollapsed ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SidebarMenuButton asChild>
+                                  <Link
+                                    href={item.url!}
+                                    className={`flex items-center p-3 rounded-md w-full transition-all duration-150
+                                  ${isCollapsed ? 'justify-center' : 'gap-2'}
+                                  ${isActive
+                                        ? 'bg-muted text-foreground font-semibold'
+                                        : 'text-muted-foreground hover:bg-muted'
+                                      }`}
+                                  >
+                                    <item.icon
+                                      className={`w-5 h-5 ${isActive
+                                        ? 'text-foreground'
+                                        : 'text-muted-foreground'
+                                        }`}
+                                    />
+                                    {!isCollapsed && (
+                                      <span className="truncate font-semibold">
+                                        {item.title}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="text-sm">
+                                {item.title}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <SidebarMenuButton asChild>
+                              <Link
+                                href={item.url!}
+                                className={`flex items-center p-3 rounded-md w-full transition-all duration-150
                                 ${isCollapsed ? 'justify-center' : 'gap-2'}
                                 ${isActive
-                                  ? 'bg-muted text-foreground font-semibold'
-                                  : 'text-muted-foreground hover:bg-muted'
-                                }`}
-                            >
-                              <item.icon
-                                className={`w-5 h-5 ${isActive
-                                  ? 'text-foreground'
-                                  : 'text-muted-foreground'
+                                    ? 'bg-muted text-foreground font-semibold'
+                                    : 'text-muted-foreground hover:bg-muted'
                                   }`}
-                              />
-                              {!isCollapsed && (
-                                <span className="truncate font-semibold">
-                                  {item.title}
-                                </span>
-                              )}
-                            </Link>
-                          </SidebarMenuButton>
-                        )
-                      )}
-                    </SidebarMenuItem>
-                  );
-                })}
+                              >
+                                <item.icon
+                                  className={`w-5 h-5 ${isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground'
+                                    }`}
+                                />
+                                {!isCollapsed && (
+                                  <span className="truncate font-semibold">
+                                    {item.title}
+                                  </span>
+                                )}
+                              </Link>
+                            </SidebarMenuButton>
+                          )
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

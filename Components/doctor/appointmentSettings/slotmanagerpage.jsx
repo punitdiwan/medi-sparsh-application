@@ -169,10 +169,7 @@ export default function SlotManagerPage() {
   };
 
   const handleSaveSlot = async (slotData) => {
-    const { day, timeFrom, timeTo } = slotData;
-
-    if (!durationMins) return toast.error("Please enter duration in Consultation Details.");
-    if (!chargeId) return toast.error("Please select a charge in Consultation Details.");
+    const { day, timeFrom, timeTo, durationMins: slotDuration, chargeId: slotChargeId } = slotData;
 
     const isOverlap = checkSlotOverlap(day, timeFrom, timeTo);
     if (isOverlap) {
@@ -185,8 +182,8 @@ export default function SlotManagerPage() {
       day,
       timeFrom,
       timeTo,
-      durationMins,
-      chargeId
+      durationMins: slotDuration,
+      chargeId: slotChargeId
     };
 
     try {
@@ -310,47 +307,6 @@ export default function SlotManagerPage() {
             </div>
           </div>
 
-          <div className="p-4 border rounded-xl shadow-sm">
-            <h3 className="font-semibold mb-3">Consultation Details</h3>
-
-            <div className="grid grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1">
-                <Label>Duration (mins)</Label>
-                <Input type="number" value={durationMins} onChange={(e) => setDurationMins(e.target.value)} />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Charge Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                  <SelectContent>
-                    {chargeCategories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Charge</Label>
-                <Select value={chargeId} disabled={!categoryId} onValueChange={setChargeId}>
-                  <SelectTrigger><SelectValue placeholder="Select charge" /></SelectTrigger>
-                  <SelectContent>
-                    {charges
-                      .filter(c => c.chargeCategoryId === categoryId)
-                      .map((x) => (
-                        <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Amount</Label>
-                <Input value={amount} readOnly />
-              </div>
-            </div>
-          </div>
 
           {showWeekPanel && (
             <div className="border rounded-xl shadow-sm overflow-hidden">
@@ -377,8 +333,9 @@ export default function SlotManagerPage() {
                                 <div className="flex justify-between items-start p-2 border rounded-md hover:bg-muted/50 transition-colors">
                                   <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm truncate">{s.text}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {s.durationMins} mins
+                                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                      <span>{s.durationMins} mins</span>
+                                      <span className="font-semibold text-green-600">₹{s.amount}</span>
                                     </div>
                                   </div>
                                   <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -393,11 +350,6 @@ export default function SlotManagerPage() {
                                       title="Delete slot"
                                     />
                                   </div>
-                                </div>
-                                {/* Tooltip for amount */}
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                  Amount: ₹{s.amount}
-                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                 </div>
                               </div>
                             ))
@@ -418,8 +370,8 @@ export default function SlotManagerPage() {
             initialData={modalInitialData}
             shiftRange={selectedShift}
             selectedDay={selectedDay}
-            durationMins={durationMins}
-            chargeId={chargeId}
+            chargeCategories={chargeCategories}
+            charges={charges}
           />
         </div>
       </CardContent>

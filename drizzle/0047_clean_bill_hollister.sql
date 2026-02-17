@@ -1,0 +1,1 @@
+ALTER TABLE "pathology_tests" ADD COLUMN "is_deleted" boolean DEFAULT false;

@@ -181,7 +181,7 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
           <h1 className="flex flex-row flex-warp gap-2 items-center text-2xl font-semibold"><Pill className="bg-dialog-header text-dialog-icon" />Prescription</h1>
           <div className="flex items-center gap-3">
             <Select value={doctorId} onValueChange={setDoctorId}>
-              <SelectTrigger className="flex-1 w-[240px] bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" >
+              <SelectTrigger className="flex-1 w-60 bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary" >
                 <SelectValue placeholder="Prescribed By" />
               </SelectTrigger>
               <SelectContent className="select-dialog-content">
@@ -253,7 +253,7 @@ export default function PrescriptionModal({ open, onClose, ipdId, doctors, editP
             </div>)}
 
         {/* FOOTER */}
-        <div className="border-t px-6 py-4 flex justify-end gap-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
+        <div className="px-6 py-4 flex justify-end gap-3 bg-dialog-header border-t border-dialog text-dialog-muted sticky bottom-0">
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4" />
             Print
