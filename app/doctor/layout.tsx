@@ -7,10 +7,12 @@ import type { Metadata } from 'next';
 import { AuthProvider } from "@/context/AuthContext";
 
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/db/queries";
+import { getModulesByHospital, getUserRole } from "@/db/queries";
 import { AbilityProvider } from "@/components/providers/AbilityProvider"
 import TrialNav from "@/Components/trialNav";
 import TrialExpiredScreen from "@/Components/TrialExpiredScreen";
+import { getMasterModules, getModules } from "@/lib/actions/getMasterModule";
+import { getMasterPermissions } from "@/lib/actions/masterPermission";
 
 export const metadata: Metadata = {
   title: 'medisparsh',
@@ -66,6 +68,14 @@ export default async function DashboardLayout({
 
   const RolePermission = permissions || RData.permission;
 
+  console.log("RolePermission", RolePermission)
+
+  const masterModules = await getModules();
+  console.log('masterModules', masterModules)
+
+  const MasterPermissions = await getMasterPermissions();
+  console.log('MasterPermissions', MasterPermissions)
+
   const userData = {
     userData: sessionData?.user,
     hospital,
@@ -84,9 +94,7 @@ export default async function DashboardLayout({
           <SidebarInset>
             {hospital?.metadata?.is_trial && <TrialNav endDate={hospital?.metadata?.trial_ends_at}/>}
             <Navbar />
-            {/* page main content */}
             {children}
-            {/* page main content ends */}
           </SidebarInset>
         </SidebarProvider>)}
       </AuthProvider>

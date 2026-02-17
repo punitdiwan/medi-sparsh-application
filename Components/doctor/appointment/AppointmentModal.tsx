@@ -53,7 +53,7 @@ import {
 // ============================================
 // FACILITY TYPE - HARDCODED FOR NOW
 // ============================================
-const FACILITY_TYPE: "hospital" | "clinic" = "hospital"; // TODO: Make configurable
+// const FACILITY_TYPE: "hospital" | "clinic" = "hospital"; // TODO: Make configurable
 
 // ============================================
 // FORM SCHEMAS
@@ -104,14 +104,20 @@ interface AppointmentModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   appointment?: any;
+  orgMode?: string;
 }
 
 export default function AppointmentModal({
   open,
   onOpenChange,
   onSuccess,
+  orgMode,
   appointment,
 }: AppointmentModalProps) {
+
+  let FACILITY_TYPE = orgMode;
+
+
   const formSchema = FACILITY_TYPE === "hospital" ? hospitalFormSchema : clinicFormSchema;
 
   const form = useForm<AppointmentFormType>({

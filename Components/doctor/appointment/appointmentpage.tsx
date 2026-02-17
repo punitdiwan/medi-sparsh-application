@@ -33,6 +33,7 @@ import { useAbility } from "@/components/providers/AbilityProvider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AppointmentCard } from "./AppointmentCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
 export type Appointment = {
   id: number;
   patient_id: string;
@@ -62,6 +63,7 @@ export default function AppointmentPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const { user } = useAuth();
 
   const ability = useAbility();
   //= FILTER STATES =//
@@ -485,6 +487,7 @@ export default function AppointmentPage() {
           setIsModalOpen(val);
           if (!val) setEditingAppointment(null);
         }}
+        orgMode={user?.hospital?.metadata?.orgMode}
         onSuccess={fetchAppointments}
         appointment={editingAppointment}
       />

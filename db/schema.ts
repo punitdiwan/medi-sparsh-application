@@ -404,6 +404,21 @@ export const modules = pgTable("modules", {
 	}).onDelete("restrict"),
 ]);
 
+export const masterPermissions = pgTable("master_permissions", {
+  id: text().default(useUUIDv4).primaryKey().notNull(),
+
+  subject: text().notNull(),
+  actions:text("actions").array().notNull(),
+
+  moduleId: text("module_id").notNull(),
+
+}, (table) => [
+  foreignKey({
+    columns: [table.moduleId],
+    foreignColumns: [masterModules.id],
+  }).onDelete("restrict"),
+]);
+
 export const appointmentPriorities = pgTable("appointment_priorities", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),
