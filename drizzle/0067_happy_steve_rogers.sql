@@ -1,0 +1,1 @@
+ALTER TABLE "master_modules" ADD COLUMN "is_charges_module" boolean DEFAULT false NOT NULL;

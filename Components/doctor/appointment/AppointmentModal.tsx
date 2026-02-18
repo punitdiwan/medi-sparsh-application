@@ -231,7 +231,6 @@ export default function AppointmentModal({
         try {
           // Fetch shifts
           const shiftsResult = await getDoctorShifts(doctorId);
-          console.log("Shifts fetched:", shiftsResult);
           if (shiftsResult.success) {
             setShifts(shiftsResult.data);
           } else {
@@ -265,10 +264,8 @@ export default function AppointmentModal({
         setLoadingSlots(true);
         try {
           const slotsResult = await getDoctorSlots(doctorId, date, shiftId);
-          console.log("Slots fetched:", slotsResult);
           if (slotsResult.success) {
             setSlots(slotsResult.data);
-            console.log("Available slots:", slotsResult.data.length);
           } else {
             toast.error(slotsResult.error ?? "Failed to load slots");
             setSlots([]);
@@ -296,7 +293,6 @@ export default function AppointmentModal({
       const selectedSlot = slots.find((slot) => slot.slotId === slotId);
       if (selectedSlot) {
         setDoctorFee(selectedSlot.chargeAmount);
-        console.log("Slot selected, fee:", selectedSlot.chargeAmount);
       }
     } else if (FACILITY_TYPE === "hospital") {
       setDoctorFee("");

@@ -5,15 +5,12 @@ import { eq,and } from "drizzle-orm";
 import * as schema from "@/drizzle/schema";
 import { organization } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
-import { ac, owner } from "./permissions";
-import {
-    ownerAc,
-    adminAc,
-    memberAc,
-} from "better-auth/plugins/organization/access";
+import { ac, owner ,doctor } from "./permissions";
+
 import { customSession } from "better-auth/plugins";
 import { OWNER_ALL_PERMISSIONS } from "./allPermissions";
-
+import { getModulesWithPermissions } from "./actions/getMasterModule";
+import { getOrganizationById } from "@/db/queries";
 
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
@@ -62,8 +59,7 @@ export const auth = betterAuth({
             ac, // Must be defined in order for dynamic access control to work
             roles: {
                 owner,
-                admin: adminAc,
-                member: memberAc,
+                doctor
             },
             dynamicAccessControl: {
                 enabled: true,
@@ -142,9 +138,14 @@ const getRoleAndPermission = async (organizationId: string,userId: string) => {
   const roleName = member[0].role;
 
   if (roleName === "owner") {
+        const organization = await getOrganizationById(organizationId);
+        const metadata = typeof organization.metadata === 'string'
+            ? JSON.parse(organization.metadata)
+            : organization.metadata;
+        const owerPermissions = await getModulesWithPermissions(organizationId, metadata?.orgMode);
     return {
         role: "owner",
-        permission: OWNER_ALL_PERMISSIONS,
+        permission: owerPermissions,
     };
 }
 

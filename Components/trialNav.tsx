@@ -1,6 +1,5 @@
 
 const TrialNav = ({ endDate }: { endDate: string }) => {
-    console.log("endDate", endDate)
     const { message, variant } = getTrialStatus(endDate);
     return (
         <>

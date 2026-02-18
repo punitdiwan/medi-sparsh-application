@@ -1306,9 +1306,29 @@ export async function getChargeCountByTaxCategory(taxCategoryId: string) {
 
 export async function getModulesByHospital(hospitalId: string) {
   return await db
-    .select()
+    .select({
+      id: modules.id,
+      name: modules.name,
+      hospitalId: modules.hospitalId,
+      moduleId: modules.moduleId,
+      createdAt: modules.createdAt,
+      updatedAt: modules.updatedAt,
+      masterModuleName: masterModules.name,
+      masterModuleCode: masterModules.code,
+      isChargesModule: masterModules.isChargesModule,
+    })
     .from(modules)
-    .where(and(eq(modules.hospitalId, hospitalId), eq(modules.isDeleted, false)))
+    .innerJoin(
+      masterModules,
+      eq(modules.moduleId, masterModules.id)
+    )
+    .where(
+      and(
+        eq(modules.hospitalId, hospitalId),
+        eq(modules.isDeleted, false),
+        eq(masterModules.isChargesModule, true) // 🔥 MAIN CONDITION
+      )
+    )
     .orderBy(desc(modules.createdAt));
 }
 

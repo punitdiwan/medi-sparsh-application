@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { ALL_PERMISSIONS } from "@/lib/allPermissions";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 type Resource = keyof typeof ALL_PERMISSIONS;
 type Action = (typeof ALL_PERMISSIONS)[Resource][number];
@@ -69,7 +70,9 @@ export function RolePermissionEditor({ value, onChange }: Props) {
       // first letter capital
       .replace(/^./, (char) => char.toUpperCase());
   }
-  const modules = Object.keys(ALL_PERMISSIONS) as Resource[];
+
+  const {user} = useAuth();
+  const modules = Object.keys(user?.permissions || {}) as Resource[];
 
   const sortedModules =
     sortOrder === "none"

@@ -1,5 +1,5 @@
 import { createAccessControl} from "better-auth/plugins/access";
-import { defaultStatements,  ownerAc } from 'better-auth/plugins/organization/access'
+import { defaultStatements,  ownerAc ,memberAc } from 'better-auth/plugins/organization/access'
 import { ALL_PERMISSIONS } from "./allPermissions";
 const statement = {
      ...defaultStatements, 
@@ -16,6 +16,11 @@ export const ac = createAccessControl(statement);
 // export const normal = ac.newRole({ 
 //     project: ["read"], 
 // }); 
+
+export const doctor = ac.newRole({
+    ...ALL_PERMISSIONS,
+    ...memberAc.statements
+});
 
 export const owner= ac.newRole({
     ...ALL_PERMISSIONS,
