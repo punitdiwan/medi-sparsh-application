@@ -114,30 +114,35 @@ export default function AppointmentModal({
 }: AppointmentModalProps) {
   const formSchema = FACILITY_TYPE === "hospital" ? hospitalFormSchema : clinicFormSchema;
 
+  const hospitalDefaults = {
+    patientName: "",
+    mobile_number: "",
+    doctorUserId: "",
+    appointmentDate: "",
+    shiftId: "",
+    slotId: "",
+    reason: "",
+    notes: "",
+    patientId: "",
+    email: "",
+  };
+
+  const clinicDefaults = {
+    patientName: "",
+    mobile_number: "",
+    doctorUserId: "",
+    appointmentDate: "",
+    appointmentTime: "",
+    reason: "",
+    notes: "",
+    patientId: "",
+    email: "",
+    services: [],
+  };
+
   const form = useForm<AppointmentFormType>({
     resolver: zodResolver(formSchema),
-    defaultValues:
-      FACILITY_TYPE === "hospital"
-        ? {
-          patientName: "",
-          mobile_number: "",
-          doctorUserId: "",
-          appointmentDate: "",
-          shiftId: "",
-          slotId: "",
-          reason: "",
-          notes: "",
-        }
-        : {
-          patientName: "",
-          mobile_number: "",
-          doctorUserId: "",
-          appointmentDate: "",
-          appointmentTime: "",
-          reason: "",
-          notes: "",
-          services: [],
-        },
+    defaultValues: FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults,
   });
 
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -212,6 +217,9 @@ export default function AppointmentModal({
             services: appointment.services?.map((s: any) => s.id) || [],
           });
         }
+      } else {
+        // Reset to initial values in add mode
+        form.reset(FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults);
       }
     }
   }, [open, appointment]);
@@ -409,7 +417,7 @@ export default function AppointmentModal({
       open={open}
       onOpenChange={(val) => {
         if (!val) {
-          form.reset();
+          form.reset(FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults);
           setDoctorSearch("");
           setShowDoctorDropdown(false);
           setServiceSearch("");
@@ -573,7 +581,6 @@ export default function AppointmentModal({
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription>Select the doctor for this appointment.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -688,9 +695,6 @@ export default function AppointmentModal({
                               )}
                             </SelectContent>
                           </Select>
-                          <FormDescription>
-                            Available slots will be shown based on selected shift and date
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
