@@ -590,7 +590,6 @@ export default function AppointmentModal({
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription>Select the doctor for this appointment.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -652,6 +651,7 @@ export default function AppointmentModal({
                               type="date"
                               {...field}
                               value={field.value ?? ""}
+                              min={new Date().toISOString().split("T")[0]}
                               onChange={(e) => {
                                 field.onChange(e);
                                 // Reset slot when date changes
@@ -707,9 +707,6 @@ export default function AppointmentModal({
                               )}
                             </SelectContent>
                           </Select>
-                          <FormDescription>
-                            Available slots will be shown based on selected shift and date
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

@@ -536,7 +536,7 @@ export default function Employee() {
       )}
 
       {showAddEmployee && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/10 backdrop-blur-sm">
           <div className="w-full max-w-4xl rounded-xl shadow-lg p-6">
             <AddEmployeeForm
               onCancel={() => {
