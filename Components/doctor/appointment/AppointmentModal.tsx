@@ -319,21 +319,6 @@ export default function AppointmentModal({
       if (FACILITY_TYPE === "hospital") {
         const hospitalValues = values as HospitalFormType;
 
-        const availabilityCheck = await checkSlotAvailability(
-          hospitalValues.slotId,
-          hospitalValues.appointmentDate
-        );
-
-        if (!availabilityCheck.success) {
-          toast.error(availabilityCheck.error || "Failed to check slot availability");
-          return;
-        }
-
-        if (!availabilityCheck.data.isAvailable) {
-          toast.error("This slot is no longer available. Please select another slot.");
-          return;
-        }
-
         const appointmentData = {
           facilityType: "hospital" as const,
           patientId: hospitalValues.patientId,
@@ -696,10 +681,8 @@ export default function AppointmentModal({
                                   <SelectItem
                                     key={slot.slotId}
                                     value={slot.slotId}
-                                    disabled={!slot.isAvailable}
                                   >
-                                    {slot.timeFrom} - {slot.timeTo} (₹{slot.chargeAmount})
-                                    {!slot.isAvailable && " - Booked"}
+                                    {slot.timeFrom} - {slot.timeTo}
                                   </SelectItem>
                                 ))
                               )}

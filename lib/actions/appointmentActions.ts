@@ -204,26 +204,10 @@ export async function getDoctorSlots(
                 )
             );
 
-        // Get booked slots for this date
-        const bookedSlots = await db
-            .select({
-                slotId: slotBookings.slotId,
-            })
-            .from(slotBookings)
-            .where(
-                and(
-                    eq(slotBookings.appointmentDate, sql`${date}::date`),
-                    eq(slotBookings.status, "active"),
-                    eq(slotBookings.hospitalId, org.id)
-                )
-            );
-
-        const bookedSlotIds = new Set(bookedSlots.map((b) => b.slotId));
-
-        // Filter out booked slots
+        // All slots are always available (multiple bookings per slot allowed)
         const availableSlots = allSlots.map((slot) => ({
             ...slot,
-            isAvailable: !bookedSlotIds.has(slot.slotId),
+            isAvailable: true,
         }));
 
         return { success: true, data: availableSlots };
@@ -238,32 +222,8 @@ export async function getDoctorSlots(
 // ============================================
 
 export async function checkSlotAvailability(slotId: string, date: string): Promise<ApiResponse<{ isAvailable: boolean }>> {
-    try {
-        const org = await getActiveOrganization();
-        if (!org) {
-            return { success: false, error: "Unauthorized" };
-        }
-
-        const booking = await db
-            .select()
-            .from(slotBookings)
-            .where(
-                and(
-                    eq(slotBookings.slotId, slotId),
-                    eq(slotBookings.appointmentDate, sql`${date}::date`),
-                    eq(slotBookings.status, "active"),
-                    eq(slotBookings.hospitalId, org.id)
-                )
-            )
-            .limit(1);
-
-        const isAvailable = booking.length === 0;
-
-        return { success: true, data: { isAvailable } };
-    } catch (error) {
-        console.error("Error checking slot availability:", error);
-        return { success: false, error: "Failed to check slot availability" };
-    }
+    // Multiple bookings per slot are allowed — always return available
+    return { success: true, data: { isAvailable: true } };
 }
 
 // ============================================
@@ -286,21 +246,8 @@ export async function createAppointment(data: any): Promise<ApiResponse<any>> {
             validatedData = clinicModeSchema.parse(data);
         }
 
-        // For hospital mode, check slot availability
+        // For hospital mode, create appointment (multiple bookings per slot allowed)
         if (validatedData.facilityType === "hospital") {
-            const availabilityCheck = await checkSlotAvailability(
-                validatedData.slotId,
-                validatedData.appointmentDate
-            );
-
-            if (!availabilityCheck.success) {
-                return { success: false, error: availabilityCheck.error || "Something went wrong" };
-            }
-
-            if (!availabilityCheck.data.isAvailable) {
-                return { success: false, error: "This slot is no longer available" };
-            }
-
             // Get slot details for pricing
             const slotDetails = await db
                 .select({
@@ -416,20 +363,6 @@ export async function updateAppointment(appointmentId: string, data: any): Promi
             const slotChanged = oldSlotId !== validatedData.slotId;
 
             if (slotChanged) {
-                // Check new slot availability
-                const availabilityCheck = await checkSlotAvailability(
-                    validatedData.slotId,
-                    validatedData.appointmentDate
-                );
-
-                if (!availabilityCheck.success) {
-                    return { success: false, error: availabilityCheck.error };
-                }
-
-                if (!availabilityCheck.data.isAvailable) {
-                    return { success: false, error: "This slot is no longer available" };
-                }
-
                 // Cancel old slot booking
                 if (oldSlotId) {
                     await db
