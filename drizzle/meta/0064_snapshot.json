@@ -1,5 +1,5 @@
 {
-  "id": "58e0a4d0-a705-4c26-ba83-fb605aa08149",
+  "id": "777b77a7-ba46-4dc5-a614-a278f5902bd1",
   "prevId": "ac473c3c-e03b-4948-a11f-fc8f43ccaa1e",
   "version": "7",
   "dialect": "postgresql",
@@ -2930,58 +2930,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.master_permissions": {
-      "name": "master_permissions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "uuid_generate_v4()"
-        },
-        "subject": {
-          "name": "subject",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "action": {
-          "name": "action",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "module_id": {
-          "name": "module_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "master_permissions_module_id_master_modules_id_fk": {
-          "name": "master_permissions_module_id_master_modules_id_fk",
-          "tableFrom": "master_permissions",
-          "tableTo": "master_modules",
-          "columnsFrom": [
-            "module_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -7620,17 +7568,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "unique_active_slot_booking": {
-          "name": "unique_active_slot_booking",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slot_id",
-            "appointment_date",
-            "status"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
