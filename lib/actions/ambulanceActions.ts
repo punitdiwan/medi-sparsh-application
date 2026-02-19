@@ -91,8 +91,6 @@ export async function saveAmbulanceBooking(data: Partial<NewAmbulanceBooking> & 
             bookingData.referenceNo = "";
         }
 
-        console.log("bookingData", bookingData);
-
         if (id) {
             // Update
             const updated = await updateAmbulanceBooking(id, {

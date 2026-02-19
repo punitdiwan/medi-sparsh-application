@@ -379,6 +379,7 @@ export const masterModules = pgTable("master_modules", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	name: text().notNull(),
 	code: text().notNull().unique(),
+	isChargesModule: boolean("is_charges_module").default(false).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
@@ -402,6 +403,33 @@ export const modules = pgTable("modules", {
 		foreignColumns: [masterModules.id],
 		name: "modules_module_id_master_modules_id_fk"
 	}).onDelete("restrict"),
+]);
+
+export const masterPermissions = pgTable("master_permissions", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+
+	subject: text().notNull(),
+	actions: text("actions").array().notNull(),
+
+});
+
+export const modulePermissions = pgTable("module_permissions", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+
+	moduleId: text("module_id").notNull(),
+	permissionId: text("permission_id").notNull(),
+
+}, (table) => [
+	foreignKey({
+		columns: [table.moduleId],
+		foreignColumns: [masterModules.id],
+	}).onDelete("restrict"),
+
+	foreignKey({
+		columns: [table.permissionId],
+		foreignColumns: [masterPermissions.id],
+	}).onDelete("restrict"),
+	unique().on(table.moduleId, table.permissionId),
 ]);
 
 export const appointmentPriorities = pgTable("appointment_priorities", {

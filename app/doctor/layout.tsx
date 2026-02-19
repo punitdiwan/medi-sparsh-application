@@ -5,12 +5,11 @@ import { redirect } from "next/navigation";
 import { validateServerSession } from "@/lib/validateSession";
 import type { Metadata } from 'next';
 import { AuthProvider } from "@/context/AuthContext";
-
 import { getCurrentHospital } from "@/lib/tenant";
-import { getUserRole } from "@/db/queries";
 import { AbilityProvider } from "@/components/providers/AbilityProvider"
 import TrialNav from "@/Components/trialNav";
 import TrialExpiredScreen from "@/Components/TrialExpiredScreen";
+import { getModulesWithPermissions } from "@/lib/actions/getMasterModule";
 
 export const metadata: Metadata = {
   title: 'medisparsh',
@@ -57,36 +56,52 @@ export default async function DashboardLayout({
       "reports": ["read"]
     }
   }
-  const rawPermissions = sessionData.permissionsData;
 
-  const permissions =
-    typeof rawPermissions === "string"
-      ? JSON.parse(rawPermissions)
-      : rawPermissions;
-
-  const RolePermission = permissions || RData.permission;
+  let RolePermission;
+  if (sessionData.role === "owner") {
+    const permissionsArray = sessionData?.permissionsData?.data || [];
+    RolePermission = permissionsArray.reduce(
+      (acc: Record<string, string[]>, item: any) => {
+        if (
+          item?.permissionSubject &&
+          Array.isArray(item?.permissionActions)
+        ) {
+          acc[item.permissionSubject] = item.permissionActions;
+        }
+        return acc;
+      },
+      {}
+    );
+  } else {
+    // Normal roles use stored permissions
+    const rawPermissions = sessionData.permissionsData;
+    const permissions =
+      typeof rawPermissions === "string" ? JSON.parse(rawPermissions) : rawPermissions;
+    RolePermission = permissions || RData.permission;
+  }
+  const modulesDataWithPermissions = await getModulesWithPermissions(hospital?.hospitalId, hospital?.metadata?.orgMode);
+  // console.log('Modules with permissions in layout', modulesDataWithPermissions)
 
   const userData = {
     userData: sessionData?.user,
     hospital,
     memberRole: sessionData?.role,
+    permissions: RolePermission
   };
   // const userData = null;
   const trialExpired = isTrialExpired(hospital);
   return (
-    <AbilityProvider permissions={RolePermission}>
+    <AbilityProvider permissions={RolePermission || RData.permission}>
       <AuthProvider initialUser={userData}>
 
         {trialExpired ? (
           <TrialExpiredScreen />
         ) : (<SidebarProvider>
-          <AppSidebar />
+          <AppSidebar mode={hospital?.metadata?.orgMode} moduleData={modulesDataWithPermissions} />
           <SidebarInset>
-            {hospital?.metadata?.is_trial && <TrialNav endDate={hospital?.metadata?.trial_ends_at}/>}
+            {hospital?.metadata?.is_trial && <TrialNav endDate={hospital?.metadata?.trial_ends_at} />}
             <Navbar />
-            {/* page main content */}
             {children}
-            {/* page main content ends */}
           </SidebarInset>
         </SidebarProvider>)}
       </AuthProvider>

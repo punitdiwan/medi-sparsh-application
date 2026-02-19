@@ -204,6 +204,7 @@ export async function getDoctorSlots(
                 )
             );
 
+        // Get booked slots for this date
         // All slots are always available (multiple bookings per slot allowed)
         const availableSlots = allSlots.map((slot) => ({
             ...slot,

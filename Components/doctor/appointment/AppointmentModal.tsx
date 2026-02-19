@@ -53,7 +53,7 @@ import {
 // ============================================
 // FACILITY TYPE - HARDCODED FOR NOW
 // ============================================
-const FACILITY_TYPE: "hospital" | "clinic" = "hospital"; // TODO: Make configurable
+// const FACILITY_TYPE: "hospital" | "clinic" = "hospital"; // TODO: Make configurable
 
 // ============================================
 // FORM SCHEMAS
@@ -104,14 +104,20 @@ interface AppointmentModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   appointment?: any;
+  orgMode?: string;
 }
 
 export default function AppointmentModal({
   open,
   onOpenChange,
   onSuccess,
+  orgMode,
   appointment,
 }: AppointmentModalProps) {
+
+  let FACILITY_TYPE = orgMode;
+
+
   const formSchema = FACILITY_TYPE === "hospital" ? hospitalFormSchema : clinicFormSchema;
 
   const hospitalDefaults = {
@@ -233,7 +239,6 @@ export default function AppointmentModal({
         try {
           // Fetch shifts
           const shiftsResult = await getDoctorShifts(doctorId);
-          console.log("Shifts fetched:", shiftsResult);
           if (shiftsResult.success) {
             setShifts(shiftsResult.data);
           } else {
@@ -267,10 +272,8 @@ export default function AppointmentModal({
         setLoadingSlots(true);
         try {
           const slotsResult = await getDoctorSlots(doctorId, date, shiftId);
-          console.log("Slots fetched:", slotsResult);
           if (slotsResult.success) {
             setSlots(slotsResult.data);
-            console.log("Available slots:", slotsResult.data.length);
           } else {
             toast.error(slotsResult.error ?? "Failed to load slots");
             setSlots([]);
@@ -298,7 +301,6 @@ export default function AppointmentModal({
       const selectedSlot = slots.find((slot) => slot.slotId === slotId);
       if (selectedSlot) {
         setDoctorFee(selectedSlot.chargeAmount);
-        console.log("Slot selected, fee:", selectedSlot.chargeAmount);
       }
     } else if (FACILITY_TYPE === "hospital") {
       setDoctorFee("");
@@ -642,6 +644,7 @@ export default function AppointmentModal({
                               type="date"
                               {...field}
                               value={field.value ?? ""}
+                              min={new Date().toISOString().split("T")[0]}
                               onChange={(e) => {
                                 field.onChange(e);
                                 // Reset slot when date changes
@@ -689,7 +692,7 @@ export default function AppointmentModal({
                                     key={slot.slotId}
                                     value={slot.slotId}
                                   >
-                                    {slot.timeFrom} - {slot.timeTo}
+                                    {slot.timeFrom} - {slot.timeTo} (₹{slot.chargeAmount})
                                   </SelectItem>
                                 ))
                               )}
