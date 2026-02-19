@@ -442,6 +442,20 @@
       "when": 1770972974617,
       "tag": "0062_true_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1771051864509,
+      "tag": "0063_glossy_madame_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1771413267661,
+      "tag": "0064_flaky_paibok",
+      "breakpoints": true
     }
   ]
 }

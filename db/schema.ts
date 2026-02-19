@@ -387,7 +387,7 @@ export const modules = pgTable("modules", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
-	moduleId : text("module_id"),
+	moduleId: text("module_id"),
 	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
@@ -647,6 +647,36 @@ export const doctorSlots = pgTable("doctor_slots", {
 		name: "doctor_slots_hospital_id_organization_id_fk"
 	}).onDelete("restrict"),
 ]);
+
+export const slotBookings = pgTable("slot_bookings", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	slotId: text("slot_id").notNull(),
+	appointmentId: text("appointment_id").notNull(),
+	appointmentDate: date("appointment_date").notNull(),
+	status: text().default('active').notNull(), // active, cancelled
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.slotId],
+		foreignColumns: [doctorSlots.id],
+		name: "slot_bookings_slot_id_doctor_slots_id_fk"
+	}).onDelete("restrict"),
+	foreignKey({
+		columns: [table.appointmentId],
+		foreignColumns: [appointments.id],
+		name: "slot_bookings_appointment_id_appointments_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "slot_bookings_hospital_id_organization_id_fk"
+	}).onDelete("restrict"),
+	index("slot_bookings_appointment_idx").on(table.appointmentId),
+	index("slot_bookings_slot_date_idx").on(table.slotId, table.appointmentDate),
+]);
+
 export const medicineGroups = pgTable("medicine_groups", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	hospitalId: text("hospital_id").notNull(),

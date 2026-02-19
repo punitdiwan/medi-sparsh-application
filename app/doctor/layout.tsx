@@ -9,13 +9,15 @@ import { AuthProvider } from "@/context/AuthContext";
 import { getCurrentHospital } from "@/lib/tenant";
 import { getUserRole } from "@/db/queries";
 import { AbilityProvider } from "@/components/providers/AbilityProvider"
+import TrialNav from "@/Components/trialNav";
+import TrialExpiredScreen from "@/Components/TrialExpiredScreen";
 
 export const metadata: Metadata = {
   title: 'medisparsh',
   description: 'Basic dashboard for EMR'
 };
 
- type AppSession = {
+type AppSession = {
   permissionsData?: Record<string, string[]>;
   role?: string;
   user: {
@@ -43,7 +45,7 @@ export default async function DashboardLayout({
     redirect("/sign-in")
   }
 
-  const RData={
+  const RData = {
     "role": "receptionist",
     "permission": {
       "appointment": ["read"],
@@ -70,21 +72,36 @@ export default async function DashboardLayout({
     memberRole: sessionData?.role,
   };
   // const userData = null;
-
+  const trialExpired = isTrialExpired(hospital);
   return (
     <AbilityProvider permissions={RolePermission}>
       <AuthProvider initialUser={userData}>
-        <SidebarProvider>
+
+        {trialExpired ? (
+          <TrialExpiredScreen />
+        ) : (<SidebarProvider>
           <AppSidebar />
           <SidebarInset>
+            {hospital?.metadata?.is_trial && <TrialNav endDate={hospital?.metadata?.trial_ends_at}/>}
             <Navbar />
-
             {/* page main content */}
             {children}
             {/* page main content ends */}
           </SidebarInset>
-        </SidebarProvider>
+        </SidebarProvider>)}
       </AuthProvider>
-     </AbilityProvider>
+    </AbilityProvider>
   );
+}
+export function isTrialExpired(hospital: any) {
+  if (!hospital?.metadata?.is_trial || !hospital?.metadata?.trial_ends_at) {
+    return false;
+  }
+
+  const trialEnd = new Date(hospital.metadata.trial_ends_at);
+  trialEnd.setHours(23, 59, 59, 999);
+
+  const now = new Date();
+
+  return now > trialEnd;
 }
