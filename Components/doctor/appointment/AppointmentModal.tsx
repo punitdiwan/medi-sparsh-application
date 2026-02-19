@@ -120,30 +120,35 @@ export default function AppointmentModal({
 
   const formSchema = FACILITY_TYPE === "hospital" ? hospitalFormSchema : clinicFormSchema;
 
+  const hospitalDefaults = {
+    patientName: "",
+    mobile_number: "",
+    doctorUserId: "",
+    appointmentDate: "",
+    shiftId: "",
+    slotId: "",
+    reason: "",
+    notes: "",
+    patientId: "",
+    email: "",
+  };
+
+  const clinicDefaults = {
+    patientName: "",
+    mobile_number: "",
+    doctorUserId: "",
+    appointmentDate: "",
+    appointmentTime: "",
+    reason: "",
+    notes: "",
+    patientId: "",
+    email: "",
+    services: [],
+  };
+
   const form = useForm<AppointmentFormType>({
     resolver: zodResolver(formSchema),
-    defaultValues:
-      FACILITY_TYPE === "hospital"
-        ? {
-          patientName: "",
-          mobile_number: "",
-          doctorUserId: "",
-          appointmentDate: "",
-          shiftId: "",
-          slotId: "",
-          reason: "",
-          notes: "",
-        }
-        : {
-          patientName: "",
-          mobile_number: "",
-          doctorUserId: "",
-          appointmentDate: "",
-          appointmentTime: "",
-          reason: "",
-          notes: "",
-          services: [],
-        },
+    defaultValues: FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults,
   });
 
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -218,6 +223,9 @@ export default function AppointmentModal({
             services: appointment.services?.map((s: any) => s.id) || [],
           });
         }
+      } else {
+        // Reset to initial values in add mode
+        form.reset(FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults);
       }
     }
   }, [open, appointment]);
@@ -321,21 +329,6 @@ export default function AppointmentModal({
       if (FACILITY_TYPE === "hospital") {
         const hospitalValues = values as HospitalFormType;
 
-        const availabilityCheck = await checkSlotAvailability(
-          hospitalValues.slotId,
-          hospitalValues.appointmentDate
-        );
-
-        if (!availabilityCheck.success) {
-          toast.error(availabilityCheck.error || "Failed to check slot availability");
-          return;
-        }
-
-        if (!availabilityCheck.data.isAvailable) {
-          toast.error("This slot is no longer available. Please select another slot.");
-          return;
-        }
-
         const appointmentData = {
           facilityType: "hospital" as const,
           patientId: hospitalValues.patientId,
@@ -426,7 +419,7 @@ export default function AppointmentModal({
       open={open}
       onOpenChange={(val) => {
         if (!val) {
-          form.reset();
+          form.reset(FACILITY_TYPE === "hospital" ? hospitalDefaults : clinicDefaults);
           setDoctorSearch("");
           setShowDoctorDropdown(false);
           setServiceSearch("");
@@ -698,10 +691,8 @@ export default function AppointmentModal({
                                   <SelectItem
                                     key={slot.slotId}
                                     value={slot.slotId}
-                                    disabled={!slot.isAvailable}
                                   >
                                     {slot.timeFrom} - {slot.timeTo} (₹{slot.chargeAmount})
-                                    {!slot.isAvailable && " - Booked"}
                                   </SelectItem>
                                 ))
                               )}

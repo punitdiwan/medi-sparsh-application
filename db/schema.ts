@@ -418,7 +418,7 @@ export const modulePermissions = pgTable("module_permissions", {
 
 	moduleId: text("module_id").notNull(),
 	permissionId: text("permission_id").notNull(),
- 
+
 }, (table) => [
 	foreignKey({
 		columns: [table.moduleId],
@@ -701,8 +701,6 @@ export const slotBookings = pgTable("slot_bookings", {
 		foreignColumns: [organization.id],
 		name: "slot_bookings_hospital_id_organization_id_fk"
 	}).onDelete("restrict"),
-	// Unique constraint to prevent double-booking
-	unique("unique_active_slot_booking").on(table.slotId, table.appointmentDate, table.status),
 	index("slot_bookings_appointment_idx").on(table.appointmentId),
 	index("slot_bookings_slot_date_idx").on(table.slotId, table.appointmentDate),
 ]);
