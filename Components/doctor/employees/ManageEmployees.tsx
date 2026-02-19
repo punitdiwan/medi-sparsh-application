@@ -223,7 +223,7 @@ export default function SpecializationsManager() {
       </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-md z-[10000] border border-dialog bg-dialog-surface overflow-hidden rounded-lg p-0"
+        <DialogContent className="sm:max-w-md z-10000 border border-dialog bg-dialog-surface overflow-hidden rounded-lg p-0"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
