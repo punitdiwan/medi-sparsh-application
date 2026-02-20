@@ -98,7 +98,7 @@ export async function getBedManagementData() {
                 consultant: user.name,
             })
             .from(beds)
-            .leftJoin(ipdAdmission, and(eq(beds.id, ipdAdmission.bedId), eq(ipdAdmission.isDeleted, false)))
+            .leftJoin(ipdAdmission, and(eq(beds.id, ipdAdmission.bedId), eq(ipdAdmission.isDeleted, false) ,eq(ipdAdmission.dischargeStatus, "pending")))
             .leftJoin(patients, eq(ipdAdmission.patientId, patients.id))
             .leftJoin(doctors, eq(ipdAdmission.doctorId, doctors.id))
             .leftJoin(staff, eq(doctors.staffId, staff.id))
