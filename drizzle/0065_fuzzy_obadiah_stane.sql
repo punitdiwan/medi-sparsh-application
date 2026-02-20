@@ -1,0 +1,1 @@
+ALTER TABLE "master_permissions" RENAME COLUMN "action" TO "actions";

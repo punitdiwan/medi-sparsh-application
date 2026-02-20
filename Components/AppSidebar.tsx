@@ -52,12 +52,14 @@ import { useSession } from "@/lib/auth-client";
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAbility } from "@/components/providers/AbilityProvider";
+import { SIDEBAR_CONFIG, AppMode } from '@/lib/constants/sidebar.config';
 
 type SidebarChildItem = {
   title: string;
   url: string;
   subject?: string;
   action?: string;
+  moduleCode?: string;
 };
 
 type SidebarItem = {
@@ -65,91 +67,58 @@ type SidebarItem = {
   url?: string;
   subject?: string;
   action?: string;
+  moduleCode?: string;
   icon: React.ElementType;
   children?: SidebarChildItem[];
 };
 
-const items: SidebarItem[] = [
-  { title: 'Dashboard', url: '/doctor', icon: Home },
-  { title: 'Patients', url: '/doctor/patient', icon: User, subject: 'patient', action: 'read', },
-  { title: 'Appointment', url: '/doctor/appointment', icon: Calendar, subject: 'appointment', action: 'read', },
-  { title: 'IPD-In Patient', url: '/doctor/IPD', icon: Bed, subject: 'ipd', action: 'read' },
-  { title: 'Prescription', url: '/doctor/prescription', icon: NotebookPen, subject: 'prescription', action: 'read', },
-  {
-    title: 'Pharmacy',
-    icon: BriefcaseMedical,
-    children: [
-      { title: 'Billing', url: '/doctor/pharmacy', subject: 'billing', action: 'read', },
-      { title: 'Medicines', url: '/doctor/pharmacy/medicine', subject: 'pharmacyMedicine', action: 'read', },
-      { title: 'Stock', url: '/doctor/pharmacy/purchase', subject: 'stock', action: 'read', },
-    ],
-  },
-  {
-    title: 'Pathology',
-    icon: FlaskConical,
-    children: [
-      { title: 'Billing', url: '/doctor/pathology', subject: 'PathologyBilling', action: 'read', },
-      { title: 'Payments', url: '/doctor/pathology/payments', subject: 'PathologyBilling', action: 'read', },
-      { title: 'Pathology Test', url: '/doctor/pathology/pathologyTest', subject: 'PathologyTest', action: 'read', },
-    ],
-  },
-  {
-    title: 'Radiology',
-    icon: Microscope,
-    children: [
-      { title: 'Billing', url: '/doctor/radiology', subject: 'RadiologyBilling', action: 'read', },
-      { title: 'Payments', url: '/doctor/radiology/RadiologyPayments', subject: 'RadiologyPayments', action: 'read', },
-      { title: 'Radiology Test', url: '/doctor/radiology/radiologyTest', subject: 'RadiologyTest', action: 'read', },
-    ],
-  },
-  {
-    title: 'Ambulance',
-    icon: Ambulance,
-    children: [
-      { title: 'Billing', url: '/doctor/ambulance', subject: 'ambulance', action: 'read', },
-      { title: 'Ambulance Management', url: '/doctor/ambulance/ambulanceManagement', subject: 'ambulanceManagement', action: 'read', },
-    ],
-  },
-  {
-    title: 'Reports', url: '/doctor/reports', icon: ClipboardPlus, subject: 'reports',
-    action: 'read',
-  },
-  {
-    title: 'Services', url: '/doctor/services', icon: ServerCog, subject: 'services',
-    action: 'read',
-  },
-  {
-    title: 'Settings',
-    icon: Settings,
-    children: [
-      { title: 'Members', url: '/doctor/employees', subject: 'members', action: 'read', },
-      { title: 'Hospital Charges', url: '/doctor/settings/hospitalCharges', subject: 'hospitalCharger', action: 'read', },
-      { title: 'Bed', url: '/doctor/settings/Bed', subject: 'bed', action: 'read', },
-      { title: 'Shift Management', url: '/doctor/settings/shifts', subject: 'doctorShift', action: 'read', },
-      { title: 'Symptoms', url: '/doctor/settings/symptom', subject: 'symptoms', action: 'read' },
-      { title: 'Vital', url: '/doctor/settings/vital', subject: 'vitals', action: 'read', },
-      { title: 'Operations', url: '/doctor/settings/operations', subject: 'operation', action: 'read' },
-      { title: 'Medicine Record', url: '/doctor/settings/medicineRecord', subject: 'medicineRedord', action: 'read', },
-      { title: 'Pathology', url: '/doctor/settings/pathology', subject: 'pathologySettings', action: 'read' },
-      { title: 'Radiology', url: '/doctor/settings/radiology', subject: 'radiologySettings', action: 'read' },
-      { title: 'Stats', url: '/doctor/settings/stats', subject: 'stats', action: 'read', },
-      { title: 'Payments History', url: '/doctor/billing', subject: 'payment', action: 'read', },
-      { title: 'App Settings', url: '/doctor/settings/config', subject: 'appSetting', action: 'read', },
-      { title: 'Roles', url: '/doctor/settings/roles', subject: 'role', action: 'read', },
-    ],
-  },
-];
 
-export function AppSidebar() {
+export function AppSidebar({ mode, moduleData }: { mode: AppMode | undefined, moduleData?: any }) {
   const pathname = usePathname();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
   const { user } = useAuth();
+  const items = SIDEBAR_CONFIG[mode || "hospital"] || [];
+  
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
-  const [staffData, setStaffData] = useState<any>();
 
   const ability = useAbility();
+
+  const modulesArray = Array.isArray(moduleData?.data)
+    ? moduleData.data
+    : [];
+
+  const groupedModules = modulesArray.reduce((acc: any, curr: any) => {
+    const key = curr.masterModuleCode;
+
+    if (!acc[key]) {
+      acc[key] = {
+        moduleName: curr.moduleName,
+        masterModuleCode: curr.masterModuleCode,
+        permissions: [],
+      };
+    }
+
+    if (curr.permissionSubject) {
+      acc[key].permissions.push(curr.permissionSubject);
+    }
+
+    return acc;
+  }, {});
+
+
+
+  const hasModulePermission = (moduleCode?: string) => {
+    if (!moduleCode) return true;
+
+    const module = groupedModules?.[moduleCode];
+
+    if (!module) return false; // no permissions found
+
+    return module.permissions.length > 0;
+  };
+
 
   const canAccess = (
     subject?: string,
@@ -158,6 +127,7 @@ export function AppSidebar() {
     if (!subject) return true; // dashboard, public items
     return ability.can(action, subject);
   };
+
   const filterItemsByPermission = (items: SidebarItem[]) => {
     return items
       .map((item) => {
@@ -250,18 +220,37 @@ export function AppSidebar() {
               <SidebarMenu>
                 {filterItemsByPermission(items)
                   .filter((item) => {
-                    // parent permission
+
+                    // 🔹 Parent module check
+                    if (!hasModulePermission(item.moduleCode)) return false;
+
+                    // 🔹 Parent ability check
                     if (!canAccess(item.subject, item.action)) return false;
 
-                    // agar children hain to unko bhi filter karo
                     if (item.children) {
-                      item.children = item.children.filter((child) =>
-                        canAccess(child.subject, child.action)
-                      );
-                    }
 
-                    // agar children empty ho gaye → parent hide
-                    if (item.children && item.children.length === 0) return false;
+                      // 🔹 Child level filtering (module + ability)
+                      const filteredChildren = item.children.filter((child) => {
+
+                        // Child module check
+                        if (child.moduleCode && !hasModulePermission(child.moduleCode)) {
+                          return false;
+                        }
+
+                        // Child ability check
+                        if (!canAccess(child.subject, child.action)) {
+                          return false;
+                        }
+
+                        return true;
+                      });
+
+                      // Agar koi child nahi bacha → parent hide
+                      if (filteredChildren.length === 0) return false;
+
+                      // Update children safely
+                      item.children = filteredChildren;
+                    }
 
                     return true;
                   })
@@ -493,3 +482,4 @@ export function AppSidebar() {
     </TooltipProvider>
   );
 }
+

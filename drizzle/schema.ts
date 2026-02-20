@@ -254,19 +254,59 @@ export const medicineCategories = pgTable("medicine_categories", {
 	}).onDelete("restrict"),
 ]);
 
+export const masterModules = pgTable("master_modules", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	name: text().notNull(),
+	code: text().notNull().unique(),
+	isChargesModule: boolean("is_charges_module").default(false).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+});
+
 export const modules = pgTable("modules", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),
 	name: text().notNull(),
 	hospitalId: text("hospital_id").notNull(),
+	moduleId: text("module_id"),
 	isDeleted: boolean("is_deleted").default(false),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	foreignKey({
 		columns: [table.hospitalId],
 		foreignColumns: [organization.id],
 		name: "modules_hospital_id_organization_id_fk"
-	}).onDelete("cascade"),
+	}).onDelete("restrict"),
+	foreignKey({
+		columns: [table.moduleId],
+		foreignColumns: [masterModules.id],
+		name: "modules_module_id_master_modules_id_fk"
+	}).onDelete("restrict"),
+]);
+
+export const masterPermissions = pgTable("master_permissions", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	subject: text().notNull(),
+	actions: text("actions").array().notNull(),
+});
+
+export const modulePermissions = pgTable("module_permissions", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+
+	moduleId: text("module_id").notNull(),
+	permissionId: text("permission_id").notNull(),
+
+}, (table) => [
+	foreignKey({
+		columns: [table.moduleId],
+		foreignColumns: [masterModules.id],
+	}).onDelete("restrict"),
+
+	foreignKey({
+		columns: [table.permissionId],
+		foreignColumns: [masterPermissions.id],
+	}).onDelete("restrict"),
+	unique().on(table.moduleId, table.permissionId),
 ]);
 
 export const patients = pgTable("patients", {
@@ -361,6 +401,35 @@ export const doctorSlots = pgTable("doctor_slots", {
 		foreignColumns: [shifts.id],
 		name: "doctor_slots_shift_id_shifts_id_fk"
 	}).onDelete("restrict"),
+]);
+
+export const slotBookings = pgTable("slot_bookings", {
+	id: text().default(useUUIDv4).primaryKey().notNull(),
+	hospitalId: text("hospital_id").notNull(),
+	slotId: text("slot_id").notNull(),
+	appointmentId: text("appointment_id").notNull(),
+	appointmentDate: date("appointment_date").notNull(),
+	status: text().default('active').notNull(), // active, cancelled
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+		columns: [table.slotId],
+		foreignColumns: [doctorSlots.id],
+		name: "slot_bookings_slot_id_doctor_slots_id_fk"
+	}).onDelete("restrict"),
+	foreignKey({
+		columns: [table.appointmentId],
+		foreignColumns: [appointments.id],
+		name: "slot_bookings_appointment_id_appointments_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.hospitalId],
+		foreignColumns: [organization.id],
+		name: "slot_bookings_hospital_id_organization_id_fk"
+	}).onDelete("restrict"),
+	index("slot_bookings_appointment_idx").on(table.appointmentId),
+	index("slot_bookings_slot_date_idx").on(table.slotId, table.appointmentDate),
 ]);
 
 export const prescriptions = pgTable("prescriptions", {

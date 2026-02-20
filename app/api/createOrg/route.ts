@@ -4,7 +4,9 @@ import { auth } from "@/lib/auth";
 import {
   user,
   organization,
-  member
+  member,
+  masterModules,
+  modules
 } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -20,6 +22,7 @@ interface CreateOrgRequest {
     phone?: string;
     email?: string;
     subdomain?: string;
+    orgMode?: string;
     [key: string]: any;
   };
 }
@@ -60,7 +63,8 @@ interface CreateOrgResponse {
  *     "address": "123 Medical Street, City",
  *     "phone": "+91-1234567890",
  *     "email": "contact@medisparsh.com",
- *     "subdomain": "medisparsh.com"
+ *     "subdomain": "medisparsh.com",
+ *     "orgMode":"hospital"
  *   }
  * }
  */
@@ -92,6 +96,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
           success: false,
           message: "Missing required fields",
           error: "userName, email, password, orgName, and orgSlug are required",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!body.metadata?.orgMode) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Organization mode is required",
+          error: "orgMode must be 'hospital' or 'clinic'",
         },
         { status: 400 }
       );
@@ -198,6 +213,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateOrg
         }
 
         createdOrganization = org;
+
+        const orgMode = body.metadata?.orgMode;
+
+        if (orgMode === "hospital") {
+          const allMasterModules = await tx
+            .select()
+            .from(masterModules);
+
+          if (allMasterModules.length > 0) {
+
+            const moduleInserts = allMasterModules.map((m) => ({
+              name: m.name,
+              hospitalId: createdOrganization.id,
+              moduleId: m.id,
+            }));
+
+            await tx.insert(modules).values(moduleInserts);
+          }
+        }
 
         return {
           success: true,

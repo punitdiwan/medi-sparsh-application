@@ -1,0 +1,1 @@
+ALTER TABLE "slot_bookings" DROP CONSTRAINT "unique_active_slot_booking";

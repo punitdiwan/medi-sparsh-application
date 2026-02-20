@@ -435,6 +435,55 @@
       "when": 1770293972984,
       "tag": "0061_third_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1770972974617,
+      "tag": "0062_true_big_bertha",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1771051864509,
+      "tag": "0063_glossy_madame_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1771246971960,
+      "tag": "0064_normal_fenris",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1771247240845,
+      "tag": "0065_fuzzy_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1771313329756,
+      "tag": "0066_redundant_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1771324817174,
+      "tag": "0067_happy_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1771413267661,
+      "tag": "0068_flaky_paibok",
+      "breakpoints": true
     }
   ]
 }

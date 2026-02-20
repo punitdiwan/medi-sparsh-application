@@ -4,21 +4,21 @@ import { getCurrentUser } from "@/lib/utils/auth-helpers";
 import { createTransaction, getTransactionsByHospital } from "@/db/queries";
 
 export async function GET() {
-    try {
-        const hospital = await getCurrentHospital();
-        const transactions = await getTransactionsByHospital(hospital.hospitalId);
+  try {
+    const hospital = await getCurrentHospital();
+    const transactions = await getTransactionsByHospital(hospital.hospitalId);
 
-        return NextResponse.json(
-            { success: true, data: transactions },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error("GET Error:", error);
-        return NextResponse.json(
-            { success: false, error: "Failed to fetch transactions" },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json(
+      { success: true, data: transactions },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch transactions" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -36,12 +36,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const services = appointment.services || [];
-    const totalAmount = services.reduce((sum: any, service: any) => {
-      const amt = Number(service.amount || 0);
-      return sum + amt;
-    }, 0);
+    const services = appointment.services;
 
+    let totalAmount = 0;
+
+    if (Array.isArray(services)) {
+      totalAmount = services.reduce((sum, service) => {
+        const amt = Number(service?.amount || 0);
+        return sum + amt;
+      }, 0);
+    } else if (services && typeof services === "object") {
+      totalAmount = Number((services as any).doctorFees || 0);
+    } else {
+      totalAmount = 0;
+    }
 
     const transaction = await createTransaction({
       hospitalId: appointment.hospitalId,
