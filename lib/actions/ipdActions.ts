@@ -123,6 +123,7 @@ export async function getIPDAdmissions() {
             .where(
                 and(
                     eq(ipdAdmission.hospitalId, org.id),
+                    eq(ipdAdmission.dischargeStatus, "pending"),
                     eq(patients.isAdmitted, true)
                 )
             );

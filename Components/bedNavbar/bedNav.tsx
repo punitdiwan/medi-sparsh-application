@@ -92,7 +92,7 @@ export function BedManagementOverlay({
                 {/* content */}
                 <div className="relative w-full bg-overview-muted isolate rounded-xl">
                     {/* header */}
-                    <div className="sticky top-0 z-[99999] bg-dialog-header border-b border-dialog rounded-t-xl shadow-md">
+                    <div className="sticky top-0 z-99999 bg-dialog-header border-b border-dialog rounded-t-xl shadow-md">
                         <div className="flex items-center justify-between p-4">
                             <h2 className="text-2xl font-bold">Bed Status</h2>
                             {/* Stats */}
