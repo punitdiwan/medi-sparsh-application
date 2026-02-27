@@ -50,7 +50,7 @@ type FormData = {
 };
 
 const patientSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters").max(30, "Name must be at most 30 characters"),
   mobileNumber: z.string().refine((val) => {
     const cleaned = val.replace(/^\+91/, "").replace(/[\s-]/g, "");
     return /^[6-9]\d{9}$/.test(cleaned);
@@ -400,7 +400,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" max="9999-12-31" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -567,7 +567,7 @@ export default function PatientRegistrationForm({ onSuccess, onCancel, onOtpRequ
             </Button>
 
             <Button type="submit"
-            className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90 gap-2">
+              className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90 gap-2">
               Add Patient
             </Button>
           </div>

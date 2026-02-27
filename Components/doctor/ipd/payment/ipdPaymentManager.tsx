@@ -9,7 +9,11 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { PlusCircle, Printer, Pencil, Trash2, CreditCard } from "lucide-react";
 import AddIPDPaymentModal, { PaymentData } from "./ipdPaymentMode";
 import { getIPDPayments, deleteIPDPayment } from "@/app/actions/ipdPaymentActions";
+import { getIPDAdmissionDetails } from "@/lib/actions/ipdActions";
 import { toast } from "sonner";
+import { pdf } from "@react-pdf/renderer";
+
+import { useAuth } from "@/context/AuthContext";
 
 interface PaymentRecord {
   id: string;
@@ -20,10 +24,12 @@ interface PaymentRecord {
   paymentAmount: string; // From DB
   paymentDate: Date; // From DB
   paymentNote: string | null; // From DB
+  isDeleted: boolean;
 }
 
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { useDischarge } from "../DischargeContext";
+import { IpdPaymentPdf } from "@/Components/pdf/IpdPaymentPdf";
 
 export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
   const { isDischarged } = useDischarge();
@@ -31,6 +37,9 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<PaymentRecord | null>(null);
+  const { user } = useAuth();
+  const [ipdData, setIpdData] = useState<any>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   // Delete Confirmation State
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -47,14 +56,23 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
         note: p.paymentNote || "",
         paymentAmount: p.paymentAmount,
         paymentDate: p.paymentDate,
-        paymentNote: p.paymentNote
+        paymentNote: p.paymentNote,
+        isDeleted: p.isDeleted || false
       }));
       setPayments(mappedPayments);
     }
   };
 
+  const fetchIpdDetails = async () => {
+    const res = await getIPDAdmissionDetails(ipdId);
+    if (res.data) {
+      setIpdData(res.data);
+    }
+  };
+
   useEffect(() => {
     fetchPayments();
+    fetchIpdDetails();
   }, [ipdId, modalOpen]);
 
   const filtered = useMemo(() => {
@@ -90,8 +108,78 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
     setIsDeleteConfirmOpen(false);
   };
 
-  const handlePrint = (payment: PaymentRecord) => {
-    alert(`Print payment ${payment.id}`);
+  const handlePrint = async (payment: PaymentRecord) => {
+    if (!user?.hospital || !ipdData) {
+      toast.error("Hospital or IPD information missing");
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const pdfDoc = (
+        <IpdPaymentPdf
+          title="Payment Receipt"
+          patientName={ipdData.patientName}
+          ipdNo={ipdId}
+          phone={ipdData.phone || ""}
+          payments={[payment]}
+          organization={{
+            name: user.hospital.name,
+            metadata: user.hospital.metadata
+          }}
+          orgModeCheck={user.hospital.metadata?.orgMode === "hospital"}
+        />
+      );
+
+      const blob = await pdf(pdfDoc).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
+  const handlePrintAll = async () => {
+    if (!user?.hospital || !ipdData) {
+      toast.error("Hospital or IPD information missing");
+      return;
+    }
+
+    const nonDeletedPayments = filtered.filter(p => !p.isDeleted);
+    if (nonDeletedPayments.length === 0) {
+      toast.error("No active transactions to print");
+      return;
+    }
+
+    try {
+      setIsPrinting(true);
+      const pdfDoc = (
+        <IpdPaymentPdf
+          title="Consolidated Payment Report"
+          patientName={ipdData.patientName}
+          ipdNo={ipdId}
+          phone={ipdData.phone || ""}
+          payments={nonDeletedPayments}
+          organization={{
+            name: user.hospital.name,
+            metadata: user.hospital.metadata
+          }}
+          orgModeCheck={user.hospital.metadata?.orgMode === "hospital"}
+        />
+      );
+
+      const blob = await pdf(pdfDoc).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF");
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   return (
@@ -111,6 +199,14 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
               onChange={e => setSearch(e.target.value)}
               className="sm:w-72"
             />
+            <Button
+              variant="outline"
+              disabled={isPrinting || filtered.length === 0}
+              onClick={handlePrintAll}
+              className="flex items-center gap-2 border-dialog-primary text-dialog hover:bg-muted"
+            >
+              <Printer className="h-4 w-4" /> Print All
+            </Button>
             {!isDischarged && (
               <Button
                 onClick={() => { setModalOpen(true); setEditPayment(null); }}
@@ -140,8 +236,13 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
             <TableBody>
               {filtered.length ? (
                 filtered.map(p => (
-                  <TableRow key={p.id} className="odd:bg-muted/40 even:bg-transparent hover:bg-muted/60 transition-colors ">
-                    <TableCell className="font-medium text-gray-800 dark:text-white">{p.id.substring(0, 8)}...</TableCell>
+                  <TableRow key={p.id} className={`odd:bg-muted/40 even:bg-transparent transition-colors ${p.isDeleted ? 'opacity-60 bg-red-50/10 grayscale-[0.2]' : 'hover:bg-muted/60'}`}>
+                    <TableCell className="font-medium text-gray-800 dark:text-white">
+                      <div className="flex flex-col gap-1">
+                        <span>{p.id.substring(0, 8)}...</span>
+                        {p.isDeleted && <span className="text-[10px] font-bold text-red-500 uppercase">Deleted</span>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-dialog-muted">{new Date(p.date).toLocaleDateString()}</TableCell>
                     <TableCell className="text-dialog-muted">{p.note || "—"}</TableCell>
                     <TableCell className="text-dialog-muted">{p.paymentMode}</TableCell>
@@ -149,14 +250,16 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
                     <TableCell className="text-right">
                       <TooltipProvider>
                         <div className="flex gap-2 justify-center">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="icon" variant="outline" onClick={() => handlePrint(p)}>
-                                <Printer className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Print</TooltipContent>
-                          </Tooltip>
+                          {!p.isDeleted && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="icon" variant="outline" onClick={() => handlePrint(p)}>
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Print</TooltipContent>
+                            </Tooltip>
+                          )}
 
                           {/* <Tooltip>
                             <TooltipTrigger asChild>
@@ -167,7 +270,7 @@ export default function IPDPaymentManagerPage({ ipdId }: { ipdId: string }) {
                             <TooltipContent>Edit</TooltipContent>
                           </Tooltip> */}
 
-                          {!isDischarged && (
+                          {!isDischarged && !p.isDeleted && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span>

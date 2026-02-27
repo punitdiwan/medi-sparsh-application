@@ -271,13 +271,13 @@ export default function IPDChargesManagerPage() {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
+                {/* <DropdownMenuItem
                   onClick={() => onPrint(row.original)}
                   className="cursor-pointer"
                 >
                   <Printer className="mr-2 h-4 w-4" />
                   Print
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
 
                 {!isDischarged && (
                   <>

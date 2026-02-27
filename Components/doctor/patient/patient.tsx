@@ -14,6 +14,13 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/model/ConfirmationModel";
 import { PaginationControl } from "@/components/pagination";
 import { FieldSelectorDropdown } from "@/components/FieldSelectorDropdown";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FaFileDownload } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSidebar } from "@/components/ui/sidebar";
 
 import PatientRegistrationForm from "@/Components/forms/PatientRegistrationFrom";
 import { InputOTPForm } from "@/components/model/Otpmodel";
@@ -22,9 +29,8 @@ import { getShortId } from "@/utils/getShortId";
 import AddPatientDialog from "./AddPatientDialog";
 import ExcelUploadModal from "@/Components/HospitalExcel";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// import { AbilityContext } from "@/lib/casl/AbilityContext";
 import { useAbility } from "@/components/providers/AbilityProvider";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 type Patient = {
   id: string;
@@ -53,8 +59,11 @@ function PatientPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [open, setOpen] = useState(false);
-
   const ability = useAbility();
+  const { state } = useSidebar();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+  const [customRange, setCustomRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
 
   const [visibleFields, setVisibleFields] = useState<string[]>([
     "name",
@@ -103,32 +112,33 @@ function PatientPage() {
 
 
   const filteredData = useMemo(() => {
+    const today = new Date();
+    const startOfWeek = new Date();
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
     return patients.filter((item) => {
+      const date = new Date(item.createdAt);
+
       const matchesSearch = filters.search
         ? item.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
         item.mobileNumber?.toString().includes(filters.search) ||
         item.id?.toString().includes(filters.search)
         : true;
 
-      const matchesDate = filters.dateCheckIn
-        ? new Date(item.createdAt).toLocaleDateString("en-CA") === filters.dateCheckIn
-        : true;
-
-      const matchesFrequency = (() => {
-        if (!filters.frequency) return true;
-
-        const today = new Date();
-        const checkInDate = new Date(item.createdAt);
-        const diffDays =
-          (today.getTime() - checkInDate.getTime()) /
-          (1000 * 60 * 60 * 24);
-
-        if (filters.frequency === "Daily") return diffDays <= 1;
-        if (filters.frequency === "Weekly") return diffDays <= 7;
-        if (filters.frequency === "Monthly") return diffDays <= 30;
-
-        return true;
-      })();
+      let matchesDate = true;
+      if (activeTab === "all") matchesDate = true;
+      else if (activeTab === "today") matchesDate = date.toDateString() === today.toDateString();
+      else if (activeTab === "week") matchesDate = date >= startOfWeek && date <= today;
+      else if (activeTab === "month") matchesDate = date >= startOfMonth && date <= today;
+      else if (activeTab === "custom") {
+        if (!customRange.from || !customRange.to) matchesDate = true; // Show all if range not set? or none? Billing shows none.
+        else {
+          const from = new Date(customRange.from);
+          const to = new Date(customRange.to);
+          matchesDate = date >= from && date <= to;
+        }
+      }
 
       const matchesDeleted =
         filters.isDeleted === "true"
@@ -137,9 +147,53 @@ function PatientPage() {
             ? item.isDeleted !== true
             : item.isDeleted !== true;
 
-      return matchesSearch && matchesDate && matchesFrequency && matchesDeleted;
+      return matchesSearch && matchesDate && matchesDeleted;
     });
-  }, [filters, patients]);
+  }, [filters, patients, activeTab, customRange]);
+
+  const exportBulk = () => {
+    const doc = new jsPDF();
+    const hospitalName = user?.hospital?.name ?? "Hospital";
+    const hospitalAddress = user?.hospital?.metadata?.address ?? "";
+    const hospitalPhone = user?.hospital?.metadata?.phone ?? "";
+    const hospitalEmail = user?.hospital?.metadata?.email ?? "";
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(hospitalName, 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Address: ${hospitalAddress}`, 14, 27);
+    doc.text(`Phone: ${hospitalPhone}`, 14, 32);
+    doc.text(`Email: ${hospitalEmail}`, 14, 37);
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${activeTab.toUpperCase()} Patients Report`, 14, 45);
+
+    const tableColumn = ["ID", "Name", "Number", "Gender", "City", "Date"];
+    const tableRows = filteredData.map((p) => [
+      getShortId(p.id),
+      p.name,
+      p.mobileNumber,
+      p.gender,
+      p.city,
+      new Date(p.createdAt).toLocaleDateString(),
+    ]);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [tableColumn],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: [30, 144, 255], textColor: 255, fontStyle: "bold", halign: "center" },
+      bodyStyles: { fontSize: 10, valign: "middle" },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    doc.save(`patients_${activeTab}.pdf`);
+  };
 
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -280,8 +334,8 @@ function PatientPage() {
     );
 
   return (
-    <div className="bg-background text-foreground min-h-screen p-6">
-      <Card className="bg-Module-header text-white shadow-lg mb-6">
+    <div className={`bg-background text-foreground min-h-screen p-6 transition-all duration-200 ${state === "collapsed" ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-280px)]"}`}>
+      <Card className="bg-Module-header text-white shadow-lg p-2 mb-2">
         <CardHeader className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
             <CardTitle className="text-3xl flex items-center gap-2">
@@ -300,7 +354,7 @@ function PatientPage() {
             <FieldSelectorDropdown
               columns={allColumns.filter(col => col.id !== "action") as TypedColumn<Patient>[]}
               visibleFields={visibleFields}
-              onToggle={(key, checked) => {
+              onToggle={(key: string, checked: boolean) => {
                 setVisibleFields((prev) =>
                   checked ? [...prev, key] : prev.filter((f) => f !== key)
                 );
@@ -329,31 +383,60 @@ function PatientPage() {
           </div>
         </CardHeader>
       </Card>
-      <div className="mt-2">
-        <FilterBar fields={patientFilters} onFilter={setFilters} />
-      </div>
-      <ExcelUploadModal
-        open={open}
-        setOpen={setOpen}
-        entity="patient"
-      />
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as typeof activeTab); setCurrentPage(1); }}>
+        <div className="flex justify-between items-center bg-background p-2 rounded-lg shadow-sm">
+          <TabsList className="">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="today">Today</TabsTrigger>
+            <TabsTrigger value="week">This Week</TabsTrigger>
+            <TabsTrigger value="month">This Month</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
+          </TabsList>
 
-      <div className="mt-6 text-sm ">
+          <div className="flex gap-4 items-center">
+            {activeTab === "custom" && (
+              <div className="flex gap-2">
+                <Input type="date" className="h-9 w-40" value={customRange.from ?? ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomRange(p => ({ ...p, from: e.target.value }))} />
+                <Input type="date" className="h-9 w-40" value={customRange.to ?? ""} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomRange(p => ({ ...p, to: e.target.value }))} />
+              </div>
+            )}
+            {activeTab !== "all" && (
+              <Button onClick={exportBulk} className="flex gap-2">
+                <FaFileDownload /> Download PDF
+              </Button>
+            )}
+          </div>
+        </div>
 
-        <Table data={paginatedData} columns={columns} fallback={"No patient found"} />
-
-        <PaginationControl
-          currentPage={currentPage}
-          totalPages={totalPages}
-          rowsPerPage={rowsPerPage}
-          onPageChange={setCurrentPage}
-          onRowsPerPageChange={(val) => {
-            setRowsPerPage(val);
-            setCurrentPage(1);
-          }}
+        <ExcelUploadModal
+          open={open}
+          setOpen={setOpen}
+          entity="patient"
         />
 
-      </div>
+        <div>
+          <FilterBar fields={patientFilters} onFilter={setFilters} />
+        </div>
+
+        {["all", "today", "week", "month", "custom"].map((tab) => (
+          <TabsContent key={tab} value={tab} className="mt-2">
+            <div className="text-sm">
+              <Table data={paginatedData} columns={columns} fallback={"No patient found"} />
+
+              <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                rowsPerPage={rowsPerPage}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={(val) => {
+                  setRowsPerPage(val);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
 
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { ipdPayments, ipdCharges, ipdAdmission } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type PaymentData = {
@@ -46,7 +46,12 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
                 paymentMode: ipdPayments.paymentMode,
             })
             .from(ipdPayments)
-            .where(eq(ipdPayments.ipdAdmissionId, ipdAdmissionId));
+            .where(
+                and(
+                    eq(ipdPayments.ipdAdmissionId, ipdAdmissionId),
+                    eq(ipdPayments.isDeleted, false)
+                )
+            );
 
         let totalPaid = 0;
         let totalCreditAdded = 0;
@@ -55,23 +60,23 @@ export async function getIPDPaymentSummary(ipdAdmissionId: string) {
         payments.forEach((payment) => {
             const amount = Number(payment.amount);
             if (payment.toCredit) {
-              totalCreditAdded += amount;
-              return;
+                totalCreditAdded += amount;
+                return;
             }
 
             if (payment.paymentMode === "Credit") {
-              usedCredit += amount;
-            totalPaid += amount;
-            return;
-          }
+                usedCredit += amount;
+                totalPaid += amount;
+                return;
+            }
 
-          totalPaid += amount;
+            totalPaid += amount;
         });
 
-    const IpdCreditLimit = totalCreditAdded - usedCredit;
+        const IpdCreditLimit = totalCreditAdded - usedCredit;
 
-    const payable =
-      totalCharges > totalPaid ? totalCharges - totalPaid : 0;
+        const payable =
+            totalCharges > totalPaid ? totalCharges - totalPaid : 0;
 
         return {
             success: true,
@@ -147,7 +152,9 @@ export async function getIPDPayments(ipdAdmissionId: string) {
 
 export async function deleteIPDPayment(id: string, ipdAdmissionId: string) {
     try {
-        await db.delete(ipdPayments).where(eq(ipdPayments.id, id));
+        await db.update(ipdPayments)
+            .set({ isDeleted: true })
+            .where(eq(ipdPayments.id, id));
         revalidatePath(`/doctor/IPD/ipdDetails/${ipdAdmissionId}/ipd/payments`);
         return { success: true };
     } catch (error) {

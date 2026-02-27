@@ -87,14 +87,14 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-4 pr-3">
-        <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
+        {user?.hospital?.metadata?.orgMode === "hospital" && <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
           <FaBed size={19} />
 
-        </div>
-        <BedManagementOverlay
+        </div>}
+        {user?.hospital?.metadata?.orgMode === "hospital" && <BedManagementOverlay
           open={open}
           onClose={() => setOpen(false)}
-        />
+        />}
 
         <ModeToggle />
 

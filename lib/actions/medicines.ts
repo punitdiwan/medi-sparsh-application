@@ -55,6 +55,30 @@ export async function getMedicines() {
   }
 }
 
+// Get all medicine groups
+export async function getMedicineGroups() {
+  try {
+    const org = await getActiveOrganization();
+    if (!org) {
+      return { error: "Unauthorized" };
+    }
+
+    const data = await db
+      .select({
+        id: medicineGroups.id,
+        name: medicineGroups.name,
+      })
+      .from(medicineGroups)
+      .where(eq(medicineGroups.hospitalId, org.id))
+      .orderBy(desc(medicineGroups.createdAt));
+
+    return { data };
+  } catch (error) {
+    console.error("Error fetching medicine groups:", error);
+    return { error: "Failed to fetch medicine groups" };
+  }
+}
+
 // Get medicine by ID
 export async function getMedicineById(id: string) {
   try {
