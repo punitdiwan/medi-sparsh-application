@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import MaskedInput from "@/components/InputMask";
 import { useAuth } from "@/context/AuthContext";
 import AdminProfileUI from "./adminProfile/page";
+import { Camera, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 interface StaffData {
     id: string;
@@ -68,14 +70,15 @@ export default function DoctorProfile() {
     const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const roleLabel =
-    user?.memberRole === "owner" ? "Doctor" : user?.memberRole || "Dcotor";
+        user?.memberRole === "owner" ? "Doctor" : user?.memberRole || "Doctor";
     const hospital = user?.hospital;
     const canEditClinic = user?.memberRole === "owner";
-    
+
     // Initialize avatar from user image or placeholder
     useEffect(() => {
         if (profileData?.user?.image) {
@@ -121,13 +124,52 @@ export default function DoctorProfile() {
     const { data: session } = useSession();
 
     const handleAvatarClick = () => fileInputRef.current?.click();
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = () =>
-                reader.result && setAvatarUrl(reader.result as string);
-            reader.readAsDataURL(file);
+            try {
+                setUploading(true);
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const endpoint = showClinicDetails ? "/api/upload/clinic-logo" : "/api/upload/profile-image";
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const newImageUrl = result.data.imageUrl;
+
+                    if (showClinicDetails) {
+                        // For clinic logo, we might need a refresh or manual state update if hospital is in user object
+                        toast.success("Clinic logo updated successfully");
+                        // Ideally we update the hospital object in user context if possible
+                    } else {
+                        setAvatarUrl(newImageUrl);
+                        // Update AuthContext to reflect changes in Header immediately
+                        if (user) {
+                            setUser({
+                                ...user,
+                                userData: {
+                                    ...user.userData,
+                                    image: newImageUrl
+                                }
+                            });
+                        }
+                        toast.success("Profile photo updated successfully");
+                    }
+                } else {
+                    toast.error(result.error || "Failed to upload image");
+                }
+            } catch (error) {
+                console.error("Error uploading image:", error);
+                toast.error("An error occurred while uploading the image");
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
@@ -284,7 +326,7 @@ export default function DoctorProfile() {
     }
     if (!user) return <div>Loading...</div>;
 
-    if ((user?.memberRole === "owner" || user?.memberRole === "admin")&&(!profileData || !profileData.doctor)) {
+    if ((user?.memberRole === "owner" || user?.memberRole === "admin") && (!profileData || !profileData.doctor)) {
         const userData: UserData = {
             id: user?.userData?.id ?? "",
             name: user?.userData?.name ?? "",
@@ -311,18 +353,33 @@ export default function DoctorProfile() {
         <div className="p-8 flex flex-col lg:flex-row justify-between gap-6  min-h-screen">
             {/* Left: Avatar + Actions */}
             <Card className="lg:w-1/3 flex flex-col items-center  p-6 gap-4 shadow-md bg-custom-gradient">
-                <Avatar className="w-20 h-20 border-2 border-gray-200">
-                    <AvatarImage
-                        src={
-                        showClinicDetails
-                            ? hospital?.logo ?? "" // Clinic photo, fallback handled below
-                            : avatarUrl ?? "" // Doctor photo from user image
-                        }
-                    />
-                    <AvatarFallback>
-                        {showClinicDetails ? "HI" : "DR"} {/* Clinic / Doctor initials */}
-                    </AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                    <div className="w-24 h-24 border-2 border-primary/20 shadow-lg rounded-full overflow-hidden bg-primary/10">
+                        <img
+                            src={
+                                showClinicDetails
+                                    ? (hospital?.logo || "/palceholderImg.jpg")
+                                    : (avatarUrl || "/palceholderImg.jpg")
+                            }
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+
+                    {(!showClinicDetails || canEditClinic) && (
+                        <button
+                            onClick={handleAvatarClick}
+                            disabled={uploading}
+                            className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg border-2 border-background hover:scale-110 transition-transform disabled:opacity-70"
+                        >
+                            {uploading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Camera className="w-4 h-4" />
+                            )}
+                        </button>
+                    )}
+                </div>
 
 
 
@@ -362,11 +419,11 @@ export default function DoctorProfile() {
                             ADMIN
                         </div>
                     )}
-                <CardHeader>
-                <CardTitle className="text-xl font-semibold border-b pb-2 capitalize">
-                    {showClinicDetails ? "Clinic Details" : `${roleLabel} Profile`}
-                </CardTitle>
-                </CardHeader>
+                    <CardHeader>
+                        <CardTitle className="text-xl font-semibold border-b pb-2 capitalize">
+                            {showClinicDetails ? "Clinic Details" : `${roleLabel} Profile`}
+                        </CardTitle>
+                    </CardHeader>
                 </CardHeader>
 
                 <CardContent className="mt-4 space-y-4">
@@ -432,6 +489,33 @@ export default function DoctorProfile() {
                                     onChange={(e) => handleInputChange("name", e.target.value)}
                                     placeholder="Dr. Jane Doe"
                                 />
+                            </div>
+                            <div>
+                                <Label className="mb-2">{roleLabel} Image</Label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border bg-gray-100 flex-shrink-0">
+                                        <img
+                                            src={avatarUrl || "/palceholderImg.jpg"}
+                                            alt="Current"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleAvatarClick}
+                                        disabled={uploading}
+                                        className="gap-2"
+                                    >
+                                        {uploading ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Camera className="w-4 h-4" />
+                                        )}
+                                        {avatarUrl ? "Change Image" : "Upload Image"}
+                                    </Button>
+                                </div>
                             </div>
                             <div>
                                 <Label className="mb-2">Email</Label>
