@@ -68,7 +68,8 @@ export default function AppointmentPage() {
   const ability = useAbility();
   //= FILTER STATES =//
   const [search, setSearch] = useState("");
-  const [date, setDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Fetch appointments from API
   const fetchAppointments = async () => {
@@ -160,14 +161,24 @@ export default function AppointmentPage() {
       );
     }
 
-    // Date
-    if (date) {
-      data = data.filter((item) => item.date === date);
+    // Date Range
+    if (startDate || endDate) {
+      data = data.filter((item) => {
+        const itemDate = item.date; // assuming item.date is in YYYY-MM-DD
+        if (startDate && endDate) {
+          return itemDate >= startDate && itemDate <= endDate;
+        } else if (startDate) {
+          return itemDate >= startDate;
+        } else if (endDate) {
+          return itemDate <= endDate;
+        }
+        return true;
+      });
     }
 
     setFilteredData(data);
     setCurrentPage(1);
-  }, [allData, appointmentFilter, search, date]);
+  }, [allData, appointmentFilter, search, startDate, endDate]);
 
   //= TABLE COLUMNS =//
   const columns: ColumnDef<Appointment>[] = [
@@ -303,7 +314,7 @@ export default function AppointmentPage() {
                     </TooltipContent>
                   </Tooltip>
                 )}
-                <Tooltip>
+                { user?.hospital?.metadata?.orgMode === "hospital" && <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="inline-flex">
                       {isCancelled ? (
@@ -328,21 +339,21 @@ export default function AppointmentPage() {
                       {isCancelled ? "Not Allowed" : "Move to IPD"}
                     </p>
                   </TooltipContent>
-                </Tooltip>
+                </Tooltip>}
               </Can>
 
               <Can I="delete" a="appointment" ability={ability}>
                 {isCancelled || isCompleted ? (
-                      <span className="cursor-not-allowed">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled
-                          className="text-destructive opacity-50 pointer-events-none"
-                        >
-                          <X size={16} />
-                        </Button>
-                      </span>
+                  <span className="cursor-not-allowed">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled
+                      className="text-destructive opacity-50 pointer-events-none"
+                    >
+                      <X size={16} />
+                    </Button>
+                  </span>
                 ) : (
                   <ConfirmDialog
                     title="Cancel Appointment"
@@ -433,11 +444,22 @@ export default function AppointmentPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <Input
-            type="date"
-            className="w-44"
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <div className="flex gap-2 items-center border p-1 rounded-md">
+            <span className="text-xs text-muted-foreground ml-1">From</span>
+            <Input
+              type="date"
+              className="w-40 h-8 border-none focus-visible:ring-0"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <span className="text-xs text-muted-foreground">To</span>
+            <Input
+              type="date"
+              className="w-40 h-8 border-none focus-visible:ring-0"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
 
           <Select
             value={appointmentFilter}
@@ -458,7 +480,8 @@ export default function AppointmentPage() {
             variant="outline"
             onClick={() => {
               setSearch("");
-              setDate("");
+              setStartDate("");
+              setEndDate("");
               setAppointmentFilter("all");
             }}
           >

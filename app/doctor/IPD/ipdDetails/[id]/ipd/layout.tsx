@@ -22,7 +22,7 @@ const TAB_ITEMS = [
   // { label: "Lab Investigation", path: "labInvestigation" },
   { label: "Operations", path: "operation" },
   { label: "Charges", path: "charges" },
-  { label: "Payments", path: "payments" },
+  // { label: "Payments", path: "payments" },
   { label: "Timeline", path: "timeline" },
   // { label: "Live Consultation", path: "liveConsultation" },
   { label: "Bed History", path: "bedHistory" },
@@ -67,9 +67,16 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
         className={`transition-all duration-200 overflow-x-auto mx-auto mt-8 ${isCollapsed ? "w-[calc(100vw-100px)]" : "w-[calc(100vw-60px)] md:w-[calc(100vw-310px)]"
           } scrollbar-show`}>
         <BackButton />
-        <h2 className="text-2xl font-semibold mb-2">
-          IPD Patient {data ? `- ${data.patientName}` : ""}
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-2xl font-semibold">
+            IPD Patient {data ? `- ${data.patientName}` : ""}
+          </h2>
+          <Button variant="outline" asChild className="bg-overview-base text-primary hover:bg-over-primary/10 border-primary">
+            <Link href={`/doctor/IPD/ipdDetails/${id}/ipd/payments`}>
+              Payments
+            </Link>
+          </Button>
+        </div>
 
         <Tabs value={activeTab}>
           <div className="flex items-center gap-2">

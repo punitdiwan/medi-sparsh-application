@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/Components/theme-provider/ThemeProviderIcon";
+import { Badge } from "@/components/ui/badge";
+
 
 import {
   DropdownMenu,
@@ -87,16 +89,25 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-4 pr-3">
-        <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
+        {user?.hospital?.metadata?.orgMode && (
+          <Badge variant="outline" className={`capitalize px-3 py-1 font-medium ${user.hospital.metadata.orgMode === 'hospital'
+              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+            }`}>
+            {user.hospital.metadata.orgMode}
+          </Badge>
+        )}
+        {user?.hospital?.metadata?.orgMode === "hospital" && <div className="p-1.5 bg-secondary rounded-sm hover:bg-secondary/80 cursor-pointer" onClick={() => setOpen(true)}>
           <FaBed size={19} />
 
-        </div>
-        <BedManagementOverlay
+        </div>}
+        {user?.hospital?.metadata?.orgMode === "hospital" && <BedManagementOverlay
           open={open}
           onClose={() => setOpen(false)}
-        />
+        />}
 
         <ModeToggle />
+
 
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>

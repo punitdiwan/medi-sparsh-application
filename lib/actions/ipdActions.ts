@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db/index";
-import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments, ipdPayments } from "@/db/schema";
-import { eq, and, ne, sql } from "drizzle-orm";
+import { ipdAdmission, beds, doctors, staff, user, ipdConsultation, patients, ipdCharges, appointments, ipdPayments, prescriptions, ipdVitals } from "@/db/schema";
+import { eq, and, ne, sql, desc } from "drizzle-orm";
 import { getActiveOrganization } from "../getActiveOrganization";
 import { revalidatePath } from "next/cache";
 import { createIPDChargesBatch, getIPDChargesByAdmission } from "@/db/queries";
@@ -73,6 +73,19 @@ export async function createIPDAdmission(data: any) {
                             updatedAt: new Date().toISOString()
                         })
                         .where(eq(appointments.id, data.opdId));
+
+                    // Copy vitals from prescription to IPD Vitals
+                    const prescription = await tx.query.prescriptions.findFirst({
+                        where: eq(prescriptions.appointmentId, data.opdId)
+                    });
+
+                    if (prescription && prescription.vitals) {
+                        await tx.insert(ipdVitals).values({
+                            hospitalId: org.id,
+                            ipdAdmissionId: newAdmission.id,
+                            vitals: prescription.vitals,
+                        });
+                    }
                 }
             }
         });
@@ -105,9 +118,9 @@ export async function getIPDAdmissions() {
             // Compute available credit per admission using subqueries on ipd_payments
             availableCredit: sql`COALESCE(
                 (
-                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.to_credit = true)
+                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.to_credit = true AND ipd_payments.is_deleted = false)
                     -
-                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.payment_mode = 'Credit')
+                    (SELECT COALESCE(SUM(payment_amount::numeric),0) FROM ipd_payments WHERE ipd_payments.ipd_admission_id = ipd_admission.id AND ipd_payments.payment_mode = 'Credit' AND ipd_payments.is_deleted = false)
                 ), 0
             )`,
             medicalHistory: ipdAdmission.medicalHistory,
@@ -126,7 +139,8 @@ export async function getIPDAdmissions() {
                     eq(ipdAdmission.dischargeStatus, "pending"),
                     eq(patients.isAdmitted, true)
                 )
-            );
+            )
+            .orderBy(desc(ipdAdmission.createdAt));
 
         return { data };
     } catch (error) {
@@ -507,7 +521,8 @@ export async function getDischargedPatients() {
                     eq(ipdAdmission.hospitalId, org.id),
                     ne(ipdAdmission.dischargeStatus, "pending")
                 )
-            );
+            )
+            .orderBy(desc(ipdAdmission.createdAt));
 
         return { data };
     } catch (error) {

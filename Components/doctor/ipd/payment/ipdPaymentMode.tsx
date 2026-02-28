@@ -53,7 +53,7 @@ export default function AddIPDPaymentModal({
   const [isLoading, setIsLoading] = useState(false);
 
   // Summary State
-  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number,payable:number, IpdCreditLimit: number, usedCredit: number } | null >(null);
+  const [summary, setSummary] = useState<{ totalCharges: number; totalPaid: number, payable: number, IpdCreditLimit: number, usedCredit: number } | null>(null);
   // Populate fields if editing
   useEffect(() => {
     if (paymentToEdit) {
@@ -89,7 +89,7 @@ export default function AddIPDPaymentModal({
       setNote("Paid from credit limit");
     } else if (note === "Paid from credit limit" && (paymentMode !== "Credit Limit" || isCreditLimitIncrease)) {
       setNote("");
-    } 
+    }
   }, [paymentMode, isCreditLimitIncrease]);
 
   const fetchSummary = async () => {
@@ -228,31 +228,34 @@ export default function AddIPDPaymentModal({
             />
           </div>
 
-          <div>
-            <Label className="text-sm font-medium">Payment Mode <span className="text-destructive">*</span></Label>
-            <Select value={paymentMode} onValueChange={setPaymentMode}>
-              <SelectTrigger className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
-                <SelectValue placeholder="Select Mode" />
-              </SelectTrigger>
-              <SelectContent className="select-dialog-content">
-                {filteredPaymentModes.map((mode) => (
-                  <SelectItem key={mode} value={mode} className="select-dialog-item">{mode}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col md:flex-row gap-2">
+            <div className="w-full">
+              <Label className="text-sm font-medium">Payment Mode <span className="text-destructive">*</span></Label>
+              <Select value={paymentMode} onValueChange={setPaymentMode}>
+                <SelectTrigger className="w-full bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary">
+                  <SelectValue placeholder="Select Mode" />
+                </SelectTrigger>
+                <SelectContent className="select-dialog-content">
+                  {filteredPaymentModes.map((mode) => (
+                    <SelectItem key={mode} value={mode} className="select-dialog-item">{mode}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {["UPI", "Card", "Bank Transfer"].includes(paymentMode) && (
+              <div className="w-full">
+                <Label className="text-sm font-medium">Reference ID</Label>
+                <Input
+                  value={referenceId}
+                  onChange={(e) => setReferenceId(e.target.value)}
+                  placeholder="Enter reference ID"
+                  className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
+                />
+              </div>
+            )}
           </div>
 
-          {["UPI", "Card", "Bank Transfer"].includes(paymentMode) && (
-            <div>
-              <Label className="text-sm font-medium">Reference ID</Label>
-              <Input
-                value={referenceId}
-                onChange={(e) => setReferenceId(e.target.value)}
-                placeholder="Enter reference ID"
-                className="bg-dialog-input border-dialog-input text-dialog focus-visible:ring-primary"
-              />
-            </div>
-          )}
+
 
           <div>
             <Label className="text-sm font-medium">Note</Label>
@@ -276,7 +279,7 @@ export default function AddIPDPaymentModal({
             className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
           >
             <PlusCircle className="h-4 w-4" />
-            {isLoading ? "Saving..." : paymentToEdit ? "Update Payment" : "Save Payment"}
+            {isLoading ? "Saving..." : paymentToEdit ? "Update Payment" : "Do Payment"}
           </Button>
         </DialogFooter>
       </DialogContent>

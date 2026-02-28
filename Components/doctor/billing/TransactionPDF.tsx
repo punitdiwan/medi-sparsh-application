@@ -338,7 +338,7 @@ export const TransactionPDF: React.FC<TransactionProps> = ({ transaction }) => {
 
             <View style={tableStyles.row}>
               <Text style={tableStyles.cellLabel}>Amount</Text>
-              <Text style={tableStyles.cellValue}>₹{transaction.amount}</Text>
+              <Text style={tableStyles.cellValue}>{transaction.amount}</Text>
             </View>
 
             <View style={tableStyles.row}>

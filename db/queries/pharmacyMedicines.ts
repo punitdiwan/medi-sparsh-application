@@ -8,7 +8,7 @@ import {
     medicineSuppliers,
     pharmacyStock,
 } from "@/drizzle/schema";
-import { eq,gte,gt, and, desc, sql } from "drizzle-orm";
+import { eq, gte, gt, and, desc, sql } from "drizzle-orm";
 
 // Types
 export type NewPharmacyMedicine = typeof pharmacyMedicines.$inferInsert;
@@ -18,49 +18,49 @@ export type NewPharmacyMedicine = typeof pharmacyMedicines.$inferInsert;
 // ============================================
 
 export async function getPharmacyMedicinesByHospital(hospitalId: string) {
-  const stockSq = db
-    .select({
-      medicineId: pharmacyStock.medicineId,
-      totalQuantity: sql<number>`sum(${pharmacyStock.quantity})`.as("total_quantity"),
-    })
-    .from(pharmacyStock)
-    .where(
-      and(
-        eq(pharmacyStock.hospitalId, hospitalId),
-        gte(pharmacyStock.expiryDate, sql`CURRENT_DATE`), // expired excluded               // zero qty excluded
-      )
-    )
-    .groupBy(pharmacyStock.medicineId)
-    .as("stock_sq");
+    const stockSq = db
+        .select({
+            medicineId: pharmacyStock.medicineId,
+            totalQuantity: sql<number>`sum(${pharmacyStock.quantity})`.as("total_quantity"),
+        })
+        .from(pharmacyStock)
+        .where(
+            and(
+                eq(pharmacyStock.hospitalId, hospitalId),
+                gte(pharmacyStock.expiryDate, sql`CURRENT_DATE`), // expired excluded               // zero qty excluded
+            )
+        )
+        .groupBy(pharmacyStock.medicineId)
+        .as("stock_sq");
 
-  return await db
-    .select({
-      id: pharmacyMedicines.id,
-      name: pharmacyMedicines.name,
-      categoryId: pharmacyMedicines.categoryId,
-      categoryName: medicineCategories.name,
-      companyId: pharmacyMedicines.companyId,
-      companyName: medicineCompanies.name,
-      groupId: pharmacyMedicines.groupId,
-      groupName: medicineGroups.name,
-      unitId: pharmacyMedicines.unitId,
-      unitName: medicineUnits.name,
-      quantity: stockSq.totalQuantity, // no coalesce needed now
-      hospitalId: pharmacyMedicines.hospitalId,
-      createdAt: pharmacyMedicines.createdAt,
-      updatedAt: pharmacyMedicines.updatedAt,
-    })
-    .from(pharmacyMedicines)
+    return await db
+        .select({
+            id: pharmacyMedicines.id,
+            name: pharmacyMedicines.name,
+            categoryId: pharmacyMedicines.categoryId,
+            categoryName: medicineCategories.name,
+            companyId: pharmacyMedicines.companyId,
+            companyName: medicineCompanies.name,
+            groupId: pharmacyMedicines.groupId,
+            groupName: medicineGroups.name,
+            unitId: pharmacyMedicines.unitId,
+            unitName: medicineUnits.name,
+            quantity: sql<number>`COALESCE(${stockSq.totalQuantity}, 0)`.as("quantity"),
+            hospitalId: pharmacyMedicines.hospitalId,
+            createdAt: pharmacyMedicines.createdAt,
+            updatedAt: pharmacyMedicines.updatedAt,
+        })
+        .from(pharmacyMedicines)
 
-    .innerJoin(stockSq, eq(pharmacyMedicines.id, stockSq.medicineId))
+        .leftJoin(stockSq, eq(pharmacyMedicines.id, stockSq.medicineId))
 
-    .leftJoin(medicineCategories, eq(pharmacyMedicines.categoryId, medicineCategories.id))
-    .leftJoin(medicineCompanies, eq(pharmacyMedicines.companyId, medicineCompanies.id))
-    .leftJoin(medicineGroups, eq(pharmacyMedicines.groupId, medicineGroups.id))
-    .leftJoin(medicineUnits, eq(pharmacyMedicines.unitId, medicineUnits.id))
+        .leftJoin(medicineCategories, eq(pharmacyMedicines.categoryId, medicineCategories.id))
+        .leftJoin(medicineCompanies, eq(pharmacyMedicines.companyId, medicineCompanies.id))
+        .leftJoin(medicineGroups, eq(pharmacyMedicines.groupId, medicineGroups.id))
+        .leftJoin(medicineUnits, eq(pharmacyMedicines.unitId, medicineUnits.id))
 
-    .where(eq(pharmacyMedicines.hospitalId, hospitalId))
-    .orderBy(desc(pharmacyMedicines.createdAt));
+        .where(eq(pharmacyMedicines.hospitalId, hospitalId))
+        .orderBy(desc(pharmacyMedicines.createdAt));
 }
 
 

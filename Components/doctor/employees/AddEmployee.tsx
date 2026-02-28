@@ -31,8 +31,9 @@ import { MultiSelectDropdown } from "./MultipleSelect";
 import Spinner from "@/components/Spinner";
 import { useSession } from "@/lib/auth-client";
 import { ImCross } from "react-icons/im";
-import MaskedInput from "@/components/InputMask";
 import { useOrganizationRoles } from "@/hooks/useOrganizationRoles"
+import { Eye, EyeOff } from "lucide-react";
+import MaskedInput from "@/components/InputMask";
 
 export type SimpleRole = {
   id: string
@@ -49,20 +50,20 @@ const baseEmployeeSchema = z.object({
     .refine((val) => /^[6-9]\d{9}$/.test(val.replace(/^\+91/, "")), {
       message: "Enter a valid 10-digit mobile number starting with 6-9",
     }),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
   gender: z.enum(["male", "female", "other"]),
-  address: z.string().min(5, "Address required"),
-  role: z.string().min(1,"Role required"),
+  role: z.string().min(1, "Role required"),
+  dob: z.string().optional(),
   department: z.string().min(2, "Department required"),
   joiningDate: z.string().nonempty("Joining date required"),
-  dob: z.string().optional(),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  address: z.string().min(5, "Address required"),
 });
 
 const doctorDataSchema = z.object({
   specialization: z
     .array(
       z.object({
-        // id: z.string().optional(),
+        id: z.string(),
         name: z.string(),
         description: z.string().optional(),
       })
@@ -74,7 +75,9 @@ const doctorDataSchema = z.object({
   availability: z.string().optional(),
 });
 
-const employeeSchema = baseEmployeeSchema;
+const employeeSchema = baseEmployeeSchema.extend({
+  doctorData: doctorDataSchema.optional(),
+});
 
 type EmployeeFormType = z.infer<typeof employeeSchema>;
 
@@ -86,6 +89,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   const [isDoctor, setIsDoctor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [doctorErrors, setDoctorErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data } = useSession();
 
@@ -98,16 +102,11 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
       mobile: "",
       gender: "male",
       address: "",
-      role: "other",
+      role: "",
       department: "",
       joiningDate: "",
       dob: "",
       password: "",
-      // specialization: [],
-      // qualification: "",
-      // experience: "",
-      // consultationFee: "",
-      // availability: "",
     },
   });
 
@@ -159,7 +158,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   // Role change effect
   const roleValue = form.watch("role");
   useEffect(() => {
-    setIsDoctor(roleValue === "doctor");
+    setIsDoctor(roleValue?.toLowerCase() === "doctor");
   }, [roleValue]);
 
   function handleSupabaseError(error: any, customPrefix?: string) {
@@ -194,35 +193,11 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
   }
 
   // Submit handler
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: EmployeeFormType) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
-      // Validate doctor-specific fields if role is doctor
-      if (isDoctor) {
-        const errors: Record<string, string> = {};
-
-        if (doctorData.specialization.length === 0) {
-          errors.specialization = "At least one specialization is required";
-        }
-        if (!doctorData.qualification.trim()) {
-          errors.qualification = "Qualification is required";
-        }
-        if (!doctorData.experience.trim()) {
-          errors.experience = "Experience is required";
-        }
-        if (!doctorData.consultationFee.trim()) {
-          errors.consultationFee = "Consultation fee is required";
-        }
-
-        if (Object.keys(errors).length > 0) {
-          setDoctorErrors(errors);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
       // Prepare the payload
       const payload: any = {
         name: values.name,
@@ -235,18 +210,8 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
         department: values.department,
         joiningDate: values.joiningDate,
         dob: values.dob,
+        doctorData: isDoctor ? values.doctorData : undefined,
       };
-
-      // Add doctor data if role is doctor
-      if (isDoctor) {
-        payload.doctorData = {
-          specialization: doctorData.specialization,
-          qualification: doctorData.qualification,
-          experience: doctorData.experience,
-          consultationFee: doctorData.consultationFee,
-          availability: doctorData.availability,
-        };
-      }
       // Call the API
       const response = await fetch("/api/employees", {
         method: "POST",
@@ -375,11 +340,21 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Set password"
-                        type="password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="Set password"
+                          type={showPassword ? "text" : "password"}
+                          {...field}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-foreground/50 hover:text-foreground"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -397,7 +372,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                     <FormLabel>Gender</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                       </FormControl>
@@ -425,7 +400,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                       </FormControl>
@@ -452,7 +427,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                   <FormItem>
                     <FormLabel>Date of Birth</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" max="9999-12-31" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -482,7 +457,7 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                   <FormItem>
                     <FormLabel>Joining Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" max="9999-12-31" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -498,29 +473,31 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                 </h3>
 
                 {/* Specializations */}
-                <MultiSelectDropdown
-                  options={specializations.map((s) => ({
-                    label: s.name,
-                    value: s.id,
-                  }))}
-                  selected={doctorData.specialization.map((s) => s.id)}
-                  onChange={(selectedIds) => {
-                    const selectedObjects = specializations.filter((spec) =>
-                      selectedIds.includes(spec.id)
-                    );
-
-                    setDoctorData((prev) => ({
-                      ...prev,
-                      specialization: selectedObjects,
-                    }));
-                  }}
-                  placeholder="Select specialization(s)"
+                <FormField
+                  control={form.control}
+                  name="doctorData.specialization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <MultiSelectDropdown
+                          options={specializations.map((s) => ({
+                            label: s.name,
+                            value: s.id,
+                          }))}
+                          selected={(field.value || []).map((s: any) => s.id)}
+                          onChange={(selectedIds) => {
+                            const selectedObjects = specializations.filter((spec) =>
+                              selectedIds.includes(spec.id)
+                            );
+                            field.onChange(selectedObjects);
+                          }}
+                          placeholder="Select specialization(s)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {doctorErrors.specialization && (
-                  <p className="text-sm text-red-500">
-                    {doctorErrors.specialization}
-                  </p>
-                )}
                 <AddDataModal
                   title="Add Specialization"
                   table="specializations"
@@ -531,101 +508,59 @@ export default function AddEmployeeForm({ onCancel }: AddEmployeeFormProps) {
                   onSuccess={fetchSpecializations}
                 />
                 <div className="flex gap-4">
-                  <div className="flex flex-col gap-2">
-                    {/* Qualification */}
-                    <Input
-                      placeholder="e.g. MBBS, MD"
-                      value={doctorData.qualification}
-                      onChange={(e) =>
-                        setDoctorData((prev) => ({
-                          ...prev,
-                          qualification: e.target.value,
-                        }))
-                      }
-                      className={`${
-                        doctorErrors.qualification &&
-                        "border-1 border-red-400/60   "
-                        }`}
-                    />
-                    {doctorErrors.qualification && (
-                      <p className="text-sm text-red-500">
-                        {doctorErrors.qualification}
-                      </p>
+                  <FormField
+                    control={form.control}
+                    name="doctorData.qualification"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input placeholder="e.g. MBBS, MD" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
 
-                  <div className={` flex flex-col gap-2`}>
-                    {/* Experience */}
-                    <Input
-                      type="number"
-                      placeholder="Years of experience"
-                      value={doctorData.experience}
-                      onChange={(e) =>
-                        setDoctorData((prev) => ({
-                          ...prev,
-                          experience: e.target.value,
-                        }))
-                      }
-                      className={`${
-                        doctorErrors.experience &&
-                        "border-1 border-red-400/60   "
-                        }`}
-                    />
-                    {doctorErrors.experience && (
-                      <p className="text-sm text-red-500">
-                        {doctorErrors.experience}
-                      </p>
+                  <FormField
+                    control={form.control}
+                    name="doctorData.experience"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input type="number" placeholder="Years of experience" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex flex-col gap-2">
-                    {/* Fee */}
-                    <Input
-                      type="number"
-                      placeholder="Consultation fee"
-                      value={doctorData.consultationFee}
-                      onChange={(e) =>
-                        setDoctorData((prev) => ({
-                          ...prev,
-                          consultationFee: e.target.value,
-                        }))
-                      }
-                      className={`${
-                        doctorErrors.consultationFee &&
-                        "border-1 border-red-400/60   "
-                        }`}
-                    />
-                    {doctorErrors.consultationFee && (
-                      <p className="text-sm text-red-500">
-                        {doctorErrors.consultationFee}
-                      </p>
+                  <FormField
+                    control={form.control}
+                    name="doctorData.consultationFee"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input type="number" placeholder="Consultation fee" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
 
-                  <div className="flex flex-col gap-2">
-                    {/* Availability */}
-                    <Input
-                      placeholder="Mon–Fri, 10AM–4PM"
-                      value={doctorData.availability}
-                      onChange={(e) =>
-                        setDoctorData((prev) => ({
-                          ...prev,
-                          availability: e.target.value,
-                        }))
-                      }
-                      className={`${
-                        doctorErrors.availability &&
-                        "border-1 border-red-400/60   "
-                        }`}
-                    />
-                    {doctorErrors.availability && (
-                      <p className="text-sm text-red-500">
-                        {doctorErrors.availability}
-                      </p>
+                  <FormField
+                    control={form.control}
+                    name="doctorData.availability"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input placeholder="Mon–Fri, 10AM–4PM" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
                 </div>
               </div>
             )}

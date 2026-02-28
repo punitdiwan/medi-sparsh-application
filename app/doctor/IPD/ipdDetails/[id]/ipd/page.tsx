@@ -131,8 +131,8 @@ export default function IPDOverviewPage() {
   const totalPending = paymentSummary?.balance || 0;
 
   const totalCredit = paymentSummary?.IpdCreditLimit + paymentSummary?.usedCredit || 0;
-  const creditUsed = paymentSummary?.usedCredit ||0;
-  
+  const creditUsed = paymentSummary?.usedCredit || 0;
+
   const overallPercentage = totalAmount
     ? Math.round((totalPaid / totalAmount) * 100)
     : 0;
@@ -282,10 +282,15 @@ export default function IPDOverviewPage() {
             </TableHeader>
             <TableBody>
               {payments.slice(0, 5).map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>{format(new Date(p.paymentDate), "dd-MM-yyyy")}</TableCell>
-                  <TableCell>{p.paymentMode}</TableCell>
-                  <TableCell className="text-right">₹{Number(p.paymentAmount).toFixed(2)}</TableCell>
+                <TableRow key={p.id} className={p.isDeleted ? "opacity-50" : ""}>
+                  <TableCell className={p.isDeleted ? "line-through" : ""}>
+                    <div className="flex flex-col">
+                      <span>{format(new Date(p.paymentDate), "dd-MM-yyyy")}</span>
+                      {p.isDeleted && <span className="text-[10px] text-destructive font-bold uppercase">Deleted</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className={p.isDeleted ? "line-through" : ""}>{p.paymentMode}</TableCell>
+                  <TableCell className={`text-right ${p.isDeleted ? "line-through" : ""}`}>₹{Number(p.paymentAmount).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -483,8 +488,8 @@ export default function IPDOverviewPage() {
               {departmentBilling.map((dept) => {
                 const deptPendingBeforeCredit = Math.max(dept.total - dept.paid, 0);
                 const creditUsed = Math.min(deptPendingBeforeCredit, data.creditLimit);
-                const remaining = Math.max(dept.total - (dept.paid + creditUsed),0);
-                const percentage = dept.total? Math.round(((dept.paid + creditUsed) / dept.total) * 100): 0;
+                const remaining = Math.max(dept.total - (dept.paid + creditUsed), 0);
+                const percentage = dept.total ? Math.round(((dept.paid + creditUsed) / dept.total) * 100) : 0;
                 return (
                   <div
                     key={dept.name}

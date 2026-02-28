@@ -7,18 +7,18 @@ export const patientFilters: FilterField[] = [
     type: "text",
     placeholder: "Search by name or ID...",
   },
-  {
+  /* {
     key: "dateCheckIn",
     label: "Date Check-In",
     type: "date",
-  },
+  }, */
   {
     key: "isDeleted",
     label: "Show Deleted",
     type: "switch",
   }
 
-  
+
   // {
   //   key: "visitPurpose",
   //   label: "Visit Purpose",

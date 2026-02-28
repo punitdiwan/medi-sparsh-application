@@ -15,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImCross } from "react-icons/im";
 import {
   Select,
   SelectTrigger,
@@ -22,9 +24,20 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 import Spinner from "@/components/Spinner";
 import MaskedInput from "@/components/InputMask";
 import { useOrganizationRoles } from "@/hooks/useOrganizationRoles"
+import AddDataModal from "./AddSpecializationModel";
+import { MultiSelectDropdown } from "./MultipleSelect";
 
 // ✅ Schemas
 const baseEmployeeSchema = z.object({
@@ -37,18 +50,18 @@ const baseEmployeeSchema = z.object({
       message: "Enter a valid 10-digit mobile number starting with 6-9",
     }),
   gender: z.enum(["male", "female", "other"]),
-  address: z.string().min(5, "Address required"),
-  role: z.string().min(1,"Role required"),
+  role: z.string().min(1, "Role required"),
+  dob: z.string().optional(),
   department: z.string().min(2, "Department required"),
   joiningDate: z.string().nonempty("Joining date required"),
-  dob: z.string().optional(),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
+  address: z.string().min(5, "Address required"),
 });
 
 const doctorDataSchema = z.object({
   specialization: z
     .array(
       z.object({
+        id: z.string(),
         name: z.string(),
         description: z.string().optional(),
       })
@@ -87,20 +100,20 @@ export function EditEmployeeModal({
   >([]);
 
   const form = useForm<EmployeeFormData>({
-    // resolver: zodResolver(fullEmployeeSchema),
+    resolver: zodResolver(fullEmployeeSchema),
     defaultValues: {
+      user_id: "",
       name: "",
       email: "",
       mobile: "",
       gender: "male",
       address: "",
-      role: "doctor",
+      role: "",
       department: "",
       joiningDate: "",
       dob: "",
-      password: "",
       doctorData: {
-        specialization: [{ name: "", description: "" }],
+        specialization: [],
         qualification: "",
         experience: "",
         consultationFee: "",
@@ -109,31 +122,27 @@ export function EditEmployeeModal({
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "doctorData.specialization",
-  });
-
   const role = form.watch("role");
 
   // Fetch specializations
-  useEffect(() => {
-    const fetchSpecializations = async () => {
-      try {
-        const response = await fetch("/api/specializations");
-        const result = await response.json();
+  async function fetchSpecializations() {
+    try {
+      const response = await fetch("/api/specializations");
+      const result = await response.json();
 
-        if (result.success && result.data) {
-          setSpecializations(result.data.map((spec: any) => ({
-            id: spec.id.toString(),
-            name: spec.name,
-            description: spec.description || "",
-          })));
-        }
-      } catch (error) {
-        console.error("Error fetching specializations:", error);
+      if (result.success && result.data) {
+        setSpecializations(result.data.map((spec: any) => ({
+          id: spec.id.toString(),
+          name: spec.name,
+          description: spec.description || "",
+        })));
       }
-    };
+    } catch (error) {
+      console.error("Error fetching specializations:", error);
+    }
+  }
+
+  useEffect(() => {
     fetchSpecializations();
   }, []);
 
@@ -165,15 +174,18 @@ export function EditEmployeeModal({
           mobile: employee.staff.mobileNumber || "",
           gender: employee.staff.gender || "male",
           address: employee.staff.address || "",
-          role: employee.member.role || "other",
+          role: employee.member.role || "",
           department: employee.staff.department || "",
           joiningDate: employee.staff.joiningDate || "",
           dob: employee.staff.dob || "",
-          password: "******", // Don't show actual password
           doctorData: employee.doctorData ? {
-            specialization: Array.isArray(employee.doctorData.specialization)
+            specialization: (Array.isArray(employee.doctorData.specialization)
               ? employee.doctorData.specialization
-              : [employee.doctorData.specialization],
+              : [employee.doctorData.specialization]).map((s: any) => ({
+                id: s.id?.toString() || Math.random().toString(),
+                name: s.name,
+                description: s.description || "",
+              })),
             qualification: employee.doctorData.qualification || "",
             experience: employee.doctorData.experience || "",
             consultationFee: employee.doctorData.consultationFee || "",
@@ -209,7 +221,7 @@ export function EditEmployeeModal({
       };
 
       // Add doctor data if role is doctor
-      if (values.role === "doctor" && values.doctorData) {
+      if (values.role?.toLowerCase() === "doctor" && values.doctorData) {
         payload.doctorData = {
           specialization: values.doctorData.specialization,
           qualification: values.doctorData.qualification,
@@ -252,186 +264,325 @@ export function EditEmployeeModal({
 
   return (
     <Dialog open={!!employeeId} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] p-6"
-        onInteractOutside={(e) => e.preventDefault()}  
-        onEscapeKeyDown={(e) => e.preventDefault()}   
+      <DialogContent className="max-w-3xl p-0 overflow-hidden border border-dialog bg-dialog-surface shadow-lg h-[90vh] flex flex-col"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle>Edit Employee</DialogTitle>
-        </DialogHeader>
+        <CardHeader className="flex items-center justify-between px-4 pt-4 pb-0 bg-dialog-header border-b border-dialog rounded-t-lg sticky top-0 z-10">
+          <CardTitle className="text-xl font-semibold flex-1 text-foreground ">
+            Edit Employee
+          </CardTitle>
 
-        <div className="max-h-[70vh] overflow-y-scroll scrollbar-hide p-2 ">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="text-foreground hover:text-foreground/80 ml-2"
+          >
+            <ImCross />
+          </Button>
+        </CardHeader>
+
+        <div className="overflow-y-auto px-6 pb-6 flex-1 scrollbar-hide">
           {initialLoading ? (
             <div className="flex justify-center py-10">
               <Spinner size={50} />
             </div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit(onSubmit)(e);
-              }}
-            >
-              {/* Basic Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <Label>Name</Label>
-                  <Input {...form.register("name")} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Email</Label>
-                  <Input {...form.register("email")} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Mobile</Label>
-                  <MaskedInput
-                    {...form.register("mobile")}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, "").slice(-10);
-                      form.setValue("mobile", raw);
-                    }}
-                    placeholder="Enter mobile number"
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-5"
+              >
+                {/* Basic Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter full name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="mobile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mobile</FormLabel>
+                        <FormControl>
+                          <MaskedInput
+                            {...field}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, "").slice(-10);
+                              field.onChange(raw);
+                            }}
+                            placeholder="+91 000-000-0000"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="z-[99999]">
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Gender</Label>
-                  <Select
-                    value={form.watch("gender")}
-                    onValueChange={(val:any) => form.setValue("gender", val as any)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Address</Label>
-                  <Input {...form.register("address")} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Department</Label>
-                  <Input {...form.register("department")} />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Joining Date</Label>
-                  <Input
-                    type="date"
-                    {...form.register("joiningDate")}
-                    disabled
-                    className="bg-gray-100 cursor-not-allowed"
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="z-[99999]">
+                            {roles.map((item) => (
+                              <SelectItem key={item.id} value={item.role}>
+                                {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {/* <p className="text-xs text-gray-500">
-                    Joining date cannot be changed
-                  </p> */}
+                  <FormField
+                    control={form.control}
+                    name="dob"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date of Birth</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} max="9999-12-31" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Label>DOB</Label>
-                  <Input type="date" {...form.register("dob")} />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Cardiology, HR" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="joiningDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Joining Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            disabled
+                            className="bg-gray-100 cursor-not-allowed"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <Label>Role</Label>
-
-                  <Select
-                    value={form.watch("role")}
-                    onValueChange={(val:any) => form.setValue("role", val)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Role" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {roles.map((item) => (
-                        <SelectItem key={item.id} value={item.role}>
-                          {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Doctor-only fields */}
-              {role === "doctor" && (
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="font-semibold mb-2">Doctor Details</h3>
-                  <div className="space-y-2">
-                    {fields.map((field, index) => (
-                      <div key={field.id} className="flex gap-2">
-                        <Input
-                          {...form.register(
-                            `doctorData.specialization.${index}.name`
-                          )}
-                          placeholder="Specialization"
-                        />
-                        <Input
-                          {...form.register(
-                            `doctorData.specialization.${index}.description`
-                          )}
-                          placeholder="Description"
-                        />
-                        {index > 0 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => remove(index)}
-                          >
-                            X
-                          </Button>
+                {/* Doctor-only fields */}
+                {role?.toLowerCase() === "doctor" && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h3 className="text-lg font-medium text-white">Doctor Details</h3>
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="doctorData.specialization"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <MultiSelectDropdown
+                                options={specializations.map((s) => ({
+                                  label: s.name,
+                                  value: s.id,
+                                }))}
+                                selected={(field.value || []).map((s: any) => s.id)}
+                                onChange={(selectedIds) => {
+                                  const selectedObjects = specializations.filter((spec) =>
+                                    selectedIds.includes(spec.id)
+                                  );
+                                  field.onChange(selectedObjects);
+                                }}
+                                placeholder="Select specialization(s)"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => append({ name: "", description: "" })}
-                    >
-                      + Add Specialization
-                    </Button>
+                      />
+                      <AddDataModal
+                        title="Add Specialization"
+                        table="specializations"
+                        fields={[
+                          { name: "name", label: "Specialization Name" },
+                          { name: "description", label: "Description" },
+                        ]}
+                        onSuccess={fetchSpecializations}
+                      />
 
-                    <div className="grid grid-cols-2 gap-4 mt-3">
-                      <div className="flex flex-col gap-1">
-                        <Label>Qualification</Label>
-                        <Input {...form.register("doctorData.qualification")} />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <Label>Experience (years)</Label>
-                        <Input {...form.register("doctorData.experience")} />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <Label>Consultation Fee</Label>
-                        <Input
-                          {...form.register("doctorData.consultationFee")}
+                      <div className="flex gap-4">
+                        <FormField
+                          control={form.control}
+                          name="doctorData.qualification"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input placeholder="e.g. MBBS, MD" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="doctorData.experience"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input type="number" placeholder="Years of experience" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <Label>Availability</Label>
-                        <Input {...form.register("doctorData.availability")} />
+
+                      <div className="flex gap-4">
+                        <FormField
+                          control={form.control}
+                          name="doctorData.consultationFee"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input type="number" placeholder="Consultation fee" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="doctorData.availability"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Input placeholder="Mon–Fri, 10AM–4PM" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="flex justify-end gap-2 pt-4">
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={onClose}>
-                    Cancel
-                  </Button>
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Enter full address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button asChild>
-                    <button type="submit" disabled={loading}>
-                      {loading ? <Spinner size={20} /> : "Update"}
-                    </button>
+                <div className="flex justify-end gap-3 pt-3">
+                  <Button
+                    type="reset"
+                    variant="outline"
+                    onClick={() => form.reset()}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="scale-75">
+                          <Spinner size={24} color="bg-black/80" />
+                        </div>
+                      </div>
+                    ) : (
+                      "Update"
+                    )}
                   </Button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </Form>
           )}
         </div>
       </DialogContent>

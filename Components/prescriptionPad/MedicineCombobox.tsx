@@ -35,7 +35,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createMedicine } from "@/lib/actions/medicines";
+import { createMedicine, getMedicineGroups } from "@/lib/actions/medicines";
 import { getMedicineCompanies } from "@/lib/actions/medicineCompanies";
 import { getMedicineUnits } from "@/lib/actions/medicineUnits";
 import { Pill } from "lucide-react";
@@ -57,6 +57,11 @@ interface MedicineCompany {
 }
 
 interface MedicineUnit {
+    id: string;
+    name: string;
+}
+
+interface MedicineGroup {
     id: string;
     name: string;
 }
@@ -87,6 +92,7 @@ export default function MedicineCombobox({
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [companies, setCompanies] = useState<MedicineCompany[]>([]);
     const [units, setUnits] = useState<MedicineUnit[]>([]);
+    const [groups, setGroups] = useState<MedicineGroup[]>([]);
     const [loading, setLoading] = useState(false);
 
     const [newMedicineForm, setNewMedicineForm] = useState({
@@ -94,6 +100,7 @@ export default function MedicineCombobox({
         categoryId: "",
         companyName: "",
         unitId: "",
+        groupId: "",
         notes: "",
     });
 
@@ -101,9 +108,10 @@ export default function MedicineCombobox({
     useEffect(() => {
         if (showAddDialog) {
             const fetchData = async () => {
-                const [companiesResult, unitsResult] = await Promise.all([
+                const [companiesResult, unitsResult, groupsResult] = await Promise.all([
                     getMedicineCompanies(),
                     getMedicineUnits(),
+                    getMedicineGroups(),
                 ]);
 
                 if (companiesResult.data) {
@@ -111,6 +119,9 @@ export default function MedicineCombobox({
                 }
                 if (unitsResult.data) {
                     setUnits(unitsResult.data);
+                }
+                if (groupsResult.data) {
+                    setGroups(groupsResult.data);
                 }
             };
 
@@ -131,6 +142,7 @@ export default function MedicineCombobox({
             categoryId: selectedCategory,
             companyName: "",
             unitId: "",
+            groupId: "",
             notes: "",
         });
         setShowAddDialog(true);
@@ -154,6 +166,10 @@ export default function MedicineCombobox({
             toast.error("Unit is required");
             return;
         }
+        if (!newMedicineForm.groupId) {
+            toast.error("Group is required");
+            return;
+        }
 
         try {
             setLoading(true);
@@ -162,7 +178,7 @@ export default function MedicineCombobox({
                 categoryId: newMedicineForm.categoryId,
                 companyName: newMedicineForm.companyName,
                 unitId: newMedicineForm.unitId,
-                groupId: 'g1',
+                groupId: newMedicineForm.groupId,
                 notes: newMedicineForm.notes || null,
             });
 
@@ -215,17 +231,6 @@ export default function MedicineCombobox({
                                     <p className="text-sm text-muted-foreground">
                                         No medicine found.
                                     </p>
-                                    {selectedCategory && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleOpenAddDialog}
-                                            className="gap-2"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            Add new medicine
-                                        </Button>
-                                    )}
                                 </div>
                             </CommandEmpty>
                             <CommandGroup>
@@ -249,13 +254,17 @@ export default function MedicineCombobox({
                                     </CommandItem>
                                 ))}
                             </CommandGroup>
-                            {!searchQuery && medicines.length > 5 && (
-                                <div className="border-t p-2 text-center">
-                                    <p className="text-xs text-muted-foreground">
-                                        Type to search {medicines.length - 5} more medicines
-                                    </p>
-                                </div>
-                            )}
+                            <div className="border-t p-2">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleOpenAddDialog}
+                                    className="w-full justify-start gap-2 text-dialog-icon hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Add new medicine "{searchQuery}"
+                                </Button>
+                            </div>
                         </CommandList>
                     </Command>
                 </PopoverContent>
@@ -308,7 +317,7 @@ export default function MedicineCombobox({
                                     }
                                     disabled={loading}
                                 >
-                                    <SelectTrigger id="category">
+                                    <SelectTrigger id="category" className="w-full">
                                         <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -335,7 +344,7 @@ export default function MedicineCombobox({
                                     }
                                     disabled={loading}
                                 >
-                                    <SelectTrigger id="company">
+                                    <SelectTrigger id="company" className="w-full">
                                         <SelectValue placeholder="Select company" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -360,7 +369,7 @@ export default function MedicineCombobox({
                                     }
                                     disabled={loading}
                                 >
-                                    <SelectTrigger id="unit">
+                                    <SelectTrigger id="unit" className="w-full">
                                         <SelectValue placeholder="Select unit" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -374,21 +383,49 @@ export default function MedicineCombobox({
                             </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-sm mb-1 block">Notes</label>
-                            <Input
-                                id="notes"
-                                value={newMedicineForm.notes}
-                                onChange={(e) =>
-                                    setNewMedicineForm((prev) => ({
-                                        ...prev,
-                                        notes: e.target.value,
-                                    }))
-                                }
-                                placeholder="Optional notes"
-                                disabled={loading}
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Group *</label>
+                                <Select
+                                    value={newMedicineForm.groupId}
+                                    onValueChange={(value) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            groupId: value,
+                                        }))
+                                    }
+                                    disabled={loading}
+                                >
+                                    <SelectTrigger id="group" className="w-full">
+                                        <SelectValue placeholder="Select group" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {groups.map((group) => (
+                                            <SelectItem key={group.id} value={group.id}>
+                                                {group.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm mb-1 block">Notes</label>
+                                <Input
+                                    id="notes"
+                                    value={newMedicineForm.notes}
+                                    onChange={(e) =>
+                                        setNewMedicineForm((prev) => ({
+                                            ...prev,
+                                            notes: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Optional notes"
+                                    disabled={loading}
+                                />
+                            </div>
                         </div>
+
+
                     </div>
 
                     <DialogFooter className="px-6 py-2 bg-dialog-header border-t border-dialog text-dialog-muted flex justify-between">

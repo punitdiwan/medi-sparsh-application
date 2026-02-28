@@ -1221,6 +1221,7 @@ export const ipdPayments = pgTable("ipd_payments", {
 	paymentNote: text("payment_note"),
 	referenceId: text("reference_id"),
 	toCredit: boolean("to_credit").default(false),
+	isDeleted: boolean("is_deleted").default(false),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
