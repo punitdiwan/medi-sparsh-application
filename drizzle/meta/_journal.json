@@ -498,6 +498,13 @@
       "when": 1772281401672,
       "tag": "0070_safe_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1772284869470,
+      "tag": "0071_normal_spirit",
+      "breakpoints": true
     }
   ]
 }

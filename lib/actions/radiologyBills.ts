@@ -198,6 +198,8 @@ export async function getBillById(billId: string) {
                 approvedBy: radiologyResults.approvedBy,
                 approveDate: radiologyResults.approvedAt,
                 findings: radiologyResults.remarks,
+                reportFileName: radiologyResults.reportFileName,
+                reportFilePath: radiologyResults.reportFilePath,
             })
             .from(radiologyOrderTests)
             .leftJoin(radiologyTests, eq(radiologyOrderTests.testId, radiologyTests.id))
@@ -216,6 +218,8 @@ export async function getBillById(billId: string) {
             approvedBy: t.approvedBy,
             approveDate: t.approveDate,
             findings: t.findings,
+            reportFileName: t.reportFileName,
+            reportFilePath: t.reportFilePath,
             status: t.approvedBy ? "Approved" : t.technicianName ? "Scanned" : "Pending",
         }));
 

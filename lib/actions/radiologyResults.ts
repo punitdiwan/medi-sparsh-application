@@ -67,6 +67,8 @@ export async function saveRadiologyReport(data: {
         value: string;
         range: string;
     }>;
+    reportFileName?: string;
+    reportFilePath?: string;
 }) {
     try {
         const org = await getActiveOrganization();
@@ -84,12 +86,19 @@ export async function saveRadiologyReport(data: {
 
         if (existing[0]) {
             resultId = existing[0].id;
+            
+            // Handle file deletion - if empty string passed, set to null
+            const fileNameValue = data.reportFileName === "" ? null : data.reportFileName;
+            const filePathValue = data.reportFilePath === "" ? null : data.reportFilePath;
+            
             await db
                 .update(radiologyResults)
                 .set({
                     approvedBy: data.approvedBy,
                     approvedAt: data.approveDate,
                     remarks: data.findings,
+                    reportFileName: fileNameValue,
+                    reportFilePath: filePathValue,
                     updatedAt: new Date(),
                 })
                 .where(eq(radiologyResults.orderTestID, data.orderTestId));
@@ -105,6 +114,8 @@ export async function saveRadiologyReport(data: {
                 approvedBy: data.approvedBy,
                 approvedAt: data.approveDate,
                 remarks: data.findings,
+                reportFileName: data.reportFileName,
+                reportFilePath: data.reportFilePath,
                 resultDate: new Date(), // default to today if not scanned yet
             }).returning({ id: radiologyResults.id });
 

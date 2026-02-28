@@ -15,7 +15,11 @@ import {
     Activity,
     FlaskConical,
     ClipboardCheck,
-    Camera
+    Camera,
+    Eye,
+    FileUp,
+    FileText,
+    XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +73,8 @@ interface TestItem {
     approvedBy?: string;
     approveDate?: string;
     findings?: string;
+    reportFileName?: string;
+    reportFilePath?: string;
     tax: number;
     netAmount: number;
     status: "Pending" | "Scanned" | "Reported" | "Approved";
@@ -175,11 +181,13 @@ function ReportEditorDialog({
     onClose,
     onSave,
     test,
+    patientId,
 }: {
     open: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
     test: TestItem | null;
+    patientId?: string;
 }) {
     const [formData, setFormData] = useState({
         approvedBy: "Dr. Radiology Expert",
@@ -189,6 +197,10 @@ function ReportEditorDialog({
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingParams, setIsLoadingParams] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [existingFileName, setExistingFileName] = useState<string>("");
+    const [existingFilePath, setExistingFilePath] = useState<string>("");
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (!open || !test) {
@@ -198,6 +210,9 @@ function ReportEditorDialog({
                 findings: "",
                 parameterValues: [],
             });
+            setSelectedFile(null);
+            setExistingFileName("");
+            setExistingFilePath("");
             return;
         }
 
@@ -233,8 +248,14 @@ function ReportEditorDialog({
                             return { ...p, value: savedVal?.resultValue || "" };
                         }),
                     });
+                    
+                    // Load existing file info
+                    setExistingFileName(reportData.reportFileName || "");
+                    setExistingFilePath(reportData.reportFilePath || "");
                 } else {
                     setFormData(prev => ({ ...prev, parameterValues: parameters }));
+                    setExistingFileName("");
+                    setExistingFilePath("");
                 }
             } catch (error) {
                 console.error("Error loading report data:", error);
@@ -253,9 +274,58 @@ function ReportEditorDialog({
             return;
         }
 
+        const hasParameterValues = formData.parameterValues.some(p => p.value.trim() !== "");
+        if (!hasParameterValues) {
+            toast.error("Please fill in at least one test parameter value");
+            return;
+        }
+
         setIsLoading(true);
         try {
-            await onSave(formData);
+            let reportFileName: string | undefined = existingFileName || undefined;
+            let reportFilePath: string | undefined = existingFilePath || undefined;
+
+            // If no existing file and new file selected, upload it
+            if (selectedFile && patientId) {
+                setIsUploading(true);
+                try {
+                    const uploadFormData = new FormData();
+                    uploadFormData.append("file", selectedFile);
+                    uploadFormData.append("patientId", patientId);
+
+                    const uploadRes = await fetch("/api/upload/radiology-report", {
+                        method: "POST",
+                        body: uploadFormData,
+                    });
+
+                    const uploadData = await uploadRes.json();
+                    if (!uploadData.success) {
+                        toast.error(uploadData.error || "Failed to upload report file");
+                        return;
+                    }
+
+                    reportFileName = uploadData.data.fileName;
+                    reportFilePath = uploadData.data.fileUrl;
+                } catch (error) {
+                    console.error("Error uploading file:", error);
+                    toast.error("Failed to upload report file");
+                    return;
+                } finally {
+                    setIsUploading(false);
+                }
+            }
+
+            // If existing file was deleted (empty strings), pass empty strings to clear in DB
+            if (!existingFileName && !existingFilePath && !selectedFile) {
+                reportFileName = "";
+                reportFilePath = "";
+            }
+
+            await onSave({
+                ...formData,
+                reportFileName,
+                reportFilePath,
+            });
             onClose();
         } catch (error) {
             console.error("Error saving report:", error);
@@ -319,6 +389,117 @@ function ReportEditorDialog({
                         </div>
                     </div>
 
+                    <div className="space-y-3 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50/50">
+                        <h3 className="font-semibold flex items-center gap-2 text-sm">
+                            <FileUp className="h-4 w-4 text-primary" />
+                            Upload Report (JPEG/PNG/PDF)
+                        </h3>
+                        
+                        {existingFilePath ? (
+                            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                                <div className="flex items-center gap-3">
+                                    <FileText className="h-5 w-5 text-green-600" />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-green-800">{existingFileName}</span>
+                                        <span className="text-xs text-green-600">Report uploaded</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-green-700 border-green-300 hover:bg-green-100"
+                                        onClick={() => window.open(existingFilePath, "_blank")}
+                                    >
+                                        <Eye className="h-4 w-4 mr-1" />
+                                        View
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        onClick={async () => {
+                                            if (existingFilePath) {
+                                                try {
+                                                    const deleteRes = await fetch(
+                                                        `/api/upload/radiology-report?filePath=${encodeURIComponent(existingFilePath)}`,
+                                                        { method: "DELETE" }
+                                                    );
+                                                    const deleteData = await deleteRes.json();
+                                                    if (!deleteData.success) {
+                                                        toast.error(deleteData.error || "Failed to delete file");
+                                                        return;
+                                                    }
+                                                } catch (error) {
+                                                    console.error("Error deleting file:", error);
+                                                    toast.error("Failed to delete file");
+                                                    return;
+                                                }
+                                            }
+                                            setExistingFileName("");
+                                            setExistingFilePath("");
+                                            setSelectedFile(null);
+                                        }}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : selectedFile ? (
+                            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <div className="flex items-center gap-3">
+                                    <FileText className="h-5 w-5 text-blue-600" />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium text-blue-800">{selectedFile.name}</span>
+                                        <span className="text-xs text-blue-600">
+                                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                                        </span>
+                                    </div>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => setSelectedFile(null)}
+                                >
+                                    <XCircle className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <FileUp className="h-4 w-4 text-gray-600" />
+                                    <span className="text-sm text-gray-700">Choose File</span>
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept=".jpeg,.jpg,.png,.pdf"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+                                                if (!allowedTypes.includes(file.type)) {
+                                                    toast.error("Only JPEG, PNG, and PDF files are allowed");
+                                                    return;
+                                                }
+                                                if (file.size > 10 * 1024 * 1024) {
+                                                    toast.error("File size must be less than 10MB");
+                                                    return;
+                                                }
+                                                setSelectedFile(file);
+                                            }
+                                        }}
+                                        disabled={isLoading}
+                                    />
+                                </label>
+                                <span className="text-xs text-gray-500">Max size: 10MB (JPEG, PNG, PDF)</span>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-4">
                         <h3 className="font-semibold flex items-center gap-2">
                             <FlaskConical className="h-4 w-4 text-primary" />
@@ -374,9 +555,9 @@ function ReportEditorDialog({
                     <Button
                         onClick={handleSave}
                         className="bg-primary text-primary-foreground hover:opacity-90"
-                        disabled={isLoading}
+                        disabled={isLoading || isUploading}
                     >
-                        {isLoading ? "Saving..." : "Approve Report"}
+                        {isLoading || isUploading ? "Saving..." : "Save Report"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -426,6 +607,8 @@ export default function RadiologyBillDetailsDialog({
                 approvedBy: t.approvedBy,
                 approveDate: t.approveDate ? new Date(t.approveDate).toISOString().split("T")[0] : undefined,
                 findings: t.findings,
+                reportFileName: t.reportFileName,
+                reportFilePath: t.reportFilePath,
             })));
         }
         setLoading(false);
@@ -463,6 +646,8 @@ export default function RadiologyBillDetailsDialog({
             approveDate: new Date(data.approveDate),
             findings: data.findings,
             parameterValues: data.parameterValues,
+            reportFileName: data.reportFileName,
+            reportFilePath: data.reportFilePath,
         });
 
         if (res.success) {
@@ -837,6 +1022,22 @@ export default function RadiologyBillDetailsDialog({
                                                                         <TooltipContent>Print Report</TooltipContent>
                                                                     </Tooltip>
                                                                 )}
+
+                                                                {item.reportFilePath && (
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="icon"
+                                                                                className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                                                                onClick={() => window.open(item.reportFilePath, "_blank")}
+                                                                            >
+                                                                                <Eye className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>View Uploaded Report</TooltipContent>
+                                                                    </Tooltip>
+                                                                )}
                                                             </TooltipProvider>
                                                         </div>
                                                     </TableCell>
@@ -883,6 +1084,7 @@ export default function RadiologyBillDetailsDialog({
                     onClose={() => setIsReportOpen(false)}
                     onSave={handleSaveReport}
                     test={selectedTest}
+                    patientId={billData?.patientId}
                 />
             </div>
         </div>

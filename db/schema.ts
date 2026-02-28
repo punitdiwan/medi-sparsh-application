@@ -1567,6 +1567,8 @@ export const radiologyResults = pgTable("radiology_results", {
 	tecnnician_name: text('tecnnician_name'),
 	approvedBy: text('approved_by'),
 	approvedAt: timestamp('approved_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	reportFileName: text('report_file_name'),
+	reportFilePath: text('report_file_path'),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
