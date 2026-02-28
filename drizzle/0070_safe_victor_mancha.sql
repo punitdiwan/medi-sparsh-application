@@ -1,0 +1,1 @@
+ALTER TABLE "pathology_results" ADD COLUMN "report_file_url" text;

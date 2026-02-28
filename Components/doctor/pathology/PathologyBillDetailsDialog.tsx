@@ -14,7 +14,8 @@ import {
     Trash2,
     ChevronDown,
     ChevronUp,
-    Info
+    Info,
+    Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -317,11 +318,13 @@ function ReportEditorDialog({
     onClose,
     onSave,
     test,
+    patientId,
 }: {
     open: boolean;
     onClose: () => void;
     onSave: (data: any) => void;
     test: TestItem | null;
+    patientId: string;
 }) {
 
     const [formData, setFormData] = useState({
@@ -338,6 +341,10 @@ function ReportEditorDialog({
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingParams, setIsLoadingParams] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadedFileUrl, setUploadedFileUrl] = useState<string>("");
+    const [uploadError, setUploadError] = useState<string>("");
 
     // Load parameters and report data when dialog opens
     React.useEffect(() => {
@@ -350,6 +357,9 @@ function ReportEditorDialog({
                 result: "",
                 parameterValues: [],
             });
+            setSelectedFile(null);
+            setUploadedFileUrl("");
+            setUploadError("");
             return;
         }
 
@@ -390,6 +400,11 @@ function ReportEditorDialog({
                             };
                         }),
                     });
+                    
+                    // Load existing report file URL
+                    if (reportData.reportFileUrl) {
+                        setUploadedFileUrl(reportData.reportFileUrl);
+                    }
                 } else {
                     // No existing report, just set parameters
                     setFormData(prev => ({
@@ -408,6 +423,39 @@ function ReportEditorDialog({
         loadData();
     }, [open, test]);
 
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Only JPEG, PNG, and PDF files are allowed");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("File size must be less than 10MB");
+            return;
+        }
+
+        // Store file locally without uploading - will upload on save
+        setSelectedFile(file);
+        setUploadedFileUrl("");
+        setUploadError("");
+    };
+
+    const handleRemoveFile = () => {
+        setSelectedFile(null);
+        setUploadedFileUrl("");
+        setUploadError("");
+    };
+
+    // Check if all required fields are filled
+    const isFormValid = formData.approvedBy.trim() !== "" && 
+                        formData.approveDate !== "" && 
+                        formData.parameterValues.length > 0 &&
+                        formData.parameterValues.every((p) => p.value.trim() !== "");
+
     const handleSave = async () => {
         if (!formData.approvedBy || !formData.approveDate) {
             toast.error("Please fill in Approved By and Approve Date");
@@ -416,6 +464,30 @@ function ReportEditorDialog({
 
         setIsLoading(true);
         try {
+            let fileUrlToSave = uploadedFileUrl;
+
+            // Upload file first if a new file is selected
+            if (selectedFile) {
+                setIsUploading(true);
+                const uploadFormData = new FormData();
+                uploadFormData.append("file", selectedFile);
+                uploadFormData.append("patientId", patientId);
+
+                const uploadResponse = await fetch("/api/upload/pathology-report", {
+                    method: "POST",
+                    body: uploadFormData,
+                });
+
+                const uploadData = await uploadResponse.json();
+
+                if (!uploadData.success) {
+                    throw new Error(uploadData.error || "Failed to upload file");
+                }
+
+                fileUrlToSave = uploadData.data.fileUrl;
+                setIsUploading(false);
+            }
+
             // Save to database
             const result = await saveReportData({
                 orderTestId: currentTest.id,
@@ -423,6 +495,7 @@ function ReportEditorDialog({
                 approveDate: formData.approveDate,
                 remarks: formData.result,
                 parameterValues: formData.parameterValues,
+                reportFileUrl: fileUrlToSave,
             });
 
             if (!result.success) {
@@ -508,12 +581,73 @@ function ReportEditorDialog({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Upload Report</Label>
-                            <Input
-                                type="file"
-                                onChange={(e) => setFormData({ ...formData, uploadReport: e.target.value })}
-                                disabled={isLoading}
-                            />
+                            <Label>Upload Report (JPEG/PNG/PDF) - Optional</Label>
+                            {selectedFile ? (
+                                <div className="flex items-center gap-2 p-3 border rounded-lg bg-blue-50 border-blue-200">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-blue-700 truncate">
+                                            Selected: {selectedFile.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Will be uploaded when you save
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleRemoveFile}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        title="Remove File"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : uploadedFileUrl ? (
+                                <div className="flex items-center gap-2 p-3 border rounded-lg bg-green-50 border-green-200">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-green-700 truncate">
+                                            File uploaded successfully
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {uploadedFileUrl.split('/').pop()}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => window.open(uploadedFileUrl, "_blank")}
+                                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                        title="View Report"
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleRemoveFile}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        title="Remove Report"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div>
+                                    <Input
+                                        type="file"
+                                        accept="image/jpeg,image/png,application/pdf"
+                                        onChange={handleFileChange}
+                                        disabled={isLoading}
+                                        className="cursor-pointer"
+                                    />
+                                    {uploadError && (
+                                        <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label>Result</Label>
@@ -587,9 +721,9 @@ function ReportEditorDialog({
                     <Button
                         onClick={handleSave}
                         className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90"
-                        disabled={!formData.approvedBy || !formData.approveDate || isLoading}
+                        disabled={!isFormValid || isLoading || isUploading}
                     >
-                        {isLoading ? "Saving..." : "Save Report"}
+                        {isLoading || isUploading ? "Saving..." : "Save Report"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -1100,6 +1234,7 @@ export default function PathologyBillDetailsDialog({
                     onClose={() => setIsReportOpen(false)}
                     onSave={handleSaveReport}
                     test={selectedTest}
+                    patientId={billData?.patientId || ""}
                 />
             </div>
         </div >

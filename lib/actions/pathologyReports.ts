@@ -58,6 +58,7 @@ export async function saveReportData(data: {
     value: string;
     range: string;
   }>;
+  reportFileUrl?: string;
 }) {
   try {
     const org = await getActiveOrganization();
@@ -92,6 +93,7 @@ export async function saveReportData(data: {
           approvedBy: data.approvedBy,
           approvedAt: new Date(data.approveDate),
           remarks: data.remarks,
+          reportFileUrl: data.reportFileUrl || existingResult[0].reportFileUrl,
           updatedAt: new Date(),
         })
         .where(eq(pathologyResults.id, resultId));
@@ -111,6 +113,7 @@ export async function saveReportData(data: {
           approvedAt: new Date(data.approveDate),
           remarks: data.remarks,
           resultDate: new Date(),
+          reportFileUrl: data.reportFileUrl || null,
         })
         .returning({ id: pathologyResults.id });
 

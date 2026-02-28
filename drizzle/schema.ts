@@ -1364,6 +1364,7 @@ export const pathologyResults = pgTable("pathology_results", {
 	remarks: text("remarks").notNull(),
 	approvedBy: text('approved_by'),
 	approvedAt: timestamp('approved_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	reportFileUrl: text("report_file_url"),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 });
