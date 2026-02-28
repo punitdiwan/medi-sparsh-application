@@ -228,7 +228,7 @@ export default function MedicineStockManagerPage() {
 
         <div className="flex gap-3">
 
-          <Button variant="default" onClick={handleAdd}>
+          {/* <Button variant="default" onClick={handleAdd}>
             <Plus size={16} /> Add Medicine
           </Button>
           <TooltipProvider>
@@ -246,7 +246,7 @@ export default function MedicineStockManagerPage() {
                 <p>Upload Patients Excel</p>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
+          </TooltipProvider> */}
         </div>
         <HospitalMedicineExcelModal open={open} setOpen={setOpen} />
       </div>

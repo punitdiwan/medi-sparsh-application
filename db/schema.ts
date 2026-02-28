@@ -682,6 +682,8 @@ export const slotBookings = pgTable("slot_bookings", {
 	slotId: text("slot_id").notNull(),
 	appointmentId: text("appointment_id").notNull(),
 	appointmentDate: date("appointment_date").notNull(),
+	bookedTimeFrom:  text("booked_time_from"), 
+  	bookedTimeTo:    text("booked_time_to"),   
 	status: text().default('active').notNull(), // active, cancelled
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),

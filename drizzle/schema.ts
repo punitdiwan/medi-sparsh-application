@@ -409,6 +409,8 @@ export const slotBookings = pgTable("slot_bookings", {
 	slotId: text("slot_id").notNull(),
 	appointmentId: text("appointment_id").notNull(),
 	appointmentDate: date("appointment_date").notNull(),
+	bookedTimeFrom: text("booked_time_from"),
+	bookedTimeTo: text("booked_time_to"),
 	status: text().default('active').notNull(), // active, cancelled
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
@@ -431,6 +433,9 @@ export const slotBookings = pgTable("slot_bookings", {
 	index("slot_bookings_appointment_idx").on(table.appointmentId),
 	index("slot_bookings_slot_date_idx").on(table.slotId, table.appointmentDate),
 ]);
+
+// uniqueIndex("unique_slot_time_per_date")
+//     .on(table.slotId, table.appointmentDate, table.bookedTimeFrom),
 
 export const prescriptions = pgTable("prescriptions", {
 	id: text().default(useUUIDv4).primaryKey().notNull(),

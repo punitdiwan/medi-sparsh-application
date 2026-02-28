@@ -128,7 +128,7 @@ export default function IPDOverviewPage() {
 
   const totalAmount = paymentSummary?.totalCharges || 0;
   const totalPaid = paymentSummary?.totalPaid || 0;
-  const totalPending = paymentSummary?.balance || 0;
+  const totalPending = paymentSummary?.payable || 0;
 
   const totalCredit = paymentSummary?.IpdCreditLimit + paymentSummary?.usedCredit || 0;
   const creditUsed = paymentSummary?.usedCredit || 0;
@@ -486,10 +486,11 @@ export default function IPDOverviewPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departmentBilling.map((dept) => {
-                const deptPendingBeforeCredit = Math.max(dept.total - dept.paid, 0);
-                const creditUsed = Math.min(deptPendingBeforeCredit, data.creditLimit);
-                const remaining = Math.max(dept.total - (dept.paid + creditUsed), 0);
-                const percentage = dept.total ? Math.round(((dept.paid + creditUsed) / dept.total) * 100) : 0;
+                // Use actual summary values for IPD Charges
+                const actualUsedCredit = dept.name === "IPD Charges" ? (paymentSummary?.usedCredit || 0) : 0;
+                const remaining = dept.name === "IPD Charges" ? (paymentSummary?.payable || 0) : Math.max(dept.total - dept.paid, 0);
+                const totalReceived = dept.paid + actualUsedCredit;
+                const percentage = dept.total ? Math.round((totalReceived / dept.total) * 100) : 0;
                 return (
                   <div
                     key={dept.name}
