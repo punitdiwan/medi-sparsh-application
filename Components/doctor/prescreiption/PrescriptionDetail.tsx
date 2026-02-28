@@ -24,7 +24,7 @@ type PrescriptionDetail = {
   patientName: string;
   patientAge: number;
   patientGender: string;
-  patientAddress: any;     
+  patientAddress: any;
   doctorName: string;
   doctorSpecialization: string;
   appointment: {
@@ -63,7 +63,7 @@ type PrescriptionDetail = {
     name: string;
     metadata: any | null;
   };
-   doctor: {
+  doctor: {
     name: string;
     specialization: Array<{
       name: string;
@@ -115,7 +115,7 @@ export default function PrescriptionDetail() {
       prescriptionId={prescription.id}
       organization={prescription.organization}
       orgModeCheck={Org}
-      date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}   />
+      date={prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : new Date().toLocaleDateString()} id={""} createdAt={""} additionalNotes={null} />
   ).toBlob();
 
   const url = URL.createObjectURL(blob);
@@ -128,7 +128,6 @@ export default function PrescriptionDetail() {
     };
   }
 };
- 
   useEffect(() => {
     const fetchPrescription = async () => {
       try {
@@ -153,7 +152,7 @@ export default function PrescriptionDetail() {
             vitals: d.vitals ? { ...d.vitals } : {},
             medicines: (d.medicines || []).map((m: any) => ({
               name: m.name ?? "",
-              dosage: m.timing ?? "",          
+              dosage: m.timing ?? "",
               frequency: m.frequency ?? "",
               duration: m.duration ?? "",
               instructions: m.instruction ?? ""
@@ -301,10 +300,10 @@ export default function PrescriptionDetail() {
                 prescriptionId={prescription.id}
                 organization={prescription.organization}
                 orgModeCheck={Org}
-                date={new Date(prescription.createdAt).toLocaleDateString()} id={""} createdAt={""} additionalNotes={null}              />
+                date={prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : new Date().toLocaleDateString()} id={""} createdAt={""} additionalNotes={null} />
 
             }
-            fileName={`prescription_${prescription.patientName.replace(/ /g, "_")}_${new Date(prescription.createdAt).toLocaleDateString().replace(/\//g, "-")}.pdf`}
+            fileName={`prescription_${(prescription?.patientName || "patient").replace(/ /g, "_")}_${prescription?.createdAt ? new Date(prescription.createdAt).toLocaleDateString().replace(/\//g, "-") : new Date().toLocaleDateString().replace(/\//g, "-")}.pdf`}
           >
             {({ blob, url, loading, error }) => (
               <Button className="mb-4 ml-2" disabled={loading}>
@@ -347,7 +346,7 @@ export default function PrescriptionDetail() {
                 <div>
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">
-                    {new Date(prescription.createdAt).toLocaleDateString()}
+                    {prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : "—"}
                   </p>
                 </div>
               </div>
@@ -401,7 +400,7 @@ export default function PrescriptionDetail() {
                 Medicines
               </h3>
               <div className="space-y-3">
-                {prescription.medicines.map((medicine, index) => (
+                {(prescription.medicines || []).map((medicine, index) => (
                   <Card key={index} className="bg-muted/50">
                     <CardContent className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -463,7 +462,10 @@ export default function PrescriptionDetail() {
                 {prescription.followUpDate && (
                   <p className="text-sm">
                     <span className="font-medium">Date:</span>{" "}
-                    {new Date(prescription.followUpDate).toLocaleDateString()}
+                    {(() => {
+                      const d = new Date(prescription.followUpDate);
+                      return isNaN(d.getTime()) ? "Invalid Date" : d.toLocaleDateString();
+                    })()}
                   </p>
                 )}
                 {prescription.followUpNotes && (
@@ -488,7 +490,6 @@ export default function PrescriptionDetail() {
 
         
       </div>
-      
     </div>
   );
 }

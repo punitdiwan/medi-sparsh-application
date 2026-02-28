@@ -183,7 +183,7 @@ const style1 = StyleSheet.create({
     right: 0,
   },
   contentWrapper: {
-    padding:20,
+    padding: 20,
     textTransform: "capitalize",
   },
 
@@ -266,9 +266,16 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
     organization,
     orgModeCheck
   } = props;
-  const parsedMetadata = organization?.metadata
-    ? JSON.parse(organization.metadata)
-    : null;
+  let parsedMetadata: any = null;
+  try {
+    parsedMetadata = organization?.metadata
+      ? typeof organization.metadata === "string"
+        ? JSON.parse(organization.metadata)
+        : organization.metadata
+      : null;
+  } catch (error) {
+    console.error("Error parsing organization metadata:", error);
+  }
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -338,7 +345,7 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
           email={parsedMetadata?.email}
           doctorName={doctorName}
           doctorSpecialization={doctorSpecialization}
-          logo={parsedMetadata?.logo} 
+          logo={parsedMetadata?.logo}
 
         />
 
@@ -425,10 +432,10 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
                 <View style={styles.sectionBox}>
                   <Text style={styles.sectionTitle}>Vitals</Text>
 
-                  {Object.entries(vitals).map(([key, value]) => (
+                  {Object.entries(vitals || {}).map(([key, value]) => (
                     <View style={styles.row} key={key}>
                       <Text style={styles.label}>{key}:</Text>
-                      <Text style={styles.value}>{String(value)}</Text>
+                      <Text style={styles.value}>{String(value ?? "—")}</Text>
                     </View>
                   ))}
                 </View>
@@ -450,12 +457,12 @@ const PrescriptionPdf: React.FC<PrescriptionPdfProps> = (props) => {
                 <Text style={styles.tableHeader}>Duration</Text>
               </View>
 
-              {medicines.map((m, i) => (
+              {(medicines || []).map((m, i) => (
                 <View style={styles.tableRow} key={i}>
-                  <Text style={styles.tableCell}>{m.name}</Text>
-                  <Text style={styles.tableCell}>{m.dosage}</Text>
-                  <Text style={styles.tableCell}>{m.frequency}</Text>
-                  <Text style={styles.tableCell}>{m.duration}</Text>
+                  <Text style={styles.tableCell}>{m?.name || "—"}</Text>
+                  <Text style={styles.tableCell}>{m?.dosage || "—"}</Text>
+                  <Text style={styles.tableCell}>{m?.frequency || "—"}</Text>
+                  <Text style={styles.tableCell}>{m?.duration || "—"}</Text>
                 </View>
               ))}
             </View>
