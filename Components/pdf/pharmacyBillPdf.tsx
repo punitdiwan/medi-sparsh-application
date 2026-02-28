@@ -96,8 +96,8 @@ export const PharmacyBillPdf: React.FC<Props> = (props) => {
         []
     );
 
-
-    const netAmount = props.netAmount || (props.totalAmount - props.discount + props.tax);
+    const totalItemsAmount = groupedItems.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const netAmount = totalItemsAmount - props.discount + props.tax;
 
     return (
         <Document>
@@ -128,18 +128,18 @@ export const PharmacyBillPdf: React.FC<Props> = (props) => {
                     {/* Medicine Table - Only Name, Quantity, Price */}
                     <View style={styles.section}>
                         <View style={styles.tableHeader}>
-                            <Text style={{ width: "50%", paddingLeft: 4 }}>Medicine Name</Text>
-                            <Text style={{ width: "25%", textAlign: "center" }}>Quantity</Text>
-                            <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>Price</Text>
-                            <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>Total</Text>
+                            <Text style={{ width: "40%", paddingLeft: 4 }}>Medicine Name</Text>
+                            <Text style={{ width: "20%", textAlign: "center" }}>Quantity</Text>
+                            <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>Price</Text>
+                            <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>Total</Text>
                         </View>
 
                         {groupedItems.map((item, idx) => (
                             <View key={idx} style={styles.tableRow}>
-                                <Text style={{ width: "50%", paddingLeft: 4 }}>{item.medicineName}</Text>
-                                <Text style={{ width: "25%", textAlign: "center" }}>{item.quantity}</Text>
-                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{item.price.toFixed(2)}</Text>
-                                <Text style={{ width: "25%", textAlign: "right", paddingRight: 4 }}>{(item.quantity * item.price).toFixed(2)}</Text>
+                                <Text style={{ width: "40%", paddingLeft: 4 }}>{item.medicineName}</Text>
+                                <Text style={{ width: "20%", textAlign: "center" }}>{item.quantity}</Text>
+                                <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>{item.price.toFixed(2)}</Text>
+                                <Text style={{ width: "20%", textAlign: "right", paddingRight: 4 }}>{(item.quantity * item.price).toFixed(2)}</Text>
                             </View>
                         ))}
                     </View>
@@ -148,7 +148,7 @@ export const PharmacyBillPdf: React.FC<Props> = (props) => {
                     <View style={styles.totalSection}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                             <Text>Total Amount:</Text>
-                            <Text>{props.totalAmount.toFixed(2)}</Text>
+                            <Text>{totalItemsAmount.toFixed(2)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                             <Text>Discount:</Text>
