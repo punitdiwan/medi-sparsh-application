@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { updateUserProfile } from "@/lib/actions/updateUserProfile";
 import { Pencil, CirclePlus, Loader2, Camera } from 'lucide-react';
 import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 // ------- TYPES -------
 interface HospitalMetadata {
   email: string;
@@ -277,11 +279,18 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
 
           {/* Hospital Logo */}
           <div className="relative w-24 h-24 rounded-full shadow flex items-center justify-center overflow-visible border-2 border-primary/20">
-            <img
-              src={hospital?.logo || "/palceholderImg.jpg"}
-              alt="Hospital Logo"
-              className="w-full h-full object-cover rounded-full"
-            />
+            <Avatar className="w-full h-full">
+              <AvatarImage
+                src={hospital?.logo ?? undefined}
+                alt="Hospital Logo"
+                className="object-cover"
+              />
+              <AvatarFallback className="text-2xl font-bold bg-indigo-100 text-indigo-700 rounded-full">
+                {hospital?.name
+                  ? hospital.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
+                  : "H"}
+              </AvatarFallback>
+            </Avatar>
 
             {/* Half inside / half outside icon */}
             <Button
@@ -289,7 +298,8 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
               type="button"
               onClick={handleAvatarClick}
               disabled={isUploading}
-              className="absolute -bottom-2 -right-2 p-0 shadow bg-background rounded-full w-8 h-8">
+              className="absolute -bottom-2 -right-2 p-0 shadow bg-background rounded-full w-8 h-8"
+            >
               {isUploading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : hospital.logo ? (
@@ -298,6 +308,7 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
                 <CirclePlus size={18} className="p-0 w-4 h-4 text-indigo-800 dark:text-white" />
               )}
             </Button>
+
             <input
               type="file"
               ref={fileInputRef}
@@ -448,13 +459,19 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
                 <div className="flex flex-col gap-1 md:col-span-2">
                   <Label>Owner Image</Label>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border bg-gray-100 flex-shrink-0">
-                      <img
-                        src={userData?.image || "/palceholderImg.jpg"}
+                    <Avatar className="w-12 h-12 flex-shrink-0">
+                      <AvatarImage
+                        src={userData?.image ?? undefined}
                         alt="Owner"
-                        className="w-full h-full object-cover"
+                        className="object-cover"
                       />
-                    </div>
+                      <AvatarFallback className="text-sm font-semibold bg-indigo-100 text-indigo-700">
+                        {userData?.name
+                          ? userData.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
+                          : "O"}
+                      </AvatarFallback>
+                    </Avatar>
+
                     <Button
                       type="button"
                       variant="outline"
@@ -470,6 +487,7 @@ const AdminProfileUI: React.FC<AdminProfileProps> = ({ data }) => {
                       )}
                       {userData?.image ? "Change Image" : "Upload Image"}
                     </Button>
+
                     <input
                       type="file"
                       ref={userFileInputRef}
