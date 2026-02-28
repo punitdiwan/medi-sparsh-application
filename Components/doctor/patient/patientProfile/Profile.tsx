@@ -166,7 +166,7 @@ function Profile() {
             {/* Left Sidebar */}
             <div className="flex flex-col items-center lg:w-1/3 gap-6">
               {/* Avatar Upload */}
-              <div className="flex flex-col items-center gap-4">
+              {/* <div className="flex flex-col items-center gap-4">
                 <Avatar
                   className={`w-20 h-20 border-2 ${editMode ? "cursor-pointer" : "cursor-default"
                     }`}
@@ -200,7 +200,7 @@ function Profile() {
                     Upload Photo
                   </Button>
                 )}
-              </div>
+              </div> */}
 
               {/* Navigation Buttons */}
               <div className="flex flex-col w-full gap-2">

@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
@@ -71,9 +71,9 @@ export default function IPDLayout({ children }: { children: ReactNode }) {
           <h2 className="text-2xl font-semibold">
             IPD Patient {data ? `- ${data.patientName}` : ""}
           </h2>
-          <Button variant="outline" asChild className="bg-overview-base text-primary hover:bg-over-primary/10 border-primary">
+          <Button variant="default" asChild className="bg-dialog-primary text-dialog-btn hover:bg-btn-hover hover:opacity-90 border-primary">
             <Link href={`/doctor/IPD/ipdDetails/${id}/ipd/payments`}>
-              Payments
+             <PlusCircle className="h-5 w-5" /> Payments
             </Link>
           </Button>
         </div>

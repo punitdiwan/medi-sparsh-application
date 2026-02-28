@@ -79,7 +79,7 @@ export function AppSidebar({ mode, moduleData }: { mode: AppMode | undefined, mo
   const isCollapsed = state === 'collapsed';
   const { user } = useAuth();
   const items = SIDEBAR_CONFIG[mode || "hospital"] || [];
-  
+
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({});
   const [openPopovers, setOpenPopovers] = useState<{ [key: string]: boolean }>({});
 
@@ -189,7 +189,7 @@ export function AppSidebar({ mode, moduleData }: { mode: AppMode | undefined, mo
               {/* Avatar / Logo */}
               <Avatar className={`${isCollapsed ? "size-8" : "size-10"}`}>
                 <AvatarImage
-                  src={user?.hospital?.profileImage || ""}
+                  src={user?.hospital?.logo || undefined}
                   alt="Clinic Logo"
                 />
                 <AvatarFallback className="bg-muted text-xs">

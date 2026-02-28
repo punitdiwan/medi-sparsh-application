@@ -43,7 +43,7 @@ import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
-import ProfileImg from "@/public/palceholderImg.jpg";
+// import ProfileImg from "@/public/palceholderImg.jpg";
 import ChangePasswordForm from "./forms/ChangePasswordForm";
 import { FaBed } from "react-icons/fa";
 import { Floor } from "./bedNavbar/bedNavType";
@@ -90,10 +90,13 @@ export default function Header() {
 
       <div className="flex items-center gap-4 pr-3">
         {user?.hospital?.metadata?.orgMode && (
-          <Badge variant="outline" className={`capitalize px-3 py-1 font-medium ${user.hospital.metadata.orgMode === 'hospital'
-              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800'
-              : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
-            }`}>
+          <Badge
+            variant="outline"
+            className={`capitalize px-3 py-1 font-medium ${user.hospital.metadata.orgMode === "hospital"
+                ? "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/40"
+                : "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40"
+              }`}
+          >
             {user.hospital.metadata.orgMode}
           </Badge>
         )}
@@ -112,12 +115,10 @@ export default function Header() {
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button className="rounded-full focus:outline-none">
-              <Image
-                src={ProfileImg}
+              <img
+                src={user?.userData?.image || "/palceholderImg.jpg"}
                 alt="Profile"
-                width={40}
-                height={40}
-                className="rounded-full border"
+                className="rounded-full border object-cover h-10 w-10"
               />
             </button>
           </DropdownMenuTrigger>
